@@ -66,6 +66,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('audit/logins', [AuditController::class, 'logins'])->name('audit.logins');
             Route::get('settings', [TenantSettingsController::class, 'show'])->name('settings.show');
             Route::post('settings', [TenantSettingsController::class, 'update'])->name('settings.update');
+            Route::get('settings/card-number-preview', [TenantSettingsController::class, 'cardNumberPreview'])->name('settings.card-number-preview');
 
             // Master data (reference lists). {type} must be registered in config/master_data.php
             Route::prefix('master-data')->name('master-data.')->whereIn('type', array_keys(config('master_data.types')))->group(function () {

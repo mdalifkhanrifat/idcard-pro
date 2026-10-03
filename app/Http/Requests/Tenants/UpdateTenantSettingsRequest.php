@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Tenants;
 
+use App\Services\Cards\CardNumberFormat;
 use DateTimeZone;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -28,6 +29,11 @@ class UpdateTenantSettingsRequest extends FormRequest
             'locale' => ['required', Rule::in(['en', 'bn'])],
             'primary_color' => ['required', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'logo' => ['nullable', 'image', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
+            'card_number_format' => ['sometimes', 'string', 'max:60', function (string $attribute, mixed $value, \Closure $fail): void {
+                if (is_string($value) && ($problem = CardNumberFormat::problem($value)) !== null) {
+                    $fail($problem);
+                }
+            }],
         ];
     }
 }

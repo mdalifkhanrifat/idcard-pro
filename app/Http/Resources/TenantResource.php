@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Tenant;
+use App\Services\Cards\CardNumberFormat;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -28,6 +29,7 @@ class TenantResource extends JsonResource
             'locale' => $this->locale,
             'primary_color' => $this->primary_color,
             'logo_url' => $this->logo_path ? url('storage/'.$this->logo_path) : null,
+            'card_number_format' => $this->settings['card_number_format'] ?? CardNumberFormat::DEFAULT,
             'status' => $this->status,
             'users_count' => $this->whenCounted('users'),
             'created_at' => $this->created_at,
