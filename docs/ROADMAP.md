@@ -26,8 +26,11 @@
 | Activity log | Audit log (ফিল্টারসহ) | 1 |
 | Organization Setup (configuration) | Tenant settings: ব্র্যান্ডিং, লোগো, রঙ, ভাষা, timezone, কার্ড নম্বরের ফরম্যাট | 2 |
 | Master Setup: Rank, Branch/Trade, Base/Unit, Appointment, Designation, Blood group, Religion, District/Upazila | **Generic lookup lists**: প্রতিটা কোম্পানি নিজের তালিকা বানাবে (Department, Designation, Grade, Location…) | 2 |
-| Personal/Office/Family/Education/Course/Student info | **Cardholder** + কাস্টম ফিল্ড (প্রতি কোম্পানি), পরিবারের সদস্য, ডকুমেন্ট | 2 |
-| Picture, holder sign, PDF, files আপলোড | ছবি/সই (সংস্করণসহ) আর একাধিক ডকুমেন্ট, ছবি পরিশোধন, private disk, signed link | 2 |
+| Personal/Office info | **Cardholder** (৬ ট্যাবের ফর্ম, বিস্তারিত পেজ, ১২+ ফিল্টার) ✅ | 2 |
+| Family info | পরিবারের সদস্য (স্বামী/স্ত্রী, ভাই/বোন যোগ; রক্তের গ্রুপ এখন সত্যিই সেভ হয়) ✅ | 2 |
+| Education info, Other course | শিক্ষা ও প্রশিক্ষণ (এক টেবিলে, কোর্স এখন ব্যক্তির সাথে যুক্ত) ✅ | 2 |
+| Student info | কাস্টম ফিল্ড + "student" প্রিসেট; যেকোনো প্রতিষ্ঠান নিজের ঘর বানাতে পারে ✅ | 2 |
+| Picture, holder sign, PDF, files আপলোড | ছবি/সই (সংস্করণসহ) আর একাধিক ডকুমেন্ট, ছবি পরিশোধন, private disk, signed link ✅ | 2 |
 | Template Type, Template, Template Setup | Card templates: ড্র্যাগ-ড্রপ ডিজাইনার, সামনে/পেছনে, ভার্সনিং | 3 |
 | Authorized Signature, Authority Type | Signatories (সই, পদ, কার্যকর তারিখ) | 3 |
 | Auto card number `CODE/YY######` | কনফিগারযোগ্য নম্বর ফরম্যাট, ট্রানজ্যাকশন আর লক দিয়ে, unique | 3 |
@@ -36,7 +39,7 @@
 | Browser print (PrintArea) | ব্রাউজার প্রিন্ট আর সার্ভারে PDF (CR80), ব্যাচ প্রিন্ট | 3 |
 | Finger image upload | Biometric enrollment (driver-ভিত্তিক), quality score, এনক্রিপ্টেড template | 4 |
 | Card Print History report, Expired card report | রিপোর্ট আর অ্যাডভান্সড ফিল্টার, Excel/PDF এক্সপোর্ট, মেয়াদ শেষের রিমাইন্ডার | 5 |
-| CSV import | ভ্যালিডেশনসহ ইমপোর্ট উইজার্ড (queue-তে চলবে) | 5 |
+| CSV import | CSV/XLSX ইমপোর্ট: যাচাই, প্রিভিউ, queue, ইতিহাস, পুরনো কলামের নাম চেনে ✅ (কার্ডের কলাম Phase 3-এ) | 2 |
 | — (নতুন) | **আইডি কার্ডের অ্যাপয়েন্টমেন্ট** আর স্বয়ংক্রিয় ইমেইল/SMS | 5 |
 | — (নতুন) | Webhooks, API tokens, SSO (OIDC/SAML) | 6 |
 | Website (slider, gallery, content) | বাদ। এটা আইডি কার্ড সিস্টেমের অংশ নয় | — |
@@ -58,7 +61,7 @@
 ## ৪. Phase পরিকল্পনা
 
 - **Phase 1: ভিত্তি।** ✅ সম্পন্ন (৩ অক্টোবর ২০২৬)। Docker, tenancy, custom auth (MFA সহ), RBAC, users, audit, SPA shell, i18n (en/bn), ২৮টা feature test।
-- **Phase 2: Master data।** Tenant settings আর ব্র্যান্ডিং, lookup lists, cardholders + কাস্টম ফিল্ড + পরিবার + ডকুমেন্ট, অ্যাডভান্সড ফিল্টার। 🔄 চলছে: Master Data সম্পন্ন; Cardholder ব্যাকএন্ড আর ফাইল আপলোড সম্পন্ন; পরের কাজ Cardholder পেজ। বিস্তারিত: [PROGRESS.md](PROGRESS.md)।
+- **Phase 2: Master data।** ✅ সম্পন্ন (৩ অক্টোবর ২০২৬)। Lookup lists, cardholders (ফাইল, পরিবার, শিক্ষা, কাস্টম ফিল্ড), অ্যাডভান্সড ফিল্টার, CSV/XLSX ইমপোর্ট, ১১২টা টেস্ট। কার্ড নম্বরের ফরম্যাট সেটিং কার্ড মডিউলের সাথে Phase 3-এ যাবে। বিস্তারিত: [PROGRESS.md](PROGRESS.md)। বিস্তারিত: [PROGRESS.md](PROGRESS.md)।
 - **Phase 3: কার্ড।** টেমপ্লেট ডিজাইনার, signatories, নম্বর সিকোয়েন্স, issuance আর প্রিন্ট, PDF, স্বাক্ষরিত QR ও ভেরিফিকেশন।
 - **Phase 4: Biometrics।** Driver interface, simulator আর upload, bridge agent spec, enrollment UI।
 - **Phase 5: অপারেশন।** অ্যাপয়েন্টমেন্ট আর নোটিফিকেশন (ইমেইল/SMS), রিপোর্ট আর এক্সপোর্ট, মেয়াদ শেষের রিমাইন্ডার, ইমপোর্ট।
@@ -89,6 +92,7 @@ docker compose up -d --build
 docker compose exec app composer install
 docker compose exec app php artisan key:generate
 docker compose exec app php artisan migrate --seed
+docker compose exec app php artisan storage:link
 docker compose --profile dev up -d vite   # ডেভেলপমেন্টে hot reload
 ```
 

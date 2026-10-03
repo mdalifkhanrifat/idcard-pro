@@ -1,7 +1,7 @@
 # IDCard Pro: কাজের অগ্রগতি ও হ্যান্ডঅফ
 
 > নতুন চ্যাট বা নতুন ডেভেলপার এই ফাইল থেকে শুরু করবেন। পুরো পরিকল্পনা আছে [ROADMAP.md](ROADMAP.md)-এ।
-> সর্বশেষ আপডেট: ৩ অক্টোবর ২০২৬, Phase 1, Master Data আর Cardholder ব্যাকএন্ড (২.৩ক) আর ছবি/সই/ডকুমেন্ট আপলোড (২.৩খ) সম্পন্ন।
+> সর্বশেষ আপডেট: ৩ অক্টোবর ২০২৬। **Phase 1 আর Phase 2 সম্পন্ন।** পরের কাজ Phase 3 (কার্ড)।
 
 ---
 
@@ -16,13 +16,15 @@
 | ধাপ | বিষয় | মূল ফাইল/ফোল্ডার |
 |---|---|---|
 | Phase 1 | Docker, multi-tenancy, কাস্টম লগইন (lockout, TOTP MFA, পাসওয়ার্ড রিসেট, API token), রোল-পারমিশন, ইউজার, অডিট লগ, SPA শেল, en/bn, লাইট/ডার্ক | `docker/`, `compose.yaml`, `app/Support/Tenancy`, `app/Services/Auth`, `resources/js` |
-| 2.1 | Master Data ব্যাকএন্ড: ১২টা রেফারেন্স তালিকা, প্যারেন্ট-চাইল্ড, ডিফল্ট আইটেম | `config/master_data.php`, `app/Services/MasterData` |
-| 2.2 | Master Data পেজ (সেটআপ → মাস্টার ডেটা) | `resources/js/pages/master-data` |
+| 2.1–2.2 | Master Data: ১২টা রেফারেন্স তালিকা, প্যারেন্ট-চাইল্ড, ডিফল্ট আইটেম, ব্যবস্থাপনার পেজ | `config/master_data.php`, `app/Services/MasterData`, `pages/master-data` |
 | R1–R4 | সব মডিউল Controller → Service → Repository কাঠামোয় | `app/Services`, `app/Repositories`, `app/Data` |
-| 2.3খ | কার্ডধারীর ফাইল: ছবি, সই (একটা চালু, পুরনোগুলো সংরক্ষিত), একাধিক ডকুমেন্ট; ছবি পরিশোধন; private disk; signed link | `config/cardholder_files.php`, `app/Services/Cardholders/CardholderFileService.php`, `app/Support/Media` |
-| 2.3ক | Cardholder ব্যাকএন্ড: `cardholders` টেবিল, CRUD API, ১২টা ফিল্টার, master data FK যাচাই (টাইপ, tenant, unit↔department, sub_region↔region), ব্যবহৃত master data মোছা বন্ধ | `app/Services/Cardholders`, `app/Models/Cardholder.php` |
+| 2.3 | কার্ডধারী: CRUD API, ১২টা ফিল্টার, তালিকা, ছয় ট্যাবের ফর্ম, বিস্তারিত পেজ | `app/Services/Cardholders`, `pages/cardholders` |
+| 2.3খ | কার্ডধারীর ফাইল: ছবি ও সই (সংস্করণসহ), একাধিক ডকুমেন্ট, ছবি পরিশোধন, private disk, signed link | `config/cardholder_files.php`, `CardholderFileService`, `app/Support/Media` |
+| 2.4 | পরিবারের সদস্য (বিস্তারিত পেজের ট্যাব) | `FamilyMemberService`, `CardholderFamily.vue` |
+| 2.5 | শিক্ষা ও প্রশিক্ষণ কোর্স (এক টেবিলে), কাস্টম ফিল্ড (সেটআপ পেজ, প্রিসেট, ফর্ম ট্যাব, ফিল্টার) | `QualificationService`, `app/Services/CustomFields`, `config/custom_field_presets.php`, `pages/custom-fields` |
+| 2.6 | CSV/XLSX ইমপোর্ট: যাচাই আর প্রিভিউ, queue-তে ইমপোর্ট, ইতিহাস, টেমপ্লেট | `CardholderImportService`, `CardholderImportMapper`, `app/Jobs/ImportCardholders.php`, `app/Support/Spreadsheets`, `config/cardholder_import.php` |
 
-**মান:** ৮৫টা টেস্ট পাস (৭৮ feature + ৭ unit), Larastan (level 5) আর Pint পরিষ্কার, TypeScript টাইপ-চেক পরিষ্কার।
+**মান:** ১১২টা টেস্ট পাস (১০১ feature + ১১ unit), Larastan (level 5) আর Pint পরিষ্কার, TypeScript টাইপ-চেক পরিষ্কার। প্রতিটা পেজ headless Chrome-এ চালিয়ে যাচাই করা হয়েছে।
 
 **বর্তমান মডিউল আর তাদের service:**
 
@@ -34,9 +36,13 @@
 | অডিট | `Audit\AuditService` | `ActivityRepository`, `LoginEventRepository` |
 | লগইন | `Auth\AuthenticationService`, `Auth\PasswordResetService`, `Auth\TwoFactorAuthenticator` | `UserRepository`, `PasswordResetTokenRepository` |
 | নিজের অ্যাকাউন্ট | `Account\AccountService` | `UserRepository` |
-| মাস্টার ডেটা | `MasterData\MasterDataService` | `MasterDataRepository`, `CardholderRepository` (ব্যবহার যাচাই) |
-| কার্ডধারী | `Cardholders\CardholderService` | `CardholderRepository`, `MasterDataRepository` |
+| মাস্টার ডেটা | `MasterData\MasterDataService` | `MasterDataRepository`, `CardholderRepository` ও `FamilyMemberRepository` (ব্যবহার যাচাই) |
+| কার্ডধারী | `Cardholders\CardholderService`, `Cardholders\CardholderValidator` (ফর্ম আর ইমপোর্টের একই নিয়ম) | `CardholderRepository`, `MasterDataRepository` |
 | কার্ডধারীর ফাইল | `Cardholders\CardholderFileService` (+ `Support\Media\ImageSanitizer`) | `CardholderFileRepository` |
+| পরিবারের সদস্য | `Cardholders\FamilyMemberService` | `FamilyMemberRepository` |
+| শিক্ষা ও কোর্স | `Cardholders\QualificationService` | `QualificationRepository` |
+| কাস্টম ফিল্ড | `CustomFields\CustomFieldService` | `CustomFieldRepository` |
+| ইমপোর্ট | `Cardholders\CardholderImportService`, `Cardholders\CardholderImportMapper` (+ `Support\Spreadsheets\TabularFileReader`) | `CardholderImportRepository` |
 
 ## ৩. চালানো
 
@@ -44,13 +50,16 @@
 cd idcard-pro
 docker compose up -d                                   # app, web, mysql, redis, mailpit, queue, scheduler
 docker compose exec app php artisan migrate --seed     # প্রথমবার (বা migrate:fresh --seed)
+docker compose exec app php artisan storage:link       # প্রথমবার: প্রতিষ্ঠানের লোগো দেখানোর জন্য
 docker compose run --rm --no-deps vite npm run build   # ফ্রন্টএন্ড বিল্ড
 docker compose --profile dev up -d vite                # অথবা hot reload
+docker compose restart queue                           # PHP কোড বদলানোর পর (ইমপোর্টের জব queue-তে চলে)
 ```
 
 - অ্যাপ: http://localhost:8080 (`127.0.0.1:8080`-ও চলে)
 - ইমেইল দেখা: http://localhost:8025 (Mailpit, কোনো ইমেইল বাইরে যায় না)
 - ডেমো লগইন: `owner@acme.test` / প্রতিষ্ঠান `acme` / `Demo@Pass2026!` (প্ল্যাটফর্ম অ্যাডমিন: `platform@idcard.local`, প্রতিষ্ঠান ফাঁকা)
+- ডেমো ডেটা: ৪০ জন বানানো কার্ডধারী আর বিভাগভিত্তিক ইউনিট (`DemoCardholderSeeder`)। এগুলো আসল কোনো ব্যক্তির তথ্য নয়।
 
 **মান যাচাই** (প্রতিটা ধাপের শেষে চালাতে হবে):
 ```bash
@@ -63,6 +72,8 @@ docker compose run --rm --no-deps vite npx vue-tsc --noEmit
 **দরকারি কমান্ড:**
 - `php artisan app:sync-permissions`: `config/permissions.php` থেকে পারমিশন সিঙ্ক করে। Owner রোল সবসময় সব পারমিশন পায়।
 - `php artisan app:sync-master-data`: বর্তমান প্রতিষ্ঠানগুলোতে নতুন ডিফল্ট master data যোগ করে। বারবার চালানো নিরাপদ।
+
+**API এক নজরে (Phase 2):** `/api/v1/cardholders` (+ `/{id}/files`, `/{id}/family-members`, `/{id}/qualifications`), `/api/v1/custom-fields` (+ `/presets`), `/api/v1/cardholder-imports` (+ `/template`, `/{id}/start`), `/api/v1/cardholder-files/{id}` (signed link, লগইন লাগে না)।
 
 ## ৪. নতুন মডিউল যোগ করার চেকলিস্ট
 
@@ -123,73 +134,69 @@ docker compose run --rm --no-deps vite npx vue-tsc --noEmit
 | কন্টেইনার রিস্টার্টের পর nginx 502 | `docker/nginx/default.conf`-এ resolver দিয়ে ঠিক করা আছে |
 | spatie Role-এর `users()` সম্পর্ক Sanctum guard-এ 500 দেয় | `App\Models\Role` ব্যবহার করুন (`config/permission.php`-এ সেট করা আছে) |
 | রাউট গ্রুপে `whereIn` | `->group()`-এর **আগে** বসাতে হবে, পরে বসালে কাজ করে না |
+| প্রতিষ্ঠানের লোগো `/storage/...`-এ 403 | `public/storage` লিংক নেই। `php artisan storage:link` চালান (gitignore-এ আছে, তাই প্রতি নতুন সেটআপে একবার) |
+| ইমপোর্ট "Queued" অবস্থায় আটকে থাকে | queue worker পুরনো কোড চালাচ্ছে। `docker compose restart queue` |
+| FormRequest-এ `validator()` নামে নিজের মেথড | Laravel এটাকে নিজের hook হিসেবে ডাকে। অন্য নাম দিন |
+| `apiResource`-এ `$this->route('customField')` null | রাউট প্যারামিটার snake_case (`custom_field`)। Controller-এর আর্গুমেন্ট camelCase হলেও চলে |
+| `type="number"` ইনপুটের মান `.trim()`-এ এরর | Vue এই মানকে সংখ্যা বানায়। `String(value ?? '').trim()` |
+| Signed link এক হোস্টে বানানো, অন্য হোস্টে 403 | ফাইলের লিংক relative signed (`signed:relative`), তাই `localhost` আর `127.0.0.1` দুটোতেই চলে |
 
-## ৭. পরের ধাপ (এই ক্রমে)
+## ৭. Phase 2-এ নেওয়া সিদ্ধান্ত (পরের কাজের জন্য জরুরি)
 
-### ধাপ ২.৩: Cardholder (কার্ডধারী), মূল রেকর্ড
-পুরনো "Employee Info" বা ব্যক্তিগত তথ্য + অফিসের তথ্যের সমান। একসাথে না করে উপ-ধাপে ভাগ করে করতে হবে।
-
-**২.৩ক, ব্যাকএন্ড:** ✅ সম্পন্ন। `cardholders` টেবিল (tenant-scoped, `public_id`)
-
-| ভাগ | ফিল্ড (পুরনো সিস্টেমে যা ছিল) |
-|---|---|
-| পরিচয় | `full_name`, `full_name_local`, `date_of_birth`, `gender`, `marital_status`, `nationality`, `national_id`, `passport_no`, `blood_group_id`, `religion_id` (দুটোই master_data FK) |
-| যোগাযোগ | `email`, `personal_phone`, `emergency_phone`, `present_address`, `permanent_address`, `region_id`, `sub_region_id` (master_data), `postal_code` |
-| শারীরিক বৈশিষ্ট্য | `height`, `weight`, `eye_color`, `complexion`, `identification_mark` |
-| অফিস | `employee_no` (পুরনো service no, প্রতি tenant-এ unique), `secondary_no` (পুরনো TS no), `department_id`, `unit_id`, `rank_id`, `designation_id`, `branch_id`, `trade_id`, `appointment_id`, `joining_date`, `retirement_date`, `retired_id_no`, `posting`, `previous_office`, `employment_type` (staff / contractor / visitor ইত্যাদি) |
-| বাইরের প্রতিষ্ঠান | `company_name`, `company_address`, `company_phone` (ঠিকাদার বা অতিথির জন্য) |
-| অবস্থা | `status` (active / inactive / retired), `created_by` |
-
-- **Media আলাদা টেবিলে:** ছবি, সই, ডকুমেন্ট, PDF সবকিছুর জন্য `cardholder_files` (type, private disk, signed URL)। পুরনো সিস্টেমে `picture`, `holder_sign`, `pdf`, `files` ছিল। **আঙুলের ছাপ Phase 4-এ আলাদা।**
-- Master data FK সবসময় একই tenant-এর আর সঠিক টাইপের হতে হবে। এটা ভ্যালিডেশনে যাচাই করতে হবে।
-- **ফিল্টার:** নাম, employee no, ফোন, বিভাগ, র‍্যাংক, পদবি, শাখা, রক্তের গ্রুপ, অবস্থা, যোগদানের তারিখের সীমা।
-
-**২.৩ক-তে নেওয়া সিদ্ধান্ত:**
+**কার্ডধারী (২.৩):**
 - `employee_no` আর `national_id` ঐচ্ছিক, তবে থাকলে প্রতি tenant-এ unique।
 - API-তে master data FK যায় `public_id` হিসেবে (`department_id` ইত্যাদি), রেসপন্সে `department: {id, name, name_local}`। কলাম → টাইপের ম্যাপ `Cardholder::LOOKUPS`।
-- অডিট লগে শুধু নাম, নম্বর, অফিস আর অবস্থার ফিল্ড; NID, পাসপোর্ট, ফোন, ঠিকানা লগ হয় না।
-- মুছলে এখন hard delete। Phase 3-এ কার্ড ইস্যু থাকলে মোছা আটকাতে হবে।
+- `unit` অবশ্যই নির্বাচিত `department`-এর, আর `sub_region` নির্বাচিত `region`-এর হতে হবে। ব্যবহৃত master data মোছা যায় না (422)।
+- অডিট লগে শুধু নাম, নম্বর, অফিস আর অবস্থা লেখা হয়। NID, পাসপোর্ট, ফোন আর ঠিকানা কখনো লগ হয় না।
+- মুছলে এখন hard delete, সাথে ফাইল, পরিবার আর শিক্ষার রেকর্ডও মোছে। **Phase 3-এ কার্ড ইস্যু থাকলে মোছা আটকাতে হবে।**
 
-**২.৩খ, ফাইল:** ✅ সম্পন্ন।
-- কোন ধরনের ফাইল রাখা যাবে তার তালিকা `config/cardholder_files.php`-এ: `photo` (পুরনো `picture`), `signature` (পুরনো `holder_sign`), `document` (পুরনো `pdf` + `files`, একাধিক, শিরোনামসহ)। নতুন ধরন যোগ করতে শুধু config-এ একটা এন্ট্রি লাগবে।
-- `photo` আর `signature` একটাই চালু থাকে। নতুন আপলোড দিলে পুরনোটা মোছে না, `replaced_at` দিয়ে সংরক্ষিত থাকে (`?include_replaced=1`)। **Phase 3-এ কার্ড ইস্যুর রেকর্ড এই ফাইলের id ধরে রাখবে**, যাতে কার্ডে ছাপা ছবি আর রেকর্ডের ছবি সবসময় মেলে।
-- ছবি GD দিয়ে নতুন করে encode হয়: EXIF/GPS মুছে যায়, ছবি সঠিক দিকে ঘোরে, সর্বোচ্চ মাপ সীমিত থাকে। স্বচ্ছ সই PNG থাকে, বাকি সব JPEG।
-- MIME যাচাই হয় ফাইলের আসল কনটেন্ট দেখে। ফাইলনাম এলোমেলো রাখা হয়, ডিস্ক private (`CARDHOLDER_FILES_DISK`, পরে S3-ও চলবে)।
-- ফাইল দেখা যায় শুধু ১৫ মিনিট মেয়াদের relative signed link দিয়ে (`/api/v1/cardholder-files/{id}`), সাথে `nosniff` আর CSP হেডার থাকে।
-- কার্ডধারী মুছলে তার ফাইলের রেকর্ড cascade হয়ে মুছে যায়, তারপর ডিস্ক থেকে ফাইলগুলোও মোছা হয়।
-- আঙুলের ছাপ এখানে নেই। সেটা Phase 4-এ এনক্রিপ্ট করে আলাদাভাবে রাখা হবে।
+**ফাইল (২.৩খ):**
+- ফাইলের ধরন `config/cardholder_files.php`-এ: `photo` (পুরনো `picture`), `signature` (পুরনো `holder_sign`), `document` (পুরনো `pdf` + `files`)।
+- ছবি আর সই একটাই চালু থাকে, পুরনোগুলো `replaced_at` দিয়ে সংরক্ষিত। **Phase 3-এর কার্ড ইস্যু যে ফাইল ছাপা হয়েছিল তার id ধরে রাখবে।** চালু ছবি মুছলে আগের সংস্করণ নিজে থেকে চালু হয় না।
+- ছবি GD দিয়ে নতুন করে encode হয় (EXIF/GPS মোছে, দিক ঠিক করে, মাপ সীমিত করে)। লিংক ১৫ মিনিটের।
 
-**➡️ পরের কাজ, ২.৩গ:** Cardholder লিস্ট পেজ ও ফিল্টার (ছবির থাম্বনেইলসহ)। **২.৩ঘ:** তৈরি ও সম্পাদনার ফর্ম (ট্যাবে ভাগ করা, ছবি/সই আপলোড আর প্রিভিউসহ)। **২.৩ঙ:** বিস্তারিত দেখার পেজ (ডকুমেন্ট তালিকা আর ছবির পুরনো সংস্করণসহ)।
+**পরিবার (২.৪):** পুরনো সব ঘর আছে। পুরনো সিস্টেমে রক্তের গ্রুপ ফর্মে নেওয়া হলেও DB-তে সেভ হতো না, এখানে ঠিক করা হয়েছে। স্বামী/স্ত্রী, ভাই/বোন আর অন্যান্য সম্পর্ক যোগ হয়েছে। `card_no` এখন হাতে লেখা নম্বর। পরিবারের কার্ড আর টেমপ্লেট Phase 3-এ।
 
-**পরে বিবেচনার জন্য (নতুন ফিচারের প্রস্তাব):** ব্রাউজারে ছবি ক্রপ করা (কার্ডের অনুপাতে), ওয়েবক্যাম থেকে সরাসরি ছবি তোলা, সই-এর পটভূমি স্বয়ংক্রিয়ভাবে স্বচ্ছ করা, ডকুমেন্টের মেয়াদ শেষের তারিখ।
+**শিক্ষা ও কোর্স (২.৫):** একটাই `qualifications` টেবিল (`kind` = education / course)। পুরনো `other_courses` কোনো ব্যক্তির সাথে যুক্ত ছিল না, এটা পুরনো সিস্টেমের বাগ ছিল।
 
-### ধাপ ২.৪: পরিবারের সদস্য
-পুরনো `family_infos`-এ ছিল: relation, name, gender, mobile, dob, blood group, nid, passport, identification remark, card no।
-নতুন `cardholder_family_members` টেবিল হবে। পরিবারের কার্ড Phase 3-এ আসবে।
+**কাস্টম ফিল্ড (২.৫):**
+- সংজ্ঞা থাকে `custom_fields` টেবিলে, মান থাকে `cardholders.custom_fields` (JSON)-এ।
+- ধরন: text, textarea, number, date, select, checkbox। key, ধরন আর entity তৈরির পর বদলানো যায় না।
+- নিষ্ক্রিয় বা মোছা ঘরের পুরনো মান রেকর্ডে থেকে যায়।
+- পুরনো `student_information` (class, section, session, registration) এখন "student" প্রিসেট। নতুন প্রিসেট যোগ হয় `config/custom_field_presets.php`-এ।
+- `entity` কলাম রাখা আছে, যাতে পরে পরিবারের সদস্যদের জন্যও চালু করা যায়।
+- ফিল্টার: `filter[custom][key]=value`। তালিকায় select আর checkbox ঘরগুলো ফিল্টার হিসেবে দেখায়।
 
-### ধাপ ২.৫: শিক্ষা, কোর্স আর অতিরিক্ত তথ্য
-- পুরনো `education_infos`: exam, board, passing year, group, degree, gpa।
-- পুরনো `other_courses`: course name, institute, year, result, certificate no।
-- পুরনো `student_information`: class, section, session, registration।
-- **প্রস্তাব:** শিক্ষা আর কোর্স আলাদা টেবিলে থাকবে। ছাত্রের তথ্য আর প্রতিষ্ঠানভেদে বাড়তি ঘরের জন্য **কাস্টম ফিল্ড** ব্যবস্থা থাকবে (প্রতি tenant নিজের ফিল্ড সংজ্ঞায়িত করবে)।
+**ইমপোর্ট (২.৬):**
+- ধাপ: আপলোড → সব সারি যাচাই, DB-তে কিছু লেখা হয় না → প্রিভিউ → শুরু → queue জব → ফলাফল। কাজ শেষে ফাইল মুছে যায়।
+- হেডার মেলানো হয় নাম দিয়ে, পুরনো নামসহ (`service no`, `ts no`, `bg_group`, `dob`, `district`, `upazila`...)। তালিকা আছে `config/cardholder_import.php`-এ। কাস্টম ফিল্ড মেলে key বা লেবেল দিয়ে।
+- অপশন: অজানা master data তৈরি (ইউনিট তৈরি হয় তার বিভাগের ভেতরে), আর employee no মিললে আগের রেকর্ড হালনাগাদ।
+- প্রতিটা সারি আলাদা ট্রানজ্যাকশনে যায়। তারিখ চলে Y-m-d, d/m/Y, d-m-Y আর Excel serial।
+- XLSX পড়া হয় নিজস্ব হালকা রিডার দিয়ে (`zip` + `xmlreader`), কোনো নতুন প্যাকেজ নেই। শুধু প্রথম শিট পড়া হয়, ফর্মুলার ফল (cached value) নেওয়া হয়।
+- **পুরনো ইমপোর্টের কার্ডের কলাম** (card no, issue date, last print date/time, notes) এখন "বাদ পড়া কলাম" হিসেবে দেখায়। **Phase 3-এ কার্ড মডিউলের সাথে এগুলো যোগ করতে হবে।**
+- পারমিশন `cardholders.import` (Owner আর Administrator)।
 
-### ধাপ ২.৬: CSV/Excel ইমপোর্ট
-পুরনো সিস্টেমে লগইন ছাড়া CSV আপলোড ছিল। নতুনটায় হবে: অনুমতি লাগবে, আগে প্রিভিউ আর যাচাই, তারপর queue-তে ইমপোর্ট।
+## ৮. পরের ধাপ: Phase 3, কার্ড (পুরনো সিস্টেমের মূল কাজ)
 
-### Phase 3: কার্ড (পুরনো সিস্টেমের মূল কাজ)
-- **টেমপ্লেট** (পুরনো `templates`): title, type, authority type, code, structure (horizontal/vertical), width/height (px/mm), status।
-- **সেকশন** (পুরনো `template_sections`): section type (লোগো, ব্যাকগ্রাউন্ড, ছবি, সই, ডেটাবেস ফিল্ড, QR, টেক্সট), field binding, label, ফন্ট, সাইজ, রঙ, পজিশন, সামনে/পেছনে।
-- **Signatories** (পুরনো `authorized_signatures`): name, designation, signature image, authority type, status।
-- **কার্ড ইস্যু** (পুরনো `card_information` + `card_print_history`): নম্বর ফরম্যাট (`CODE/YY######`, তবে কনফিগারযোগ্য), কারণ (new / promotion / lost), নোট, মেয়াদ, RF card no।
-- **পুরনো দুটো বাগ এখানে এড়াতে হবে:**
-  - কার্ডে ছাপা নম্বর আর রেকর্ডের নম্বর আলাদা হয়ে যেত।
-  - একই নম্বর একাধিক কার্ডে বসে যেত। সমাধান: unique নিয়ম + `lockForUpdate`।
-- স্বাক্ষরিত QR + পাবলিক ভেরিফিকেশন পেজ, সার্ভারে PDF বানানো, ব্যাচ প্রিন্ট।
+প্রস্তাবিত ক্রম। প্রতিটা ভাগ ব্যাকএন্ড আর পেজ আলাদা করে করতে হবে, আগের মতো।
+
+1. **৩.১ Signatories** (পুরনো `authorized_signatures` + authority type): name, designation, signature image (ফাইল ব্যবস্থার মতো private + পরিশোধন), authority type (master data `authority_type` আগেই আছে), কার্যকর তারিখ, status।
+2. **৩.২ কার্ড নম্বরের ফরম্যাট:** tenant settings-এ ফরম্যাট (`{CODE}/{YY}{SEQ:6}` ধরনের) আর `card_sequences` টেবিল। নম্বর তৈরি হবে `lockForUpdate` আর unique `(tenant_id, number)` দিয়ে।
+3. **৩.৩ টেমপ্লেট** (পুরনো `templates` + template type): title, type (কর্মী/পরিবার/অতিথি...), code, orientation, width/height (mm), সামনে/পেছনে, status, সংস্করণ।
+4. **৩.৪ টেমপ্লেট ডিজাইনার** (পুরনো `template_sections`): লোগো, ব্যাকগ্রাউন্ড, ছবি, সই, ডেটাবেস ফিল্ড (কাস্টম ফিল্ডসহ), QR, টেক্সট; পজিশন, ফন্ট, রঙ; ড্র্যাগ-ড্রপ।
+5. **৩.৫ কার্ড ইস্যু** (পুরনো `card_information`): কারণ (new / promotion / lost / renewal), নোট, মেয়াদ, RF card no। প্রতিবার ইস্যুতে নতুন রেকর্ড, আগের কার্ড বাতিল। **যে ছবি, সই আর টেমপ্লেট সংস্করণ ব্যবহার হলো তার id রাখতে হবে।** পরিবারের সদস্যের কার্ডও এখানে।
+6. **৩.৬ প্রিন্ট আর ইতিহাস** (পুরনো `card_print_history`): ব্রাউজার প্রিন্ট আর সার্ভারে PDF (CR80), ব্যাচ প্রিন্ট, প্রতিটা প্রিন্ট ইউজারের নামে লগ।
+7. **৩.৭ স্বাক্ষরিত QR আর পাবলিক ভেরিফিকেশন পেজ।**
+8. **৩.৮ ইমপোর্টে কার্ডের কলাম** (উপরে দেখুন) আর কার্ডধারী মোছার নিয়ম (কার্ড থাকলে মোছা যাবে না)।
+
+**পুরনো দুটো বাগ এড়াতে হবে:** কার্ডে ছাপা নম্বর আর রেকর্ডের নম্বর আলাদা হয়ে যাওয়া, আর একই নম্বর একাধিক কার্ডে বসে যাওয়া।
+
+**নতুন ফিচারের প্রস্তাব (পরে বিবেচনার জন্য):** ব্রাউজারে কার্ডের অনুপাতে ছবি ক্রপ, ওয়েবক্যাম থেকে সরাসরি ছবি, সই-এর পটভূমি স্বয়ংক্রিয়ভাবে স্বচ্ছ করা, ডকুমেন্টের মেয়াদের তারিখ, পরিবারের সদস্যদের কাস্টম ফিল্ড, ইমপোর্টের এরর রিপোর্ট CSV হিসেবে ডাউনলোড।
 
 ### Phase 4–6
 বায়োমেট্রিক ড্রাইভার → অ্যাপয়েন্টমেন্ট আর নোটিফিকেশন (ইমেইল/SMS) → রিপোর্ট আর এক্সপোর্ট → webhooks আর SSO। বিস্তারিত আছে ROADMAP-এ।
 
-## ৮. নতুন চ্যাট শুরু করার প্রম্পট (কপি করে দিন)
+## ৯. নতুন চ্যাট শুরু করার প্রম্পট (কপি করে দিন)
 
 ```
 আমি /var/www/php74/idcard/idcard-pro প্রজেক্টে কাজ চালিয়ে যেতে চাই।
