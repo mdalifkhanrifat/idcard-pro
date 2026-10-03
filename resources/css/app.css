@@ -1,0 +1,74 @@
+@import 'tailwindcss';
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@source '../../storage/framework/views/*.php';
+
+/*
+ * Design tokens. `--brand` is overridden at runtime with the organization's colour.
+ */
+:root {
+    --brand: #0f62fe;
+    --brand-contrast: #ffffff;
+
+    --bg: #f6f7f9;
+    --surface: #ffffff;
+    --surface-2: #f1f3f6;
+    --border: #e3e6eb;
+    --text: #111827;
+    --text-muted: #5b6474;
+    --danger: #d92d20;
+    --success: #079455;
+    --warning: #dc6803;
+    --ring: color-mix(in oklab, var(--brand) 35%, transparent);
+}
+
+.dark {
+    --bg: #0b0d12;
+    --surface: #12151c;
+    --surface-2: #1a1e27;
+    --border: #262b36;
+    --text: #e8ebf0;
+    --text-muted: #9aa3b2;
+    --danger: #f97066;
+    --success: #47cd89;
+    --warning: #fdb022;
+}
+
+@theme inline {
+    --font-sans: 'Inter', 'Noto Sans Bengali', ui-sans-serif, system-ui, sans-serif;
+    --color-brand: var(--brand);
+    --color-brand-contrast: var(--brand-contrast);
+    --color-bg: var(--bg);
+    --color-surface: var(--surface);
+    --color-surface-2: var(--surface-2);
+    --color-line: var(--border);
+    --color-fg: var(--text);
+    --color-muted: var(--text-muted);
+    --color-danger: var(--danger);
+    --color-success: var(--success);
+    --color-warning: var(--warning);
+}
+
+@layer base {
+    html {
+        color-scheme: light;
+    }
+
+    html.dark {
+        color-scheme: dark;
+    }
+
+    body {
+        @apply bg-bg text-fg font-sans antialiased;
+    }
+
+    :lang(bn) body {
+        line-height: 1.6;
+    }
+
+    :focus-visible {
+        outline: 2px solid var(--ring);
+        outline-offset: 2px;
+    }
+}
