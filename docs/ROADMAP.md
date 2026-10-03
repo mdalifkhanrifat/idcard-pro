@@ -57,7 +57,7 @@
 ## ৪. Phase পরিকল্পনা
 
 - **Phase 1: ভিত্তি।** ✅ সম্পন্ন (৩ অক্টোবর ২০২৬)। Docker, tenancy, custom auth (MFA সহ), RBAC, users, audit, SPA shell, i18n (en/bn), ২৮টা feature test।
-- **Phase 2: Master data।** Tenant settings আর ব্র্যান্ডিং, lookup lists, cardholders + কাস্টম ফিল্ড + পরিবার + ডকুমেন্ট, অ্যাডভান্সড ফিল্টার।
+- **Phase 2: Master data।** Tenant settings আর ব্র্যান্ডিং, lookup lists, cardholders + কাস্টম ফিল্ড + পরিবার + ডকুমেন্ট, অ্যাডভান্সড ফিল্টার। 🔄 চলছে: Master Data (তালিকা ও পেজ) সম্পন্ন; পরের কাজ Cardholder। বিস্তারিত: [PROGRESS.md](PROGRESS.md)।
 - **Phase 3: কার্ড।** টেমপ্লেট ডিজাইনার, signatories, নম্বর সিকোয়েন্স, issuance আর প্রিন্ট, PDF, স্বাক্ষরিত QR ও ভেরিফিকেশন।
 - **Phase 4: Biometrics।** Driver interface, simulator আর upload, bridge agent spec, enrollment UI।
 - **Phase 5: অপারেশন।** অ্যাপয়েন্টমেন্ট আর নোটিফিকেশন (ইমেইল/SMS), রিপোর্ট আর এক্সপোর্ট, মেয়াদ শেষের রিমাইন্ডার, ইমপোর্ট।
