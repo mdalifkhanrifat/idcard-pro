@@ -42,6 +42,7 @@ const routes: RouteRecordRaw[] = [
             { path: 'cardholders/:id', name: 'cardholders.show', component: () => import('@/pages/cardholders/CardholderShowPage.vue'), meta: { permission: 'cardholders.view', title: 'nav.cardholders' } },
             { path: 'cardholders', name: 'cardholders', component: () => import('@/pages/cardholders/CardholdersPage.vue'), meta: { permission: 'cardholders.view', title: 'nav.cardholders' } },
             { path: 'master-data/:type?', name: 'master-data', component: () => import('@/pages/master-data/MasterDataPage.vue'), meta: { permission: 'master_data.view', title: 'nav.masterData' } },
+            { path: 'signatories', name: 'signatories', component: () => import('@/pages/signatories/SignatoriesPage.vue'), meta: { permission: 'signatories.view', title: 'nav.signatories' } },
             { path: 'custom-fields', name: 'custom-fields', component: () => import('@/pages/custom-fields/CustomFieldsPage.vue'), meta: { permission: 'settings.view', title: 'nav.customFields' } },
             { path: 'audit', name: 'audit', component: () => import('@/pages/audit/AuditPage.vue'), meta: { permission: 'audit.view', title: 'nav.audit' } },
             { path: 'settings', name: 'settings', component: () => import('@/pages/settings/OrganizationPage.vue'), meta: { permission: 'settings.view', title: 'nav.settings' } },

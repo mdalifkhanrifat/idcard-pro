@@ -93,7 +93,8 @@
         "masterData": "Master data",
         "setup": "Setup",
         "records": "Records",
-        "customFields": "Custom fields"
+        "customFields": "Custom fields",
+        "signatories": "Signatories"
     },
     "dashboard": {
         "welcome": "Welcome, {name}",
@@ -516,5 +517,28 @@
             "select": "Drop-down",
             "checkbox": "Yes / no"
         }
+    },
+    "signatories": {
+        "title": "Signatories",
+        "subtitle": "Officials whose signatures are printed on ID cards.",
+        "new": "New signatory",
+        "editTitle": "Edit signatory",
+        "empty": "No signatories yet.",
+        "searchPlaceholder": "Name or designation",
+        "name": "Name",
+        "nameLocal": "Name (local language)",
+        "designation": "Designation",
+        "designationLocal": "Designation (local language)",
+        "authorityType": "Authority type",
+        "effectiveFrom": "Effective from",
+        "effectiveTo": "Effective to",
+        "period": "Effective period",
+        "active": "Active (can be used on new cards)",
+        "signature": "Signature",
+        "noSignature": "No signature",
+        "removeSignature": "Remove signature",
+        "deleteConfirm": "Delete {name}?",
+        "uploadFailed": "The signature could not be uploaded: {message}",
+        "always": "No limit"
     }
 }

@@ -93,7 +93,8 @@
         "masterData": "মাস্টার ডেটা",
         "setup": "সেটআপ",
         "records": "রেকর্ড",
-        "customFields": "কাস্টম ফিল্ড"
+        "customFields": "কাস্টম ফিল্ড",
+        "signatories": "সইকারী"
     },
     "dashboard": {
         "welcome": "স্বাগতম, {name}",
@@ -516,5 +517,28 @@
             "select": "ড্রপডাউন",
             "checkbox": "হ্যাঁ / না"
         }
+    },
+    "signatories": {
+        "title": "সইকারী",
+        "subtitle": "যাদের সই আইডি কার্ডে ছাপা হয়।",
+        "new": "নতুন সইকারী",
+        "editTitle": "সইকারী সম্পাদনা",
+        "empty": "এখনো কোনো সইকারী নেই।",
+        "searchPlaceholder": "নাম বা পদবি",
+        "name": "নাম",
+        "nameLocal": "নাম (বাংলায়)",
+        "designation": "পদবি",
+        "designationLocal": "পদবি (বাংলায়)",
+        "authorityType": "কর্তৃপক্ষের ধরন",
+        "effectiveFrom": "কার্যকর শুরু",
+        "effectiveTo": "কার্যকর শেষ",
+        "period": "কার্যকর সময়",
+        "active": "সক্রিয় (নতুন কার্ডে ব্যবহার করা যাবে)",
+        "signature": "সই",
+        "noSignature": "সই নেই",
+        "removeSignature": "সই মুছুন",
+        "deleteConfirm": "{name} মুছবেন?",
+        "uploadFailed": "সই আপলোড হয়নি: {message}",
+        "always": "সীমা নেই"
     }
 }

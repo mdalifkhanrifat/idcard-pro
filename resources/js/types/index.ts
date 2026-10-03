@@ -237,3 +237,17 @@ export interface CardholderImport {
     finished_at: string | null;
     created_at: string;
 }
+
+export interface Signatory {
+    id: string;
+    name: string;
+    name_local: string | null;
+    designation: string;
+    designation_local: string | null;
+    authority_type?: { id: string; name: string } | null;
+    signature_url: string | null;
+    effective_from: string | null;
+    effective_to: string | null;
+    is_active: boolean;
+    updated_at: string;
+}
