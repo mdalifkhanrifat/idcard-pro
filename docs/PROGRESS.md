@@ -1,7 +1,7 @@
 # IDCard Pro: কাজের অগ্রগতি ও হ্যান্ডঅফ
 
 > নতুন চ্যাট বা নতুন ডেভেলপার এই ফাইল থেকে শুরু করবেন। পুরো পরিকল্পনা আছে [ROADMAP.md](ROADMAP.md)-এ।
-> সর্বশেষ আপডেট: ৩ অক্টোবর ২০২৬। **Phase 1 আর Phase 2 সম্পন্ন।** পরের কাজ Phase 3 (কার্ড)।
+> সর্বশেষ আপডেট: ৩ অক্টোবর ২০২৬। **Phase 1 আর Phase 2 সম্পন্ন।** Phase 3 চলছে: ৩.১ক (Signatory টেবিল) সম্পন্ন, পরের কাজ ৩.১খ (§৮ দেখুন)।
 
 ---
 
@@ -180,7 +180,10 @@ docker compose run --rm --no-deps vite npx vue-tsc --noEmit
 
 প্রস্তাবিত ক্রম। প্রতিটা ভাগ ব্যাকএন্ড আর পেজ আলাদা করে করতে হবে, আগের মতো।
 
-1. **৩.১ Signatories** (পুরনো `authorized_signatures` + authority type): name, designation, signature image (ফাইল ব্যবস্থার মতো private + পরিশোধন), authority type (master data `authority_type` আগেই আছে), কার্যকর তারিখ, status।
+1. **৩.১ Signatories** (পুরনো `authorized_signatures`: name, designation, signature, status; authority type এখন master data `authority_type`)
+   - ✅ **৩.১ক সম্পন্ন:** `signatories` টেবিল (name/name_local, designation/designation_local, `authority_type_id`, `signature_disk`/`signature_path`, `effective_from`/`effective_to`, `is_active` ডিফল্ট false, পুরনো সিস্টেমের মতো), `Signatory` model + factory, `signatories.*` পারমিশন (Administrator সব)।
+   - ➡️ **এখান থেকে শুরু, ৩.১খ:** Repository + `SignatoryService` + Request + Resource + Controller + রাউট + টেস্ট। সই-এর ছবি `ImageSanitizer` দিয়ে পরিশোধন করে private ডিস্কে রাখতে হবে, আর signed link দিয়ে দেখাতে হবে (`CardholderFileService`-এর ধরন অনুসরণ করুন)। `authority_type_id` যাচাই করতে হবে একই tenant আর টাইপ `authority_type` দিয়ে। `MasterDataService::delete`-এর "ব্যবহৃত" চেকে signatory-ও যোগ করতে হবে।
+   - **৩.১গ:** সেটআপ → Signatories পেজ (তালিকা, ডায়ালগ, সই আপলোড আর প্রিভিউ)।
 2. **৩.২ কার্ড নম্বরের ফরম্যাট:** tenant settings-এ ফরম্যাট (`{CODE}/{YY}{SEQ:6}` ধরনের) আর `card_sequences` টেবিল। নম্বর তৈরি হবে `lockForUpdate` আর unique `(tenant_id, number)` দিয়ে।
 3. **৩.৩ টেমপ্লেট** (পুরনো `templates` + template type): title, type (কর্মী/পরিবার/অতিথি...), code, orientation, width/height (mm), সামনে/পেছনে, status, সংস্করণ।
 4. **৩.৪ টেমপ্লেট ডিজাইনার** (পুরনো `template_sections`): লোগো, ব্যাকগ্রাউন্ড, ছবি, সই, ডেটাবেস ফিল্ড (কাস্টম ফিল্ডসহ), QR, টেক্সট; পজিশন, ফন্ট, রঙ; ড্র্যাগ-ড্রপ।
