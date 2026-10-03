@@ -1,18 +1,11 @@
 <?php
 
 use App\Models\MasterDataItem;
-use App\Models\Tenant;
-use App\Support\Tenancy\TenantContext;
 use Laravel\Sanctum\Sanctum;
 
 beforeEach(function () {
     [$this->tenant, $this->owner] = tenantWithOwner();
 });
-
-function masterItem(Tenant $tenant, array $attributes): MasterDataItem
-{
-    return app(TenantContext::class)->run($tenant, fn () => MasterDataItem::factory()->create([...$attributes, 'tenant_id' => $tenant->id]));
-}
 
 it('seeds default blood groups for a new organization', function () {
     Sanctum::actingAs($this->owner);

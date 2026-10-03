@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
 use App\Http\Controllers\Api\V1\Auth\SessionController;
 use App\Http\Controllers\Api\V1\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\Api\V1\Auth\TwoFactorController;
+use App\Http\Controllers\Api\V1\CardholderController;
 use App\Http\Controllers\Api\V1\MasterDataController;
 use App\Http\Controllers\Api\V1\PermissionController;
 use App\Http\Controllers\Api\V1\Platform\TenantController;
@@ -60,6 +61,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                 Route::put('{type}/{item}', [MasterDataController::class, 'update'])->name('update');
                 Route::delete('{type}/{item}', [MasterDataController::class, 'destroy'])->name('destroy');
             });
+
+            Route::apiResource('cardholders', CardholderController::class);
         });
 
         // Platform administration

@@ -1,0 +1,81 @@
+<?php
+
+namespace App\Services\Cardholders;
+
+use App\Data\Cardholders\CardholderFilter;
+use App\Models\Cardholder;
+use App\Models\User;
+use App\Repositories\Contracts\CardholderRepositoryInterface;
+use App\Repositories\Contracts\MasterDataRepositoryInterface;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+
+/**
+ * Manages the cardholders (people who can be issued ID cards) of the current tenant.
+ */
+class CardholderService
+{
+    public function __construct(
+        private CardholderRepositoryInterface $cardholders,
+        private MasterDataRepositoryInterface $masterData,
+    ) {}
+
+    /**
+     * @return LengthAwarePaginator<int, Cardholder>
+     */
+    public function list(CardholderFilter $filter): LengthAwarePaginator
+    {
+        return $this->cardholders->list($filter);
+    }
+
+    public function show(Cardholder $cardholder): Cardholder
+    {
+        return $this->withDetails($cardholder);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data  validated input; master data references are public ids
+     */
+    public function create(array $data, User $actor): Cardholder
+    {
+        $cardholder = $this->cardholders->create($this->resolveLookups($data));
+        $cardholder->forceFill(['created_by' => $actor->id])->save();
+
+        return $this->withDetails($cardholder);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    public function update(Cardholder $cardholder, array $data): Cardholder
+    {
+        return $this->withDetails($this->cardholders->update($cardholder, $this->resolveLookups($data)));
+    }
+
+    public function delete(Cardholder $cardholder): void
+    {
+        $this->cardholders->delete($cardholder);
+    }
+
+    private function withDetails(Cardholder $cardholder): Cardholder
+    {
+        return $cardholder->load([...Cardholder::lookupRelations(), 'creator']);
+    }
+
+    /**
+     * Replace master data public ids with internal ids (already validated for tenant and type).
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function resolveLookups(array $data): array
+    {
+        $columns = array_intersect_key(Cardholder::LOOKUPS, $data);
+        $ids = $this->masterData->idsForPublicIds(array_values(array_filter(array_intersect_key($data, $columns))));
+
+        foreach (array_keys($columns) as $column) {
+            $data[$column] = $data[$column] ? $ids[$data[$column]] ?? null : null;
+        }
+
+        return $data;
+    }
+}

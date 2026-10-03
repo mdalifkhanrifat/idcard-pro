@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Repositories\Contracts\ActivityRepositoryInterface;
+use App\Repositories\Contracts\CardholderRepositoryInterface;
 use App\Repositories\Contracts\LoginEventRepositoryInterface;
 use App\Repositories\Contracts\MasterDataRepositoryInterface;
 use App\Repositories\Contracts\PasswordResetTokenRepositoryInterface;
@@ -10,6 +11,7 @@ use App\Repositories\Contracts\RoleRepositoryInterface;
 use App\Repositories\Contracts\TenantRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Repositories\Eloquent\ActivityRepository;
+use App\Repositories\Eloquent\CardholderRepository;
 use App\Repositories\Eloquent\LoginEventRepository;
 use App\Repositories\Eloquent\MasterDataRepository;
 use App\Repositories\Eloquent\PasswordResetTokenRepository;
@@ -29,6 +31,7 @@ class RepositoryServiceProvider extends ServiceProvider
      */
     public array $bindings = [
         MasterDataRepositoryInterface::class => MasterDataRepository::class,
+        CardholderRepositoryInterface::class => CardholderRepository::class,
         UserRepositoryInterface::class => UserRepository::class,
         RoleRepositoryInterface::class => RoleRepository::class,
         TenantRepositoryInterface::class => TenantRepository::class,

@@ -57,6 +57,15 @@ class MasterDataRepository extends EloquentRepository implements MasterDataRepos
         return $this->query()->where('public_id', $publicId)->value('id');
     }
 
+    public function idsForPublicIds(array $publicIds): array
+    {
+        if ($publicIds === []) {
+            return [];
+        }
+
+        return $this->query()->whereIn('public_id', $publicIds)->pluck('id', 'public_id')->all();
+    }
+
     public function hasChildren(MasterDataItem $item): bool
     {
         return $item->children()->exists();

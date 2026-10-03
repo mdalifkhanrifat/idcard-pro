@@ -24,6 +24,12 @@ interface MasterDataRepositoryInterface extends RepositoryInterface
 
     public function idForPublicId(string $publicId): ?int;
 
+    /**
+     * @param  array<int, string>  $publicIds
+     * @return array<string, int> public id => id
+     */
+    public function idsForPublicIds(array $publicIds): array;
+
     public function hasChildren(MasterDataItem $item): bool;
 
     /**

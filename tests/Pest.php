@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\MasterDataItem;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\Tenants\TenantService;
@@ -86,4 +87,12 @@ function tenantUser(Tenant $tenant, string $role = 'Operator', array $attributes
 
         return $user->assignRole($role);
     });
+}
+
+/**
+ * Create a master data item inside a tenant.
+ */
+function masterItem(Tenant $tenant, array $attributes): MasterDataItem
+{
+    return app(TenantContext::class)->run($tenant, fn () => MasterDataItem::factory()->create([...$attributes, 'tenant_id' => $tenant->id]));
 }
