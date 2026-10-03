@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\Api\V1\Auth\TwoFactorController;
 use App\Http\Controllers\Api\V1\CardholderController;
 use App\Http\Controllers\Api\V1\CardholderFileController;
+use App\Http\Controllers\Api\V1\CardholderImportController;
 use App\Http\Controllers\Api\V1\CustomFieldController;
 use App\Http\Controllers\Api\V1\FamilyMemberController;
 use App\Http\Controllers\Api\V1\MasterDataController;
@@ -74,6 +75,15 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('custom-fields/presets', [CustomFieldController::class, 'presets'])->name('custom-fields.presets');
             Route::post('custom-fields/presets/{preset}', [CustomFieldController::class, 'applyPreset'])->name('custom-fields.presets.apply');
             Route::apiResource('custom-fields', CustomFieldController::class)->except('show');
+
+            Route::prefix('cardholder-imports')->name('cardholder-imports.')->controller(CardholderImportController::class)->group(function () {
+                Route::get('/', 'index')->name('index');
+                Route::get('template', 'template')->name('template');
+                Route::post('/', 'store')->middleware('throttle:20,1')->name('store');
+                Route::get('{import}', 'show')->name('show');
+                Route::post('{import}/start', 'start')->name('start');
+                Route::delete('{import}', 'destroy')->name('destroy');
+            });
 
             Route::apiResource('cardholders', CardholderController::class);
             Route::apiResource('cardholders.files', CardholderFileController::class)->only(['index', 'store', 'destroy'])->scoped(['cardholder' => 'public_id', 'file' => 'public_id']);

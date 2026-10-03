@@ -30,6 +30,13 @@ interface MasterDataRepositoryInterface extends RepositoryInterface
      */
     public function idsForPublicIds(array $publicIds): array;
 
+    /**
+     * Every item of a type (active or not), for matching imported names.
+     *
+     * @return Collection<int, MasterDataItem>
+     */
+    public function allOfType(string $type): Collection;
+
     public function hasChildren(MasterDataItem $item): bool;
 
     /**

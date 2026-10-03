@@ -59,4 +59,9 @@ class CardholderRepository extends EloquentRepository implements CardholderRepos
 
         return $column !== false && $this->query()->where($column, $item->id)->exists();
     }
+
+    public function findByEmployeeNo(string $employeeNo): ?Cardholder
+    {
+        return $this->query()->where('employee_no', $employeeNo)->first();
+    }
 }

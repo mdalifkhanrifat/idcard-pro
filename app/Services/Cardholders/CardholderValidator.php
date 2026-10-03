@@ -48,7 +48,7 @@ class CardholderValidator
             // Identity
             'full_name' => ['required', 'string', 'max:255'],
             'full_name_local' => ['nullable', 'string', 'max:255'],
-            'date_of_birth' => ['nullable', 'date_format:Y-m-d', 'before:today'],
+            'date_of_birth' => ['nullable', 'bail', 'date_format:Y-m-d', 'before:today'],
             'gender' => ['nullable', new Enum(Gender::class)],
             'marital_status' => ['nullable', new Enum(MaritalStatus::class)],
             'nationality' => ['nullable', 'string', 'max:60'],
@@ -75,7 +75,7 @@ class CardholderValidator
             'secondary_no' => ['nullable', 'string', 'max:40'],
             'employment_type' => ['sometimes', new Enum(EmploymentType::class)],
             'joining_date' => ['nullable', 'date_format:Y-m-d'],
-            'retirement_date' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:joining_date'],
+            'retirement_date' => ['nullable', 'bail', 'date_format:Y-m-d', 'after_or_equal:joining_date'],
             'retired_id_no' => ['nullable', 'string', 'max:40'],
             'posting' => ['nullable', 'string', 'max:255'],
             'previous_office' => ['nullable', 'string', 'max:255'],

@@ -38,10 +38,10 @@ class CardholderService
     /**
      * @param  array<string, mixed>  $data  validated input; master data references are public ids
      */
-    public function create(array $data, User $actor): Cardholder
+    public function create(array $data, ?User $actor): Cardholder
     {
         $cardholder = $this->cardholders->create($this->withCustomFields($this->resolveLookups($data), null));
-        $cardholder->forceFill(['created_by' => $actor->id])->save();
+        $cardholder->forceFill(['created_by' => $actor?->id])->save();
 
         return $this->withDetails($cardholder);
     }

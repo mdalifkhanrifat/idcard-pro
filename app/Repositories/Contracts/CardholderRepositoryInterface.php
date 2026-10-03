@@ -21,4 +21,6 @@ interface CardholderRepositoryInterface extends RepositoryInterface
      * Whether any cardholder references the master data item.
      */
     public function usesMasterDataItem(MasterDataItem $item): bool;
+
+    public function findByEmployeeNo(string $employeeNo): ?Cardholder;
 }
