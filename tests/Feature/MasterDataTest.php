@@ -1,6 +1,8 @@
 <?php
 
+use App\Models\Cardholder;
 use App\Models\MasterDataItem;
+use App\Support\Tenancy\TenantContext;
 use Laravel\Sanctum\Sanctum;
 
 beforeEach(function () {
@@ -88,6 +90,18 @@ it('blocks deleting a parent that still has children', function () {
     masterItem($this->tenant, ['type' => 'sub_region', 'name' => 'Savar', 'parent_id' => $region->id]);
 
     $this->deleteJson("/api/v1/master-data/region/{$region->public_id}")->assertUnprocessable();
+});
+
+it('blocks deleting an item used by a cardholder', function () {
+    Sanctum::actingAs($this->owner);
+    $rank = masterItem($this->tenant, ['type' => 'rank', 'name' => 'Captain']);
+    $unused = masterItem($this->tenant, ['type' => 'rank', 'name' => 'Major']);
+    app(TenantContext::class)->run($this->tenant, fn () => Cardholder::factory()->create(['tenant_id' => $this->tenant->id, 'rank_id' => $rank->id]));
+
+    $this->deleteJson("/api/v1/master-data/rank/{$rank->public_id}")
+        ->assertUnprocessable()
+        ->assertJsonPath('message', __('master_data.in_use'));
+    $this->deleteJson("/api/v1/master-data/rank/{$unused->public_id}")->assertNoContent();
 });
 
 it('filters by search, parent and active state', function () {

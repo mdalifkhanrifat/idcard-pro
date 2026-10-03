@@ -46,4 +46,11 @@ class CardholderRepository extends EloquentRepository implements CardholderRepos
             ->paginate(min($filter->perPage, 100))
             ->withQueryString();
     }
+
+    public function usesMasterDataItem(MasterDataItem $item): bool
+    {
+        $column = array_search($item->type, Cardholder::LOOKUPS, true);
+
+        return $column !== false && $this->query()->where($column, $item->id)->exists();
+    }
 }

@@ -6,6 +6,7 @@ use App\Data\MasterData\MasterDataFilter;
 use App\Exceptions\BusinessRuleException;
 use App\Models\MasterDataItem;
 use App\Models\Tenant;
+use App\Repositories\Contracts\CardholderRepositoryInterface;
 use App\Repositories\Contracts\MasterDataRepositoryInterface;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -19,6 +20,7 @@ class MasterDataService
 {
     public function __construct(
         private MasterDataRepositoryInterface $items,
+        private CardholderRepositoryInterface $cardholders,
         private TenantContext $tenantContext,
     ) {}
 
@@ -76,6 +78,10 @@ class MasterDataService
 
         if ($this->items->hasChildren($item)) {
             throw new BusinessRuleException(__('master_data.has_children'));
+        }
+
+        if ($this->cardholders->usesMasterDataItem($item)) {
+            throw new BusinessRuleException(__('master_data.in_use'));
         }
 
         $this->items->delete($item);
