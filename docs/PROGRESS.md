@@ -1,7 +1,7 @@
 # IDCard Pro: কাজের অগ্রগতি ও হ্যান্ডঅফ
 
 > নতুন চ্যাট বা নতুন ডেভেলপার এই ফাইল থেকে শুরু করবেন। পুরো পরিকল্পনা আছে [ROADMAP.md](ROADMAP.md)-এ।
-> সর্বশেষ আপডেট: ৩ অক্টোবর ২০২৬। **Phase 1 আর Phase 2 সম্পন্ন।** Phase 3 চলছে: ৩.১ক (Signatory টেবিল) সম্পন্ন, পরের কাজ ৩.১খ (§৮ দেখুন)।
+> সর্বশেষ আপডেট: ৩ অক্টোবর ২০২৬। **Phase 1 আর Phase 2 সম্পন্ন।** Phase 3 চলছে: ৩.১ক–খ (Signatory টেবিল ও API) সম্পন্ন, পরের কাজ ৩.১গ, অর্থাৎ Signatories পেজ (§৮ দেখুন)।
 
 ---
 
@@ -24,7 +24,7 @@
 | 2.5 | শিক্ষা ও প্রশিক্ষণ কোর্স (এক টেবিলে), কাস্টম ফিল্ড (সেটআপ পেজ, প্রিসেট, ফর্ম ট্যাব, ফিল্টার) | `QualificationService`, `app/Services/CustomFields`, `config/custom_field_presets.php`, `pages/custom-fields` |
 | 2.6 | CSV/XLSX ইমপোর্ট: যাচাই আর প্রিভিউ, queue-তে ইমপোর্ট, ইতিহাস, টেমপ্লেট | `CardholderImportService`, `CardholderImportMapper`, `app/Jobs/ImportCardholders.php`, `app/Support/Spreadsheets`, `config/cardholder_import.php` |
 
-**মান:** ১১২টা টেস্ট পাস (১০১ feature + ১১ unit), Larastan (level 5) আর Pint পরিষ্কার, TypeScript টাইপ-চেক পরিষ্কার। প্রতিটা পেজ headless Chrome-এ চালিয়ে যাচাই করা হয়েছে।
+**মান:** ১১৭টা টেস্ট পাস (১০৬ feature + ১১ unit), Larastan (level 5) আর Pint পরিষ্কার, TypeScript টাইপ-চেক পরিষ্কার। প্রতিটা পেজ headless Chrome-এ চালিয়ে যাচাই করা হয়েছে।
 
 **বর্তমান মডিউল আর তাদের service:**
 
@@ -182,8 +182,8 @@ docker compose run --rm --no-deps vite npx vue-tsc --noEmit
 
 1. **৩.১ Signatories** (পুরনো `authorized_signatures`: name, designation, signature, status; authority type এখন master data `authority_type`)
    - ✅ **৩.১ক সম্পন্ন:** `signatories` টেবিল (name/name_local, designation/designation_local, `authority_type_id`, `signature_disk`/`signature_path`, `effective_from`/`effective_to`, `is_active` ডিফল্ট false, পুরনো সিস্টেমের মতো), `Signatory` model + factory, `signatories.*` পারমিশন (Administrator সব)।
-   - ➡️ **এখান থেকে শুরু, ৩.১খ:** Repository + `SignatoryService` + Request + Resource + Controller + রাউট + টেস্ট। সই-এর ছবি `ImageSanitizer` দিয়ে পরিশোধন করে private ডিস্কে রাখতে হবে, আর signed link দিয়ে দেখাতে হবে (`CardholderFileService`-এর ধরন অনুসরণ করুন)। `authority_type_id` যাচাই করতে হবে একই tenant আর টাইপ `authority_type` দিয়ে। `MasterDataService::delete`-এর "ব্যবহৃত" চেকে signatory-ও যোগ করতে হবে।
-   - **৩.১গ:** সেটআপ → Signatories পেজ (তালিকা, ডায়ালগ, সই আপলোড আর প্রিভিউ)।
+   - ✅ **৩.১খ সম্পন্ন:** `SignatoryService` + `SignatoryRepository`, `/api/v1/signatories` (CRUD, `filter[search|is_active]`), সই আপলোড/মোছা `POST|DELETE /signatories/{id}/signature` (`ImageSanitizer`, private ডিস্ক, পুরনো ফাইল মুছে যায়), `signature_url` = ১৫ মিনিটের relative signed link (ছবির path-এর hash লিংকে থাকে, তাই ছবি বদলালে পুরনো লিংক অকেজো)। ব্যবহৃত `authority_type` master data থেকে মোছা যায় না। ৫টা টেস্ট।
+   - ➡️ **এখান থেকে শুরু, ৩.১গ:** সেটআপ → Signatories পেজ (তালিকা, ডায়ালগ, সই আপলোড আর প্রিভিউ)।
 2. **৩.২ কার্ড নম্বরের ফরম্যাট:** tenant settings-এ ফরম্যাট (`{CODE}/{YY}{SEQ:6}` ধরনের) আর `card_sequences` টেবিল। নম্বর তৈরি হবে `lockForUpdate` আর unique `(tenant_id, number)` দিয়ে।
 3. **৩.৩ টেমপ্লেট** (পুরনো `templates` + template type): title, type (কর্মী/পরিবার/অতিথি...), code, orientation, width/height (mm), সামনে/পেছনে, status, সংস্করণ।
 4. **৩.৪ টেমপ্লেট ডিজাইনার** (পুরনো `template_sections`): লোগো, ব্যাকগ্রাউন্ড, ছবি, সই, ডেটাবেস ফিল্ড (কাস্টম ফিল্ডসহ), QR, টেক্সট; পজিশন, ফন্ট, রঙ; ড্র্যাগ-ড্রপ।
