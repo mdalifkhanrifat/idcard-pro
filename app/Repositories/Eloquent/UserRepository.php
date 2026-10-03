@@ -52,4 +52,25 @@ class UserRepository extends EloquentRepository implements UserRepositoryInterfa
             ->whereHas('roles', fn (Builder $r) => $r->where('name', $role))
             ->count();
     }
+
+    public function findForLogin(?int $tenantId, string $identifier): ?User
+    {
+        $column = filter_var($identifier, FILTER_VALIDATE_EMAIL) ? 'email' : 'username';
+
+        return User::query()
+            ->withoutGlobalScopes()
+            ->whereNull('deleted_at')
+            ->where($column, $column === 'email' ? strtolower($identifier) : $identifier)
+            ->when(
+                $tenantId,
+                fn (Builder $q) => $q->where('tenant_id', $tenantId),
+                fn (Builder $q) => $q->whereNull('tenant_id')->where('is_platform_admin', true),
+            )
+            ->first();
+    }
+
+    public function findAnyTenant(int $id): ?User
+    {
+        return User::query()->withoutGlobalScopes()->whereNull('deleted_at')->find($id);
+    }
 }

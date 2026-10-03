@@ -22,4 +22,15 @@ interface UserRepositoryInterface extends RepositoryInterface
      * Number of active users holding the role, excluding the given user.
      */
     public function countActiveWithRole(string $role, User $except): int;
+
+    /**
+     * Find a sign-in candidate by e-mail or username, ignoring the current tenant scope.
+     * A null tenant id means a platform administrator.
+     */
+    public function findForLogin(?int $tenantId, string $identifier): ?User;
+
+    /**
+     * Find by primary key across all tenants (used before a tenant is bound).
+     */
+    public function findAnyTenant(int $id): ?User;
 }
