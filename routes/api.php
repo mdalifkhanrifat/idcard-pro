@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\Api\V1\Auth\TwoFactorController;
 use App\Http\Controllers\Api\V1\CardholderController;
 use App\Http\Controllers\Api\V1\CardholderFileController;
+use App\Http\Controllers\Api\V1\FamilyMemberController;
 use App\Http\Controllers\Api\V1\MasterDataController;
 use App\Http\Controllers\Api\V1\PermissionController;
 use App\Http\Controllers\Api\V1\Platform\TenantController;
@@ -70,6 +71,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
             Route::apiResource('cardholders', CardholderController::class);
             Route::apiResource('cardholders.files', CardholderFileController::class)->only(['index', 'store', 'destroy'])->scoped(['cardholder' => 'public_id', 'file' => 'public_id']);
+            Route::apiResource('cardholders.family-members', FamilyMemberController::class)->except('show')->scoped(['cardholder' => 'public_id', 'family_member' => 'public_id']);
         });
 
         // Platform administration

@@ -77,6 +77,7 @@ use Spatie\Activitylog\Support\LogOptions;
  * @property-read CardholderFile|null $photo
  * @property-read CardholderFile|null $signature
  * @property-read Collection<int, CardholderFile> $files
+ * @property-read Collection<int, FamilyMember> $familyMembers
  */
 #[Fillable([
     'full_name', 'full_name_local', 'date_of_birth', 'gender', 'marital_status', 'nationality', 'national_id', 'passport_no',
@@ -263,6 +264,14 @@ class Cardholder extends Model
     public function files(): HasMany
     {
         return $this->hasMany(CardholderFile::class);
+    }
+
+    /**
+     * @return HasMany<FamilyMember, $this>
+     */
+    public function familyMembers(): HasMany
+    {
+        return $this->hasMany(FamilyMember::class)->orderBy('sort_order')->orderBy('id');
     }
 
     /**
