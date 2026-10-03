@@ -8,6 +8,7 @@ use App\Enums\Gender;
 use App\Enums\MaritalStatus;
 use App\Models\Cardholder;
 use App\Models\MasterDataItem;
+use App\Services\CustomFields\CustomFieldService;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Str;
@@ -92,7 +93,17 @@ class SaveCardholderRequest extends FormRequest
             ...$lookups,
 
             'status' => ['sometimes', new Enum(CardholderStatus::class)],
+
+            ...app(CustomFieldService::class)->rules('cardholder'),
         ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return app(CustomFieldService::class)->attributes('cardholder');
     }
 
     /**

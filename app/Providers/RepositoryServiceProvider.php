@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Repositories\Contracts\ActivityRepositoryInterface;
 use App\Repositories\Contracts\CardholderFileRepositoryInterface;
 use App\Repositories\Contracts\CardholderRepositoryInterface;
+use App\Repositories\Contracts\CustomFieldRepositoryInterface;
 use App\Repositories\Contracts\FamilyMemberRepositoryInterface;
 use App\Repositories\Contracts\LoginEventRepositoryInterface;
 use App\Repositories\Contracts\MasterDataRepositoryInterface;
@@ -16,6 +17,7 @@ use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Repositories\Eloquent\ActivityRepository;
 use App\Repositories\Eloquent\CardholderFileRepository;
 use App\Repositories\Eloquent\CardholderRepository;
+use App\Repositories\Eloquent\CustomFieldRepository;
 use App\Repositories\Eloquent\FamilyMemberRepository;
 use App\Repositories\Eloquent\LoginEventRepository;
 use App\Repositories\Eloquent\MasterDataRepository;
@@ -41,6 +43,7 @@ class RepositoryServiceProvider extends ServiceProvider
         CardholderFileRepositoryInterface::class => CardholderFileRepository::class,
         FamilyMemberRepositoryInterface::class => FamilyMemberRepository::class,
         QualificationRepositoryInterface::class => QualificationRepository::class,
+        CustomFieldRepositoryInterface::class => CustomFieldRepository::class,
         UserRepositoryInterface::class => UserRepository::class,
         RoleRepositoryInterface::class => RoleRepository::class,
         TenantRepositoryInterface::class => TenantRepository::class,

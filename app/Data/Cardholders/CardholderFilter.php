@@ -23,12 +23,14 @@ final readonly class CardholderFilter
 
     /**
      * @param  array<string, string>  $lookups  cardholder column => master data public id
+     * @param  array<string, string>  $custom  custom field key => exact value
      */
     public function __construct(
         public ?string $search = null,
         public ?string $status = null,
         public ?string $employmentType = null,
         public array $lookups = [],
+        public array $custom = [],
         public ?string $joinedFrom = null,
         public ?string $joinedTo = null,
         public string $sort = 'created_at',
@@ -56,6 +58,11 @@ final readonly class CardholderFilter
             status: $filter['status'] ?? null,
             employmentType: $filter['employment_type'] ?? null,
             lookups: $lookups,
+            custom: array_filter(
+                (array) ($filter['custom'] ?? []),
+                fn (mixed $value, mixed $key) => is_string($key) && preg_match('/^[a-z][a-z0-9_]*$/', $key) && filled($value),
+                ARRAY_FILTER_USE_BOTH,
+            ),
             joinedFrom: $filter['joined_from'] ?? null,
             joinedTo: $filter['joined_to'] ?? null,
             sort: ltrim($sort, '-'),

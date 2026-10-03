@@ -61,6 +61,7 @@ class CardholderResource extends JsonResource
             'company_address' => $this->company_address,
             'company_phone' => $this->company_phone,
             ...$lookups,
+            'custom_fields' => (object) ($this->custom_fields ?? []),
             'status' => $this->status,
             'photo' => $this->whenLoaded('photo', fn () => $this->fileSummary($this->photo)),
             'signature' => $this->whenLoaded('signature', fn () => $this->fileSummary($this->signature)),

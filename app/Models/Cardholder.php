@@ -58,6 +58,7 @@ use Spatie\Activitylog\Support\LogOptions;
  * @property string|null $company_name
  * @property string|null $company_address
  * @property string|null $company_phone
+ * @property array<string, mixed>|null $custom_fields
  * @property int|null $blood_group_id
  * @property int|null $religion_id
  * @property int|null $region_id
@@ -85,7 +86,7 @@ use Spatie\Activitylog\Support\LogOptions;
     'email', 'personal_phone', 'emergency_phone', 'present_address', 'permanent_address', 'postal_code',
     'height', 'weight', 'eye_color', 'complexion', 'identification_mark',
     'employee_no', 'secondary_no', 'employment_type', 'joining_date', 'retirement_date', 'retired_id_no', 'posting', 'previous_office',
-    'company_name', 'company_address', 'company_phone',
+    'company_name', 'company_address', 'company_phone', 'custom_fields',
     'blood_group_id', 'religion_id', 'region_id', 'sub_region_id',
     'department_id', 'unit_id', 'rank_id', 'designation_id', 'branch_id', 'trade_id', 'appointment_id',
     'status',
@@ -158,6 +159,7 @@ class Cardholder extends Model
             'marital_status' => MaritalStatus::class,
             'employment_type' => EmploymentType::class,
             'status' => CardholderStatus::class,
+            'custom_fields' => 'array',
         ];
     }
 

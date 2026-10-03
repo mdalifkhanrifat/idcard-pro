@@ -36,6 +36,12 @@ class CardholderRepository extends EloquentRepository implements CardholderRepos
             ->when($filter->joinedFrom, fn (Builder $q, string $date) => $q->whereDate('joining_date', '>=', $date))
             ->when($filter->joinedTo, fn (Builder $q, string $date) => $q->whereDate('joining_date', '<=', $date));
 
+        foreach ($filter->custom as $key => $value) {
+            in_array($value, ['true', 'false'], true)
+                ? $query->where("custom_fields->{$key}", $value === 'true')
+                : $query->where("custom_fields->{$key}", $value);
+        }
+
         foreach ($filter->lookups as $column => $publicId) {
             $query->whereIn($column, MasterDataItem::query()->where('public_id', $publicId)->select('id'));
         }

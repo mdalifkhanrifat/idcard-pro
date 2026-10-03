@@ -23,7 +23,7 @@ class ListCardholdersRequest extends FormRequest
     {
         $sorts = collect(CardholderFilter::SORTS)->flatMap(fn (string $s) => [$s, "-{$s}"])->all();
         $lookupKeys = array_keys(CardholderFilter::LOOKUP_FILTERS);
-        $allowed = implode(',', ['search', 'status', 'employment_type', 'joined_from', 'joined_to', ...$lookupKeys]);
+        $allowed = implode(',', ['search', 'status', 'employment_type', 'joined_from', 'joined_to', 'custom', ...$lookupKeys]);
 
         return [
             'filter' => ['sometimes', "array:{$allowed}"],
@@ -32,6 +32,8 @@ class ListCardholdersRequest extends FormRequest
             'filter.employment_type' => ['nullable', new Enum(EmploymentType::class)],
             'filter.joined_from' => ['nullable', 'date_format:Y-m-d'],
             'filter.joined_to' => ['nullable', 'date_format:Y-m-d'],
+            'filter.custom' => ['nullable', 'array', 'max:10'],
+            'filter.custom.*' => ['nullable', 'string', 'max:100'],
             ...collect($lookupKeys)->mapWithKeys(fn (string $key) => ["filter.{$key}" => ['nullable', 'string', 'size:26']])->all(),
             'sort' => ['sometimes', Rule::in($sorts)],
             'per_page' => ['sometimes', 'integer', 'between:1,100'],

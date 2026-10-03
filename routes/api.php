@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\V1\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\Api\V1\Auth\TwoFactorController;
 use App\Http\Controllers\Api\V1\CardholderController;
 use App\Http\Controllers\Api\V1\CardholderFileController;
+use App\Http\Controllers\Api\V1\CustomFieldController;
 use App\Http\Controllers\Api\V1\FamilyMemberController;
 use App\Http\Controllers\Api\V1\MasterDataController;
 use App\Http\Controllers\Api\V1\PermissionController;
@@ -69,6 +70,10 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                 Route::put('{type}/{item}', [MasterDataController::class, 'update'])->name('update');
                 Route::delete('{type}/{item}', [MasterDataController::class, 'destroy'])->name('destroy');
             });
+
+            Route::get('custom-fields/presets', [CustomFieldController::class, 'presets'])->name('custom-fields.presets');
+            Route::post('custom-fields/presets/{preset}', [CustomFieldController::class, 'applyPreset'])->name('custom-fields.presets.apply');
+            Route::apiResource('custom-fields', CustomFieldController::class)->except('show');
 
             Route::apiResource('cardholders', CardholderController::class);
             Route::apiResource('cardholders.files', CardholderFileController::class)->only(['index', 'store', 'destroy'])->scoped(['cardholder' => 'public_id', 'file' => 'public_id']);

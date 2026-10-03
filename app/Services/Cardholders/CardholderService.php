@@ -7,6 +7,7 @@ use App\Models\Cardholder;
 use App\Models\User;
 use App\Repositories\Contracts\CardholderRepositoryInterface;
 use App\Repositories\Contracts\MasterDataRepositoryInterface;
+use App\Services\CustomFields\CustomFieldService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 /**
@@ -18,6 +19,7 @@ class CardholderService
         private CardholderRepositoryInterface $cardholders,
         private MasterDataRepositoryInterface $masterData,
         private CardholderFileService $files,
+        private CustomFieldService $customFields,
     ) {}
 
     /**
@@ -38,7 +40,7 @@ class CardholderService
      */
     public function create(array $data, User $actor): Cardholder
     {
-        $cardholder = $this->cardholders->create($this->resolveLookups($data));
+        $cardholder = $this->cardholders->create($this->withCustomFields($this->resolveLookups($data), null));
         $cardholder->forceFill(['created_by' => $actor->id])->save();
 
         return $this->withDetails($cardholder);
@@ -49,7 +51,7 @@ class CardholderService
      */
     public function update(Cardholder $cardholder, array $data): Cardholder
     {
-        return $this->withDetails($this->cardholders->update($cardholder, $this->resolveLookups($data)));
+        return $this->withDetails($this->cardholders->update($cardholder, $this->withCustomFields($this->resolveLookups($data), $cardholder)));
     }
 
     /**
@@ -61,6 +63,19 @@ class CardholderService
 
         $this->cardholders->delete($cardholder);
         $this->files->deleteStored($locations);
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function withCustomFields(array $data, ?Cardholder $cardholder): array
+    {
+        if (array_key_exists('custom_fields', $data)) {
+            $data['custom_fields'] = $this->customFields->mergeValues('cardholder', $data['custom_fields'] ?? [], $cardholder?->custom_fields);
+        }
+
+        return $data;
     }
 
     private function withDetails(Cardholder $cardholder): Cardholder
