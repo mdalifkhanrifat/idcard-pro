@@ -1,8 +1,8 @@
 <?php
 
-use App\Actions\Tenancy\ProvisionTenant;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\Tenants\TenantService;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -68,7 +68,7 @@ const TEST_PASSWORD = 'Secret#Pass123';
  */
 function tenantWithOwner(string $slug = 'acme', string $email = 'owner@example.com'): array
 {
-    $tenant = app(ProvisionTenant::class)->handle(
+    $tenant = app(TenantService::class)->provision(
         ['name' => ucfirst($slug), 'slug' => $slug],
         ['name' => 'Owner', 'email' => $email, 'username' => 'owner', 'password' => TEST_PASSWORD],
     );

@@ -4,9 +4,11 @@ namespace App\Providers;
 
 use App\Repositories\Contracts\MasterDataRepositoryInterface;
 use App\Repositories\Contracts\RoleRepositoryInterface;
+use App\Repositories\Contracts\TenantRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Repositories\Eloquent\MasterDataRepository;
 use App\Repositories\Eloquent\RoleRepository;
+use App\Repositories\Eloquent\TenantRepository;
 use App\Repositories\Eloquent\UserRepository;
 use Illuminate\Support\ServiceProvider;
 
@@ -23,5 +25,6 @@ class RepositoryServiceProvider extends ServiceProvider
         MasterDataRepositoryInterface::class => MasterDataRepository::class,
         UserRepositoryInterface::class => UserRepository::class,
         RoleRepositoryInterface::class => RoleRepository::class,
+        TenantRepositoryInterface::class => TenantRepository::class,
     ];
 }

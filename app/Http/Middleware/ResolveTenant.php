@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\Tenant;
+use App\Services\Tenants\TenantService;
 use App\Support\Tenancy\TenantContext;
 use Closure;
 use Illuminate\Http\Request;
@@ -16,7 +16,10 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class ResolveTenant
 {
-    public function __construct(private TenantContext $tenantContext) {}
+    public function __construct(
+        private TenantContext $tenantContext,
+        private TenantService $tenants,
+    ) {}
 
     public function handle(Request $request, Closure $next): Response
     {
@@ -28,7 +31,7 @@ class ResolveTenant
 
         if ($user->is_platform_admin && $user->tenant_id === null) {
             $slug = $request->header('X-Tenant');
-            $tenant = $slug ? Tenant::query()->where('slug', $slug)->first() : null;
+            $tenant = $slug ? $this->tenants->findBySlug($slug) : null;
             abort_if($slug && $tenant === null, Response::HTTP_NOT_FOUND, __('tenancy.not_found'));
 
             $this->tenantContext->set($tenant);

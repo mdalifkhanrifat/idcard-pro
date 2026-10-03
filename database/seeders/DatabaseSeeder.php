@@ -2,9 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Actions\Tenancy\ProvisionTenant;
-use App\Models\Tenant;
 use App\Models\User;
+use App\Services\Tenants\TenantService;
 use App\Support\Permissions\PermissionRegistry;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Database\Seeder;
@@ -16,15 +15,15 @@ class DatabaseSeeder extends Seeder
 {
     public const DEMO_PASSWORD = 'Demo@Pass2026!';
 
-    public function run(PermissionRegistry $permissions, ProvisionTenant $provision, TenantContext $tenantContext): void
+    public function run(PermissionRegistry $permissions, TenantService $tenants, TenantContext $tenantContext): void
     {
         $permissions->sync();
 
         $admin = User::query()->withoutGlobalScopes()->firstOrNew(['email' => 'platform@idcard.local', 'tenant_id' => null]);
         $admin->fill(['name' => 'Platform Admin', 'username' => 'platform', 'password' => self::DEMO_PASSWORD])->forceFill(['is_platform_admin' => true, 'password_changed_at' => now()])->save();
 
-        if (Tenant::query()->where('slug', 'acme')->doesntExist()) {
-            $tenant = $provision->handle(
+        if ($tenants->findBySlug('acme') === null) {
+            $tenant = $tenants->provision(
                 ['name' => 'Acme Corporation', 'slug' => 'acme', 'legal_name' => 'Acme Corporation Ltd.', 'country_code' => 'BD', 'timezone' => 'Asia/Dhaka', 'locale' => 'en', 'primary_color' => '#0F62FE'],
                 ['name' => 'Acme Owner', 'email' => 'owner@acme.test', 'username' => 'owner', 'password' => self::DEMO_PASSWORD],
             );

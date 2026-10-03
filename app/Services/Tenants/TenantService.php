@@ -1,0 +1,106 @@
+<?php
+
+namespace App\Services\Tenants;
+
+use App\Data\Tenants\TenantFilter;
+use App\Models\Tenant;
+use App\Models\User;
+use App\Repositories\Contracts\RoleRepositoryInterface;
+use App\Repositories\Contracts\TenantRepositoryInterface;
+use App\Repositories\Contracts\UserRepositoryInterface;
+use App\Services\MasterData\MasterDataService;
+use App\Support\Permissions\PermissionRegistry;
+use App\Support\Tenancy\TenantContext;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
+
+/**
+ * Organizations: provisioning, settings and platform-level status.
+ */
+class TenantService
+{
+    public function __construct(
+        private TenantRepositoryInterface $tenants,
+        private RoleRepositoryInterface $roles,
+        private UserRepositoryInterface $users,
+        private PermissionRegistry $permissions,
+        private MasterDataService $masterData,
+        private TenantContext $tenantContext,
+    ) {}
+
+    /**
+     * @return LengthAwarePaginator<int, Tenant>
+     */
+    public function list(TenantFilter $filter): LengthAwarePaginator
+    {
+        return $this->tenants->list($filter);
+    }
+
+    public function findBySlug(string $slug): ?Tenant
+    {
+        return $this->tenants->findBySlug($slug);
+    }
+
+    /**
+     * @param  callable(Tenant): void  $callback
+     */
+    public function each(callable $callback): void
+    {
+        $this->tenants->each($callback);
+    }
+
+    /**
+     * Create an organization with its default roles, default master data and first Owner.
+     *
+     * @param  array<string, mixed>  $attributes
+     * @param  array{name: string, email: string, password: string, username?: string|null}  $owner
+     */
+    public function provision(array $attributes, array $owner): Tenant
+    {
+        $this->permissions->sync();
+
+        return DB::transaction(function () use ($attributes, $owner): Tenant {
+            $tenant = $this->tenants->create([...$attributes, 'slug' => strtolower($attributes['slug'])]);
+
+            $this->tenantContext->run($tenant, function () use ($tenant, $owner): void {
+                foreach (array_keys(config('permissions.default_roles')) as $roleName) {
+                    $this->roles->create($roleName)->syncPermissions($this->permissions->forRole($roleName));
+                }
+
+                /** @var User $user */
+                $user = $this->users->create([...$owner, 'email' => strtolower($owner['email']), 'tenant_id' => $tenant->id]);
+                $user->forceFill(['password_changed_at' => now(), 'email_verified_at' => now()])->save();
+                $user->assignRole(PermissionRegistry::OWNER_ROLE);
+            });
+
+            $this->masterData->seedDefaults($tenant);
+
+            return $tenant;
+        });
+    }
+
+    /**
+     * Update branding and regional settings, optionally replacing the logo.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function updateSettings(Tenant $tenant, array $data, ?UploadedFile $logo = null): Tenant
+    {
+        if ($logo !== null) {
+            $data['logo_path'] = $logo->store("tenants/{$tenant->public_id}/branding", 'public');
+        }
+
+        return $this->tenants->update($tenant, $data)->refresh();
+    }
+
+    /**
+     * Platform-level changes (name, status).
+     *
+     * @param  array<string, mixed>  $data
+     */
+    public function update(Tenant $tenant, array $data): Tenant
+    {
+        return $this->tenants->update($tenant, $data);
+    }
+}

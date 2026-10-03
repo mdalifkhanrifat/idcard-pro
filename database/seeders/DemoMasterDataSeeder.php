@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\MasterDataItem;
-use App\Models\Tenant;
+use App\Services\Tenants\TenantService;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Database\Seeder;
 
@@ -12,9 +12,9 @@ use Illuminate\Database\Seeder;
  */
 class DemoMasterDataSeeder extends Seeder
 {
-    public function run(TenantContext $tenantContext): void
+    public function run(TenantContext $tenantContext, TenantService $tenants): void
     {
-        $tenant = Tenant::query()->where('slug', 'acme')->first();
+        $tenant = $tenants->findBySlug('acme');
 
         if ($tenant === null || MasterDataItem::query()->withoutGlobalScopes()->where('tenant_id', $tenant->id)->where('type', 'department')->exists()) {
             return;
