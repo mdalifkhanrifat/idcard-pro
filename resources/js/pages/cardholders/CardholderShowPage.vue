@@ -7,6 +7,7 @@ import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiCard from '@/components/ui/UiCard.vue';
 import CardholderDocuments from './CardholderDocuments.vue';
+import CardholderFamily from './CardholderFamily.vue';
 import { useConfirm } from '@/composables/useConfirm';
 import { http, toApiError } from '@/lib/http';
 import { formatDate, formatDateTime } from '@/lib/format';
@@ -24,7 +25,9 @@ const { confirm } = useConfirm();
 
 const cardholder = ref<Cardholder | null>(null);
 const earlierImages = ref<CardholderFile[]>([]);
-const tab = ref<'details' | 'documents'>('details');
+const TABS = ['details', 'family', 'documents'] as const;
+const tab = ref<(typeof TABS)[number]>('details');
+const tabLabel = (key: (typeof TABS)[number]) => ({ details: t('cardholders.tabs.details'), family: t('cardholders.family.title'), documents: t('cardholders.files.document') })[key];
 
 type Row = [label: string, value: string | null | undefined];
 
@@ -175,7 +178,7 @@ onMounted(load);
         <!-- Tabs -->
         <div class="mb-5 flex gap-1 border-b border-line" role="tablist">
             <button
-                v-for="key in ['details', 'documents'] as const"
+                v-for="key in TABS"
                 :key="key"
                 type="button"
                 role="tab"
@@ -184,7 +187,7 @@ onMounted(load);
                 :class="tab === key ? 'border-brand font-medium text-brand' : 'border-transparent text-muted hover:text-fg'"
                 @click="tab = key"
             >
-                {{ key === 'details' ? t('cardholders.tabs.details') : t('cardholders.files.document') }}
+                {{ tabLabel(key) }}
             </button>
         </div>
 
@@ -217,6 +220,7 @@ onMounted(load);
             </div>
         </div>
 
+        <CardholderFamily v-else-if="tab === 'family'" :cardholder-id="cardholder.id" />
         <CardholderDocuments v-else :cardholder-id="cardholder.id" />
     </div>
 </template>

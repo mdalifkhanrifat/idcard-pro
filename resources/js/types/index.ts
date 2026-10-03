@@ -160,3 +160,22 @@ export interface CardholderFile {
     replaced_at: string | null;
     created_at: string;
 }
+
+export type FamilyRelation = 'father' | 'mother' | 'father_in_law' | 'mother_in_law' | 'spouse' | 'son' | 'daughter' | 'sibling' | 'other';
+
+export interface FamilyMember {
+    id: string;
+    relation: FamilyRelation;
+    name: string;
+    name_local: string | null;
+    gender: 'male' | 'female' | 'other' | null;
+    date_of_birth: string | null;
+    phone: string | null;
+    blood_group?: { id: string; name: string } | null;
+    national_id: string | null;
+    passport_no: string | null;
+    identification_mark: string | null;
+    card_no: string | null;
+    sort_order: number;
+    updated_at: string;
+}

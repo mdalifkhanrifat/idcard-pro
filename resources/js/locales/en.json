@@ -380,6 +380,30 @@
         "back": "Back to cardholders",
         "tabs": {
             "details": "Details"
+        },
+        "family": {
+            "title": "Family members",
+            "add": "Add family member",
+            "editTitle": "Edit family member",
+            "empty": "No family members recorded.",
+            "deleteConfirm": "Remove {name} from the family list?",
+            "relation": "Relation",
+            "name": "Name",
+            "nameLocal": "Name (local language)",
+            "phone": "Phone",
+            "cardNo": "Family card no",
+            "age": "{years} yrs",
+            "relations": {
+                "father": "Father",
+                "mother": "Mother",
+                "father_in_law": "Father-in-law",
+                "mother_in_law": "Mother-in-law",
+                "spouse": "Spouse",
+                "son": "Son",
+                "daughter": "Daughter",
+                "sibling": "Sibling",
+                "other": "Other"
+            }
         }
     }
 }
