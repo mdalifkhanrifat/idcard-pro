@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1\Auth;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\TenantResource;
 use App\Http\Resources\UserResource;
+use App\Services\Account\AccountService;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -29,7 +30,7 @@ class CurrentUserController extends Controller
         ]);
     }
 
-    public function update(Request $request): UserResource
+    public function update(Request $request, AccountService $account): UserResource
     {
         $data = $request->validate([
             'name' => ['required', 'string', 'max:120'],
@@ -37,8 +38,8 @@ class CurrentUserController extends Controller
             'locale' => ['nullable', Rule::in(['en', 'bn'])],
         ]);
 
-        $request->user()->update($data);
+        $user = $account->updateProfile($request->user(), $data);
 
-        return new UserResource($request->user()->load('roles'));
+        return new UserResource($user->load('roles'));
     }
 }

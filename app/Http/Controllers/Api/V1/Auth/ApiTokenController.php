@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\Account\AccountService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Laravel\Sanctum\PersonalAccessToken;
@@ -12,10 +13,12 @@ use Laravel\Sanctum\PersonalAccessToken;
  */
 class ApiTokenController extends Controller
 {
+    public function __construct(private AccountService $account) {}
+
     public function index(Request $request): JsonResponse
     {
         return response()->json([
-            'data' => $request->user()->tokens()->latest()->get()->map(fn (PersonalAccessToken $token) => [
+            'data' => $this->account->tokens($request->user())->map(fn (PersonalAccessToken $token) => [
                 'id' => $token->id,
                 'name' => $token->name,
                 'abilities' => $token->abilities,
@@ -33,18 +36,14 @@ class ApiTokenController extends Controller
             'expires_in_days' => ['nullable', 'integer', 'between:1,365'],
         ]);
 
-        $token = $request->user()->createToken(
-            $data['name'],
-            ['*'],
-            isset($data['expires_in_days']) ? now()->addDays($data['expires_in_days']) : null,
-        );
+        $token = $this->account->createToken($request->user(), $data['name'], $data['expires_in_days'] ?? null);
 
-        return response()->json(['data' => ['id' => $token->accessToken->id, 'plain_text_token' => $token->plainTextToken]], 201);
+        return response()->json(['data' => ['id' => $token->accessToken->getKey(), 'plain_text_token' => $token->plainTextToken]], 201);
     }
 
     public function destroy(Request $request, int $tokenId): JsonResponse
     {
-        $request->user()->tokens()->whereKey($tokenId)->delete();
+        $this->account->revokeToken($request->user(), $tokenId);
 
         return response()->json(status: 204);
     }
