@@ -39,7 +39,8 @@ it('filters and sorts users', function () {
     $this->getJson('/api/v1/users?filter[search]=zed')->assertJsonCount(1, 'data');
     $this->getJson('/api/v1/users?filter[locked]=1')->assertJsonCount(1, 'data')->assertJsonPath('data.0.name', 'Amy Locked');
     $this->getJson('/api/v1/users?sort=name')->assertJsonPath('data.0.name', 'Amy Locked');
-    $this->getJson('/api/v1/users?filter[unknown]=1')->assertBadRequest();
+    $this->getJson('/api/v1/users?filter[unknown]=1')->assertJsonValidationErrors('filter');
+    $this->getJson('/api/v1/users?sort=password')->assertJsonValidationErrors('sort');
 });
 
 it('keeps at least one active owner', function () {
@@ -59,4 +60,13 @@ it('unlocks a locked user', function () {
     $this->putJson('/api/v1/users/'.$locked->public_id, [
         'name' => $locked->name, 'email' => $locked->email, 'status' => 'active', 'unlock' => true,
     ])->assertOk()->assertJsonPath('data.is_locked', false);
+});
+
+it('filters by creation date range', function () {
+    tenantUser($this->tenant, 'Viewer', ['email' => 'old@example.com', 'created_at' => '2025-01-15 10:00:00']);
+    Sanctum::actingAs($this->owner);
+
+    $this->getJson('/api/v1/users?filter[created_to]=2025-12-31')->assertJsonCount(1, 'data')->assertJsonPath('data.0.email', 'old@example.com');
+    $this->getJson('/api/v1/users?filter[created_from]=2025-12-31')->assertJsonMissing(['email' => 'old@example.com']);
+    $this->getJson('/api/v1/users?filter[created_from]=31-12-2025')->assertJsonValidationErrors('filter.created_from');
 });
