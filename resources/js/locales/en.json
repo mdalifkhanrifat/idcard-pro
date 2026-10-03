@@ -377,6 +377,9 @@
         },
         "created": "Cardholder created",
         "tabErrors": "This tab has errors",
-        "back": "Back to cardholders"
+        "back": "Back to cardholders",
+        "tabs": {
+            "details": "Details"
+        }
     }
 }
