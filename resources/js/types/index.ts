@@ -12,6 +12,7 @@ export interface Tenant {
     locale: string;
     primary_color: string;
     logo_url: string | null;
+    card_number_format?: string;
     status: 'active' | 'suspended';
     users_count?: number;
     created_at: string;

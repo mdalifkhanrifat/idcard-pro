@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { watchDebounced } from '@vueuse/core';
 import { useI18n } from 'vue-i18n';
 import { BadgeCheck, Upload } from 'lucide-vue-next';
 import UiButton from '@/components/ui/UiButton.vue';
@@ -17,7 +18,10 @@ const { t } = useI18n();
 const auth = useAuthStore();
 const ui = useUiStore();
 
-const form = reactive({ name: '', legal_name: '', email: '', phone: '', country_code: '', timezone: 'UTC', locale: 'en', primary_color: '#0f62fe' });
+const form = reactive({ name: '', legal_name: '', email: '', phone: '', country_code: '', timezone: 'UTC', locale: 'en', primary_color: '#0f62fe', card_number_format: '{CODE}/{YY}{SEQ:6}' });
+const sampleCode = ref('EMP');
+const numberPreview = ref('');
+const previewError = ref('');
 const logo = ref<File | null>(null);
 const logoPreview = ref<string | null>(null);
 const errors = ref<Record<string, string[]>>({});
@@ -35,6 +39,22 @@ onMounted(async () => {
 });
 
 watch(() => form.primary_color, (color) => applyBrand(color));
+
+// Ask the server so the preview uses the real next sequence value.
+watchDebounced(
+    [() => form.card_number_format, sampleCode],
+    async () => {
+        try {
+            const { data } = await http.get('/settings/card-number-preview', { params: { format: form.card_number_format, code: sampleCode.value || 'EMP' } });
+            numberPreview.value = data.data.number;
+            previewError.value = '';
+        } catch (error) {
+            const apiError = toApiError(error);
+            previewError.value = apiError.errors.format?.[0] ?? apiError.errors.code?.[0] ?? apiError.message;
+        }
+    },
+    { debounce: 300, immediate: true },
+);
 
 function pickLogo(event: Event): void {
     const file = (event.target as HTMLInputElement).files?.[0] ?? null;
@@ -100,6 +120,17 @@ async function save(): Promise<void> {
                         <UiSelect v-model="form.timezone" :label="t('settings.timezone')" :options="timezones" :error="errors.timezone" />
                         <UiSelect v-model="form.locale" :label="t('settings.locale')" :options="[{ value: 'en', label: 'English' }, { value: 'bn', label: 'বাংলা' }]" />
                     </fieldset>
+                </UiCard>
+                <UiCard :title="t('settings.cardNumber.title')" :description="t('settings.cardNumber.description')">
+                    <fieldset :disabled="!canEdit" class="grid gap-4 sm:grid-cols-[2fr_1fr]">
+                        <UiInput v-model="form.card_number_format" :label="t('settings.cardNumber.format')" :maxlength="60" :error="errors.card_number_format ?? previewError" />
+                        <UiInput v-model="sampleCode" :label="t('settings.cardNumber.sampleCode')" :maxlength="20" />
+                    </fieldset>
+                    <p class="mt-3 text-sm text-muted">
+                        {{ t('settings.cardNumber.next') }}
+                        <span class="ml-1 rounded-md bg-surface-2 px-2 py-1 font-mono text-fg">{{ previewError ? '—' : numberPreview }}</span>
+                    </p>
+                    <p class="mt-3 text-xs text-muted">{{ t('settings.cardNumber.tokens') }}</p>
                 </UiCard>
             </div>
 

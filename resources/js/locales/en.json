@@ -194,7 +194,15 @@
         "logoHint": "PNG, JPG or WebP, up to 2 MB.",
         "preview": "Preview",
         "branding": "Branding",
-        "regional": "Regional"
+        "regional": "Regional",
+        "cardNumber": {
+            "title": "Card numbers",
+            "description": "Pattern for new card numbers. Numbering restarts whenever the part before the running number changes (e.g. a new year).",
+            "format": "Format",
+            "sampleCode": "Sample card type code",
+            "next": "Next number:",
+            "tokens": "{'{CODE}'} card type code · {'{YYYY}'} / {'{YY}'} year · {'{MM}'} month · {'{SEQ:6}'} running number with 6 digits. Default {'{CODE}'}/{'{YY}'}{'{SEQ:6}'} gives EMP/26000001."
+        }
     },
     "account": {
         "title": "My account",
