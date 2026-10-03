@@ -13,6 +13,7 @@ use App\Repositories\Contracts\MasterDataRepositoryInterface;
 use App\Repositories\Contracts\PasswordResetTokenRepositoryInterface;
 use App\Repositories\Contracts\QualificationRepositoryInterface;
 use App\Repositories\Contracts\RoleRepositoryInterface;
+use App\Repositories\Contracts\SignatoryRepositoryInterface;
 use App\Repositories\Contracts\TenantRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Repositories\Eloquent\ActivityRepository;
@@ -26,6 +27,7 @@ use App\Repositories\Eloquent\MasterDataRepository;
 use App\Repositories\Eloquent\PasswordResetTokenRepository;
 use App\Repositories\Eloquent\QualificationRepository;
 use App\Repositories\Eloquent\RoleRepository;
+use App\Repositories\Eloquent\SignatoryRepository;
 use App\Repositories\Eloquent\TenantRepository;
 use App\Repositories\Eloquent\UserRepository;
 use Illuminate\Support\ServiceProvider;
@@ -47,6 +49,7 @@ class RepositoryServiceProvider extends ServiceProvider
         QualificationRepositoryInterface::class => QualificationRepository::class,
         CustomFieldRepositoryInterface::class => CustomFieldRepository::class,
         CardholderImportRepositoryInterface::class => CardholderImportRepository::class,
+        SignatoryRepositoryInterface::class => SignatoryRepository::class,
         UserRepositoryInterface::class => UserRepository::class,
         RoleRepositoryInterface::class => RoleRepository::class,
         TenantRepositoryInterface::class => TenantRepository::class,

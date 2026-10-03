@@ -9,6 +9,7 @@ use App\Models\Tenant;
 use App\Repositories\Contracts\CardholderRepositoryInterface;
 use App\Repositories\Contracts\FamilyMemberRepositoryInterface;
 use App\Repositories\Contracts\MasterDataRepositoryInterface;
+use App\Repositories\Contracts\SignatoryRepositoryInterface;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -23,6 +24,7 @@ class MasterDataService
         private MasterDataRepositoryInterface $items,
         private CardholderRepositoryInterface $cardholders,
         private FamilyMemberRepositoryInterface $familyMembers,
+        private SignatoryRepositoryInterface $signatories,
         private TenantContext $tenantContext,
     ) {}
 
@@ -82,7 +84,9 @@ class MasterDataService
             throw new BusinessRuleException(__('master_data.has_children'));
         }
 
-        if ($this->cardholders->usesMasterDataItem($item) || $this->familyMembers->usesMasterDataItem($item)) {
+        if ($this->cardholders->usesMasterDataItem($item)
+            || $this->familyMembers->usesMasterDataItem($item)
+            || $this->signatories->usesMasterDataItem($item)) {
             throw new BusinessRuleException(__('master_data.in_use'));
         }
 

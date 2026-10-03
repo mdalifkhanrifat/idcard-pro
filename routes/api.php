@@ -18,6 +18,7 @@ use App\Http\Controllers\Api\V1\PermissionController;
 use App\Http\Controllers\Api\V1\Platform\TenantController;
 use App\Http\Controllers\Api\V1\QualificationController;
 use App\Http\Controllers\Api\V1\RoleController;
+use App\Http\Controllers\Api\V1\SignatoryController;
 use App\Http\Controllers\Api\V1\TenantSettingsController;
 use App\Http\Controllers\Api\V1\UserController;
 use Illuminate\Support\Facades\Route;
@@ -36,6 +37,9 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::get('cardholder-files/{file}', [CardholderFileController::class, 'content'])
         ->middleware(['signed:relative', 'throttle:120,1'])
         ->name('cardholder-files.content');
+    Route::get('signatory-signatures/{signatory}', [SignatoryController::class, 'signature'])
+        ->middleware(['signed:relative', 'throttle:120,1'])
+        ->name('signatory-signatures.show');
 
     Route::middleware(['auth:sanctum', 'tenant'])->group(function () {
 
@@ -86,6 +90,10 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             });
 
             Route::apiResource('cardholders', CardholderController::class);
+
+            Route::apiResource('signatories', SignatoryController::class);
+            Route::post('signatories/{signatory}/signature', [SignatoryController::class, 'uploadSignature'])->name('signatories.signature.store');
+            Route::delete('signatories/{signatory}/signature', [SignatoryController::class, 'removeSignature'])->name('signatories.signature.destroy');
             Route::apiResource('cardholders.files', CardholderFileController::class)->only(['index', 'store', 'destroy'])->scoped(['cardholder' => 'public_id', 'file' => 'public_id']);
             Route::apiResource('cardholders.family-members', FamilyMemberController::class)->except('show')->scoped(['cardholder' => 'public_id', 'family_member' => 'public_id']);
             Route::apiResource('cardholders.qualifications', QualificationController::class)->except('show')->scoped(['cardholder' => 'public_id', 'qualification' => 'public_id']);
