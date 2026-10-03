@@ -40,7 +40,7 @@ class ProvisionTenant
 
                 $user = User::create([...$owner, 'tenant_id' => $tenant->id]);
                 $user->forceFill(['password_changed_at' => now(), 'email_verified_at' => now()])->save();
-                $user->assignRole('Owner');
+                $user->assignRole(PermissionRegistry::OWNER_ROLE);
             });
 
             $this->masterData->seedDefaults($tenant);

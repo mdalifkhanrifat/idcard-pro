@@ -7,6 +7,7 @@ use App\Enums\UserStatus;
 use App\Exceptions\BusinessRuleException;
 use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
+use App\Support\Permissions\PermissionRegistry;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
@@ -15,8 +16,6 @@ use Illuminate\Support\Facades\DB;
  */
 class UserService
 {
-    public const OWNER_ROLE = 'Owner';
-
     public function __construct(private UserRepositoryInterface $users) {}
 
     /**
@@ -85,14 +84,14 @@ class UserService
      */
     private function guardLastOwner(User $user, ?array $newRoles, string $newStatus): void
     {
-        if (! $user->hasRole(self::OWNER_ROLE)) {
+        if (! $user->hasRole(PermissionRegistry::OWNER_ROLE)) {
             return;
         }
 
-        $staysOwner = ($newRoles === null || in_array(self::OWNER_ROLE, $newRoles, true))
+        $staysOwner = ($newRoles === null || in_array(PermissionRegistry::OWNER_ROLE, $newRoles, true))
             && $newStatus === UserStatus::Active->value;
 
-        if (! $staysOwner && $this->users->countActiveWithRole(self::OWNER_ROLE, $user) === 0) {
+        if (! $staysOwner && $this->users->countActiveWithRole(PermissionRegistry::OWNER_ROLE, $user) === 0) {
             throw new BusinessRuleException(__('users.last_owner'));
         }
     }

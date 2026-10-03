@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Role;
+use App\Support\Permissions\PermissionRegistry;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -19,7 +20,7 @@ class RoleResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
-            'is_system' => $this->name === 'Owner',
+            'is_system' => $this->name === PermissionRegistry::OWNER_ROLE,
             'permissions' => $this->whenLoaded('permissions', fn () => $this->permissions->pluck('name')),
             'users_count' => $this->whenCounted('users'),
         ];

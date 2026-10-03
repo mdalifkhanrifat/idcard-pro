@@ -14,6 +14,9 @@ class PermissionRegistry
 {
     public const GUARD = 'web';
 
+    /** Built-in role that always holds every permission and cannot be edited or deleted. */
+    public const OWNER_ROLE = 'Owner';
+
     /**
      * @return Collection<int, non-falsy-string>
      */
@@ -51,7 +54,7 @@ class PermissionRegistry
         Permission::query()->where('guard_name', self::GUARD)->whereNotIn('name', $names)->delete();
 
         // Every tenant's Owner always holds every permission, including ones added by new modules.
-        Role::query()->where('name', 'Owner')->where('guard_name', self::GUARD)
+        Role::query()->where('name', self::OWNER_ROLE)->where('guard_name', self::GUARD)
             ->each(fn (Role $owner) => $owner->syncPermissions($names));
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
