@@ -1,7 +1,7 @@
 # IDCard Pro: কাজের অগ্রগতি ও হ্যান্ডঅফ
 
 > নতুন চ্যাট বা নতুন ডেভেলপার এই ফাইল থেকে শুরু করবেন। পুরো পরিকল্পনা আছে [ROADMAP.md](ROADMAP.md)-এ।
-> সর্বশেষ আপডেট: ৩ অক্টোবর ২০২৬, Phase 1 আর Phase 2-এর প্রথম অংশ (Master Data) সম্পন্ন।
+> সর্বশেষ আপডেট: ৩ অক্টোবর ২০২৬, Phase 1, Master Data আর Cardholder ব্যাকএন্ড (২.৩ক) সম্পন্ন।
 
 ---
 
@@ -19,8 +19,9 @@
 | 2.1 | Master Data ব্যাকএন্ড: ১২টা রেফারেন্স তালিকা, প্যারেন্ট-চাইল্ড, ডিফল্ট আইটেম | `config/master_data.php`, `app/Services/MasterData` |
 | 2.2 | Master Data পেজ (সেটআপ → মাস্টার ডেটা) | `resources/js/pages/master-data` |
 | R1–R4 | সব মডিউল Controller → Service → Repository কাঠামোয় | `app/Services`, `app/Repositories`, `app/Data` |
+| 2.3ক | Cardholder ব্যাকএন্ড: `cardholders` টেবিল, CRUD API, ১২টা ফিল্টার, master data FK যাচাই (টাইপ, tenant, unit↔department, sub_region↔region), ব্যবহৃত master data মোছা বন্ধ | `app/Services/Cardholders`, `app/Models/Cardholder.php` |
 
-**মান:** ৫৮টা feature test পাস, Larastan (level 5) আর Pint পরিষ্কার, TypeScript টাইপ-চেক পরিষ্কার।
+**মান:** ৬৮টা feature test পাস, Larastan (level 5) আর Pint পরিষ্কার, TypeScript টাইপ-চেক পরিষ্কার।
 
 **বর্তমান মডিউল আর তাদের service:**
 
@@ -32,7 +33,8 @@
 | অডিট | `Audit\AuditService` | `ActivityRepository`, `LoginEventRepository` |
 | লগইন | `Auth\AuthenticationService`, `Auth\PasswordResetService`, `Auth\TwoFactorAuthenticator` | `UserRepository`, `PasswordResetTokenRepository` |
 | নিজের অ্যাকাউন্ট | `Account\AccountService` | `UserRepository` |
-| মাস্টার ডেটা | `MasterData\MasterDataService` | `MasterDataRepository` |
+| মাস্টার ডেটা | `MasterData\MasterDataService` | `MasterDataRepository`, `CardholderRepository` (ব্যবহার যাচাই) |
+| কার্ডধারী | `Cardholders\CardholderService` | `CardholderRepository`, `MasterDataRepository` |
 
 ## ৩. চালানো
 
@@ -125,7 +127,7 @@ docker compose run --rm --no-deps vite npx vue-tsc --noEmit
 ### ধাপ ২.৩: Cardholder (কার্ডধারী), মূল রেকর্ড
 পুরনো "Employee Info" বা ব্যক্তিগত তথ্য + অফিসের তথ্যের সমান। একসাথে না করে উপ-ধাপে ভাগ করে করতে হবে।
 
-**২.৩ক, ব্যাকএন্ড:** `cardholders` টেবিল (tenant-scoped, `public_id`)
+**২.৩ক, ব্যাকএন্ড:** ✅ সম্পন্ন। `cardholders` টেবিল (tenant-scoped, `public_id`)
 
 | ভাগ | ফিল্ড (পুরনো সিস্টেমে যা ছিল) |
 |---|---|
@@ -140,7 +142,13 @@ docker compose run --rm --no-deps vite npx vue-tsc --noEmit
 - Master data FK সবসময় একই tenant-এর আর সঠিক টাইপের হতে হবে। এটা ভ্যালিডেশনে যাচাই করতে হবে।
 - **ফিল্টার:** নাম, employee no, ফোন, বিভাগ, র‍্যাংক, পদবি, শাখা, রক্তের গ্রুপ, অবস্থা, যোগদানের তারিখের সীমা।
 
-**২.৩খ:** ছবি আর সই আপলোড (MIME যাচাই, এলোমেলো নাম, private disk)। **২.৩গ:** Cardholder লিস্ট পেজ ও ফিল্টার। **২.৩ঘ:** তৈরি ও সম্পাদনার ফর্ম (ট্যাবে ভাগ করা)। **২.৩ঙ:** বিস্তারিত দেখার পেজ।
+**২.৩ক-তে নেওয়া সিদ্ধান্ত:**
+- `employee_no` আর `national_id` ঐচ্ছিক, তবে থাকলে প্রতি tenant-এ unique।
+- API-তে master data FK যায় `public_id` হিসেবে (`department_id` ইত্যাদি), রেসপন্সে `department: {id, name, name_local}`। কলাম → টাইপের ম্যাপ `Cardholder::LOOKUPS`।
+- অডিট লগে শুধু নাম, নম্বর, অফিস আর অবস্থার ফিল্ড; NID, পাসপোর্ট, ফোন, ঠিকানা লগ হয় না।
+- মুছলে এখন hard delete। Phase 3-এ কার্ড ইস্যু থাকলে মোছা আটকাতে হবে।
+
+**➡️ পরের কাজ, ২.৩খ:** ছবি আর সই আপলোড (MIME যাচাই, এলোমেলো নাম, private disk)। **২.৩গ:** Cardholder লিস্ট পেজ ও ফিল্টার। **২.৩ঘ:** তৈরি ও সম্পাদনার ফর্ম (ট্যাবে ভাগ করা)। **২.৩ঙ:** বিস্তারিত দেখার পেজ।
 
 ### ধাপ ২.৪: পরিবারের সদস্য
 পুরনো `family_infos`-এ ছিল: relation, name, gender, mobile, dob, blood group, nid, passport, identification remark, card no।
