@@ -134,3 +134,21 @@ it('adds missing defaults to existing organizations without duplicating them', f
 
     expect(MasterDataItem::query()->withoutGlobalScopes()->where('tenant_id', $this->tenant->id)->where('type', 'blood_group')->count())->toBe(8);
 });
+
+it('validates list parameters', function () {
+    Sanctum::actingAs($this->owner);
+
+    $this->getJson('/api/v1/master-data/department?filter[unknown]=1')->assertJsonValidationErrors('filter');
+    $this->getJson('/api/v1/master-data/department?sort=password')->assertJsonValidationErrors('sort');
+    $this->getJson('/api/v1/master-data/department?per_page=abc')->assertJsonValidationErrors('per_page');
+});
+
+it('returns every item without pagination for dropdowns', function () {
+    Sanctum::actingAs($this->owner);
+
+    $this->getJson('/api/v1/master-data/blood_group?per_page=all&sort=-name')
+        ->assertOk()
+        ->assertJsonMissingPath('meta')
+        ->assertJsonCount(8, 'data')
+        ->assertJsonPath('data.0.name', 'O-');
+});

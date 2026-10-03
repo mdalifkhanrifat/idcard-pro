@@ -35,7 +35,7 @@ class SaveMasterDataItemRequest extends FormRequest
                     ->where('tenant_id', $tenantId)
                     ->where('type', $type)
                     ->where(fn ($q) => $this->input('parent_id')
-                        ? $q->where('parent_id', $this->parentId())
+                        ? $q->whereIn('parent_id', MasterDataItem::query()->where('public_id', $this->input('parent_id'))->select('id'))
                         : $q->whereNull('parent_id'))
                     ->ignore($item?->id),
             ],
@@ -48,27 +48,6 @@ class SaveMasterDataItemRequest extends FormRequest
                 : ['prohibited'],
             'sort_order' => ['sometimes', 'integer', 'min:0', 'max:65535'],
             'is_active' => ['sometimes', 'boolean'],
-        ];
-    }
-
-    /**
-     * Internal id of the parent referenced by its public id.
-     */
-    public function parentId(): ?int
-    {
-        $publicId = $this->input('parent_id');
-
-        return $publicId ? MasterDataItem::query()->where('public_id', $publicId)->value('id') : null;
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    public function attributesForSave(): array
-    {
-        return [
-            ...collect($this->validated())->except('parent_id')->all(),
-            'parent_id' => $this->parentId(),
         ];
     }
 }

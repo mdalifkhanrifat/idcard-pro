@@ -63,7 +63,24 @@
 - **Phase 5: অপারেশন।** অ্যাপয়েন্টমেন্ট আর নোটিফিকেশন (ইমেইল/SMS), রিপোর্ট আর এক্সপোর্ট, মেয়াদ শেষের রিমাইন্ডার, ইমপোর্ট।
 - **Phase 6: ইন্টিগ্রেশন।** Webhooks, API token UI, SSO, পুরনো সিস্টেম থেকে ডেটা মাইগ্রেশন টুল।
 
-## ৫. চালানো
+## ৫. কোডের কাঠামো (প্রতিটি মডিউলে একই নিয়ম)
+
+```
+Controller  →  Service  →  Repository (interface)  →  Eloquent Model
+   │              │               │
+   │              │               └─ app/Repositories/Contracts + Eloquent/  (শুধু ডাটাবেস কোয়েরি)
+   │              └─ app/Services/<Module>/   (বিজনেস নিয়ম, ট্রানজ্যাকশন, BusinessRuleException)
+   └─ app/Http/Controllers/Api/V1/            (শুধু রিকোয়েস্ট → রেসপন্স)
+```
+
+- **Form Request:** ইনপুট ভ্যালিডেশন আর পারমিশন চেক।
+- **DTO:** `app/Data/<Module>/`, ফিল্টার বা ইনপুট টাইপ-সেফ অবজেক্ট হিসেবে।
+- **Resource:** `app/Http/Resources/`, API রেসপন্সের আকার ঠিক করে।
+- **Repository binding:** `App\Providers\RepositoryServiceProvider::$bindings`।
+- বিজনেস নিয়ম ভাঙলে service থেকে `BusinessRuleException` ছোঁড়া হয়, যা HTTP 422 হয়ে ফেরত যায়।
+- উদাহরণ মডিউল: Master Data।
+
+## ৬. চালানো
 
 ```bash
 cp .env.example .env    # পাসওয়ার্ড বদলান
@@ -78,7 +95,7 @@ docker compose --profile dev up -d vite   # ডেভেলপমেন্টে
 - টেস্ট ইমেইল: http://localhost:8025 (Mailpit)
 - টেস্ট চালাতে: `docker compose exec app php artisan test --compact`
 
-## ৬. ডেমো লগইন (শুধু লোকাল)
+## ৭. ডেমো লগইন (শুধু লোকাল)
 
 | লগইন | প্রতিষ্ঠান | পাসওয়ার্ড |
 |---|---|---|
@@ -86,7 +103,7 @@ docker compose --profile dev up -d vite   # ডেভেলপমেন্টে
 | owner@acme.test | acme | Demo@Pass2026! |
 | operator@acme.test | acme | Demo@Pass2026! |
 
-## ৭. মান যাচাই
+## ৮. মান যাচাই
 
 ```bash
 docker compose exec app php artisan test --compact     # Pest

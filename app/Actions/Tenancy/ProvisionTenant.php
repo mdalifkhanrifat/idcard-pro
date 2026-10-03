@@ -2,10 +2,10 @@
 
 namespace App\Actions\Tenancy;
 
-use App\Actions\MasterData\SeedDefaultMasterData;
 use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Services\MasterData\MasterDataService;
 use App\Support\Permissions\PermissionRegistry;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Support\Facades\DB;
@@ -18,7 +18,7 @@ class ProvisionTenant
     public function __construct(
         private PermissionRegistry $permissions,
         private TenantContext $tenantContext,
-        private SeedDefaultMasterData $seedMasterData,
+        private MasterDataService $masterData,
     ) {}
 
     /**
@@ -43,7 +43,7 @@ class ProvisionTenant
                 $user->assignRole('Owner');
             });
 
-            $this->seedMasterData->handle($tenant);
+            $this->masterData->seedDefaults($tenant);
 
             return $tenant;
         });
