@@ -279,7 +279,8 @@
             "office": "অফিস",
             "external": "বাইরের প্রতিষ্ঠান",
             "files": "ছবি ও ডকুমেন্ট",
-            "history": "রেকর্ড"
+            "history": "রেকর্ড",
+            "images": "ছবি ও সই"
         },
         "fields": {
             "full_name": "পূর্ণ নাম",
@@ -353,6 +354,29 @@
         },
         "selectDepartmentFirst": "আগে বিভাগ বেছে নিন",
         "selectRegionFirst": "আগে অঞ্চল বেছে নিন",
-        "sameAsPresent": "বর্তমান ঠিকানার মতোই"
+        "sameAsPresent": "বর্তমান ঠিকানার মতোই",
+        "files": {
+            "choose": "ছবি বেছে নিন",
+            "change": "বদলান",
+            "pending": "সেভ করলে আপলোড হবে",
+            "rules": "JPEG, PNG বা WebP, সর্বোচ্চ {size} MB",
+            "imageType": "JPEG, PNG বা WebP ছবি বেছে নিন।",
+            "tooLarge": "ফাইলটি {size} MB-এর বেশি।",
+            "uploadFailed": "{name} আপলোড হয়নি: {message}",
+            "photo": "ছবি",
+            "signature": "সই",
+            "document": "ডকুমেন্ট",
+            "addDocument": "ডকুমেন্ট যোগ করুন",
+            "documentTitle": "শিরোনাম (ঐচ্ছিক)",
+            "documentRules": "PDF বা ছবি, সর্বোচ্চ {size} MB",
+            "noDocuments": "এখনো কোনো ডকুমেন্ট নেই।",
+            "history": "আগের সংস্করণ",
+            "open": "খুলুন",
+            "deleteConfirm": "{name} মুছবেন?",
+            "uploaded": "আপলোড হয়েছে"
+        },
+        "created": "কার্ডধারী তৈরি হয়েছে",
+        "tabErrors": "এই ট্যাবে ভুল আছে",
+        "back": "কার্ডধারীদের তালিকায় ফিরুন"
     }
 }

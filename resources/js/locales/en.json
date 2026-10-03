@@ -279,7 +279,8 @@
             "office": "Office",
             "external": "External organization",
             "files": "Photo & documents",
-            "history": "Record"
+            "history": "Record",
+            "images": "Photo & signature"
         },
         "fields": {
             "full_name": "Full name",
@@ -353,6 +354,29 @@
         },
         "selectDepartmentFirst": "Choose a department first",
         "selectRegionFirst": "Choose a region first",
-        "sameAsPresent": "Same as present address"
+        "sameAsPresent": "Same as present address",
+        "files": {
+            "choose": "Choose an image",
+            "change": "Change",
+            "pending": "Will be uploaded when you save",
+            "rules": "JPEG, PNG or WebP, up to {size} MB",
+            "imageType": "Choose a JPEG, PNG or WebP image.",
+            "tooLarge": "The file is larger than {size} MB.",
+            "uploadFailed": "{name} could not be uploaded: {message}",
+            "photo": "Photo",
+            "signature": "Signature",
+            "document": "Documents",
+            "addDocument": "Add document",
+            "documentTitle": "Title (optional)",
+            "documentRules": "PDF or image, up to {size} MB",
+            "noDocuments": "No documents yet.",
+            "history": "Earlier versions",
+            "open": "Open",
+            "deleteConfirm": "Delete {name}?",
+            "uploaded": "Uploaded"
+        },
+        "created": "Cardholder created",
+        "tabErrors": "This tab has errors",
+        "back": "Back to cardholders"
     }
 }
