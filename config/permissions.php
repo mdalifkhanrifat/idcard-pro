@@ -23,6 +23,7 @@ return [
         'settings' => ['view', 'update'],
         'master_data' => ['view', 'create', 'update', 'delete'],
         'cardholders' => ['view', 'create', 'update', 'delete', 'import'],
+        'signatories' => ['view', 'create', 'update', 'delete'],
     ],
 
     'default_roles' => [
@@ -32,6 +33,7 @@ return [
             'roles.view', 'audit.view', 'settings.view',
             'master_data.view', 'master_data.create', 'master_data.update', 'master_data.delete',
             'cardholders.view', 'cardholders.create', 'cardholders.update', 'cardholders.delete', 'cardholders.import',
+            'signatories.view', 'signatories.create', 'signatories.update', 'signatories.delete',
         ],
         'Operator' => ['users.view', 'master_data.view', 'cardholders.view', 'cardholders.create', 'cardholders.update'],
         'Viewer' => ['users.view', 'audit.view', 'master_data.view', 'cardholders.view'],
