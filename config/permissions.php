@@ -22,6 +22,7 @@ return [
         'audit' => ['view'],
         'settings' => ['view', 'update'],
         'master_data' => ['view', 'create', 'update', 'delete'],
+        'cardholders' => ['view', 'create', 'update', 'delete'],
     ],
 
     'default_roles' => [
@@ -30,9 +31,10 @@ return [
             'users.view', 'users.create', 'users.update', 'users.delete',
             'roles.view', 'audit.view', 'settings.view',
             'master_data.view', 'master_data.create', 'master_data.update', 'master_data.delete',
+            'cardholders.view', 'cardholders.create', 'cardholders.update', 'cardholders.delete',
         ],
-        'Operator' => ['users.view', 'master_data.view'],
-        'Viewer' => ['users.view', 'audit.view', 'master_data.view'],
+        'Operator' => ['users.view', 'master_data.view', 'cardholders.view', 'cardholders.create', 'cardholders.update'],
+        'Viewer' => ['users.view', 'audit.view', 'master_data.view', 'cardholders.view'],
     ],
 
 ];
