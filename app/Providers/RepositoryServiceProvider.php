@@ -2,10 +2,14 @@
 
 namespace App\Providers;
 
+use App\Repositories\Contracts\ActivityRepositoryInterface;
+use App\Repositories\Contracts\LoginEventRepositoryInterface;
 use App\Repositories\Contracts\MasterDataRepositoryInterface;
 use App\Repositories\Contracts\RoleRepositoryInterface;
 use App\Repositories\Contracts\TenantRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
+use App\Repositories\Eloquent\ActivityRepository;
+use App\Repositories\Eloquent\LoginEventRepository;
 use App\Repositories\Eloquent\MasterDataRepository;
 use App\Repositories\Eloquent\RoleRepository;
 use App\Repositories\Eloquent\TenantRepository;
@@ -26,5 +30,7 @@ class RepositoryServiceProvider extends ServiceProvider
         UserRepositoryInterface::class => UserRepository::class,
         RoleRepositoryInterface::class => RoleRepository::class,
         TenantRepositoryInterface::class => TenantRepository::class,
+        ActivityRepositoryInterface::class => ActivityRepository::class,
+        LoginEventRepositoryInterface::class => LoginEventRepository::class,
     ];
 }
