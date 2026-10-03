@@ -1,7 +1,7 @@
 # IDCard Pro: কাজের অগ্রগতি ও হ্যান্ডঅফ
 
 > নতুন চ্যাট বা নতুন ডেভেলপার এই ফাইল থেকে শুরু করবেন। পুরো পরিকল্পনা আছে [ROADMAP.md](ROADMAP.md)-এ।
-> সর্বশেষ আপডেট: ৩ অক্টোবর ২০২৬। **Phase 1 আর Phase 2 সম্পন্ন।** Phase 3 চলছে: ৩.১ Signatories (টেবিল, API, পেজ) সম্পন্ন। পরের কাজ ৩.২, কার্ড নম্বরের ফরম্যাট (§৮ দেখুন)।
+> সর্বশেষ আপডেট: ৩ অক্টোবর ২০২৬। **Phase 1 আর Phase 2 সম্পন্ন।** Phase 3 চলছে: ৩.১ Signatories আর ৩.২ কার্ড নম্বরের ফরম্যাট সম্পন্ন। পরের কাজ ৩.৩, কার্ড টেমপ্লেট (§৮ দেখুন)।
 
 ---
 
@@ -24,7 +24,7 @@
 | 2.5 | শিক্ষা ও প্রশিক্ষণ কোর্স (এক টেবিলে), কাস্টম ফিল্ড (সেটআপ পেজ, প্রিসেট, ফর্ম ট্যাব, ফিল্টার) | `QualificationService`, `app/Services/CustomFields`, `config/custom_field_presets.php`, `pages/custom-fields` |
 | 2.6 | CSV/XLSX ইমপোর্ট: যাচাই আর প্রিভিউ, queue-তে ইমপোর্ট, ইতিহাস, টেমপ্লেট | `CardholderImportService`, `CardholderImportMapper`, `app/Jobs/ImportCardholders.php`, `app/Support/Spreadsheets`, `config/cardholder_import.php` |
 
-**মান:** ১১৭টা টেস্ট পাস (১০৬ feature + ১১ unit), Larastan (level 5) আর Pint পরিষ্কার, TypeScript টাইপ-চেক পরিষ্কার। প্রতিটা পেজ headless Chrome-এ চালিয়ে যাচাই করা হয়েছে।
+**মান:** ১৩০টা টেস্ট পাস (১১৯ feature + ১১ unit), Larastan (level 5) আর Pint পরিষ্কার, TypeScript টাইপ-চেক পরিষ্কার। প্রতিটা পেজ headless Chrome-এ চালিয়ে যাচাই করা হয়েছে।
 
 **বর্তমান মডিউল আর তাদের service:**
 
@@ -185,8 +185,13 @@ docker compose run --rm --no-deps vite npx vue-tsc --noEmit
    - ✅ **৩.১খ সম্পন্ন:** `SignatoryService` + `SignatoryRepository`, `/api/v1/signatories` (CRUD, `filter[search|is_active]`), সই আপলোড/মোছা `POST|DELETE /signatories/{id}/signature` (`ImageSanitizer`, private ডিস্ক, পুরনো ফাইল মুছে যায়), `signature_url` = ১৫ মিনিটের relative signed link (ছবির path-এর hash লিংকে থাকে, তাই ছবি বদলালে পুরনো লিংক অকেজো)। ব্যবহৃত `authority_type` master data থেকে মোছা যায় না। ৫টা টেস্ট।
    - ✅ **৩.১গ সম্পন্ন:** সেটআপ → সইকারী পেজ (`pages/signatories`): তালিকায় সইয়ের ছবি, খোঁজা আর অবস্থার ফিল্টার; ডায়ালগে সব ঘর আর সই আপলোড বা মোছা (`CardholderImagePicker` আবার ব্যবহার করা হয়েছে)। ব্রাউজারে যাচাই করা।
    - **নোট:** Operator রোলের এখন `signatories.view` নেই। ৩.৫-এ কার্ড ইস্যুর সময় Operator-কে সইকারী বাছতে হলে এটা দিতে হবে।
-2. ➡️ **এখান থেকে শুরু, ৩.২ কার্ড নম্বরের ফরম্যাট:** tenant settings-এ ফরম্যাট (`{CODE}/{YY}{SEQ:6}` ধরনের) আর `card_sequences` টেবিল। নম্বর তৈরি হবে `lockForUpdate` আর unique `(tenant_id, number)` দিয়ে।
-3. **৩.৩ টেমপ্লেট** (পুরনো `templates` + template type): title, type (কর্মী/পরিবার/অতিথি...), code, orientation, width/height (mm), সামনে/পেছনে, status, সংস্করণ।
+2. ✅ **৩.২ কার্ড নম্বরের ফরম্যাট সম্পন্ন:**
+   - ফরম্যাট থাকে `tenants.settings.card_number_format`-এ, ডিফল্ট `{CODE}/{YY}{SEQ:6}` (পুরনো `CODE/YY######`)। টোকেন: `{CODE}`, `{YYYY}`, `{YY}`, `{MM}`, `{SEQ:n}`। যাচাই আর মান বসানোর কাজ `App\Services\Cards\CardNumberFormat`-এ।
+   - `card_sequences` টেবিল (`tenant_id` + `key`, unique)। key হলো SEQ-এর আগের অংশ, তাই কোড বা বছর বদলালে গণনা ১ থেকে শুরু হয়।
+   - `CardNumberService::next($code)` `lockForUpdate` দিয়ে নম্বর দেয়। **৩.৫-এ কার্ড সেভ করার ট্রানজ্যাকশনের ভেতরেই এটা ডাকতে হবে**, আর কার্ডের টেবিলে `(tenant_id, number)` unique দিতে হবে।
+   - সেটিংস পেজে "কার্ড নম্বর" অংশ আছে, সার্ভার থেকে লাইভ প্রিভিউসহ (`GET /settings/card-number-preview`, কোনো নম্বর আটকে রাখে না)। ১৩টা টেস্ট।
+   - vue-i18n বার্তায় `{CODE}` লিখতে হলে literal সিনট্যাক্স `{'{CODE}'}` ব্যবহার করুন, নইলে ফাঁকা দেখায়।
+3. ➡️ **এখান থেকে শুরু, ৩.৩ টেমপ্লেট** (পুরনো `templates` + template type): title, type (কর্মী/পরিবার/অতিথি...), code, orientation, width/height (mm), সামনে/পেছনে, status, সংস্করণ।
 4. **৩.৪ টেমপ্লেট ডিজাইনার** (পুরনো `template_sections`): লোগো, ব্যাকগ্রাউন্ড, ছবি, সই, ডেটাবেস ফিল্ড (কাস্টম ফিল্ডসহ), QR, টেক্সট; পজিশন, ফন্ট, রঙ; ড্র্যাগ-ড্রপ।
 5. **৩.৫ কার্ড ইস্যু** (পুরনো `card_information`): কারণ (new / promotion / lost / renewal), নোট, মেয়াদ, RF card no। প্রতিবার ইস্যুতে নতুন রেকর্ড, আগের কার্ড বাতিল। **যে ছবি, সই আর টেমপ্লেট সংস্করণ ব্যবহার হলো তার id রাখতে হবে।** পরিবারের সদস্যের কার্ডও এখানে।
 6. **৩.৬ প্রিন্ট আর ইতিহাস** (পুরনো `card_print_history`): ব্রাউজার প্রিন্ট আর সার্ভারে PDF (CR80), ব্যাচ প্রিন্ট, প্রতিটা প্রিন্ট ইউজারের নামে লগ।
