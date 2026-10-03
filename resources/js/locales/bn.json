@@ -404,6 +404,35 @@
                 "sibling": "ভাই/বোন",
                 "other": "অন্যান্য"
             }
+        },
+        "qualifications": {
+            "title": "শিক্ষা ও প্রশিক্ষণ",
+            "education": "শিক্ষাগত যোগ্যতা",
+            "course": "প্রশিক্ষণ কোর্স",
+            "addEducation": "শিক্ষা যোগ করুন",
+            "addCourse": "কোর্স যোগ করুন",
+            "editEducation": "শিক্ষা সম্পাদনা",
+            "editCourse": "কোর্স সম্পাদনা",
+            "emptyEducation": "কোনো শিক্ষাগত তথ্য নেই।",
+            "emptyCourse": "কোনো কোর্স নেই।",
+            "deleteConfirm": "“{name}” মুছবেন?",
+            "fields": {
+                "education": {
+                    "title": "পরীক্ষা",
+                    "institution": "বোর্ড / বিশ্ববিদ্যালয়",
+                    "year": "পাসের বছর",
+                    "subject": "গ্রুপ / বিষয়",
+                    "degree": "ডিগ্রি",
+                    "result": "ফল / জিপিএ"
+                },
+                "course": {
+                    "title": "কোর্সের নাম",
+                    "institution": "প্রতিষ্ঠান",
+                    "year": "বছর",
+                    "result": "ফল",
+                    "certificate_no": "সার্টিফিকেট নম্বর"
+                }
+            }
         }
     }
 }

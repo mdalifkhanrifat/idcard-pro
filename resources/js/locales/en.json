@@ -404,6 +404,35 @@
                 "sibling": "Sibling",
                 "other": "Other"
             }
+        },
+        "qualifications": {
+            "title": "Education & training",
+            "education": "Education",
+            "course": "Training courses",
+            "addEducation": "Add education",
+            "addCourse": "Add course",
+            "editEducation": "Edit education",
+            "editCourse": "Edit course",
+            "emptyEducation": "No education recorded.",
+            "emptyCourse": "No courses recorded.",
+            "deleteConfirm": "Delete “{name}”?",
+            "fields": {
+                "education": {
+                    "title": "Exam",
+                    "institution": "Board / university",
+                    "year": "Passing year",
+                    "subject": "Group / subject",
+                    "degree": "Degree",
+                    "result": "Result / GPA"
+                },
+                "course": {
+                    "title": "Course name",
+                    "institution": "Institute",
+                    "year": "Year",
+                    "result": "Result",
+                    "certificate_no": "Certificate no"
+                }
+            }
         }
     }
 }

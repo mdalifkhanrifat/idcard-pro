@@ -179,3 +179,19 @@ export interface FamilyMember {
     sort_order: number;
     updated_at: string;
 }
+
+export type QualificationKind = 'education' | 'course';
+
+export interface Qualification {
+    id: string;
+    kind: QualificationKind;
+    title: string;
+    institution: string | null;
+    year: number | null;
+    subject: string | null;
+    degree: string | null;
+    result: string | null;
+    certificate_no: string | null;
+    sort_order: number;
+    updated_at: string;
+}

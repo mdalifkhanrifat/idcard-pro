@@ -8,6 +8,7 @@ import UiButton from '@/components/ui/UiButton.vue';
 import UiCard from '@/components/ui/UiCard.vue';
 import CardholderDocuments from './CardholderDocuments.vue';
 import CardholderFamily from './CardholderFamily.vue';
+import CardholderQualifications from './CardholderQualifications.vue';
 import { useConfirm } from '@/composables/useConfirm';
 import { http, toApiError } from '@/lib/http';
 import { formatDate, formatDateTime } from '@/lib/format';
@@ -25,9 +26,9 @@ const { confirm } = useConfirm();
 
 const cardholder = ref<Cardholder | null>(null);
 const earlierImages = ref<CardholderFile[]>([]);
-const TABS = ['details', 'family', 'documents'] as const;
+const TABS = ['details', 'family', 'qualifications', 'documents'] as const;
 const tab = ref<(typeof TABS)[number]>('details');
-const tabLabel = (key: (typeof TABS)[number]) => ({ details: t('cardholders.tabs.details'), family: t('cardholders.family.title'), documents: t('cardholders.files.document') })[key];
+const tabLabel = (key: (typeof TABS)[number]) => ({ details: t('cardholders.tabs.details'), family: t('cardholders.family.title'), qualifications: t('cardholders.qualifications.title'), documents: t('cardholders.files.document') })[key];
 
 type Row = [label: string, value: string | null | undefined];
 
@@ -221,6 +222,7 @@ onMounted(load);
         </div>
 
         <CardholderFamily v-else-if="tab === 'family'" :cardholder-id="cardholder.id" />
+        <CardholderQualifications v-else-if="tab === 'qualifications'" :cardholder-id="cardholder.id" />
         <CardholderDocuments v-else :cardholder-id="cardholder.id" />
     </div>
 </template>
