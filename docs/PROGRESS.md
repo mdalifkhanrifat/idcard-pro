@@ -1,7 +1,7 @@
 # IDCard Pro: কাজের অগ্রগতি ও হ্যান্ডঅফ
 
 > নতুন চ্যাট বা নতুন ডেভেলপার এই ফাইল থেকে শুরু করবেন। পুরো পরিকল্পনা আছে [ROADMAP.md](ROADMAP.md)-এ।
-> সর্বশেষ আপডেট: ৩ অক্টোবর ২০২৬, Phase 1, Master Data আর Cardholder ব্যাকএন্ড (২.৩ক) সম্পন্ন।
+> সর্বশেষ আপডেট: ৩ অক্টোবর ২০২৬, Phase 1, Master Data আর Cardholder ব্যাকএন্ড (২.৩ক) আর ছবি/সই/ডকুমেন্ট আপলোড (২.৩খ) সম্পন্ন।
 
 ---
 
@@ -19,9 +19,10 @@
 | 2.1 | Master Data ব্যাকএন্ড: ১২টা রেফারেন্স তালিকা, প্যারেন্ট-চাইল্ড, ডিফল্ট আইটেম | `config/master_data.php`, `app/Services/MasterData` |
 | 2.2 | Master Data পেজ (সেটআপ → মাস্টার ডেটা) | `resources/js/pages/master-data` |
 | R1–R4 | সব মডিউল Controller → Service → Repository কাঠামোয় | `app/Services`, `app/Repositories`, `app/Data` |
+| 2.3খ | কার্ডধারীর ফাইল: ছবি, সই (একটা চালু, পুরনোগুলো সংরক্ষিত), একাধিক ডকুমেন্ট; ছবি পরিশোধন; private disk; signed link | `config/cardholder_files.php`, `app/Services/Cardholders/CardholderFileService.php`, `app/Support/Media` |
 | 2.3ক | Cardholder ব্যাকএন্ড: `cardholders` টেবিল, CRUD API, ১২টা ফিল্টার, master data FK যাচাই (টাইপ, tenant, unit↔department, sub_region↔region), ব্যবহৃত master data মোছা বন্ধ | `app/Services/Cardholders`, `app/Models/Cardholder.php` |
 
-**মান:** ৬৮টা feature test পাস, Larastan (level 5) আর Pint পরিষ্কার, TypeScript টাইপ-চেক পরিষ্কার।
+**মান:** ৮৫টা টেস্ট পাস (৭৮ feature + ৭ unit), Larastan (level 5) আর Pint পরিষ্কার, TypeScript টাইপ-চেক পরিষ্কার।
 
 **বর্তমান মডিউল আর তাদের service:**
 
@@ -35,6 +36,7 @@
 | নিজের অ্যাকাউন্ট | `Account\AccountService` | `UserRepository` |
 | মাস্টার ডেটা | `MasterData\MasterDataService` | `MasterDataRepository`, `CardholderRepository` (ব্যবহার যাচাই) |
 | কার্ডধারী | `Cardholders\CardholderService` | `CardholderRepository`, `MasterDataRepository` |
+| কার্ডধারীর ফাইল | `Cardholders\CardholderFileService` (+ `Support\Media\ImageSanitizer`) | `CardholderFileRepository` |
 
 ## ৩. চালানো
 
@@ -148,7 +150,18 @@ docker compose run --rm --no-deps vite npx vue-tsc --noEmit
 - অডিট লগে শুধু নাম, নম্বর, অফিস আর অবস্থার ফিল্ড; NID, পাসপোর্ট, ফোন, ঠিকানা লগ হয় না।
 - মুছলে এখন hard delete। Phase 3-এ কার্ড ইস্যু থাকলে মোছা আটকাতে হবে।
 
-**➡️ পরের কাজ, ২.৩খ:** ছবি আর সই আপলোড (MIME যাচাই, এলোমেলো নাম, private disk)। **২.৩গ:** Cardholder লিস্ট পেজ ও ফিল্টার। **২.৩ঘ:** তৈরি ও সম্পাদনার ফর্ম (ট্যাবে ভাগ করা)। **২.৩ঙ:** বিস্তারিত দেখার পেজ।
+**২.৩খ, ফাইল:** ✅ সম্পন্ন।
+- কোন ধরনের ফাইল রাখা যাবে তার তালিকা `config/cardholder_files.php`-এ: `photo` (পুরনো `picture`), `signature` (পুরনো `holder_sign`), `document` (পুরনো `pdf` + `files`, একাধিক, শিরোনামসহ)। নতুন ধরন যোগ করতে শুধু config-এ একটা এন্ট্রি লাগবে।
+- `photo` আর `signature` একটাই চালু থাকে। নতুন আপলোড দিলে পুরনোটা মোছে না, `replaced_at` দিয়ে সংরক্ষিত থাকে (`?include_replaced=1`)। **Phase 3-এ কার্ড ইস্যুর রেকর্ড এই ফাইলের id ধরে রাখবে**, যাতে কার্ডে ছাপা ছবি আর রেকর্ডের ছবি সবসময় মেলে।
+- ছবি GD দিয়ে নতুন করে encode হয়: EXIF/GPS মুছে যায়, ছবি সঠিক দিকে ঘোরে, সর্বোচ্চ মাপ সীমিত থাকে। স্বচ্ছ সই PNG থাকে, বাকি সব JPEG।
+- MIME যাচাই হয় ফাইলের আসল কনটেন্ট দেখে। ফাইলনাম এলোমেলো রাখা হয়, ডিস্ক private (`CARDHOLDER_FILES_DISK`, পরে S3-ও চলবে)।
+- ফাইল দেখা যায় শুধু ১৫ মিনিট মেয়াদের relative signed link দিয়ে (`/api/v1/cardholder-files/{id}`), সাথে `nosniff` আর CSP হেডার থাকে।
+- কার্ডধারী মুছলে তার ফাইলের রেকর্ড cascade হয়ে মুছে যায়, তারপর ডিস্ক থেকে ফাইলগুলোও মোছা হয়।
+- আঙুলের ছাপ এখানে নেই। সেটা Phase 4-এ এনক্রিপ্ট করে আলাদাভাবে রাখা হবে।
+
+**➡️ পরের কাজ, ২.৩গ:** Cardholder লিস্ট পেজ ও ফিল্টার (ছবির থাম্বনেইলসহ)। **২.৩ঘ:** তৈরি ও সম্পাদনার ফর্ম (ট্যাবে ভাগ করা, ছবি/সই আপলোড আর প্রিভিউসহ)। **২.৩ঙ:** বিস্তারিত দেখার পেজ (ডকুমেন্ট তালিকা আর ছবির পুরনো সংস্করণসহ)।
+
+**পরে বিবেচনার জন্য (নতুন ফিচারের প্রস্তাব):** ব্রাউজারে ছবি ক্রপ করা (কার্ডের অনুপাতে), ওয়েবক্যাম থেকে সরাসরি ছবি তোলা, সই-এর পটভূমি স্বয়ংক্রিয়ভাবে স্বচ্ছ করা, ডকুমেন্টের মেয়াদ শেষের তারিখ।
 
 ### ধাপ ২.৪: পরিবারের সদস্য
 পুরনো `family_infos`-এ ছিল: relation, name, gender, mobile, dob, blood group, nid, passport, identification remark, card no।

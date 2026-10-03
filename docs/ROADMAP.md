@@ -27,6 +27,7 @@
 | Organization Setup (configuration) | Tenant settings: ব্র্যান্ডিং, লোগো, রঙ, ভাষা, timezone, কার্ড নম্বরের ফরম্যাট | 2 |
 | Master Setup: Rank, Branch/Trade, Base/Unit, Appointment, Designation, Blood group, Religion, District/Upazila | **Generic lookup lists**: প্রতিটা কোম্পানি নিজের তালিকা বানাবে (Department, Designation, Grade, Location…) | 2 |
 | Personal/Office/Family/Education/Course/Student info | **Cardholder** + কাস্টম ফিল্ড (প্রতি কোম্পানি), পরিবারের সদস্য, ডকুমেন্ট | 2 |
+| Picture, holder sign, PDF, files আপলোড | ছবি/সই (সংস্করণসহ) আর একাধিক ডকুমেন্ট, ছবি পরিশোধন, private disk, signed link | 2 |
 | Template Type, Template, Template Setup | Card templates: ড্র্যাগ-ড্রপ ডিজাইনার, সামনে/পেছনে, ভার্সনিং | 3 |
 | Authorized Signature, Authority Type | Signatories (সই, পদ, কার্যকর তারিখ) | 3 |
 | Auto card number `CODE/YY######` | কনফিগারযোগ্য নম্বর ফরম্যাট, ট্রানজ্যাকশন আর লক দিয়ে, unique | 3 |
@@ -57,7 +58,7 @@
 ## ৪. Phase পরিকল্পনা
 
 - **Phase 1: ভিত্তি।** ✅ সম্পন্ন (৩ অক্টোবর ২০২৬)। Docker, tenancy, custom auth (MFA সহ), RBAC, users, audit, SPA shell, i18n (en/bn), ২৮টা feature test।
-- **Phase 2: Master data।** Tenant settings আর ব্র্যান্ডিং, lookup lists, cardholders + কাস্টম ফিল্ড + পরিবার + ডকুমেন্ট, অ্যাডভান্সড ফিল্টার। 🔄 চলছে: Master Data (তালিকা ও পেজ) সম্পন্ন; পরের কাজ Cardholder। বিস্তারিত: [PROGRESS.md](PROGRESS.md)।
+- **Phase 2: Master data।** Tenant settings আর ব্র্যান্ডিং, lookup lists, cardholders + কাস্টম ফিল্ড + পরিবার + ডকুমেন্ট, অ্যাডভান্সড ফিল্টার। 🔄 চলছে: Master Data সম্পন্ন; Cardholder ব্যাকএন্ড আর ফাইল আপলোড সম্পন্ন; পরের কাজ Cardholder পেজ। বিস্তারিত: [PROGRESS.md](PROGRESS.md)।
 - **Phase 3: কার্ড।** টেমপ্লেট ডিজাইনার, signatories, নম্বর সিকোয়েন্স, issuance আর প্রিন্ট, PDF, স্বাক্ষরিত QR ও ভেরিফিকেশন।
 - **Phase 4: Biometrics।** Driver interface, simulator আর upload, bridge agent spec, enrollment UI।
 - **Phase 5: অপারেশন।** অ্যাপয়েন্টমেন্ট আর নোটিফিকেশন (ইমেইল/SMS), রিপোর্ট আর এক্সপোর্ট, মেয়াদ শেষের রিমাইন্ডার, ইমপোর্ট।
