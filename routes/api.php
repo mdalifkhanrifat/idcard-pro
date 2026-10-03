@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\Auth\SessionController;
 use App\Http\Controllers\Api\V1\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\Api\V1\Auth\TwoFactorController;
 use App\Http\Controllers\Api\V1\CardholderController;
+use App\Http\Controllers\Api\V1\CardholderFileController;
 use App\Http\Controllers\Api\V1\MasterDataController;
 use App\Http\Controllers\Api\V1\PermissionController;
 use App\Http\Controllers\Api\V1\Platform\TenantController;
@@ -26,6 +27,11 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('forgot-password', [PasswordResetController::class, 'forgot'])->name('password.forgot');
         Route::post('reset-password', [PasswordResetController::class, 'reset'])->name('password.reset');
     });
+
+    // Signed, short-lived links to cardholder files (authorization happened when the link was issued)
+    Route::get('cardholder-files/{file}', [CardholderFileController::class, 'content'])
+        ->middleware(['signed:relative', 'throttle:120,1'])
+        ->name('cardholder-files.content');
 
     Route::middleware(['auth:sanctum', 'tenant'])->group(function () {
 
@@ -63,6 +69,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             });
 
             Route::apiResource('cardholders', CardholderController::class);
+            Route::apiResource('cardholders.files', CardholderFileController::class)->only(['index', 'store', 'destroy'])->scoped(['cardholder' => 'public_id', 'file' => 'public_id']);
         });
 
         // Platform administration

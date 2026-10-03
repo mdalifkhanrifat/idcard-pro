@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Cardholder;
 use App\Models\MasterDataItem;
 use App\Models\Tenant;
 use App\Models\User;
@@ -95,4 +96,12 @@ function tenantUser(Tenant $tenant, string $role = 'Operator', array $attributes
 function masterItem(Tenant $tenant, array $attributes): MasterDataItem
 {
     return app(TenantContext::class)->run($tenant, fn () => MasterDataItem::factory()->create([...$attributes, 'tenant_id' => $tenant->id]));
+}
+
+/**
+ * Create a cardholder inside a tenant.
+ */
+function cardholder(Tenant $tenant, array $attributes = []): Cardholder
+{
+    return app(TenantContext::class)->run($tenant, fn () => Cardholder::factory()->create([...$attributes, 'tenant_id' => $tenant->id]));
 }

@@ -1,19 +1,12 @@
 <?php
 
 use App\Models\Cardholder;
-use App\Models\Tenant;
-use App\Support\Tenancy\TenantContext;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Activitylog\Models\Activity;
 
 beforeEach(function () {
     [$this->tenant, $this->owner] = tenantWithOwner();
 });
-
-function cardholder(Tenant $tenant, array $attributes = []): Cardholder
-{
-    return app(TenantContext::class)->run($tenant, fn () => Cardholder::factory()->create([...$attributes, 'tenant_id' => $tenant->id]));
-}
 
 it('creates, shows, updates and deletes a cardholder', function () {
     Sanctum::actingAs($this->owner);
