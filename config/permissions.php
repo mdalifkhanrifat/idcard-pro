@@ -21,6 +21,7 @@ return [
         'roles' => ['view', 'create', 'update', 'delete'],
         'audit' => ['view'],
         'settings' => ['view', 'update'],
+        'master_data' => ['view', 'create', 'update', 'delete'],
     ],
 
     'default_roles' => [
@@ -28,9 +29,10 @@ return [
         'Administrator' => [
             'users.view', 'users.create', 'users.update', 'users.delete',
             'roles.view', 'audit.view', 'settings.view',
+            'master_data.view', 'master_data.create', 'master_data.update', 'master_data.delete',
         ],
-        'Operator' => ['users.view'],
-        'Viewer' => ['users.view', 'audit.view'],
+        'Operator' => ['users.view', 'master_data.view'],
+        'Viewer' => ['users.view', 'audit.view', 'master_data.view'],
     ],
 
 ];

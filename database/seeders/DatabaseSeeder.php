@@ -37,6 +37,8 @@ class DatabaseSeeder extends Seeder
             });
         }
 
+        $this->call(DemoMasterDataSeeder::class);
+
         $this->command?->table(['Login', 'Organization', 'Password'], [
             ['platform@idcard.local', '(leave empty)', self::DEMO_PASSWORD],
             ['owner@acme.test', 'acme', self::DEMO_PASSWORD],

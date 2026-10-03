@@ -2,6 +2,7 @@
 
 namespace App\Actions\Tenancy;
 
+use App\Actions\MasterData\SeedDefaultMasterData;
 use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
@@ -17,6 +18,7 @@ class ProvisionTenant
     public function __construct(
         private PermissionRegistry $permissions,
         private TenantContext $tenantContext,
+        private SeedDefaultMasterData $seedMasterData,
     ) {}
 
     /**
@@ -40,6 +42,8 @@ class ProvisionTenant
                 $user->forceFill(['password_changed_at' => now(), 'email_verified_at' => now()])->save();
                 $user->assignRole('Owner');
             });
+
+            $this->seedMasterData->handle($tenant);
 
             return $tenant;
         });

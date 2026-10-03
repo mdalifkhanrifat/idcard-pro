@@ -2,6 +2,7 @@
 
 namespace App\Support\Permissions;
 
+use App\Models\Role;
 use Illuminate\Support\Collection;
 use Spatie\Permission\Models\Permission;
 use Spatie\Permission\PermissionRegistrar;
@@ -48,6 +49,10 @@ class PermissionRegistry
         $names->each(fn (string $name) => Permission::findOrCreate($name, self::GUARD));
 
         Permission::query()->where('guard_name', self::GUARD)->whereNotIn('name', $names)->delete();
+
+        // Every tenant's Owner always holds every permission, including ones added by new modules.
+        Role::query()->where('name', 'Owner')->where('guard_name', self::GUARD)
+            ->each(fn (Role $owner) => $owner->syncPermissions($names));
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 

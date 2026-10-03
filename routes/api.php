@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
 use App\Http\Controllers\Api\V1\Auth\SessionController;
 use App\Http\Controllers\Api\V1\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\Api\V1\Auth\TwoFactorController;
+use App\Http\Controllers\Api\V1\MasterDataController;
 use App\Http\Controllers\Api\V1\PermissionController;
 use App\Http\Controllers\Api\V1\Platform\TenantController;
 use App\Http\Controllers\Api\V1\RoleController;
@@ -50,6 +51,15 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('audit/logins', [AuditController::class, 'logins'])->name('audit.logins');
             Route::get('settings', [TenantSettingsController::class, 'show'])->name('settings.show');
             Route::post('settings', [TenantSettingsController::class, 'update'])->name('settings.update');
+
+            // Master data (reference lists). {type} must be registered in config/master_data.php
+            Route::prefix('master-data')->name('master-data.')->whereIn('type', array_keys(config('master_data.types')))->group(function () {
+                Route::get('/', [MasterDataController::class, 'types'])->name('types');
+                Route::get('{type}', [MasterDataController::class, 'index'])->name('index');
+                Route::post('{type}', [MasterDataController::class, 'store'])->name('store');
+                Route::put('{type}/{item}', [MasterDataController::class, 'update'])->name('update');
+                Route::delete('{type}/{item}', [MasterDataController::class, 'destroy'])->name('destroy');
+            });
         });
 
         // Platform administration
