@@ -2,7 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { Pencil, Plus, RotateCcw, Search, SlidersHorizontal, Trash2, UserRound } from 'lucide-vue-next';
+import { FileUp, Pencil, Plus, RotateCcw, Search, SlidersHorizontal, Trash2, UserRound } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiEmpty from '@/components/ui/UiEmpty.vue';
@@ -79,6 +79,7 @@ async function remove(cardholder: Cardholder): Promise<void> {
 <template>
     <div>
         <UiPageHeader :title="t('cardholders.title')" :subtitle="t('cardholders.subtitle')">
+            <UiButton v-if="auth.can('cardholders.import')" variant="secondary" @click="router.push('/cardholders/import')"><FileUp class="size-4" />{{ t('cardholders.import.action') }}</UiButton>
             <UiButton v-if="auth.can('cardholders.create')" @click="router.push('/cardholders/new')"><Plus class="size-4" />{{ t('cardholders.new') }}</UiButton>
         </UiPageHeader>
 

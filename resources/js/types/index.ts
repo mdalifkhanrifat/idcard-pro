@@ -212,3 +212,28 @@ export interface CustomField {
     is_active: boolean;
     sort_order: number;
 }
+
+export type ImportStatus = 'analyzed' | 'queued' | 'processing' | 'completed' | 'failed';
+
+export interface CardholderImport {
+    id: string;
+    original_name: string;
+    status: ImportStatus;
+    options: { create_missing_lookups: boolean; update_existing: boolean };
+    summary: {
+        columns: { header: string; field: string }[];
+        ignored: string[];
+        preview: { row: number; action: 'created' | 'updated'; values: Record<string, string> }[];
+        lookups_to_create: string[];
+    } | null;
+    total_rows: number;
+    valid_rows: number;
+    created_count: number;
+    updated_count: number;
+    failed_count: number;
+    errors: { row: number; messages: string[] }[];
+    user?: { id: string; name: string } | null;
+    started_at: string | null;
+    finished_at: string | null;
+    created_at: string;
+}

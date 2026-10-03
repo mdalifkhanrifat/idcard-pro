@@ -435,6 +435,51 @@
                     "certificate_no": "Certificate no"
                 }
             }
+        },
+        "import": {
+            "title": "Import cardholders",
+            "subtitle": "Add or update many cardholders from a CSV or Excel (XLSX) file.",
+            "action": "Import",
+            "file": "File",
+            "fileHint": "CSV or XLSX, up to {size} MB and {rows} rows. The first row must contain column names.",
+            "template": "Download template",
+            "createMissing": "Create missing list items",
+            "createMissingHint": "Departments, ranks etc. that are not in master data yet are added automatically.",
+            "updateExisting": "Update existing cardholders",
+            "updateExistingHint": "Rows whose employee no already exists update that cardholder instead of failing.",
+            "analyze": "Check file",
+            "analyzing": "Checking…",
+            "total": "Rows",
+            "valid": "Ready",
+            "invalid": "With errors",
+            "columns": "Matched columns",
+            "ignored": "Ignored columns",
+            "willCreate": "Will be added to master data",
+            "preview": "Preview",
+            "previewHint": "First {count} valid rows",
+            "errors": "Rows with errors",
+            "row": "Row",
+            "problems": "Problems",
+            "errorsTruncated": "Only the first {count} rows with errors are shown.",
+            "start": "Import {count} rows",
+            "discard": "Discard",
+            "discarded": "Import discarded",
+            "running": "Importing… this page updates by itself.",
+            "done": "Import finished",
+            "created": "Created",
+            "updated": "Updated",
+            "failed": "Not imported",
+            "history": "Recent imports",
+            "noHistory": "No imports yet.",
+            "new": "Import another file",
+            "willUpdate": "update",
+            "status": {
+                "analyzed": "Waiting to import",
+                "queued": "Queued",
+                "processing": "Importing",
+                "completed": "Completed",
+                "failed": "Failed"
+            }
         }
     },
     "customFields": {
