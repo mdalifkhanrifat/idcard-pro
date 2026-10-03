@@ -91,7 +91,8 @@
         "appointments": "Appointments",
         "reports": "Reports",
         "masterData": "Master data",
-        "setup": "Setup"
+        "setup": "Setup",
+        "records": "Records"
     },
     "dashboard": {
         "welcome": "Welcome, {name}",
@@ -260,5 +261,98 @@
             "region": "Regions / districts",
             "sub_region": "Areas / sub-districts"
         }
+    },
+    "cardholders": {
+        "title": "Cardholders",
+        "subtitle": "People who can be issued ID cards.",
+        "new": "New cardholder",
+        "editTitle": "Edit cardholder",
+        "searchPlaceholder": "Name, employee no, NID, phone or email",
+        "deleteConfirm": "Delete {name} and all their files?",
+        "noPhoto": "No photo",
+        "joined": "Joined",
+        "employeeNo": "Employee no",
+        "sections": {
+            "identity": "Identity",
+            "contact": "Contact",
+            "physical": "Physical description",
+            "office": "Office",
+            "external": "External organization",
+            "files": "Photo & documents",
+            "history": "Record"
+        },
+        "fields": {
+            "full_name": "Full name",
+            "full_name_local": "Name (local language)",
+            "date_of_birth": "Date of birth",
+            "gender": "Gender",
+            "marital_status": "Marital status",
+            "nationality": "Nationality",
+            "national_id": "National ID",
+            "passport_no": "Passport no",
+            "blood_group_id": "Blood group",
+            "religion_id": "Religion",
+            "email": "Email",
+            "personal_phone": "Phone",
+            "emergency_phone": "Emergency phone",
+            "present_address": "Present address",
+            "permanent_address": "Permanent address",
+            "region_id": "Region / district",
+            "sub_region_id": "Area / sub-district",
+            "postal_code": "Postal code",
+            "height": "Height",
+            "weight": "Weight",
+            "eye_color": "Eye colour",
+            "complexion": "Complexion",
+            "identification_mark": "Identification mark",
+            "employee_no": "Employee no",
+            "secondary_no": "Secondary no",
+            "employment_type": "Employment type",
+            "department_id": "Department",
+            "unit_id": "Unit",
+            "rank_id": "Rank / grade",
+            "designation_id": "Designation",
+            "branch_id": "Branch",
+            "trade_id": "Trade",
+            "appointment_id": "Appointment",
+            "joining_date": "Joining date",
+            "retirement_date": "Retirement date",
+            "retired_id_no": "Retired ID no",
+            "posting": "Posting",
+            "previous_office": "Previous office",
+            "company_name": "Company name",
+            "company_address": "Company address",
+            "company_phone": "Company phone",
+            "status": "Status",
+            "created_by": "Created by",
+            "created_at": "Created",
+            "updated_at": "Last updated"
+        },
+        "status": {
+            "active": "Active",
+            "inactive": "Inactive",
+            "retired": "Retired"
+        },
+        "employmentType": {
+            "staff": "Staff",
+            "contractor": "Contractor",
+            "visitor": "Visitor",
+            "student": "Student",
+            "other": "Other"
+        },
+        "gender": {
+            "male": "Male",
+            "female": "Female",
+            "other": "Other"
+        },
+        "maritalStatus": {
+            "single": "Single",
+            "married": "Married",
+            "divorced": "Divorced",
+            "widowed": "Widowed"
+        },
+        "selectDepartmentFirst": "Choose a department first",
+        "selectRegionFirst": "Choose a region first",
+        "sameAsPresent": "Same as present address"
     }
 }

@@ -77,3 +77,86 @@ export interface MasterDataItem {
     children_count?: number;
     updated_at: string;
 }
+
+export interface LookupRef {
+    id: string;
+    name: string;
+    name_local: string | null;
+}
+
+export interface FileSummary {
+    id: string;
+    url: string;
+    width: number | null;
+    height: number | null;
+}
+
+export type CardholderStatus = 'active' | 'inactive' | 'retired';
+export type EmploymentType = 'staff' | 'contractor' | 'visitor' | 'student' | 'other';
+
+export interface Cardholder {
+    id: string;
+    full_name: string;
+    full_name_local: string | null;
+    date_of_birth: string | null;
+    gender: 'male' | 'female' | 'other' | null;
+    marital_status: 'single' | 'married' | 'divorced' | 'widowed' | null;
+    nationality: string | null;
+    national_id: string | null;
+    passport_no: string | null;
+    email: string | null;
+    personal_phone: string | null;
+    emergency_phone: string | null;
+    present_address: string | null;
+    permanent_address: string | null;
+    postal_code: string | null;
+    height: string | null;
+    weight: string | null;
+    eye_color: string | null;
+    complexion: string | null;
+    identification_mark: string | null;
+    employee_no: string | null;
+    secondary_no: string | null;
+    employment_type: EmploymentType;
+    joining_date: string | null;
+    retirement_date: string | null;
+    retired_id_no: string | null;
+    posting: string | null;
+    previous_office: string | null;
+    company_name: string | null;
+    company_address: string | null;
+    company_phone: string | null;
+    blood_group?: LookupRef | null;
+    religion?: LookupRef | null;
+    region?: LookupRef | null;
+    sub_region?: LookupRef | null;
+    department?: LookupRef | null;
+    unit?: LookupRef | null;
+    rank?: LookupRef | null;
+    designation?: LookupRef | null;
+    branch?: LookupRef | null;
+    trade?: LookupRef | null;
+    appointment?: LookupRef | null;
+    status: CardholderStatus;
+    photo?: FileSummary | null;
+    signature?: FileSummary | null;
+    created_by?: { id: string; name: string } | null;
+    created_at: string;
+    updated_at: string;
+}
+
+export interface CardholderFile {
+    id: string;
+    collection: string;
+    title: string | null;
+    original_name: string;
+    mime_type: string;
+    size: number;
+    width: number | null;
+    height: number | null;
+    is_current: boolean;
+    url: string;
+    uploaded_by?: { id: string; name: string } | null;
+    replaced_at: string | null;
+    created_at: string;
+}

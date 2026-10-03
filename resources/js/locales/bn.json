@@ -91,7 +91,8 @@
         "appointments": "অ্যাপয়েন্টমেন্ট",
         "reports": "রিপোর্ট",
         "masterData": "মাস্টার ডেটা",
-        "setup": "সেটআপ"
+        "setup": "সেটআপ",
+        "records": "রেকর্ড"
     },
     "dashboard": {
         "welcome": "স্বাগতম, {name}",
@@ -260,5 +261,98 @@
             "region": "অঞ্চল / জেলা",
             "sub_region": "এলাকা / উপজেলা"
         }
+    },
+    "cardholders": {
+        "title": "কার্ডধারী",
+        "subtitle": "যাদের আইডি কার্ড দেওয়া যাবে।",
+        "new": "নতুন কার্ডধারী",
+        "editTitle": "কার্ডধারী সম্পাদনা",
+        "searchPlaceholder": "নাম, কর্মী নম্বর, এনআইডি, ফোন বা ইমেইল",
+        "deleteConfirm": "{name} এবং তার সব ফাইল মুছবেন?",
+        "noPhoto": "ছবি নেই",
+        "joined": "যোগদান",
+        "employeeNo": "কর্মী নম্বর",
+        "sections": {
+            "identity": "পরিচয়",
+            "contact": "যোগাযোগ",
+            "physical": "শারীরিক বর্ণনা",
+            "office": "অফিস",
+            "external": "বাইরের প্রতিষ্ঠান",
+            "files": "ছবি ও ডকুমেন্ট",
+            "history": "রেকর্ড"
+        },
+        "fields": {
+            "full_name": "পূর্ণ নাম",
+            "full_name_local": "নাম (বাংলায়)",
+            "date_of_birth": "জন্ম তারিখ",
+            "gender": "লিঙ্গ",
+            "marital_status": "বৈবাহিক অবস্থা",
+            "nationality": "জাতীয়তা",
+            "national_id": "জাতীয় পরিচয়পত্র নম্বর",
+            "passport_no": "পাসপোর্ট নম্বর",
+            "blood_group_id": "রক্তের গ্রুপ",
+            "religion_id": "ধর্ম",
+            "email": "ইমেইল",
+            "personal_phone": "ফোন",
+            "emergency_phone": "জরুরি ফোন",
+            "present_address": "বর্তমান ঠিকানা",
+            "permanent_address": "স্থায়ী ঠিকানা",
+            "region_id": "অঞ্চল / জেলা",
+            "sub_region_id": "এলাকা / উপজেলা",
+            "postal_code": "পোস্ট কোড",
+            "height": "উচ্চতা",
+            "weight": "ওজন",
+            "eye_color": "চোখের রং",
+            "complexion": "গায়ের রং",
+            "identification_mark": "সনাক্তকরণ চিহ্ন",
+            "employee_no": "কর্মী নম্বর",
+            "secondary_no": "দ্বিতীয় নম্বর",
+            "employment_type": "কর্মসংস্থানের ধরন",
+            "department_id": "বিভাগ",
+            "unit_id": "ইউনিট",
+            "rank_id": "র‍্যাংক / গ্রেড",
+            "designation_id": "পদবি",
+            "branch_id": "শাখা",
+            "trade_id": "ট্রেড",
+            "appointment_id": "নিয়োগ",
+            "joining_date": "যোগদানের তারিখ",
+            "retirement_date": "অবসরের তারিখ",
+            "retired_id_no": "অবসরপ্রাপ্ত আইডি নম্বর",
+            "posting": "পোস্টিং",
+            "previous_office": "আগের অফিস",
+            "company_name": "প্রতিষ্ঠানের নাম",
+            "company_address": "প্রতিষ্ঠানের ঠিকানা",
+            "company_phone": "প্রতিষ্ঠানের ফোন",
+            "status": "অবস্থা",
+            "created_by": "তৈরি করেছেন",
+            "created_at": "তৈরি",
+            "updated_at": "সর্বশেষ পরিবর্তন"
+        },
+        "status": {
+            "active": "সক্রিয়",
+            "inactive": "নিষ্ক্রিয়",
+            "retired": "অবসরপ্রাপ্ত"
+        },
+        "employmentType": {
+            "staff": "কর্মী",
+            "contractor": "ঠিকাদার",
+            "visitor": "অতিথি",
+            "student": "ছাত্র/ছাত্রী",
+            "other": "অন্যান্য"
+        },
+        "gender": {
+            "male": "পুরুষ",
+            "female": "নারী",
+            "other": "অন্যান্য"
+        },
+        "maritalStatus": {
+            "single": "অবিবাহিত",
+            "married": "বিবাহিত",
+            "divorced": "তালাকপ্রাপ্ত",
+            "widowed": "বিধবা/বিপত্নীক"
+        },
+        "selectDepartmentFirst": "আগে বিভাগ বেছে নিন",
+        "selectRegionFirst": "আগে অঞ্চল বেছে নিন",
+        "sameAsPresent": "বর্তমান ঠিকানার মতোই"
     }
 }

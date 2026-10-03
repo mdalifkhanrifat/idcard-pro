@@ -30,10 +30,12 @@ const sections = computed<{ title?: string; items: NavItem[] }[]>(() => {
 
     if (auth.tenant) {
         result.push({ items: [{ to: '/', label: t('nav.dashboard'), icon: LayoutDashboard }] });
+        if (auth.can('cardholders.view')) {
+            result.push({ title: t('nav.records'), items: [{ to: '/cardholders', label: t('nav.cardholders'), icon: ContactRound }] });
+        }
         result.push({
             title: t('nav.comingSoon'),
             items: [
-                { label: t('nav.cardholders'), icon: ContactRound, soon: true },
                 { label: t('nav.templates'), icon: LayoutTemplate, soon: true },
                 { label: t('nav.cards'), icon: CreditCard, soon: true },
                 { label: t('nav.appointments'), icon: CalendarClock, soon: true },

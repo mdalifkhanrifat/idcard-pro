@@ -34,3 +34,25 @@ export function formatRelative(value: string | null | undefined): string {
 
     return rtf.format(seconds, 'second');
 }
+
+/** Calendar date (`YYYY-MM-DD`), shown without any timezone shift. */
+export function formatDate(value: string | null | undefined): string {
+    if (!value) {
+        return '—';
+    }
+    const [year, month, day] = value.slice(0, 10).split('-').map(Number);
+
+    return new Intl.DateTimeFormat(i18n.global.locale.value === 'bn' ? 'bn-BD' : 'en-GB', { dateStyle: 'medium' }).format(new Date(year, month - 1, day));
+}
+
+export function formatBytes(bytes: number): string {
+    const units = ['B', 'KB', 'MB', 'GB'];
+    let value = bytes;
+    let unit = 0;
+    while (value >= 1024 && unit < units.length - 1) {
+        value /= 1024;
+        unit++;
+    }
+
+    return `${value.toFixed(unit === 0 ? 0 : 1)} ${units[unit]}`;
+}
