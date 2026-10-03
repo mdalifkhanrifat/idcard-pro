@@ -57,3 +57,23 @@ export interface Session {
     tenant: Tenant | null;
     permissions: string[];
 }
+
+export interface MasterDataType {
+    type: string;
+    parent: string | null;
+    has_code: boolean;
+    count: number;
+}
+
+export interface MasterDataItem {
+    id: string;
+    type: string;
+    name: string;
+    name_local: string | null;
+    code: string | null;
+    sort_order: number;
+    is_active: boolean;
+    parent: { id: string; name: string } | null;
+    children_count?: number;
+    updated_at: string;
+}

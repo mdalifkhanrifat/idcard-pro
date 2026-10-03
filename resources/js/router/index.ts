@@ -36,6 +36,7 @@ const routes: RouteRecordRaw[] = [
             { path: '', name: 'dashboard', component: () => import('@/pages/DashboardPage.vue'), meta: { title: 'nav.dashboard' } },
             { path: 'users', name: 'users', component: () => import('@/pages/users/UsersPage.vue'), meta: { permission: 'users.view', title: 'nav.users' } },
             { path: 'roles', name: 'roles', component: () => import('@/pages/roles/RolesPage.vue'), meta: { permission: 'roles.view', title: 'nav.roles' } },
+            { path: 'master-data/:type?', name: 'master-data', component: () => import('@/pages/master-data/MasterDataPage.vue'), meta: { permission: 'master_data.view', title: 'nav.masterData' } },
             { path: 'audit', name: 'audit', component: () => import('@/pages/audit/AuditPage.vue'), meta: { permission: 'audit.view', title: 'nav.audit' } },
             { path: 'settings', name: 'settings', component: () => import('@/pages/settings/OrganizationPage.vue'), meta: { permission: 'settings.view', title: 'nav.settings' } },
             { path: 'account', name: 'account', component: () => import('@/pages/account/AccountPage.vue'), meta: { title: 'nav.account' } },

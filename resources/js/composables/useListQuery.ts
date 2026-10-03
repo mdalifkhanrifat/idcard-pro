@@ -16,7 +16,7 @@ export interface PageMeta {
  * Server-side list state (filters, sort, page) mirrored in the URL so filtered views can be bookmarked and shared.
  * Filters are sent as `filter[key]=value`, compatible with spatie/laravel-query-builder.
  */
-export function useListQuery<T>(endpoint: string, defaults: { filters: Record<string, string>; sort?: string; perPage?: number }) {
+export function useListQuery<T>(endpoint: string | (() => string), defaults: { filters: Record<string, string>; sort?: string; perPage?: number }) {
     const route = useRoute();
     const router = useRouter();
     const ui = useUiStore();
@@ -49,7 +49,7 @@ export function useListQuery<T>(endpoint: string, defaults: { filters: Record<st
         }
 
         try {
-            const { data } = await http.get(endpoint, { params });
+            const { data } = await http.get(typeof endpoint === 'function' ? endpoint() : endpoint, { params });
             rows.value = data.data;
             meta.value = data.meta ?? data;
         } catch (error) {

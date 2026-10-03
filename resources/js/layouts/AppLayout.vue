@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuRoot, DropdownMenuSeparator, DropdownMenuTrigger } from 'reka-ui';
 import {
-    BadgeCheck, Building2, CalendarClock, ChevronDown, ContactRound, CreditCard, FileBarChart, LayoutDashboard, LayoutTemplate,
+    BadgeCheck, Building2, CalendarClock, Database, ChevronDown, ContactRound, CreditCard, FileBarChart, LayoutDashboard, LayoutTemplate,
     LogOut, Menu, ScrollText, Settings, ShieldCheck, UserCog, Users, X,
 } from 'lucide-vue-next';
 import LocaleThemeSwitch from '@/components/LocaleThemeSwitch.vue';
@@ -40,6 +40,9 @@ const sections = computed<{ title?: string; items: NavItem[] }[]>(() => {
                 { label: t('nav.reports'), icon: FileBarChart, soon: true },
             ],
         });
+        if (auth.can('master_data.view')) {
+            result.push({ title: t('nav.setup'), items: [{ to: '/master-data', label: t('nav.masterData'), icon: Database }] });
+        }
         result.push({
             title: t('nav.administration'),
             items: [
