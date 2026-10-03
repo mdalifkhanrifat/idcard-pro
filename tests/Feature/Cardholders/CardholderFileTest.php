@@ -122,3 +122,28 @@ it('enforces permissions', function () {
     Sanctum::actingAs(tenantUser($this->tenant, 'Operator'));
     $this->post($this->base, ['collection' => 'document', 'file' => pdfUpload()], ['Accept' => 'application/json'])->assertCreated();
 });
+
+it('shows the current photo and signature on the cardholder', function () {
+    Sanctum::actingAs($this->owner);
+    $photo = $this->post($this->base, ['collection' => 'photo', 'file' => UploadedFile::fake()->image('p.jpg', 300, 400)], ['Accept' => 'application/json'])->json('data.id');
+
+    $this->getJson("/api/v1/cardholders/{$this->cardholder->public_id}")
+        ->assertJsonPath('data.photo.id', $photo)
+        ->assertJsonPath('data.photo.width', 300)
+        ->assertJsonPath('data.signature', null);
+
+    $this->getJson('/api/v1/cardholders')->assertJsonPath('data.0.photo.id', $photo);
+});
+
+it('removes stored files when the cardholder is deleted', function () {
+    Sanctum::actingAs($this->owner);
+    $this->post($this->base, ['collection' => 'photo', 'file' => UploadedFile::fake()->image('a.jpg')], ['Accept' => 'application/json']);
+    $this->post($this->base, ['collection' => 'photo', 'file' => UploadedFile::fake()->image('b.jpg')], ['Accept' => 'application/json']);
+    $this->post($this->base, ['collection' => 'document', 'file' => pdfUpload()], ['Accept' => 'application/json']);
+    $paths = CardholderFile::pluck('path');
+
+    $this->deleteJson("/api/v1/cardholders/{$this->cardholder->public_id}")->assertNoContent();
+
+    expect($paths)->toHaveCount(3)->and(CardholderFile::count())->toBe(0);
+    $paths->each(fn (string $path) => Storage::disk(config('cardholder_files.disk'))->assertMissing($path));
+});

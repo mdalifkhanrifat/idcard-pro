@@ -22,7 +22,7 @@ class CardholderRepository extends EloquentRepository implements CardholderRepos
     public function list(CardholderFilter $filter): LengthAwarePaginator
     {
         $query = $this->query()
-            ->with(['department', 'unit', 'rank', 'designation', 'bloodGroup'])
+            ->with(['department', 'unit', 'rank', 'designation', 'bloodGroup', 'photo'])
             ->when($filter->search, fn (Builder $q, string $search) => $q->where(fn (Builder $w) => $w
                 ->where('full_name', 'like', "%{$search}%")
                 ->orWhere('full_name_local', 'like', "%{$search}%")

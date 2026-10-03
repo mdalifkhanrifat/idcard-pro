@@ -3,7 +3,9 @@
 namespace App\Http\Resources;
 
 use App\Models\Cardholder;
+use App\Models\CardholderFile;
 use App\Models\MasterDataItem;
+use App\Services\Cardholders\CardholderFileService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Str;
@@ -60,6 +62,8 @@ class CardholderResource extends JsonResource
             'company_phone' => $this->company_phone,
             ...$lookups,
             'status' => $this->status,
+            'photo' => $this->whenLoaded('photo', fn () => $this->fileSummary($this->photo)),
+            'signature' => $this->whenLoaded('signature', fn () => $this->fileSummary($this->signature)),
             'created_by' => $this->whenLoaded('creator', fn () => $this->creator ? [
                 'id' => $this->creator->public_id,
                 'name' => $this->creator->name,
@@ -67,5 +71,18 @@ class CardholderResource extends JsonResource
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];
+    }
+
+    /**
+     * @return array{id: string, url: string, width: int|null, height: int|null}|null
+     */
+    private function fileSummary(?CardholderFile $file): ?array
+    {
+        return $file ? [
+            'id' => $file->public_id,
+            'url' => app(CardholderFileService::class)->temporaryUrl($file),
+            'width' => $file->width,
+            'height' => $file->height,
+        ] : null;
     }
 }

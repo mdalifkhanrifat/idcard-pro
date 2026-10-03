@@ -88,13 +88,24 @@ class CardholderFileService
     }
 
     /**
-     * Remove the stored files of a cardholder whose records are being deleted.
+     * Where a cardholder's files are stored; read before the records are deleted.
+     *
+     * @return Collection<int, array{disk: string, path: string}>
      */
-    public function purge(Cardholder $cardholder): void
+    public function storedLocations(Cardholder $cardholder): Collection
     {
-        $this->files->locationsFor($cardholder)
-            ->groupBy('disk')
-            ->each(fn (Collection $locations, string $disk) => Storage::disk($disk)->delete($locations->pluck('path')->all()));
+        return $this->files->locationsFor($cardholder);
+    }
+
+    /**
+     * Remove stored files once their records are gone.
+     *
+     * @param  Collection<int, array{disk: string, path: string}>  $locations
+     */
+    public function deleteStored(Collection $locations): void
+    {
+        $locations->groupBy('disk')
+            ->each(fn (Collection $group, string $disk) => Storage::disk($disk)->delete($group->pluck('path')->all()));
     }
 
     public function temporaryUrl(CardholderFile $file): string

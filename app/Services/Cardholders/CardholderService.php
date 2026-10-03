@@ -17,6 +17,7 @@ class CardholderService
     public function __construct(
         private CardholderRepositoryInterface $cardholders,
         private MasterDataRepositoryInterface $masterData,
+        private CardholderFileService $files,
     ) {}
 
     /**
@@ -51,14 +52,20 @@ class CardholderService
         return $this->withDetails($this->cardholders->update($cardholder, $this->resolveLookups($data)));
     }
 
+    /**
+     * Delete the cardholder; file records cascade in the database, stored files are removed afterwards.
+     */
     public function delete(Cardholder $cardholder): void
     {
+        $locations = $this->files->storedLocations($cardholder);
+
         $this->cardholders->delete($cardholder);
+        $this->files->deleteStored($locations);
     }
 
     private function withDetails(Cardholder $cardholder): Cardholder
     {
-        return $cardholder->load([...Cardholder::lookupRelations(), 'creator']);
+        return $cardholder->load([...Cardholder::lookupRelations(), 'creator', 'photo', 'signature']);
     }
 
     /**
