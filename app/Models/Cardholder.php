@@ -9,10 +9,14 @@ use App\Enums\MaritalStatus;
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\CardholderFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
@@ -70,6 +74,9 @@ use Spatie\Activitylog\Support\LogOptions;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read User|null $creator
+ * @property-read CardholderFile|null $photo
+ * @property-read CardholderFile|null $signature
+ * @property-read Collection<int, CardholderFile> $files
  */
 #[Fillable([
     'full_name', 'full_name_local', 'date_of_birth', 'gender', 'marital_status', 'nationality', 'national_id', 'passport_no',
@@ -246,6 +253,43 @@ class Cardholder extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /**
+     * Every stored file, including replaced versions.
+     *
+     * @return HasMany<CardholderFile, $this>
+     */
+    public function files(): HasMany
+    {
+        return $this->hasMany(CardholderFile::class);
+    }
+
+    /**
+     * @return HasOne<CardholderFile, $this>
+     */
+    public function photo(): HasOne
+    {
+        return $this->currentFile('photo');
+    }
+
+    /**
+     * @return HasOne<CardholderFile, $this>
+     */
+    public function signature(): HasOne
+    {
+        return $this->currentFile('signature');
+    }
+
+    /**
+     * @return HasOne<CardholderFile, $this>
+     */
+    private function currentFile(string $collection): HasOne
+    {
+        return $this->hasOne(CardholderFile::class)->ofMany(
+            ['id' => 'max'],
+            fn (Builder $query) => $query->where('collection', $collection)->whereNull('replaced_at'),
+        );
     }
 
     /**
