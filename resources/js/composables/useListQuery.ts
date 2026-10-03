@@ -44,7 +44,8 @@ export function useListQuery<T>(endpoint: string | (() => string), defaults: { f
         }
         for (const [key, value] of Object.entries(filters)) {
             if (value !== '' && value !== null) {
-                params[`filter[${key}]`] = value;
+                // "custom.class" is sent as filter[custom][class]
+                params[`filter[${key.split('.').join('][')}]`] = value;
             }
         }
 
@@ -74,22 +75,35 @@ export function useListQuery<T>(endpoint: string | (() => string), defaults: { f
     }
 
     function resetFilters(): void {
-        Object.assign(filters, defaults.filters);
+        for (const key of Object.keys(filters)) {
+            filters[key] = defaults.filters[key] ?? '';
+        }
+    }
+
+    /** Register filters discovered after mount (e.g. custom fields), restoring their value from the URL. */
+    function addFilters(keys: string[]): void {
+        for (const key of keys) {
+            if (!(key in filters)) {
+                const value = route.query[`f_${key}`];
+                filters[key] = typeof value === 'string' ? value : '';
+            }
+        }
     }
 
     function toggleSort(field: string): void {
         sort.value = sort.value === field ? `-${field}` : field;
     }
 
+    // Only filters with a value count, so registering new empty filters does not reset the page.
     watchDebounced(
-        () => ({ ...filters }),
+        () => JSON.stringify(Object.entries(filters).filter(([, value]) => value !== '' && value !== null).sort()),
         () => {
             page.value = 1;
             load();
         },
-        { debounce: 300, deep: true },
+        { debounce: 300 },
     );
     watch([page, sort, perPage], load);
 
-    return { filters, sort, page, perPage, rows, meta, loading, load, resetFilters, toggleSort };
+    return { filters, sort, page, perPage, rows, meta, loading, load, resetFilters, addFilters, toggleSort };
 }

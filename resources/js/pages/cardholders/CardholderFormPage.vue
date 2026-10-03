@@ -10,6 +10,8 @@ import UiPageHeader from '@/components/ui/UiPageHeader.vue';
 import UiSelect from '@/components/ui/UiSelect.vue';
 import UiTextarea from '@/components/ui/UiTextarea.vue';
 import CardholderImagePicker from './CardholderImagePicker.vue';
+import CustomFieldInputs from './CustomFieldInputs.vue';
+import { useCustomFields } from '@/composables/useCustomFields';
 import { useMasterDataOptions } from '@/composables/useMasterDataOptions';
 import { http, toApiError } from '@/lib/http';
 import { blankForm, FILE_LIMITS, formFromCardholder, LOOKUP_FIELDS, toPayload } from './cardholder';
@@ -21,6 +23,8 @@ const route = useRoute();
 const router = useRouter();
 const ui = useUiStore();
 const lookups = useMasterDataOptions();
+const customFields = useCustomFields();
+const custom = ref<Record<string, string | boolean>>({});
 
 const editingId = computed(() => (route.params.id as string | undefined) ?? null);
 const form = reactive(blankForm());
@@ -42,10 +46,13 @@ const tabs = [
             'joining_date', 'retirement_date', 'retired_id_no', 'posting', 'previous_office', 'status'],
     },
     { key: 'external', fields: ['company_name', 'company_address', 'company_phone'] },
+    { key: 'additional', fields: ['custom_fields'] },
     { key: 'images', fields: [] as string[] },
 ] as const;
 const activeTab = ref<(typeof tabs)[number]['key']>('identity');
-const tabHasErrors = (fields: readonly string[]) => fields.some((field) => errors.value[field]);
+// Custom field errors arrive as "custom_fields.<key>".
+const tabHasErrors = (fields: readonly string[]) => Object.keys(errors.value).some((key) => fields.some((field) => key === field || key.startsWith(`${field}.`)));
+const visibleTabs = computed(() => tabs.filter((tab) => tab.key !== 'additional' || customFields.fields.value.length));
 
 const options = computed(() => ({
     gender: (['male', 'female', 'other'] as const).map((value) => ({ value, label: t(`cardholders.gender.${value}`) })),
@@ -61,6 +68,8 @@ watch([sameAddress, () => form.present_address], () => sameAddress.value && (for
 
 onMounted(async () => {
     lookups.load(Object.values(LOOKUP_FIELDS));
+    await customFields.load();
+    custom.value = Object.fromEntries(customFields.fields.value.map((field) => [field.key, field.type === 'checkbox' ? false : '']));
     if (!editingId.value) {
         return;
     }
@@ -68,6 +77,10 @@ onMounted(async () => {
     try {
         existing.value = (await http.get(`/cardholders/${editingId.value}`)).data.data;
         Object.assign(form, formFromCardholder(existing.value!));
+        for (const field of customFields.fields.value) {
+            const stored = existing.value!.custom_fields?.[field.key];
+            custom.value[field.key] = field.type === 'checkbox' ? stored === true : stored === undefined || stored === null ? '' : String(stored);
+        }
         sameAddress.value = !!form.present_address && form.present_address === form.permanent_address;
     } catch (error) {
         ui.notify(toApiError(error).message, 'error');
@@ -99,7 +112,10 @@ async function submit(): Promise<void> {
     busy.value = true;
     errors.value = {};
     try {
-        const payload = toPayload(form);
+        const payload = {
+            ...toPayload(form),
+            custom_fields: Object.fromEntries(Object.entries(custom.value).map(([key, value]) => [key, typeof value === 'boolean' ? value : String(value).trim() || null])),
+        };
         const { data } = editingId.value ? await http.put(`/cardholders/${editingId.value}`, payload) : await http.post('/cardholders', payload);
         await uploadImages(data.data.id);
         ui.notify(editingId.value ? t('common.saved') : t('cardholders.created'));
@@ -135,7 +151,7 @@ async function submit(): Promise<void> {
             <!-- Tabs -->
             <div class="flex gap-1 overflow-x-auto border-b border-line px-3" role="tablist">
                 <button
-                    v-for="tab in tabs"
+                    v-for="tab in visibleTabs"
                     :key="tab.key"
                     type="button"
                     role="tab"
@@ -221,6 +237,8 @@ async function submit(): Promise<void> {
                     <UiInput v-model="form.company_phone" inputmode="tel" :label="t('cardholders.fields.company_phone')" :error="errors.company_phone" />
                     <UiTextarea v-model="form.company_address" :rows="2" :label="t('cardholders.fields.company_address')" :error="errors.company_address" class="sm:col-span-2" />
                 </div>
+
+                <CustomFieldInputs v-show="activeTab === 'additional'" v-model="custom" :groups="customFields.groups.value" :label="customFields.label" :errors="errors" />
 
                 <div v-show="activeTab === 'images'" class="grid gap-8 sm:grid-cols-2">
                     <CardholderImagePicker v-model="photo" :label="t('cardholders.files.photo')" :current-url="existing?.photo?.url" :max-kb="FILE_LIMITS.photo" />

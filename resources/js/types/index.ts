@@ -138,6 +138,7 @@ export interface Cardholder {
     trade?: LookupRef | null;
     appointment?: LookupRef | null;
     status: CardholderStatus;
+    custom_fields: Record<string, string | number | boolean>;
     photo?: FileSummary | null;
     signature?: FileSummary | null;
     created_by?: { id: string; name: string } | null;
@@ -194,4 +195,20 @@ export interface Qualification {
     certificate_no: string | null;
     sort_order: number;
     updated_at: string;
+}
+
+export type CustomFieldType = 'text' | 'textarea' | 'number' | 'date' | 'select' | 'checkbox';
+
+export interface CustomField {
+    id: string;
+    entity: string;
+    key: string;
+    label: string;
+    label_local: string | null;
+    group: string | null;
+    type: CustomFieldType;
+    options: string[] | null;
+    is_required: boolean;
+    is_active: boolean;
+    sort_order: number;
 }

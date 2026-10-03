@@ -92,7 +92,8 @@
         "reports": "Reports",
         "masterData": "Master data",
         "setup": "Setup",
-        "records": "Records"
+        "records": "Records",
+        "customFields": "Custom fields"
     },
     "dashboard": {
         "welcome": "Welcome, {name}",
@@ -280,7 +281,8 @@
             "external": "External organization",
             "files": "Photo & documents",
             "history": "Record",
-            "images": "Photo & signature"
+            "images": "Photo & signature",
+            "additional": "Additional information"
         },
         "fields": {
             "full_name": "Full name",
@@ -433,6 +435,41 @@
                     "certificate_no": "Certificate no"
                 }
             }
+        }
+    },
+    "customFields": {
+        "title": "Custom fields",
+        "subtitle": "Extra fields your organization records for cardholders.",
+        "new": "New field",
+        "editTitle": "Edit field",
+        "none": "No additional fields are set up.",
+        "empty": "No custom fields yet. Add one or start from a preset.",
+        "presets": "Add preset",
+        "presetApplied": "{count} fields added",
+        "presetNames": {
+            "student": "Student information (class, section, session, registration)"
+        },
+        "deleteConfirm": "Delete the field “{name}”? Values already saved stay on the records but are no longer shown.",
+        "key": "Key",
+        "keyHint": "Lowercase letters, numbers and _; cannot be changed later.",
+        "label": "Label",
+        "labelLocal": "Label (local language)",
+        "group": "Group",
+        "groupHint": "Fields with the same group are shown together.",
+        "type": "Type",
+        "typeFixed": "The type cannot be changed after creation.",
+        "options": "Options",
+        "optionsHint": "One option per line.",
+        "required": "Required",
+        "active": "Active",
+        "order": "Order",
+        "types": {
+            "text": "Text",
+            "textarea": "Long text",
+            "number": "Number",
+            "date": "Date",
+            "select": "Drop-down",
+            "checkbox": "Yes / no"
         }
     }
 }

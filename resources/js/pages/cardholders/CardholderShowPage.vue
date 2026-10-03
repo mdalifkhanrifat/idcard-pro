@@ -9,6 +9,7 @@ import UiCard from '@/components/ui/UiCard.vue';
 import CardholderDocuments from './CardholderDocuments.vue';
 import CardholderFamily from './CardholderFamily.vue';
 import CardholderQualifications from './CardholderQualifications.vue';
+import { useCustomFields } from '@/composables/useCustomFields';
 import { useConfirm } from '@/composables/useConfirm';
 import { http, toApiError } from '@/lib/http';
 import { formatDate, formatDateTime } from '@/lib/format';
@@ -23,6 +24,7 @@ const router = useRouter();
 const auth = useAuthStore();
 const ui = useUiStore();
 const { confirm } = useConfirm();
+const customFields = useCustomFields();
 
 const cardholder = ref<Cardholder | null>(null);
 const earlierImages = ref<CardholderFile[]>([]);
@@ -35,7 +37,7 @@ type Row = [label: string, value: string | null | undefined];
 const lookup = (item: LookupRef | null | undefined) => (item ? (item.name_local && item.name_local !== item.name ? `${item.name} (${item.name_local})` : item.name) : null);
 const label = (field: string) => t(`cardholders.fields.${field}`);
 
-const sections = computed<{ key: string; rows: Row[] }[]>(() => {
+const sections = computed<{ key: string; title?: string; rows: Row[] }[]>(() => {
     const c = cardholder.value;
     if (!c) {
         return [];
@@ -98,6 +100,11 @@ const sections = computed<{ key: string; rows: Row[] }[]>(() => {
                 [label('identification_mark'), c.identification_mark],
             ],
         },
+        ...customFields.groups.value.map((group) => ({
+            key: 'additional',
+            title: group.name || t('cardholders.sections.additional'),
+            rows: group.fields.map((field) => [customFields.label(field), customFields.display(field, c.custom_fields?.[field.key])]),
+        })),
         { key: 'external', rows: [[label('company_name'), c.company_name], [label('company_address'), c.company_address], [label('company_phone'), c.company_phone]] },
         {
             key: 'history',
@@ -107,7 +114,7 @@ const sections = computed<{ key: string; rows: Row[] }[]>(() => {
                 [label('updated_at'), formatDateTime(c.updated_at)],
             ],
         },
-    ] as { key: string; rows: Row[] }[];
+    ] as { key: string; title?: string; rows: Row[] }[];
 
     // Hide empty sections (e.g. external organization for staff) but keep the identity and office blocks.
     return result
@@ -118,7 +125,8 @@ const sections = computed<{ key: string; rows: Row[] }[]>(() => {
 async function load(): Promise<void> {
     try {
         const id = route.params.id as string;
-        const [record, images] = await Promise.all([
+        const [, record, images] = await Promise.all([
+            customFields.load(),
             http.get(`/cardholders/${id}`),
             http.get(`/cardholders/${id}/files`, { params: { include_replaced: 1 } }),
         ]);
@@ -194,7 +202,7 @@ onMounted(load);
 
         <div v-if="tab === 'details'" class="grid gap-6 lg:grid-cols-[1fr_300px]">
             <div class="grid gap-6 md:grid-cols-2">
-                <UiCard v-for="section in sections" :key="section.key" :title="t(`cardholders.sections.${section.key}`)">
+                <UiCard v-for="section in sections" :key="`${section.key}-${section.title}`" :title="section.title ?? t(`cardholders.sections.${section.key}`)">
                     <dl class="space-y-3 text-sm">
                         <div v-for="[name, value] in section.rows" :key="name" class="grid grid-cols-[minmax(0,2fr)_minmax(0,3fr)] gap-3">
                             <dt class="text-muted">{{ name }}</dt>

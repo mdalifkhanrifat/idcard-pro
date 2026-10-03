@@ -14,6 +14,7 @@ import UiSortHeader from '@/components/ui/UiSortHeader.vue';
 import { useConfirm } from '@/composables/useConfirm';
 import { useListQuery } from '@/composables/useListQuery';
 import { useMasterDataOptions } from '@/composables/useMasterDataOptions';
+import { useCustomFields } from '@/composables/useCustomFields';
 import { http, toApiError } from '@/lib/http';
 import { formatDate } from '@/lib/format';
 import { statusTone } from './cardholder';
@@ -27,6 +28,9 @@ const auth = useAuthStore();
 const ui = useUiStore();
 const { confirm } = useConfirm();
 const lookups = useMasterDataOptions();
+const customFields = useCustomFields();
+// Drop-down and yes/no custom fields can be filtered on exactly.
+const customFilters = computed(() => customFields.fields.value.filter((field) => field.type === 'select' || field.type === 'checkbox'));
 
 const list = useListQuery<Cardholder>('/cardholders', {
     filters: {
@@ -51,9 +55,11 @@ watch(() => filters.department, (department, previous) => {
     }
 });
 
-onMounted(() => {
-    list.load();
+onMounted(async () => {
     lookups.load(['department', 'unit', 'rank', 'designation', 'branch', 'blood_group']);
+    await customFields.load();
+    list.addFilters(customFilters.value.map((field) => `custom.${field.key}`));
+    list.load();
 });
 
 async function remove(cardholder: Cardholder): Promise<void> {
@@ -110,6 +116,16 @@ async function remove(cardholder: Cardholder): Promise<void> {
                 <UiSelect v-model="filters.blood_group" :label="t('cardholders.fields.blood_group_id')" :placeholder="t('common.all')" :options="lookups.options('blood_group')" />
                 <UiInput v-model="filters.joined_from" type="date" :label="`${t('cardholders.joined')} · ${t('common.from')}`" />
                 <UiInput v-model="filters.joined_to" type="date" :label="`${t('cardholders.joined')} · ${t('common.to')}`" />
+                <UiSelect
+                    v-for="field in customFilters"
+                    :key="field.key"
+                    v-model="filters[`custom.${field.key}`]"
+                    :label="customFields.label(field)"
+                    :placeholder="t('common.all')"
+                    :options="field.type === 'checkbox'
+                        ? [{ value: 'true', label: t('common.yes') }, { value: 'false', label: t('common.no') }]
+                        : (field.options ?? []).map((option) => ({ value: option, label: option }))"
+                />
             </div>
 
             <!-- Table -->
