@@ -31,7 +31,7 @@
 | Education info, Other course | শিক্ষা ও প্রশিক্ষণ (এক টেবিলে, কোর্স এখন ব্যক্তির সাথে যুক্ত) ✅ | 2 |
 | Student info | কাস্টম ফিল্ড + "student" প্রিসেট; যেকোনো প্রতিষ্ঠান নিজের ঘর বানাতে পারে ✅ | 2 |
 | Picture, holder sign, PDF, files আপলোড | ছবি/সই (সংস্করণসহ) আর একাধিক ডকুমেন্ট, ছবি পরিশোধন, private disk, signed link ✅ | 2 |
-| Template Type, Template, Template Setup | Card templates: ড্র্যাগ-ড্রপ ডিজাইনার (হ্যান্ডেল, mm, স্ন্যাপ, লেয়ার, Undo, আকৃতি, গ্রেডিয়েন্ট, বর্ডার), সামনে/পেছনে, ভার্সনিং, আসল কার্ডধারী দিয়ে প্রিভিউ, self-hosted ফন্ট ✅ | 3 |
+| Template Type, Template, Template Setup | Card templates: ড্র্যাগ-ড্রপ ডিজাইনার (হ্যান্ডেল, mm, স্ন্যাপ ও স্মার্ট গাইড, লেয়ার, লক/লুকানো, একাধিক বাছাই ও সারিবদ্ধ, Undo, আকৃতি, গ্রেডিয়েন্ট, বর্ডার, ঘোরানো, auto-fit, বিকল্প ছবি, তৈরি নকশা, লেআউট export/import), সামনে/পেছনে, ভার্সনিং, আসল কার্ডধারী দিয়ে প্রিভিউ, self-hosted ফন্ট, ডিফল্ট কার্ড মাপ (Template Setup) ✅ | 3 |
 | Authorized Signature, Authority Type | Signatories (সই, পদ, কার্যকর তারিখ) ✅ | 3 |
 | Auto card number `CODE/YY######` | কনফিগারযোগ্য নম্বর ফরম্যাট, ট্রানজ্যাকশন আর লক দিয়ে, unique ✅ | 3 |
 | Card print + reason (New/Promotion/Lost) + history | Card issuance: প্রতিবার ইস্যুতে নতুন রেকর্ড, কারণ, নোট, প্রিন্ট ইতিহাস, পুরনো কার্ড বাতিল | 3 |
