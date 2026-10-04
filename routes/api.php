@@ -42,6 +42,9 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::get('signatory-signatures/{signatory}', [SignatoryController::class, 'signature'])
         ->middleware(['signed:relative', 'throttle:120,1'])
         ->name('signatory-signatures.show');
+    Route::get('card-template-images/{template}/{image}', [CardTemplateElementController::class, 'image'])
+        ->middleware(['signed:relative', 'throttle:120,1'])
+        ->name('card-template-images.show');
 
     Route::middleware(['auth:sanctum', 'tenant'])->group(function () {
 
@@ -98,6 +101,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::post('card-templates/{template}/duplicate', [CardTemplateController::class, 'duplicate'])->name('card-templates.duplicate');
             Route::get('card-templates/{template}/elements', [CardTemplateElementController::class, 'index'])->name('card-templates.elements.index');
             Route::put('card-templates/{template}/elements', [CardTemplateElementController::class, 'update'])->name('card-templates.elements.update');
+            Route::post('card-templates/{template}/images', [CardTemplateElementController::class, 'uploadImage'])->name('card-templates.images.store');
 
             Route::apiResource('signatories', SignatoryController::class);
             Route::post('signatories/{signatory}/signature', [SignatoryController::class, 'uploadSignature'])->name('signatories.signature.store');

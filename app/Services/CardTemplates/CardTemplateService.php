@@ -11,7 +11,7 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Card templates (layout, size, card type). Sections are added by the designer (3.4).
+ * Card templates (layout, size, card type). Their elements are edited through CardTemplateDesignService.
  */
 class CardTemplateService
 {
@@ -23,6 +23,7 @@ class CardTemplateService
     public function __construct(
         private CardTemplateRepositoryInterface $templates,
         private MasterDataRepositoryInterface $masterData,
+        private CardTemplateImageService $images,
     ) {}
 
     /**
@@ -71,6 +72,7 @@ class CardTemplateService
     public function delete(CardTemplate $template): void
     {
         $this->templates->delete($template);
+        $this->images->deleteAll($template);
     }
 
     /**
@@ -89,11 +91,13 @@ class CardTemplateService
                 'created_by' => $actor->id,
             ]);
 
-            // Uploaded images are shared by reference; a later upload on either template stores a new file.
+            // The copy gets its own image files, so removing a logo from one template never breaks the other.
+            $imagePaths = $this->images->copyAll($template, $copy);
             foreach ($template->elements as $element) {
-                $copy->elements()->create($element->only([
-                    'side', 'type', 'field', 'label', 'content', 'qr_lines', 'image_disk', 'image_path', 'x', 'y', 'width', 'height', 'z_index', 'style',
-                ]));
+                $copy->elements()->create([
+                    ...$element->only(['side', 'type', 'field', 'label', 'content', 'qr_lines', 'image_disk', 'x', 'y', 'width', 'height', 'z_index', 'style']),
+                    'image_path' => $imagePaths[$element->image_path] ?? null,
+                ]);
             }
 
             return $copy->load(['cardType', 'authorityType']);

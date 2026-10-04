@@ -7,15 +7,22 @@ use App\Http\Requests\CardTemplates\SaveCardTemplateElementsRequest;
 use App\Http\Resources\CardTemplateElementResource;
 use App\Models\CardTemplate;
 use App\Services\CardTemplates\CardTemplateDesignService;
+use App\Services\CardTemplates\CardTemplateImageService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 /**
  * Template designer layout. `meta` carries the template version and, on GET, the designer catalog.
  */
 class CardTemplateElementController extends Controller
 {
-    public function __construct(private CardTemplateDesignService $design) {}
+    public function __construct(
+        private CardTemplateDesignService $design,
+        private CardTemplateImageService $images,
+    ) {}
 
     public function index(CardTemplate $template): AnonymousResourceCollection
     {
@@ -31,5 +38,29 @@ class CardTemplateElementController extends Controller
 
         return CardTemplateElementResource::collection($elements)
             ->additional(['meta' => ['version' => $template->version]]);
+    }
+
+    /**
+     * Upload a logo or background image; the returned name is then used in a layout save.
+     */
+    public function uploadImage(Request $request, CardTemplate $template): JsonResponse
+    {
+        Gate::authorize('templates.update');
+
+        $request->validate(['file' => ['required', 'file', 'mimes:jpg,jpeg,png,webp', 'max:5120']]);
+        $name = $this->images->upload($template, $request->file('file'));
+
+        return response()->json(['data' => [
+            'image' => $name,
+            'image_url' => $this->images->url($template, $this->images->path($template, $name)),
+        ]], 201);
+    }
+
+    /**
+     * Template image behind a short-lived signed link.
+     */
+    public function image(string $template, string $image): StreamedResponse
+    {
+        return $this->images->stream($template, $image);
     }
 }

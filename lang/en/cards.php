@@ -14,5 +14,6 @@ return [
         'content_required' => 'Enter the text to show.',
         'qr_line_invalid' => 'Each QR line needs a data field or custom text.',
         'outside_card' => 'The element must stay inside the card (:width × :height mm).',
+        'image_missing' => 'The image was not found. Upload it again.',
     ],
 ];

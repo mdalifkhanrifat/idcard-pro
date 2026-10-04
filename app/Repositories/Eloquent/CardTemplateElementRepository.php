@@ -19,7 +19,7 @@ class CardTemplateElementRepository extends EloquentRepository implements CardTe
 
     public function forTemplate(CardTemplate $template): Collection
     {
-        return $template->elements()->get();
+        return $template->elements()->get()->each->setRelation('template', $template);
     }
 
     public function replaceForTemplate(CardTemplate $template, array $elements): Collection

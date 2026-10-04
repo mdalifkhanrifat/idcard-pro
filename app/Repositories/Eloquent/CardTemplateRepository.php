@@ -47,4 +47,9 @@ class CardTemplateRepository extends EloquentRepository implements CardTemplateR
 
         return $column !== null && $this->query()->where($column, $item->id)->exists();
     }
+
+    public function findAnyTenant(string $publicId): ?CardTemplate
+    {
+        return CardTemplate::query()->withoutGlobalScopes()->where('public_id', $publicId)->first();
+    }
 }

@@ -18,4 +18,9 @@ interface CardTemplateRepositoryInterface extends RepositoryInterface
     public function list(CardTemplateFilter $filter): Collection;
 
     public function usesMasterDataItem(MasterDataItem $item): bool;
+
+    /**
+     * Lookup without the tenant scope, for signed image links (no session).
+     */
+    public function findAnyTenant(string $publicId): ?CardTemplate;
 }

@@ -33,6 +33,7 @@ class CardTemplateDesignService
         private CardTemplateElementRepositoryInterface $elements,
         private CardTemplateRepositoryInterface $templates,
         private CustomFieldRepositoryInterface $customFields,
+        private CardTemplateImageService $images,
     ) {}
 
     /**
@@ -73,16 +74,21 @@ class CardTemplateDesignService
     {
         $rows = $this->normalize($template, $input);
 
-        return DB::transaction(function () use ($template, $rows): Collection {
-            $before = $this->designSignature($this->elements->forTemplate($template));
+        [$saved, $unusedImages] = DB::transaction(function () use ($template, $rows): array {
+            $previous = $this->elements->forTemplate($template);
             $saved = $this->elements->replaceForTemplate($template, $rows);
 
-            if ($this->designSignature($saved) !== $before) {
+            if ($this->designSignature($saved) !== $this->designSignature($previous)) {
                 $this->templates->update($template, ['version' => $template->version + 1]);
             }
 
-            return $saved;
+            return [$saved, $previous->pluck('image_path')->filter()->diff($saved->pluck('image_path')->filter())];
         });
+
+        // Replaced or removed images; uploads never saved in a layout stay until the template is deleted.
+        $this->images->delete($unusedImages->unique());
+
+        return $saved;
     }
 
     /**
@@ -160,6 +166,15 @@ class CardTemplateDesignService
                 $errors["{$key}.x"] = __('cards.designer.outside_card', ['width' => $size['width'], 'height' => $size['height']]);
             }
 
+            $imagePath = null;
+            if (! empty($options['image']) && ($element['image'] ?? null) !== null) {
+                if ($this->images->exists($template, $element['image'])) {
+                    $imagePath = $this->images->path($template, $element['image']);
+                } else {
+                    $errors["{$key}.image"] = __('cards.designer.image_missing');
+                }
+            }
+
             $rows[] = [
                 'side' => $side,
                 'type' => $type,
@@ -167,6 +182,8 @@ class CardTemplateDesignService
                 'label' => ($element['label'] ?? '') === '' ? null : $element['label'],
                 'content' => $content,
                 'qr_lines' => $qrLines,
+                'image_disk' => $imagePath === null ? null : $this->images->diskName(),
+                'image_path' => $imagePath,
                 'x' => $x,
                 'y' => $y,
                 'width' => $width,

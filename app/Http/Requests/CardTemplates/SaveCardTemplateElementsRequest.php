@@ -3,6 +3,7 @@
 namespace App\Http\Requests\CardTemplates;
 
 use App\Models\CardTemplateElement;
+use App\Services\CardTemplates\CardTemplateImageService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -26,7 +27,7 @@ class SaveCardTemplateElementsRequest extends FormRequest
 
         return [
             'elements' => ['present', 'array', 'max:200'],
-            'elements.*' => ['array:side,type,field,label,content,qr_lines,x,y,width,height,style'],
+            'elements.*' => ['array:side,type,field,label,content,qr_lines,image,x,y,width,height,style'],
             'elements.*.side' => ['required', Rule::in(CardTemplateElement::SIDES)],
             'elements.*.type' => ['required', Rule::in(array_keys((array) config('card_template_elements.types')))],
             'elements.*.field' => ['nullable', 'string', 'max:60'],
@@ -37,6 +38,8 @@ class SaveCardTemplateElementsRequest extends FormRequest
             'elements.*.qr_lines.*.field' => ['nullable', 'string', 'max:60'],
             'elements.*.qr_lines.*.label' => ['nullable', 'string', 'max:50'],
             'elements.*.qr_lines.*.text' => ['nullable', 'string', 'max:200'],
+            // Name returned by POST /card-templates/{id}/images
+            'elements.*.image' => ['nullable', 'string', 'regex:'.CardTemplateImageService::NAME_PATTERN],
             'elements.*.x' => ['required', 'numeric', 'min:0', 'max:1000'],
             'elements.*.y' => ['required', 'numeric', 'min:0', 'max:1000'],
             'elements.*.width' => ['required', 'numeric', 'min:0.5', 'max:1000'],

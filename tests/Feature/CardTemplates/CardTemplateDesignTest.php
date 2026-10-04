@@ -3,9 +3,12 @@
 use App\Models\CardTemplate;
 use App\Models\CardTemplateElement;
 use App\Support\Tenancy\TenantContext;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 
 beforeEach(function () {
+    Storage::fake(config('cardholder_files.disk'));
     [$this->tenant, $this->owner] = tenantWithOwner();
     $this->template = app(TenantContext::class)->run($this->tenant, fn () => CardTemplate::factory()->create([
         'tenant_id' => $this->tenant->id, 'width' => 85.6, 'height' => 54, 'size_unit' => 'mm', 'is_double_sided' => true,
@@ -133,7 +136,69 @@ it('keeps layouts per organization and enforces permissions', function () {
     $this->getJson("/api/v1/card-templates/{$foreign->public_id}/elements")->assertNotFound();
     $this->putJson("/api/v1/card-templates/{$foreign->public_id}/elements", ['elements' => []])->assertNotFound();
 
+    $this->post("/api/v1/card-templates/{$foreign->public_id}/images", ['file' => UploadedFile::fake()->image('l.png')], ['Accept' => 'application/json'])->assertNotFound();
+
     Sanctum::actingAs(tenantUser($this->tenant, 'Operator'));
     $this->getJson($this->url)->assertOk();
     $this->putJson($this->url, ['elements' => []])->assertForbidden();
+    $this->post("/api/v1/card-templates/{$this->template->public_id}/images", ['file' => UploadedFile::fake()->image('l.png')], ['Accept' => 'application/json'])->assertForbidden();
+});
+
+it('uploads logo and background images and cleans up replaced ones', function () {
+    Sanctum::actingAs($this->owner);
+    $upload = fn (string $name) => $this->post("/api/v1/card-templates/{$this->template->public_id}/images", ['file' => UploadedFile::fake()->image($name, 600, 300)], ['Accept' => 'application/json'])
+        ->assertCreated()
+        ->json('data');
+
+    $logo = $upload('logo.png');
+    $background = $upload('bg.jpg');
+    expect($logo['image'])->toMatch('/^[0-9a-z]{26}\.(png|jpg)$/');
+    $this->get($logo['image_url'])->assertOk()->assertHeader('X-Content-Type-Options', 'nosniff');
+
+    $this->putJson($this->url, ['elements' => [
+        designElement(['type' => 'background', 'field' => null, 'image' => $background['image'], 'x' => 0, 'y' => 0, 'width' => 85.6, 'height' => 54]),
+        designElement(['type' => 'logo', 'field' => null, 'image' => $logo['image'], 'x' => 2, 'y' => 2, 'width' => 12, 'height' => 12]),
+        designElement(['type' => 'photo', 'image' => $logo['image']]),
+    ]])
+        ->assertOk()
+        ->assertJsonPath('data.1.image', $logo['image'])
+        ->assertJsonPath('data.2.image', null)
+        ->assertJsonPath('data.2.image_url', null);
+    $logoUrl = $this->getJson($this->url)->json('data.1.image_url');
+    $this->get($logoUrl)->assertOk();
+
+    // A file of another template (or a made-up name) cannot be referenced.
+    $this->putJson($this->url, ['elements' => [designElement(['type' => 'logo', 'field' => null, 'image' => str_repeat('a', 26).'.png'])]])
+        ->assertJsonValidationErrors('elements.0.image');
+
+    // Dropping the logo deletes its file; the background stays.
+    $this->putJson($this->url, ['elements' => [
+        designElement(['type' => 'background', 'field' => null, 'image' => $background['image'], 'x' => 0, 'y' => 0, 'width' => 85.6, 'height' => 54]),
+    ]])->assertOk();
+    $this->get($logoUrl)->assertNotFound();
+    expect(Storage::disk(config('cardholder_files.disk'))->allFiles())->toHaveCount(1);
+
+    // Tampered links are refused.
+    $this->get(str_replace($background['image'], $logo['image'], $background['image_url']))->assertForbidden();
+
+    $this->post("/api/v1/card-templates/{$this->template->public_id}/images", ['file' => UploadedFile::fake()->createWithContent('x.png', '%PDF-1.4')], ['Accept' => 'application/json'])
+        ->assertUnprocessable();
+});
+
+it('gives a duplicated template its own images and deletes them with the template', function () {
+    Sanctum::actingAs($this->owner);
+    $logo = $this->post("/api/v1/card-templates/{$this->template->public_id}/images", ['file' => UploadedFile::fake()->image('logo.png')], ['Accept' => 'application/json'])->json('data.image');
+    $this->putJson($this->url, ['elements' => [designElement(['type' => 'logo', 'field' => null, 'image' => $logo])]])->assertOk();
+
+    $copyId = $this->postJson("/api/v1/card-templates/{$this->template->public_id}/duplicate", ['name' => 'Copy'])->json('data.id');
+    $disk = Storage::disk(config('cardholder_files.disk'));
+    expect($disk->allFiles())->toHaveCount(2);
+
+    // Removing the logo from the copy leaves the original intact.
+    $this->putJson("/api/v1/card-templates/{$copyId}/elements", ['elements' => []])->assertOk();
+    expect($disk->allFiles())->toHaveCount(1);
+    $this->get($this->getJson($this->url)->json('data.0.image_url'))->assertOk();
+
+    $this->deleteJson("/api/v1/card-templates/{$this->template->public_id}")->assertNoContent();
+    expect($disk->allFiles())->toHaveCount(0);
 });
