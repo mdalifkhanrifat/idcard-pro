@@ -269,6 +269,8 @@ export interface CardTemplate {
     is_active: boolean;
     version: number;
     updated_at: string;
+    /** Only with `include=elements`. */
+    elements?: DesignElement[];
 }
 
 export type CardSide = 'front' | 'back';

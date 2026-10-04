@@ -242,3 +242,15 @@ it('offers bundled fonts and legacy system fonts', function () {
         ->assertJsonPath('meta.catalog.fonts.2', 'Noto Sans Bengali')
         ->assertJsonPath('meta.catalog.system_fonts.3', 'SutonnyMJ');
 });
+
+it('lists templates with their layout for thumbnails', function () {
+    Sanctum::actingAs($this->owner);
+    $this->putJson($this->url, ['elements' => [designElement(), designElement(['side' => 'back'])]])->assertOk();
+
+    $this->getJson('/api/v1/card-templates?include=elements')
+        ->assertOk()
+        ->assertJsonCount(2, 'data.0.elements')
+        ->assertJsonPath('data.0.elements.1.field', 'full_name');
+    $this->getJson('/api/v1/card-templates')->assertJsonMissingPath('data.0.elements');
+    $this->getJson('/api/v1/card-templates?include=everything')->assertJsonValidationErrors('include');
+});

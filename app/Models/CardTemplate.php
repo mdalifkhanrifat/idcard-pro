@@ -137,7 +137,7 @@ class CardTemplate extends Model
      */
     public function elements(): HasMany
     {
-        return $this->hasMany(CardTemplateElement::class)->orderBy('side')->orderBy('z_index')->orderBy('id');
+        return $this->hasMany(CardTemplateElement::class)->chaperone('template')->orderBy('side')->orderBy('z_index')->orderBy('id');
     }
 
     public function getActivitylogOptions(): LogOptions

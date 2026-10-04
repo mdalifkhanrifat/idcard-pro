@@ -23,6 +23,8 @@ const props = defineProps<{
     invalidKeys?: number[];
     /** Grid step in mm that dragged positions and edges snap to; 0 = off. */
     snap?: number;
+    /** Only what prints: no outlines or handles (thumbnails). */
+    bare?: boolean;
 }>();
 
 const emit = defineEmits<{
@@ -162,7 +164,7 @@ onBeforeUnmount(stop);
         />
         <!-- Editing layer: outlines and handles stay visible above everything and past the corners -->
         <div
-            v-for="item in layers"
+            v-for="item in bare ? [] : layers"
             :key="item.key"
             class="absolute"
             :class="[editable ? 'cursor-move' : 'cursor-pointer', outline(item)]"

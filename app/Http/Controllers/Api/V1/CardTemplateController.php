@@ -20,7 +20,7 @@ class CardTemplateController extends Controller
     public function __construct(private CardTemplateService $templates) {}
 
     /**
-     * Filters: filter[search|card_type|audience|is_active].
+     * Filters: filter[search|card_type|audience|is_active]; include=elements adds the designer layout (thumbnails).
      */
     public function index(Request $request): AnonymousResourceCollection
     {
@@ -32,6 +32,7 @@ class CardTemplateController extends Controller
             'filter.card_type' => ['nullable', 'string', 'size:26'],
             'filter.audience' => ['nullable', new Enum(TemplateAudience::class)],
             'filter.is_active' => ['nullable', 'in:0,1,true,false'],
+            'include' => ['nullable', 'in:elements'],
         ]);
 
         return CardTemplateResource::collection($this->templates->list(CardTemplateFilter::fromArray($input)));

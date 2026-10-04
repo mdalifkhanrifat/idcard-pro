@@ -12,6 +12,8 @@ final readonly class CardTemplateFilter
         public ?string $cardTypePublicId = null,
         public ?string $audience = null,
         public ?bool $isActive = null,
+        /** Load each template's designer elements (for thumbnails). */
+        public bool $withElements = false,
     ) {}
 
     /**
@@ -26,6 +28,7 @@ final readonly class CardTemplateFilter
             cardTypePublicId: $filter['card_type'] ?? null,
             audience: $filter['audience'] ?? null,
             isActive: isset($filter['is_active']) && $filter['is_active'] !== '' ? filter_var($filter['is_active'], FILTER_VALIDATE_BOOL) : null,
+            withElements: ($input['include'] ?? null) === 'elements',
         );
     }
 }

@@ -23,6 +23,7 @@ class CardTemplateRepository extends EloquentRepository implements CardTemplateR
     {
         return $this->query()
             ->with(['cardType', 'authorityType'])
+            ->when($filter->withElements, fn (Builder $q) => $q->with('elements'))
             ->when($filter->search, fn (Builder $q, string $search) => $q->where(fn (Builder $w) => $w
                 ->where('name', 'like', "%{$search}%")
                 ->orWhere('code', 'like', "%{$search}%")))

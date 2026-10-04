@@ -36,6 +36,7 @@ class CardTemplateResource extends JsonResource
             'is_double_sided' => $this->is_double_sided,
             'is_active' => $this->is_active,
             'version' => $this->version,
+            'elements' => CardTemplateElementResource::collection($this->whenLoaded('elements')),
             'updated_at' => $this->updated_at,
         ];
     }

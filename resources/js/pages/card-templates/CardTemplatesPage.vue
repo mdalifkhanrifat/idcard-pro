@@ -9,6 +9,7 @@ import UiEmpty from '@/components/ui/UiEmpty.vue';
 import UiPageHeader from '@/components/ui/UiPageHeader.vue';
 import UiSelect from '@/components/ui/UiSelect.vue';
 import CardTemplateDialog from './CardTemplateDialog.vue';
+import CardThumbnail from './designer/CardThumbnail.vue';
 import { useConfirm } from '@/composables/useConfirm';
 import { useMasterDataOptions } from '@/composables/useMasterDataOptions';
 import { http, toApiError } from '@/lib/http';
@@ -31,7 +32,10 @@ const editing = ref<CardTemplate | null>(null);
 async function load(): Promise<void> {
     loading.value = true;
     try {
-        const params = Object.fromEntries(Object.entries(filters).filter(([, v]) => v !== '').map(([k, v]) => [`filter[${k}]`, v]));
+        const params = {
+            ...Object.fromEntries(Object.entries(filters).filter(([, v]) => v !== '').map(([k, v]) => [`filter[${k}]`, v])),
+            include: 'elements',
+        };
         templates.value = (await http.get('/card-templates', { params })).data.data;
     } finally {
         loading.value = false;
@@ -114,7 +118,8 @@ async function remove(template: CardTemplate): Promise<void> {
         <div v-if="templates.length" class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3" :class="loading && 'opacity-50'">
             <article v-for="item in templates" :key="item.id" class="flex gap-4 rounded-xl border border-line bg-surface p-4">
                 <div class="flex size-32 shrink-0 items-center justify-center rounded-lg bg-surface-2">
-                    <div class="flex items-center justify-center rounded-md border-2 border-brand/40 bg-surface font-mono text-xs text-brand shadow-sm" :style="shape(item)">
+                    <CardThumbnail v-if="item.elements?.length" :template="item" :box="112" />
+                    <div v-else class="flex items-center justify-center rounded-md border-2 border-brand/40 bg-surface font-mono text-xs text-brand shadow-sm" :style="shape(item)">
                         {{ item.code }}
                     </div>
                 </div>
