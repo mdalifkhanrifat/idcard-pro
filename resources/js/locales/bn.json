@@ -269,7 +269,8 @@
             "blood_group": "রক্তের গ্রুপ",
             "religion": "ধর্ম",
             "region": "অঞ্চল / জেলা",
-            "sub_region": "এলাকা / উপজেলা"
+            "sub_region": "এলাকা / উপজেলা",
+            "card_type": "কার্ডের ধরন"
         }
     },
     "cardholders": {

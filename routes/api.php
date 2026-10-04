@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\V1\Auth\TwoFactorController;
 use App\Http\Controllers\Api\V1\CardholderController;
 use App\Http\Controllers\Api\V1\CardholderFileController;
 use App\Http\Controllers\Api\V1\CardholderImportController;
+use App\Http\Controllers\Api\V1\CardTemplateController;
 use App\Http\Controllers\Api\V1\CustomFieldController;
 use App\Http\Controllers\Api\V1\FamilyMemberController;
 use App\Http\Controllers\Api\V1\MasterDataController;
@@ -91,6 +92,9 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             });
 
             Route::apiResource('cardholders', CardholderController::class);
+
+            Route::apiResource('card-templates', CardTemplateController::class)->parameters(['card-templates' => 'template']);
+            Route::post('card-templates/{template}/duplicate', [CardTemplateController::class, 'duplicate'])->name('card-templates.duplicate');
 
             Route::apiResource('signatories', SignatoryController::class);
             Route::post('signatories/{signatory}/signature', [SignatoryController::class, 'uploadSignature'])->name('signatories.signature.store');

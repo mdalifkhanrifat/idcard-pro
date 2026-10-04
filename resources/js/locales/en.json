@@ -269,7 +269,8 @@
             "blood_group": "Blood groups",
             "religion": "Religions",
             "region": "Regions / districts",
-            "sub_region": "Areas / sub-districts"
+            "sub_region": "Areas / sub-districts",
+            "card_type": "Card types"
         }
     },
     "cardholders": {

@@ -14,7 +14,8 @@
 |
 | Legacy mapping: department = Base/Unit, unit = Unit, rank = Rank,
 | designation = Designation, branch = Branch, trade = Trade,
-| appointment = Appointment, region = District, sub_region = Upazila/Thana.
+| appointment = Appointment, region = District, sub_region = Upazila/Thana,
+| card_type = Template Type (employee_types).
 |
 */
 
@@ -29,6 +30,11 @@ return [
         'trade' => ['parent' => null, 'has_code' => true],
         'appointment' => ['parent' => null, 'has_code' => false],
         'authority_type' => ['parent' => null, 'has_code' => true],
+        'card_type' => [
+            'parent' => null,
+            'has_code' => true,
+            'defaults' => ['Employee Card', 'Family Card', 'Visitor Card'],
+        ],
         'blood_group' => [
             'parent' => null,
             'has_code' => false,

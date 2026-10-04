@@ -7,6 +7,7 @@ use App\Exceptions\BusinessRuleException;
 use App\Models\MasterDataItem;
 use App\Models\Tenant;
 use App\Repositories\Contracts\CardholderRepositoryInterface;
+use App\Repositories\Contracts\CardTemplateRepositoryInterface;
 use App\Repositories\Contracts\FamilyMemberRepositoryInterface;
 use App\Repositories\Contracts\MasterDataRepositoryInterface;
 use App\Repositories\Contracts\SignatoryRepositoryInterface;
@@ -25,6 +26,7 @@ class MasterDataService
         private CardholderRepositoryInterface $cardholders,
         private FamilyMemberRepositoryInterface $familyMembers,
         private SignatoryRepositoryInterface $signatories,
+        private CardTemplateRepositoryInterface $templates,
         private TenantContext $tenantContext,
     ) {}
 
@@ -86,7 +88,8 @@ class MasterDataService
 
         if ($this->cardholders->usesMasterDataItem($item)
             || $this->familyMembers->usesMasterDataItem($item)
-            || $this->signatories->usesMasterDataItem($item)) {
+            || $this->signatories->usesMasterDataItem($item)
+            || $this->templates->usesMasterDataItem($item)) {
             throw new BusinessRuleException(__('master_data.in_use'));
         }
 
