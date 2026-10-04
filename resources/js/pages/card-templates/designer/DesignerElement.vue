@@ -13,6 +13,8 @@ const props = defineProps<{
     scale: number;
     /** Text shown for a data field (sample or real). */
     value: string;
+    /** Real photo or signature when previewing a cardholder. */
+    imageUrl?: string | null;
 }>();
 
 const { t } = useI18n();
@@ -50,6 +52,7 @@ const labelStyle = computed(() => ({ color: props.element.style.label_color ?? p
     </div>
 
     <img v-else-if="element.type === 'logo' && element.image_url" :src="element.image_url" alt="" class="size-full object-contain" draggable="false" />
+    <img v-else-if="imageUrl" :src="imageUrl" alt="" class="size-full" :class="element.type === 'photo' ? 'object-cover' : 'object-contain'" draggable="false" />
 
     <div v-else class="flex size-full items-center justify-center overflow-hidden bg-slate-500/10 text-slate-500" :class="element.type === 'photo' && 'bg-slate-500/20'">
         <UserRound v-if="element.type === 'photo'" class="size-3/5" />

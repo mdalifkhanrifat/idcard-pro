@@ -8,6 +8,7 @@ import UiButton from '@/components/ui/UiButton.vue';
 import DesignerCanvas from './designer/DesignerCanvas.vue';
 import ElementPalette from './designer/ElementPalette.vue';
 import ElementSettings from './designer/ElementSettings.vue';
+import PreviewPicker, { type PreviewData } from './designer/PreviewPicker.vue';
 import { sampleValue } from './designer/sample';
 import { useDesigner, type DesignerItem } from './designer/useDesigner';
 import { useConfirm } from '@/composables/useConfirm';
@@ -158,8 +159,23 @@ function fieldLabel(field: string | null): string {
     return te(`designer.fields.${field}`) ? t(`designer.fields.${field}`) : field;
 }
 
+/** Real data of a chosen cardholder; null shows made-up sample data. */
+const preview = ref<PreviewData | null>(null);
+
 function valueOf(item: DesignerItem): string {
-    return sampleValue(item.field, { 'organization.name': auth.tenant?.name ?? '' });
+    const sample = sampleValue(item.field, { 'organization.name': auth.tenant?.name ?? '' });
+    if (!preview.value || !item.field) {
+        return sample;
+    }
+
+    // Card numbers and dates exist only once a card is issued, so they stay as samples.
+    return item.field.startsWith('card.') ? sample : (preview.value.fields[item.field] ?? '');
+}
+
+function imageOf(item: DesignerItem): string | null {
+    const images = preview.value?.images;
+
+    return images && (item.type === 'photo' || item.type === 'cardholder_signature' || item.type === 'signatory_signature') ? images[item.type] : null;
 }
 
 /** Short name for the layer list. */
@@ -250,7 +266,14 @@ function itemTitle(item: DesignerItem): string {
                 </button>
             </aside>
 
-            <section ref="stage" class="relative order-first flex min-h-[24rem] overflow-auto rounded-xl border border-line bg-surface-2 p-6 lg:order-none">
+            <section ref="stage" class="relative order-first flex flex-col min-h-[24rem] overflow-auto rounded-xl border border-line bg-surface-2 p-6 lg:order-none">
+                <PreviewPicker
+                    v-if="auth.can('cardholders.view')"
+                    class="-mt-2 mb-4"
+                    :template-id="template.id"
+                    :for-family="template.audience === 'family_member'"
+                    @change="preview = $event"
+                />
                 <DesignerCanvas
                     class="m-auto"
                     :width="size.width"
@@ -259,6 +282,7 @@ function itemTitle(item: DesignerItem): string {
                     :items="sideItems"
                     :selected-key="selectedKey"
                     :value-of="valueOf"
+                    :image-of="imageOf"
                     :editable="editable"
                     :invalid-keys="invalidKeys"
                     :snap="snap"

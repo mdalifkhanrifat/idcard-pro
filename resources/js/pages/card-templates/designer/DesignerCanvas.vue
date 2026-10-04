@@ -15,6 +15,7 @@ const props = defineProps<{
     items: DesignerItem[];
     selectedKey: number | null;
     valueOf: (item: DesignerItem) => string;
+    imageOf?: (item: DesignerItem) => string | null;
     editable: boolean;
     /** Keys of elements the server rejected. */
     invalidKeys?: number[];
@@ -166,7 +167,7 @@ onBeforeUnmount(stop);
             :data-key="item.key"
             @pointerdown.stop="start($event, item, 'move')"
         >
-            <DesignerElement :element="item" :scale="scale" :value="valueOf(item)" />
+            <DesignerElement :element="item" :scale="scale" :value="valueOf(item)" :image-url="imageOf?.(item)" />
             <template v-if="editable && item.key === selectedKey">
                 <span
                     v-for="handle in HANDLES"

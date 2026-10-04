@@ -749,6 +749,11 @@
         "redo": "আবার করুন",
         "snap": "গ্রিডে বসানো",
         "snapOff": "স্ন্যাপ বন্ধ",
-        "shortcuts": "তীর ১ mm সরায় (Shift দিলে ০.১ mm) · Del মোছে · Ctrl+D কপি · Ctrl+Z আগের অবস্থা · Ctrl+S সংরক্ষণ"
+        "shortcuts": "তীর ১ mm সরায় (Shift দিলে ০.১ mm) · Del মোছে · Ctrl+D কপি · Ctrl+Z আগের অবস্থা · Ctrl+S সংরক্ষণ",
+        "previewWith": "প্রিভিউ:",
+        "sampleData": "নমুনা ডেটা",
+        "findCardholder": "কার্ডধারী খুঁজুন…",
+        "backToSample": "নমুনা ডেটায় ফিরুন",
+        "noFamilyMembers": "পরিবারের সদস্য নেই"
     }
 }
