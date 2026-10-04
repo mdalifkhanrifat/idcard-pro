@@ -680,6 +680,13 @@
             "organization": {
                 "name": "Organization name"
             }
-        }
+        },
+        "addElement": "Add element",
+        "defaultText": "Text",
+        "backgroundExists": "This side already has a background; it will be selected.",
+        "unsaved": "Unsaved changes",
+        "saveFailed": "The design could not be saved. Check the marked elements.",
+        "leaveConfirm": "Leave the designer? Unsaved changes will be lost.",
+        "leave": "Leave"
     }
 }
