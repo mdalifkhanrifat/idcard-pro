@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount } from 'vue';
 import DesignerElement from './DesignerElement.vue';
+import { sideCss } from './styles';
 import { MIN_SIZE, roundMm, type DesignerItem, type Rect } from './useDesigner';
 
 /**
@@ -139,16 +140,16 @@ onBeforeUnmount(stop);
 
 <template>
     <div
-        class="relative shrink-0 touch-none rounded-[3%] bg-white shadow-lg ring-1 ring-black/10 select-none"
-        :style="{
-            width: `${width * scale}px`,
-            height: `${height * scale}px`,
-            backgroundImage: background?.image_url ? `url('${background.image_url}')` : undefined,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-        }"
+        class="relative shrink-0 touch-none rounded-[3%] shadow-lg ring-1 ring-black/10 select-none"
+        :style="{ width: `${width * scale}px`, height: `${height * scale}px`, ...sideCss(background, background?.image_url) }"
         @pointerdown.self="emit('select', background?.key ?? null)"
     >
+        <!-- What prints: clipped to the card's rounded corners -->
+        <div class="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]">
+            <div v-for="item in layers" :key="item.key" class="absolute" :style="box(item)" :data-content-key="item.key">
+                <DesignerElement :element="item" :scale="scale" :value="valueOf(item)" :image-url="imageOf?.(item)" />
+            </div>
+        </div>
         <div
             v-if="snap"
             class="pointer-events-none absolute inset-0 rounded-[inherit] opacity-60"
@@ -158,6 +159,7 @@ onBeforeUnmount(stop);
             }"
             data-grid
         />
+        <!-- Editing layer: outlines and handles stay visible above everything and past the corners -->
         <div
             v-for="item in layers"
             :key="item.key"
@@ -167,7 +169,6 @@ onBeforeUnmount(stop);
             :data-key="item.key"
             @pointerdown.stop="start($event, item, 'move')"
         >
-            <DesignerElement :element="item" :scale="scale" :value="valueOf(item)" :image-url="imageOf?.(item)" />
             <template v-if="editable && item.key === selectedKey">
                 <span
                     v-for="handle in HANDLES"

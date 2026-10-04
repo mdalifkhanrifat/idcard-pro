@@ -61,8 +61,8 @@ onMounted(async () => {
     requestAnimationFrame(fitZoom);
 });
 
-function add(type: DesignElementType): void {
-    designer.add(type, t('designer.defaultText'));
+function add(type: DesignElementType, preset?: string): void {
+    designer.add(type, t('designer.defaultText'), preset);
 }
 
 function remove(): void {
@@ -185,6 +185,13 @@ function itemTitle(item: DesignerItem): string {
     }
     if (item.type === 'text') {
         return item.content || t('designer.types.text');
+    }
+    if (item.type === 'shape') {
+        if (item.style.shape === 'ellipse') {
+            return t('designer.shapes.ellipse');
+        }
+
+        return t(Math.min(item.width, item.height) <= 1 ? 'designer.presets.line' : 'designer.shapes.rectangle');
     }
 
     return t(`designer.types.${item.type}`);

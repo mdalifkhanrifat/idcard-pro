@@ -273,7 +273,7 @@ export interface CardTemplate {
 
 export type CardSide = 'front' | 'back';
 
-export type DesignElementType = 'logo' | 'background' | 'photo' | 'signatory_signature' | 'cardholder_signature' | 'qr_code' | 'field' | 'text';
+export type DesignElementType = 'logo' | 'background' | 'photo' | 'signatory_signature' | 'cardholder_signature' | 'qr_code' | 'field' | 'text' | 'shape';
 
 export interface DesignElementStyle {
     font_family?: string;
@@ -286,6 +286,22 @@ export interface DesignElementStyle {
     italic?: boolean;
     underline?: boolean;
     align?: 'left' | 'center' | 'right';
+    vertical_align?: 'top' | 'middle' | 'bottom';
+    line_height?: number;
+    /** Points. */
+    letter_spacing?: number;
+    uppercase?: boolean;
+    /** Millimetres, like every size below. */
+    padding?: number;
+    /** Second colour of a gradient fill that starts with `background`. */
+    gradient_to?: string;
+    gradient_direction?: 'to bottom' | 'to right' | 'to bottom right' | 'to top right';
+    border_color?: string;
+    border_width?: number;
+    border_radius?: number;
+    opacity?: number;
+    fit?: 'cover' | 'contain';
+    shape?: 'rectangle' | 'ellipse';
 }
 
 export interface QrLine {

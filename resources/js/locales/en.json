@@ -608,13 +608,14 @@
         "sampleSignature": "Signature",
         "types": {
             "logo": "Logo",
-            "background": "Background image",
+            "background": "Background",
             "photo": "Photo",
             "signatory_signature": "Authorized signature",
             "cardholder_signature": "Cardholder signature",
             "qr_code": "QR code",
             "field": "Data field",
-            "text": "Text"
+            "text": "Text",
+            "shape": "Shape"
         },
         "fields": {
             "full_name": "Full name",
@@ -709,7 +710,7 @@
         "replaceImage": "Replace",
         "removeImage": "Remove",
         "logoHint": "PNG keeps transparency. Images are cleaned and stored privately.",
-        "backgroundHint": "Covers the whole side. Use the card’s proportions (e.g. 1012 × 638 px for CR80) to avoid cropping.",
+        "backgroundHint": "A colour, a gradient, an image, or an image over a colour. Use the card’s proportions (e.g. 1012 × 638 px for CR80) to avoid cropping.",
         "photoHint": "Prints the cardholder’s current photo.",
         "cardholderSignatureHint": "Prints the cardholder’s current signature.",
         "signatoryHint": "Prints the signature of the active signatory of “{authority}”.",
@@ -754,6 +755,48 @@
         "sampleData": "Sample data",
         "findCardholder": "Find a cardholder…",
         "backToSample": "Back to sample data",
-        "noFamilyMembers": "No family members"
+        "noFamilyMembers": "No family members",
+        "presets": {
+            "line": "Line",
+            "band": "Colour band"
+        },
+        "shapeKind": "Shape",
+        "shapes": {
+            "rectangle": "Rectangle",
+            "ellipse": "Circle / oval"
+        },
+        "fit": "Image fit",
+        "fits": {
+            "cover": "Fill (crop)",
+            "contain": "Fit inside"
+        },
+        "round": "Round",
+        "makeRound": "Make the photo a circle",
+        "uppercase": "Capital letters",
+        "vertical": {
+            "top": "Top",
+            "middle": "Middle",
+            "bottom": "Bottom"
+        },
+        "textNumbers": {
+            "line_height": "Line height",
+            "letter_spacing": "Spacing (pt)",
+            "padding": "Padding (mm)"
+        },
+        "sideColour": "Side colour",
+        "fillAndBorder": "Fill and border",
+        "fill": "Fill colour",
+        "gradientTo": "Gradient to",
+        "gradientDirection": "Gradient direction",
+        "gradientDirections": {
+            "to_bottom": "Top to bottom",
+            "to_right": "Left to right",
+            "to_bottom_right": "Diagonal ↘",
+            "to_top_right": "Diagonal ↗"
+        },
+        "borderColour": "Border",
+        "borderWidth": "Width (mm)",
+        "radius": "Corners (mm)",
+        "opacity": "Opacity"
     }
 }

@@ -14,8 +14,8 @@ export interface Rect {
     height: number;
 }
 
-/** Smallest element edge, in millimetres. */
-export const MIN_SIZE = 1;
+/** Smallest element edge, in millimetres (thin enough for lines). */
+export const MIN_SIZE = 0.2;
 
 /** Undo steps kept in memory. */
 const HISTORY_LIMIT = 100;
@@ -32,6 +32,13 @@ const DEFAULTS: Record<DesignElementType, Partial<DesignElement> & { width: numb
     qr_code: { width: 18, height: 18, qr_lines: [{ field: 'employee_no' }] },
     field: { width: 40, height: 5, field: 'full_name', style: { font_family: 'Inter', font_size: 8, color: '#111111' } },
     text: { width: 40, height: 5, style: { font_family: 'Inter', font_size: 8, color: '#111111' } },
+    shape: { width: 30, height: 12, style: { background: '#1e3a8a' } },
+};
+
+/** Ready-made variants offered in the palette. */
+export const PRESETS: Record<string, { type: DesignElementType; width: number; height: number; style: DesignElement['style'] }> = {
+    line: { type: 'shape', width: 60, height: 0.3, style: { background: '#111111' } },
+    band: { type: 'shape', width: 0, height: 10, style: { background: '#1e3a8a' } },
 };
 
 let nextKey = 1;
@@ -181,7 +188,7 @@ export function useDesigner() {
      * Add an element in the middle of the current side and select it. A side has one background,
      * so asking for a second one selects the existing one. `text` is the starting content of a text element.
      */
-    function add(type: DesignElementType, text = 'Text'): void {
+    function add(type: DesignElementType, text = 'Text', preset?: string): void {
         if (type === 'background') {
             const existing = sideItems.value.find((item) => item.type === 'background');
             if (existing) {
@@ -191,18 +198,22 @@ export function useDesigner() {
             }
         }
 
-        const defaults = DEFAULTS[type];
+        const variant = preset ? PRESETS[preset] : undefined;
+        // A band spans the full card width.
+        const defaults = variant ? { ...variant, width: variant.width || size.value.width } : DEFAULTS[type];
         const rect =
             type === 'background'
                 ? { x: 0, y: 0, width: size.value.width, height: size.value.height }
+                : preset === 'band'
+                  ? { x: 0, y: 0, width: size.value.width, height: defaults.height }
                 : clampRect({ x: (size.value.width - defaults.width) / 2, y: (size.value.height - defaults.height) / 2, width: defaults.width, height: defaults.height });
         const item = toItem({
             side: side.value,
             type,
-            field: defaults.field ?? null,
+            field: 'field' in defaults ? (defaults.field ?? null) : null,
             label: null,
             content: type === 'text' ? text : null,
-            qr_lines: defaults.qr_lines ? defaults.qr_lines.map((line) => ({ ...line })) : null,
+            qr_lines: 'qr_lines' in defaults && defaults.qr_lines ? defaults.qr_lines.map((line) => ({ ...line })) : null,
             image: null,
             image_url: null,
             style: { ...(defaults.style ?? {}) },

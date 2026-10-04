@@ -608,13 +608,14 @@
         "sampleSignature": "স্বাক্ষর",
         "types": {
             "logo": "লোগো",
-            "background": "ব্যাকগ্রাউন্ডের ছবি",
+            "background": "ব্যাকগ্রাউন্ড",
             "photo": "ছবি",
             "signatory_signature": "অনুমোদিত স্বাক্ষর",
             "cardholder_signature": "কার্ডধারীর স্বাক্ষর",
             "qr_code": "QR কোড",
             "field": "ডেটার ঘর",
-            "text": "লেখা"
+            "text": "লেখা",
+            "shape": "আকৃতি"
         },
         "fields": {
             "full_name": "পূর্ণ নাম",
@@ -709,7 +710,7 @@
         "replaceImage": "বদলান",
         "removeImage": "সরান",
         "logoHint": "PNG হলে স্বচ্ছতা থাকে। ছবি পরিষ্কার করে গোপনে রাখা হয়।",
-        "backgroundHint": "পুরো পাশ ঢেকে দেয়। কাটা এড়াতে কার্ডের অনুপাতের ছবি দিন (যেমন CR80-এর জন্য 1012 × 638 px)।",
+        "backgroundHint": "শুধু রঙ, গ্রেডিয়েন্ট, ছবি, বা রঙের উপর ছবি। কাটা এড়াতে কার্ডের অনুপাতের ছবি দিন (যেমন CR80-এর জন্য 1012 × 638 px)।",
         "photoHint": "কার্ডধারীর বর্তমান ছবি ছাপা হবে।",
         "cardholderSignatureHint": "কার্ডধারীর বর্তমান সই ছাপা হবে।",
         "signatoryHint": "“{authority}”-এর সক্রিয় সইকারীর সই ছাপা হবে।",
@@ -754,6 +755,48 @@
         "sampleData": "নমুনা ডেটা",
         "findCardholder": "কার্ডধারী খুঁজুন…",
         "backToSample": "নমুনা ডেটায় ফিরুন",
-        "noFamilyMembers": "পরিবারের সদস্য নেই"
+        "noFamilyMembers": "পরিবারের সদস্য নেই",
+        "presets": {
+            "line": "রেখা",
+            "band": "রঙিন ব্যান্ড"
+        },
+        "shapeKind": "আকৃতি",
+        "shapes": {
+            "rectangle": "আয়তক্ষেত্র",
+            "ellipse": "গোল / উপবৃত্ত"
+        },
+        "fit": "ছবি বসানো",
+        "fits": {
+            "cover": "পুরো ভরাট (কাটা)",
+            "contain": "ভেতরে সম্পূর্ণ"
+        },
+        "round": "গোল",
+        "makeRound": "ছবিটা গোল করুন",
+        "uppercase": "বড় হাতের অক্ষর",
+        "vertical": {
+            "top": "উপরে",
+            "middle": "মাঝে",
+            "bottom": "নিচে"
+        },
+        "textNumbers": {
+            "line_height": "লাইনের উচ্চতা",
+            "letter_spacing": "অক্ষরের ফাঁক (pt)",
+            "padding": "ভেতরের ফাঁক (mm)"
+        },
+        "sideColour": "পাশের রঙ",
+        "fillAndBorder": "ভরাট ও বর্ডার",
+        "fill": "ভরাট রঙ",
+        "gradientTo": "গ্রেডিয়েন্টের দ্বিতীয় রঙ",
+        "gradientDirection": "গ্রেডিয়েন্টের দিক",
+        "gradientDirections": {
+            "to_bottom": "উপর থেকে নিচে",
+            "to_right": "বাঁ থেকে ডানে",
+            "to_bottom_right": "কোনাকুনি ↘",
+            "to_top_right": "কোনাকুনি ↗"
+        },
+        "borderColour": "বর্ডার",
+        "borderWidth": "পুরুত্ব (mm)",
+        "radius": "কোণা (mm)",
+        "opacity": "স্বচ্ছতা"
     }
 }
