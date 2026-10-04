@@ -65,7 +65,8 @@ class CardTemplateDesignService
                 ->map(fn (CustomField $field) => ['key' => 'custom.'.$field->key, 'label' => $field->label, 'label_local' => $field->label_local])
                 ->values()
                 ->all(),
-            'fonts' => config('card_template_elements.fonts'),
+            'fonts' => config('card_template_elements.bundled_fonts'),
+            'system_fonts' => config('card_template_elements.system_fonts'),
             'size_mm' => $template->sizeInMm(),
         ];
     }

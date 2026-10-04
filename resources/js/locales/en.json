@@ -797,6 +797,10 @@
         "borderColour": "Border",
         "borderWidth": "Width (mm)",
         "radius": "Corners (mm)",
-        "opacity": "Opacity"
+        "opacity": "Opacity",
+        "bundledFonts": "Included fonts",
+        "systemFonts": "Only if installed on the computer",
+        "systemFontHint": "This font is not included. It shows only on computers that have it installed; elsewhere a standard font is used.",
+        "ansiFontHint": "SutonnyMJ is an ANSI (Bijoy) font: Unicode Bangla text will not print correctly in it. Use a Bangla font from “Included fonts”."
     }
 }

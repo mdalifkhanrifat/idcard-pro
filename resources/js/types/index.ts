@@ -332,6 +332,9 @@ export interface DesignerCatalog {
     types: Record<DesignElementType, { image?: boolean; single_per_side?: boolean; needs_field?: boolean; needs_content?: boolean }>;
     fields: Record<string, string[]>;
     custom_fields: { key: string; label: string; label_local: string | null }[];
+    /** Shipped with the application. */
     fonts: string[];
+    /** Render only where installed on the computer. */
+    system_fonts: string[];
     size_mm: { width: number; height: number };
 }

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount } from 'vue';
+import './cardFonts';
 import DesignerElement from './DesignerElement.vue';
 import { sideCss } from './styles';
 import { MIN_SIZE, roundMm, type DesignerItem, type Rect } from './useDesigner';

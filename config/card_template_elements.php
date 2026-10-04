@@ -79,9 +79,22 @@ return [
         ],
     ],
 
-    'fonts' => [
-        'Inter', 'Arial', 'Arial Narrow', 'Arial Black', 'Impact', 'Roboto', 'sans-serif', 'serif', 'monospace',
-        'SutonnyMJ', 'SolaimanLipi', 'Nikosh', 'AdorshoLipi', 'Noto Sans Bengali',
+    /*
+     * Fonts shipped with the application (OFL-1.1, @fontsource packages, served from our own build;
+     * see resources/js/pages/card-templates/designer/cardFonts.ts).
+     */
+    'bundled_fonts' => [
+        'Inter', 'Roboto', 'Noto Sans Bengali', 'Noto Serif Bengali', 'Hind Siliguri', 'Tiro Bangla', 'Baloo Da 2', 'Anek Bangla',
+    ],
+
+    /*
+     * Fonts the legacy designer offered that cannot be shipped (unclear or commercial licences).
+     * They render only where installed. SutonnyMJ is an ANSI (Bijoy) font: Unicode Bangla text
+     * shows as garbage in it, so prefer a Unicode Bangla font above.
+     */
+    'system_fonts' => [
+        'SolaimanLipi', 'Nikosh', 'AdorshoLipi', 'SutonnyMJ', 'Arial', 'Arial Narrow', 'Arial Black', 'Impact',
+        'sans-serif', 'serif', 'monospace',
     ],
 
 ];

@@ -229,3 +229,16 @@ it('saves shapes, lines, colour backgrounds and box styles', function () {
         designElement(['type' => 'shape', 'field' => null, 'style' => ['shape' => 'star', 'opacity' => 0, 'gradient_direction' => 'sideways', 'fit' => 'stretch']]),
     ]])->assertJsonValidationErrors(['elements.0.style.shape', 'elements.0.style.opacity', 'elements.0.style.gradient_direction', 'elements.0.style.fit']);
 });
+
+it('offers bundled fonts and legacy system fonts', function () {
+    Sanctum::actingAs($this->owner);
+
+    $this->putJson($this->url, ['elements' => [
+        designElement(['style' => ['font_family' => 'Hind Siliguri']]),
+        designElement(['style' => ['font_family' => 'SutonnyMJ']]),
+    ]])->assertOk();
+
+    $this->getJson($this->url)
+        ->assertJsonPath('meta.catalog.fonts.2', 'Noto Sans Bengali')
+        ->assertJsonPath('meta.catalog.system_fonts.3', 'SutonnyMJ');
+});

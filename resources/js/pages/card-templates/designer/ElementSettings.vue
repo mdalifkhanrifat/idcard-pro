@@ -296,7 +296,12 @@ function removeImage(): void {
                     <span class="text-xs font-medium text-muted">{{ t('designer.font') }}</span>
                     <select :value="item.style.font_family ?? ''" :class="inputClass" data-setting="font_family" @change="setStyle('font_family', ($event.target as HTMLSelectElement).value)">
                         <option value="">{{ t('designer.defaultFont') }}</option>
-                        <option v-for="font in catalog.fonts" :key="font" :value="font" :style="{ fontFamily: font }">{{ font }}</option>
+                        <optgroup :label="t('designer.bundledFonts')">
+                            <option v-for="font in catalog.fonts" :key="font" :value="font" :style="{ fontFamily: font }">{{ font }}</option>
+                        </optgroup>
+                        <optgroup :label="t('designer.systemFonts')">
+                            <option v-for="font in catalog.system_fonts" :key="font" :value="font">{{ font }}</option>
+                        </optgroup>
                     </select>
                 </label>
                 <label class="block space-y-1">
@@ -304,6 +309,10 @@ function removeImage(): void {
                     <input :value="item.style.font_size ?? 8" type="number" min="1" max="72" step="0.5" :class="inputClass" data-setting="font_size" @change="setNumber('font_size', $event, 1, 72)" />
                 </label>
             </div>
+
+            <p v-if="item.style.font_family && catalog.system_fonts.includes(item.style.font_family)" class="text-xs text-warning" data-font-warning>
+                {{ t(item.style.font_family === 'SutonnyMJ' ? 'designer.ansiFontHint' : 'designer.systemFontHint') }}
+            </p>
 
             <div class="flex flex-wrap items-center gap-1">
                 <button
