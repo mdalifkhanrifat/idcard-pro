@@ -15,7 +15,8 @@ use Carbon\CarbonInterface;
 /**
  * Values printed on a card, keyed like the designer's data fields (config/card_template_elements.php).
  * The designer preview and printing (3.6) both use this, so a preview always matches the printed card.
- * Text is produced in the organization's language; empty values are left out.
+ * Text is produced in the organization's language; empty values are left out. A missing photo or signature
+ * is null here: the element's own image (uploaded in the designer) is then printed instead.
  */
 class CardDataResolver
 {
@@ -85,9 +86,9 @@ class CardDataResolver
         return [
             'fields' => array_filter($fields, fn (string $value) => $value !== ''),
             'images' => [
-                // Family members have no photo or signature of their own yet.
-                'photo' => $member === null && $cardholder->photo ? $this->files->temporaryUrl($cardholder->photo) : null,
-                'cardholder_signature' => $member === null && $cardholder->signature ? $this->files->temporaryUrl($cardholder->signature) : null,
+                // Family cards show the cardholder's photo, as in the legacy system (family members have none of their own).
+                'photo' => $cardholder->photo ? $this->files->temporaryUrl($cardholder->photo) : null,
+                'cardholder_signature' => $cardholder->signature ? $this->files->temporaryUrl($cardholder->signature) : null,
                 'signatory_signature' => $signatory ? $this->signatoryService->signatureUrl($signatory) : null,
             ],
         ];

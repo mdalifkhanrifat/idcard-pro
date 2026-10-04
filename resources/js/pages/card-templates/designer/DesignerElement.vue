@@ -15,7 +15,7 @@ const props = defineProps<{
     scale: number;
     /** Text shown for a data field (sample or real). */
     value: string;
-    /** Real photo or signature when previewing a cardholder. */
+    /** Real photo or signature when previewing a cardholder; without one the element's own (fallback) image shows. */
     imageUrl?: string | null;
 }>();
 
@@ -25,7 +25,7 @@ const box = computed(() => boxCss(props.element.style, props.scale));
 const text = computed(() => textCss(props.element.style, props.scale));
 const labelStyle = computed(() => ({ color: props.element.style.label_color ?? props.element.style.color ?? '#111111' }));
 const fit = computed(() => (imageFit(props.element) === 'cover' ? 'object-cover' : 'object-contain'));
-const image = computed(() => (props.element.type === 'logo' ? props.element.image_url : props.imageUrl));
+const image = computed(() => (props.element.type === 'logo' ? props.element.image_url : (props.imageUrl ?? props.element.image_url)));
 </script>
 
 <template>

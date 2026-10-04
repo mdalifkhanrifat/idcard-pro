@@ -14,6 +14,8 @@
 |   profile                     => photo
 |   sign                        => signatory_signature (active signatory of the template's authority type)
 |   emp_sign                    => cardholder_signature
+|   An image uploaded on profile/sign/emp_sign was printed when the real one was missing;
+|   photo and signature elements keep that as an optional fallback image.
 |   qr_code (+ qrcode_info)     => qr_code (signed verification link in 3.7)
 |   db_field (+ relation_name)  => field (see "fields" below)
 |   general_section             => text
@@ -27,9 +29,10 @@ return [
     'types' => [
         'logo' => ['image' => true],
         'background' => ['image' => true, 'single_per_side' => true],
-        'photo' => [],
-        'signatory_signature' => [],
-        'cardholder_signature' => [],
+        // `image` here is an optional fallback printed when the real photo or signature is missing.
+        'photo' => ['image' => true],
+        'signatory_signature' => ['image' => true],
+        'cardholder_signature' => ['image' => true],
         'qr_code' => [],
         'field' => ['needs_field' => true],
         'text' => ['needs_content' => true],

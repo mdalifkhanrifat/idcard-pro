@@ -243,7 +243,7 @@ function removeImage(): void {
                 <button v-if="item.image" class="inline-flex h-8 items-center rounded-md px-2 text-sm text-muted hover:text-danger" @click="removeImage">{{ t('designer.removeImage') }}</button>
             </div>
             <input ref="file" type="file" accept="image/png,image/jpeg,image/webp" class="hidden" data-upload @change="upload" />
-            <p class="text-xs text-muted">{{ t(item.type === 'background' ? 'designer.backgroundHint' : 'designer.logoHint') }}</p>
+            <p class="text-xs text-muted">{{ t(item.type === 'background' ? 'designer.backgroundHint' : item.type === 'logo' ? 'designer.logoHint' : 'designer.fallbackHint') }}</p>
         </div>
 
         <p v-if="item.type === 'photo'" class="text-xs text-muted">{{ t('designer.photoHint') }}</p>

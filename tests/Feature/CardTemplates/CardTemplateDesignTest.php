@@ -159,11 +159,14 @@ it('uploads logo and background images and cleans up replaced ones', function ()
         designElement(['type' => 'background', 'field' => null, 'image' => $background['image'], 'x' => 0, 'y' => 0, 'width' => 85.6, 'height' => 54]),
         designElement(['type' => 'logo', 'field' => null, 'image' => $logo['image'], 'x' => 2, 'y' => 2, 'width' => 12, 'height' => 12]),
         designElement(['type' => 'photo', 'image' => $logo['image']]),
+        designElement(['type' => 'qr_code', 'image' => $logo['image']]),
     ]])
         ->assertOk()
         ->assertJsonPath('data.1.image', $logo['image'])
-        ->assertJsonPath('data.2.image', null)
-        ->assertJsonPath('data.2.image_url', null);
+        // Photos keep a fallback image (legacy profile upload); QR codes have none.
+        ->assertJsonPath('data.2.image', $logo['image'])
+        ->assertJsonPath('data.3.image', null)
+        ->assertJsonPath('data.3.image_url', null);
     $logoUrl = $this->getJson($this->url)->json('data.1.image_url');
     $this->get($logoUrl)->assertOk();
 
