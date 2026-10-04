@@ -1,7 +1,7 @@
 # IDCard Pro: কাজের অগ্রগতি ও হ্যান্ডঅফ
 
 > নতুন চ্যাট বা নতুন ডেভেলপার এই ফাইল থেকে শুরু করবেন। পুরো পরিকল্পনা আছে [ROADMAP.md](ROADMAP.md)-এ।
-> সর্বশেষ আপডেট: ৪ অক্টোবর ২০২৬। **Phase 1 আর Phase 2 সম্পন্ন।** Phase 3 চলছে: ৩.১ Signatories, ৩.২ কার্ড নম্বর, ৩.৩ টেমপ্লেট, ৩.৪ক (ডিজাইনারের টেবিল) আর ৩.৪খ (ডিজাইনারের API) সম্পন্ন। পরের কাজ ৩.৪গ, ডিজাইনার পেজ (§৮ দেখুন)।
+> সর্বশেষ আপডেট: ৪ অক্টোবর ২০২৬। **Phase 1 আর Phase 2 সম্পন্ন।** Phase 3 চলছে: ৩.১ Signatories, ৩.২ কার্ড নম্বর, ৩.৩ টেমপ্লেট আর ৩.৪ক–গ (টেমপ্লেট ডিজাইনার: টেবিল, API, পেজ) সম্পন্ন। পরের কাজ ৩.৪ঘ, বাংলা ফন্ট (§৮ দেখুন)।
 
 ---
 
@@ -24,7 +24,7 @@
 | 2.5 | শিক্ষা ও প্রশিক্ষণ কোর্স (এক টেবিলে), কাস্টম ফিল্ড (সেটআপ পেজ, প্রিসেট, ফর্ম ট্যাব, ফিল্টার) | `QualificationService`, `app/Services/CustomFields`, `config/custom_field_presets.php`, `pages/custom-fields` |
 | 2.6 | CSV/XLSX ইমপোর্ট: যাচাই আর প্রিভিউ, queue-তে ইমপোর্ট, ইতিহাস, টেমপ্লেট | `CardholderImportService`, `CardholderImportMapper`, `app/Jobs/ImportCardholders.php`, `app/Support/Spreadsheets`, `config/cardholder_import.php` |
 
-**মান:** ১৪৫টা টেস্ট পাস (১৩৪ feature + ১১ unit), Larastan (level 5) আর Pint পরিষ্কার, TypeScript টাইপ-চেক পরিষ্কার। প্রতিটা পেজ headless Chrome-এ চালিয়ে যাচাই করা হয়েছে।
+**মান:** ১৪৯টা টেস্ট পাস (১৩৮ feature + ১১ unit), Larastan (level 5) আর Pint পরিষ্কার, TypeScript টাইপ-চেক পরিষ্কার। প্রতিটা পেজ headless Chrome-এ চালিয়ে যাচাই করা হয়েছে।
 
 **বর্তমান মডিউল আর তাদের service:**
 
@@ -43,6 +43,7 @@
 | শিক্ষা ও কোর্স | `Cardholders\QualificationService` | `QualificationRepository` |
 | কাস্টম ফিল্ড | `CustomFields\CustomFieldService` | `CustomFieldRepository` |
 | কার্ড টেমপ্লেট ও ডিজাইনার | `CardTemplates\CardTemplateService`, `CardTemplates\CardTemplateDesignService`, `CardTemplates\CardTemplateImageService` | `CardTemplateRepository`, `CardTemplateElementRepository` |
+| কার্ডে ছাপার মান | `Cards\CardDataResolver` (প্রিভিউ এখন, প্রিন্ট ৩.৬-এ) | `SignatoryRepository::activeFor()` |
 | ইমপোর্ট | `Cardholders\CardholderImportService`, `Cardholders\CardholderImportMapper` (+ `Support\Spreadsheets\TabularFileReader`) | `CardholderImportRepository` |
 
 ## ৩. চালানো
@@ -74,7 +75,7 @@ docker compose run --rm --no-deps vite npx vue-tsc --noEmit
 - `php artisan app:sync-permissions`: `config/permissions.php` থেকে পারমিশন সিঙ্ক করে। Owner রোল সবসময় সব পারমিশন পায়।
 - `php artisan app:sync-master-data`: বর্তমান প্রতিষ্ঠানগুলোতে নতুন ডিফল্ট master data যোগ করে। বারবার চালানো নিরাপদ।
 
-**API এক নজরে (Phase 3 পর্যন্ত):** `/api/v1/signatories`, `/api/v1/card-templates` (+ `/{id}/duplicate`, `/{id}/elements`, `/{id}/images`), `/api/v1/card-template-images/{template}/{image}` (signed)।
+**API এক নজরে (Phase 3 পর্যন্ত):** `/api/v1/signatories`, `/api/v1/card-templates` (+ `/{id}/duplicate`, `/{id}/elements`, `/{id}/images`, `/{id}/preview`), `/api/v1/card-template-images/{template}/{image}` (signed)।
 
 **API এক নজরে (Phase 2):** `/api/v1/cardholders` (+ `/{id}/files`, `/{id}/family-members`, `/{id}/qualifications`), `/api/v1/custom-fields` (+ `/presets`), `/api/v1/cardholder-imports` (+ `/template`, `/{id}/start`), `/api/v1/cardholder-files/{id}` (signed link, লগইন লাগে না)।
 
@@ -143,6 +144,9 @@ docker compose run --rm --no-deps vite npx vue-tsc --noEmit
 | `apiResource`-এ `$this->route('customField')` null | রাউট প্যারামিটার snake_case (`custom_field`)। Controller-এর আর্গুমেন্ট camelCase হলেও চলে |
 | `type="number"` ইনপুটের মান `.trim()`-এ এরর | Vue এই মানকে সংখ্যা বানায়। `String(value ?? '').trim()` |
 | দশমিক মানসহ (যেমন 85.6) ফর্ম জমাই হয় না, কোনো বার্তাও আসে না | `type="number"`-এর ডিফল্ট step 1। `UiInput`-এ `step="any"` দিন |
+| আগে থেকে থাকা প্রতিষ্ঠানের রোলে নতুন মডিউলের পারমিশন নেই (যেমন ডেমো Operator-এর `templates.view`) | `app:sync-permissions` শুধু নতুন পারমিশন বানায় আর Owner-কে দেয়; অন্য রোল প্রতিষ্ঠান নিজে Roles পেজে ঠিক করে। ইচ্ছাকৃত |
+| ডার্ক মোডে গাঢ় ব্র্যান্ড রঙে `text-brand` লেখা প্রায় অদৃশ্য (যেমন বাঁ মেনুর চালু আইটেম) | ডিজাইনারে চালু অবস্থা `bg-brand text-brand-contrast` দিয়ে ঠিক করা। **পুরো অ্যাপে এখনো বাকি**: ডার্ক মোডে ব্র্যান্ড রঙ হালকা করা বা `text-brand`-এর বদল |
+| Pest-এ `assertJsonPath('data.fields.custom\\.class')` কাজ করে না | ডটওয়ালা key-র জন্য `->json(...)` নিয়ে `toMatchArray` ব্যবহার করুন |
 | Signed link এক হোস্টে বানানো, অন্য হোস্টে 403 | ফাইলের লিংক relative signed (`signed:relative`), তাই `localhost` আর `127.0.0.1` দুটোতেই চলে |
 
 ## ৭. Phase 2-এ নেওয়া সিদ্ধান্ত (পরের কাজের জন্য জরুরি)
@@ -220,13 +224,18 @@ docker compose run --rm --no-deps vite npx vue-tsc --noEmit
      - ছবি: `POST /card-templates/{id}/images` (jpg/png/webp, ৫ MB) → `{image, image_url}`। ছবি `ImageSanitizer` দিয়ে পরিষ্কার হয়ে `tenants/<t>/card-templates/<template>/`-এ যায়। লেআউটে logo/background উপাদানে `image` = সেই নাম; অন্য টেমপ্লেটের বা বানানো নাম চলে না। সেভে বাদ পড়া ছবি মুছে যায়; আপলোড করে সেভ না করা ছবি টেমপ্লেট মুছলে মোছে। লিংক `/card-template-images/{template}/{image}` (relative signed, ১৫ মিনিট)।
      - টেমপ্লেট কপি করলে ছবিও আলাদা ফাইল হিসেবে কপি হয়; টেমপ্লেট মুছলে তার ছবির ফোল্ডারও মোছে।
      - পুরনো ডিজাইনারে profile/sign/emp_sign-এর জন্যও ছবি আপলোড ছিল, সেটা শুধু ডিজাইনারে দেখানোর নমুনা। নতুনটায় নমুনা ছবি ফ্রন্টএন্ড নিজে দেখাবে, ছাপার সময় আসল ছবি আসবে কার্ডধারী আর সইকারী থেকে।
+   - ✅ **৩.৪গ সম্পন্ন — ডিজাইনার পেজ** (`pages/card-templates/CardTemplateDesignerPage.vue` + `designer/`: `useDesigner.ts` স্টেট আর Undo, `DesignerCanvas.vue`, `DesignerElement.vue`, `ElementPalette.vue`, `ElementSettings.vue`, `FieldSelect.vue`, `PreviewPicker.vue`, `sample.ts`):
+     - রাউট `/card-templates/:id/design` (`templates.view`), টেমপ্লেট তালিকার প্রতিটা কার্ডে "Design" বোতাম।
+     - আসল অনুপাতে ক্যানভাস (px/mm জুম, শুরুতে কলামের মাপে বসে, 100% = আসল মাপ), Front/Back (এক পাশের টেমপ্লেটে পেছনে পুরনো উপাদান থাকলে Back দেখায়, যাতে মোছা যায়)।
+     - **পুরনো ডিজাইনারের সব:** সব ধরনের উপাদান, যেকোনো সংখ্যক লোগো, প্রতি পাশে একটা ব্যাকগ্রাউন্ড (পুরো পাশ cover), ডেটার ঘর (লেবেল `:` মান, লেবেলের আলাদা রঙ), লেখা (লেবেলসহ), QR-এর একাধিক লাইন (ঘর + ঐচ্ছিক লেবেল, বা কাস্টম লেখা), ফন্ট, সাইজ, মানের/লেবেলের/পটভূমির রঙ, বোল্ড/ইটালিক/আন্ডারলাইন, alignment, টেনে সরানো (কার্ডের বাইরে নয়), প্রস্থ/উচ্চতা লেখা।
+     - **নতুন:** ৮ দিকের হ্যান্ডেলে সাইজ বদল, mm-এ x/y/প্রস্থ/উচ্চতা, তীর ১ mm (Shift ০.১ mm), Delete, Ctrl+D কপি, লেয়ার উপরে/নিচে/সবার উপরে/সবার নিচে, Undo/Redo (Ctrl+Z, Ctrl+Shift+Z/Ctrl+Y; থেমে যাওয়া বদল এক ধাপ, সর্বোচ্চ ১০০), গ্রিডে স্ন্যাপ (০.৫/১/২/৫ mm, গ্রিড দেখায়), Ctrl+S, লেয়ারের তালিকা, না-সেভ বদলে পেজ ছাড়ার সতর্কতা, সার্ভারের ভুল উপাদানে লাল আর লেয়ারে ⚠️, নমুনা ডেটা।
+     - **আসল কার্ডধারী দিয়ে প্রিভিউ** (`cardholders.view` লাগে): `GET /card-templates/{id}/preview?cardholder=&family_member=`। মান বানায় **`Cards\CardDataResolver`**: প্রতিষ্ঠানের ভাষায় (`tenant.locale`) enum লেবেল (`lang/*/cards.php` → `values`), তারিখ `d/m/Y`, master data-র নাম, কাস্টম ফিল্ড (checkbox হ্যাঁ/না), আজকের দিনে কার্যকর সক্রিয় সইকারী, ছবি/সইয়ের signed link। ফাঁকা মান বাদ যায়, তাই প্রিভিউতে ফাঁকা দেখায় (ছাপাতেও তাই হবে)। `card.*` ঘর ইস্যুর আগে জানা নেই, তাই নমুনা থাকে। **৩.৬-এর প্রিন্ট/PDF-এ এই resolver-ই ব্যবহার করতে হবে**, যাতে প্রিভিউ আর ছাপা কার্ড এক থাকে।
+     - Operator (শুধু `templates.view`): কেবল দেখা, প্যালেট/হ্যান্ডেল/সেভ নেই।
+     - পরিবারের সদস্যের নিজের ছবি বা সই এখনো নেই, তাই পরিবারের কার্ডের প্রিভিউতে ছবি ফাঁকা। ৩.৫-এ ঠিক করতে হবে।
+     - ব্রাউজারে যাচাই (headless Chrome): টেনে সরানো, কিনারায় আটকানো, হ্যান্ডেল, সেভ-রিলোড, সার্ভারের ভুল, Undo/Redo, স্ন্যাপ, ছবি আপলোড, QR লাইন, en/bn, লাইট/ডার্ক, ফোনের প্রস্থ, Operator। ডেভেলপমেন্ট ডাটাবেসে যাচাইয়ের জন্য "QA designer check" আর "QA family check" টেমপ্লেট বানানো হয়েছে (বানানো ডেটা, মুছে ফেলা যায়)।
    - ➡️ **এখান থেকে শুরু:**
-   - **৩.৪গ — ডিজাইনার পেজ** (`/card-templates/{id}/design`): কার্ডের আসল অনুপাতে ক্যানভাস (mm → px স্কেল), Front/Back টগল, বাঁ দিকে "উপাদান যোগ করুন" প্যালেট, ডান দিকে নির্বাচিত উপাদানের সেটিংস (ঘর, লেবেল, ফন্ট, সাইজ, রঙ, ব্যাকগ্রাউন্ড, বোল্ড/ইটালিক/আন্ডারলাইন, alignment, লেবেলের রঙ), QR-এর লাইন যোগ/মোছা, লোগো/ব্যাকগ্রাউন্ডের ছবি আপলোড।
-     - **টেনে সরানো আর কোণা/পাশের হ্যান্ডেল দিয়ে সাইজ বদলানো,** pointer event দিয়ে, নতুন প্যাকেজ ছাড়া। কার্ডের বাইরে যাবে না।
-     - কিবোর্ডের তীর দিয়ে ১ mm (Shift দিলে ০.১ mm) সরানো, গ্রিডে স্ন্যাপ, লেয়ার উপরে/নিচে, কপি, মোছা, Undo।
-     - প্রিভিউতে নমুনা ডেটা দেখানো, আর চাইলে একজন আসল কার্ডধারী বেছে তার ডেটা দেখা।
    - **৩.৪ঘ — ফন্ট:** বাংলা ফন্ট (SolaimanLipi, Nikosh ইত্যাদি) প্রজেক্টের ভেতরে self-hosted করতে হবে, কোনো CDN নয়। লাইসেন্স দেখে নিতে হবে। SutonnyMJ ANSI ফন্ট, তাই এটা Unicode লেখার সাথে মিলবে না, নোট রাখতে হবে।
-   - **৩.৪ঙ — টেমপ্লেট তালিকা থেকে "Design" বোতাম** আর কার্ডের থাম্বনেইলে আসল ডিজাইন দেখানো।
+   - **৩.৪ঙ — টেমপ্লেট তালিকায় কার্ডের থাম্বনেইলে আসল ডিজাইন** দেখানো (`DesignerCanvas` ছোট স্কেলে, কেবল-দেখা মোডে আবার ব্যবহার করা যায়)। "Design" বোতাম ৩.৪গ-তে হয়ে গেছে।
 5. **৩.৫ কার্ড ইস্যু** (পুরনো `card_information`): কারণ (new / promotion / lost / renewal), নোট, মেয়াদ, RF card no। প্রতিবার ইস্যুতে নতুন রেকর্ড, আগের কার্ড বাতিল। **যে ছবি, সই আর টেমপ্লেট সংস্করণ ব্যবহার হলো তার id রাখতে হবে।** পরিবারের সদস্যের কার্ডও এখানে।
 6. **৩.৬ প্রিন্ট আর ইতিহাস** (পুরনো `card_print_history`): ব্রাউজার প্রিন্ট আর সার্ভারে PDF (CR80), ব্যাচ প্রিন্ট, প্রতিটা প্রিন্ট ইউজারের নামে লগ।
 7. **৩.৭ স্বাক্ষরিত QR আর পাবলিক ভেরিফিকেশন পেজ।**
