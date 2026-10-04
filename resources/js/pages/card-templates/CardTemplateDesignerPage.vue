@@ -6,6 +6,7 @@ import { AlertCircle, ArrowLeft, EyeOff, Frame, Grid3x3, Layers, Lock, Plus, Red
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import DesignerCanvas from './designer/DesignerCanvas.vue';
+import AlignTools from './designer/AlignTools.vue';
 import ElementPalette from './designer/ElementPalette.vue';
 import ElementSettings from './designer/ElementSettings.vue';
 import PreviewPicker, { type PreviewData } from './designer/PreviewPicker.vue';
@@ -22,7 +23,7 @@ const auth = useAuthStore();
 const ui = useUiStore();
 const { confirm } = useConfirm();
 const designer = useDesigner();
-const { template, catalog, items, side, sideItems, selected, selectedKey, loading, saving, errors, dirty, size, canUndo, canRedo } = designer;
+const { template, catalog, items, side, sideItems, selected, selectedKey, selectedKeys, selection, loading, saving, errors, dirty, size, canUndo, canRedo } = designer;
 
 /** Grid step (mm) for snapping while dragging; 0 = off. */
 const SNAP_STEPS = [0, 0.5, 1, 2, 5];
@@ -75,10 +76,12 @@ function copyToOtherSide(key: number): void {
     }
 }
 
+/** Remove every selected element (locked ones stay). */
 function remove(): void {
-    if (selectedKey.value !== null) {
-        designer.remove(selectedKey.value);
+    for (const key of [...selectedKeys.value]) {
+        designer.remove(key);
     }
+    designer.selectMany(selectedKeys.value.filter((key) => items.value.some((item) => item.key === key)));
 }
 
 function isTyping(target: EventTarget | null): boolean {
@@ -113,6 +116,12 @@ function onKeydown(event: KeyboardEvent): void {
 
         return;
     }
+    if (command && key === 'a') {
+        event.preventDefault();
+        designer.selectMany(sideItems.value.filter((item) => item.type !== 'background').map((item) => item.key));
+
+        return;
+    }
     if (selectedKey.value === null) {
         return;
     }
@@ -120,15 +129,17 @@ function onKeydown(event: KeyboardEvent): void {
     const moves: Record<string, [number, number]> = { arrowleft: [-step, 0], arrowright: [step, 0], arrowup: [0, -step], arrowdown: [0, step] };
     if (moves[key]) {
         event.preventDefault();
-        designer.nudge(selectedKey.value, ...moves[key]);
+        designer.moveBy(selectedKeys.value, ...moves[key]);
     } else if (key === 'delete' || key === 'backspace') {
         event.preventDefault();
         remove();
     } else if (command && key === 'd') {
         event.preventDefault();
-        designer.duplicate(selectedKey.value);
+        for (const selectedItem of selection.value) {
+            designer.duplicate(selectedItem.key);
+        }
     } else if (key === 'escape') {
-        selectedKey.value = null;
+        designer.select(null);
     }
 }
 window.addEventListener('keydown', onKeydown);
@@ -285,8 +296,8 @@ function itemTitle(item: DesignerItem): string {
                     v-for="item in [...sideItems].reverse()"
                     :key="item.key"
                     class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm"
-                    :class="item.key === selectedKey ? 'bg-brand text-brand-contrast' : 'text-fg hover:bg-surface-2'"
-                    @click="selectedKey = item.key"
+                    :class="selectedKeys.includes(item.key) ? 'bg-brand text-brand-contrast' : 'text-fg hover:bg-surface-2'"
+                    @click="designer.select(item.key, $event.shiftKey || $event.ctrlKey || $event.metaKey)"
                 >
                     <span class="truncate" :class="item.style.hidden && 'line-through opacity-60'">{{ itemTitle(item) }}</span>
                     <span class="ml-auto flex shrink-0 gap-1 opacity-70">
@@ -312,21 +323,38 @@ function itemTitle(item: DesignerItem): string {
                     :scale="scale"
                     :items="sideItems"
                     :selected-key="selectedKey"
+                    :selected-keys="selectedKeys"
                     :value-of="valueOf"
                     :image-of="imageOf"
                     :editable="editable"
                     :invalid-keys="invalidKeys"
                     :snap="snap"
                     :guides="guides"
-                    @select="selectedKey = $event"
+                    @select="(key, additive) => designer.select(key, additive)"
+                    @select-many="designer.selectMany"
+                    @move-group="designer.moveBy"
                     @rect="designer.setRect"
                 />
                 <p v-if="editable" class="absolute right-3 bottom-2 hidden text-[11px] text-muted lg:block">{{ t('designer.shortcuts') }}</p>
             </section>
 
-            <aside class="rounded-xl border border-line bg-surface p-4 text-sm">
+            <aside class="space-y-4 rounded-xl border border-line bg-surface p-4 text-sm">
+                <template v-if="editable && selection.length > 1">
+                    <div class="flex items-center justify-between">
+                        <p class="font-medium text-fg" data-selection-count>{{ t('designer.selectedCount', { n: selection.length }) }}</p>
+                        <UiButton variant="secondary" size="sm" class="text-danger" @click="remove">{{ t('common.delete') }}</UiButton>
+                    </div>
+                    <AlignTools :count="selection.length" @align="designer.align(selectedKeys, $event)" @distribute="designer.distribute(selectedKeys, $event)" />
+                    <p class="text-xs text-muted">{{ t('designer.multiHint') }}</p>
+                </template>
+                <AlignTools
+                    v-else-if="editable && selected && selected.type !== 'background' && !selected.style.locked"
+                    :count="1"
+                    @align="designer.align([selected.key], $event)"
+                    @distribute="() => {}"
+                />
                 <ElementSettings
-                    v-if="selected && editable && catalog"
+                    v-if="selected && editable && catalog && selection.length <= 1"
                     :key="selected.key"
                     :item="selected"
                     :catalog="catalog"
@@ -342,11 +370,11 @@ function itemTitle(item: DesignerItem): string {
                     @duplicate="designer.duplicate(selected.key)"
                     @layer="designer.moveLayer(selected.key, $event)"
                 />
-                <template v-else-if="selected">
+                <template v-else-if="selected && selection.length <= 1">
                     <p class="font-medium text-fg">{{ itemTitle(selected) }}</p>
                     <p class="mt-1 text-xs text-muted">{{ t('designer.position', { x: selected.x, y: selected.y, width: selected.width, height: selected.height }) }}</p>
                 </template>
-                <p v-else class="text-muted">{{ t('designer.selectHint') }}</p>
+                <p v-else-if="!selected" class="text-muted">{{ t('designer.selectHint') }}</p>
             </aside>
         </div>
     </div>

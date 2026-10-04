@@ -759,7 +759,7 @@
         "redo": "Redo",
         "snap": "Snap to grid",
         "snapOff": "No snap",
-        "shortcuts": "Arrows move 1 mm (Shift 0.1 mm) · Del removes · Ctrl+D copies · Ctrl+Z undoes · Ctrl+S saves",
+        "shortcuts": "Arrows move 1 mm (Shift 0.1 mm) · Shift-click / box selects several · Del removes · Ctrl+D copies · Ctrl+Z undoes · Ctrl+S saves",
         "previewWith": "Preview with",
         "sampleData": "Sample data",
         "findCardholder": "Find a cardholder…",
@@ -828,6 +828,20 @@
             "dashed": "Dashed",
             "dotted": "Dotted"
         },
-        "rotation": "Rotation"
+        "rotation": "Rotation",
+        "alignSelection": "Align selected",
+        "alignCard": "Align on the card",
+        "alignModes": {
+            "left": "Left edges",
+            "center": "Centres (horizontal)",
+            "right": "Right edges",
+            "top": "Top edges",
+            "middle": "Middles (vertical)",
+            "bottom": "Bottom edges"
+        },
+        "distributeHorizontal": "Equal gaps across",
+        "distributeVertical": "Equal gaps down",
+        "selectedCount": "{n} elements selected",
+        "multiHint": "Drag any of them to move all. Shift-click adds or removes one; drag on an empty part of the card to select with a box; Ctrl+A selects all."
     }
 }

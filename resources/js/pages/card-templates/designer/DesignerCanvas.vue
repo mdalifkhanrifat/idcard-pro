@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount } from 'vue';
+import { computed, onBeforeUnmount, ref } from 'vue';
 import './cardFonts';
 import DesignerElement from './DesignerElement.vue';
 import { sideCss } from './styles';
@@ -16,6 +16,8 @@ const props = defineProps<{
     scale: number;
     items: DesignerItem[];
     selectedKey: number | null;
+    /** Every selected element (multiple selection). */
+    selectedKeys?: number[];
     valueOf: (item: DesignerItem) => string;
     imageOf?: (item: DesignerItem) => string | null;
     editable: boolean;
@@ -33,7 +35,12 @@ const props = defineProps<{
 const SAFE_MARGIN_MM = 3;
 
 const emit = defineEmits<{
-    select: [key: number | null];
+    /** `additive`: Shift/Ctrl-click adds to or removes from the selection. */
+    select: [key: number | null, additive?: boolean];
+    /** Elements inside a dragged selection box. */
+    selectMany: [keys: number[]];
+    /** Several selected elements dragged together, by mm from where they started. */
+    moveGroup: [keys: number[], dx: number, dy: number, from: Map<number, Rect>];
     rect: [key: number, rect: Rect];
     /** A drag or resize finished and changed something. */
     changed: [key: number];
@@ -63,24 +70,50 @@ function box(item: DesignerItem): Record<string, string> {
     };
 }
 
+const selectedSet = computed(() => new Set(props.selectedKeys ?? (props.selectedKey === null ? [] : [props.selectedKey])));
+/** Resize handles only make sense for a single element. */
+const showHandles = computed(() => selectedSet.value.size <= 1);
+
 /** Only one outline style applies, so the colours never compete. */
 function outline(item: DesignerItem): string {
     if (props.invalidKeys?.includes(item.key)) {
         return 'outline-2 outline-solid outline-danger';
     }
 
-    return item.key === props.selectedKey ? 'outline-2 outline-solid outline-brand' : 'outline-1 outline-dashed outline-slate-400/60';
+    return selectedSet.value.has(item.key) ? 'outline-2 outline-solid outline-brand' : 'outline-1 outline-dashed outline-slate-400/60';
 }
 
-let drag: { key: number; mode: 'move' | Handle; pointerX: number; pointerY: number; start: Rect; moved: boolean } | null = null;
+let drag: {
+    key: number;
+    mode: 'move' | Handle;
+    pointerX: number;
+    pointerY: number;
+    start: Rect;
+    moved: boolean;
+    /** Start positions of the other selected elements when moving a group. */
+    group: Map<number, Rect> | null;
+} | null = null;
 
 function start(event: PointerEvent, item: DesignerItem, mode: 'move' | Handle): void {
-    emit('select', item.key);
+    if (event.shiftKey || event.ctrlKey || event.metaKey) {
+        emit('select', item.key, true);
+
+        return;
+    }
+    const inGroup = mode === 'move' && selectedSet.value.size > 1 && selectedSet.value.has(item.key);
+    if (!inGroup) {
+        emit('select', item.key);
+    }
     if (!props.editable || event.button !== 0 || item.style.locked) {
+        if (inGroup) {
+            emit('select', item.key);
+        }
+
         return;
     }
     event.preventDefault();
-    drag = { key: item.key, mode, pointerX: event.clientX, pointerY: event.clientY, start: { x: item.x, y: item.y, width: item.width, height: item.height }, moved: false };
+    const group = inGroup ? new Map(props.items.filter((candidate) => selectedSet.value.has(candidate.key)).map((candidate) => [candidate.key, { x: candidate.x, y: candidate.y, width: candidate.width, height: candidate.height }])) : null;
+    drag = { key: item.key, mode, pointerX: event.clientX, pointerY: event.clientY, start: { x: item.x, y: item.y, width: item.width, height: item.height }, moved: false, group };
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', stop);
     window.addEventListener('pointercancel', stop);
@@ -108,6 +141,12 @@ function move(event: PointerEvent): void {
     drag.moved = true;
 
     const { x, y, width, height } = drag.start;
+    if (drag.mode === 'move' && drag.group) {
+        // The grabbed element snaps; the others keep their distance to it.
+        emit('moveGroup', [...drag.group.keys()], snapped(x + dx) - x, snapped(y + dy) - y, drag.group);
+
+        return;
+    }
     if (drag.mode === 'move') {
         emit('rect', drag.key, { x: snapped(x + dx), y: snapped(y + dy), width, height });
 
@@ -136,6 +175,9 @@ function move(event: PointerEvent): void {
 function stop(): void {
     if (drag?.moved) {
         emit('changed', drag.key);
+    } else if (drag?.group) {
+        // A click (no drag) inside a multiple selection narrows it to that element.
+        emit('select', drag.key);
     }
     drag = null;
     window.removeEventListener('pointermove', move);
@@ -143,14 +185,65 @@ function stop(): void {
     window.removeEventListener('pointercancel', stop);
 }
 
-onBeforeUnmount(stop);
+/*
+ * Selection box: dragging on an empty part of the card selects every element it touches.
+ */
+const marquee = ref<{ x: number; y: number; width: number; height: number } | null>(null);
+let marqueeStart: { x: number; y: number; left: number; top: number } | null = null;
+
+function startMarquee(event: PointerEvent): void {
+    if (!props.editable || event.button !== 0) {
+        emit('select', background.value?.key ?? null);
+
+        return;
+    }
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    marqueeStart = { x: (event.clientX - rect.left) / props.scale, y: (event.clientY - rect.top) / props.scale, left: rect.left, top: rect.top };
+    marquee.value = null;
+    window.addEventListener('pointermove', moveMarquee);
+    window.addEventListener('pointerup', endMarquee);
+}
+
+function moveMarquee(event: PointerEvent): void {
+    if (!marqueeStart) {
+        return;
+    }
+    const x = (event.clientX - marqueeStart.left) / props.scale;
+    const y = (event.clientY - marqueeStart.top) / props.scale;
+    marquee.value = { x: Math.min(x, marqueeStart.x), y: Math.min(y, marqueeStart.y), width: Math.abs(x - marqueeStart.x), height: Math.abs(y - marqueeStart.y) };
+}
+
+function endMarquee(): void {
+    const box = marquee.value;
+    window.removeEventListener('pointermove', moveMarquee);
+    window.removeEventListener('pointerup', endMarquee);
+    marqueeStart = null;
+    marquee.value = null;
+    if (!box || (box.width * props.scale < 3 && box.height * props.scale < 3)) {
+        emit('select', background.value?.key ?? null);
+
+        return;
+    }
+    emit(
+        'selectMany',
+        layers.value
+            .filter((item) => item.x < box.x + box.width && item.x + item.width > box.x && item.y < box.y + box.height && item.y + item.height > box.y)
+            .map((item) => item.key),
+    );
+}
+
+onBeforeUnmount(() => {
+    stop();
+    window.removeEventListener('pointermove', moveMarquee);
+    window.removeEventListener('pointerup', endMarquee);
+});
 </script>
 
 <template>
     <div
         class="relative shrink-0 touch-none rounded-[3%] shadow-lg ring-1 ring-black/10 select-none"
         :style="{ width: `${width * scale}px`, height: `${height * scale}px`, ...sideCss(background, background?.image_url) }"
-        @pointerdown.self="emit('select', background?.key ?? null)"
+        @pointerdown.self="startMarquee"
     >
         <!-- What prints: clipped to the card's rounded corners -->
         <div class="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]">
@@ -166,6 +259,12 @@ onBeforeUnmount(stop);
                 backgroundSize: `${snap * scale}px ${snap * scale}px`,
             }"
             data-grid
+        />
+        <div
+            v-if="marquee"
+            class="pointer-events-none absolute z-20 border border-[var(--brand)] bg-[var(--brand)]/10"
+            :style="{ left: `${marquee.x * scale}px`, top: `${marquee.y * scale}px`, width: `${marquee.width * scale}px`, height: `${marquee.height * scale}px` }"
+            data-marquee
         />
         <template v-if="guides">
             <div
@@ -186,7 +285,7 @@ onBeforeUnmount(stop);
             :data-key="item.key"
             @pointerdown.stop="start($event, item, 'move')"
         >
-            <template v-if="editable && item.key === selectedKey && !item.style.locked">
+            <template v-if="editable && showHandles && item.key === selectedKey && !item.style.locked">
                 <span
                     v-for="handle in HANDLES"
                     :key="handle.handle"

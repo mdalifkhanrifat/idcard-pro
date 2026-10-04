@@ -22,6 +22,8 @@ const HISTORY_LIMIT = 100;
 
 export type LayerMove = 'up' | 'down' | 'top' | 'bottom';
 
+export type AlignMode = 'left' | 'center' | 'right' | 'top' | 'middle' | 'bottom';
+
 /** Default size (mm) and style of new elements; text sizes are in points. */
 const DEFAULTS: Record<DesignElementType, Partial<DesignElement> & { width: number; height: number }> = {
     logo: { width: 12, height: 12 },
@@ -89,6 +91,38 @@ export function useDesigner() {
     const size = computed(() => catalog.value?.size_mm ?? { width: 85.6, height: 54 });
     const sideItems = computed(() => items.value.filter((item) => item.side === side.value));
     const selected = computed(() => items.value.find((item) => item.key === selectedKey.value) ?? null);
+
+    /*
+     * Multiple selection. `selectedKey` stays the primary element (shown in the settings panel);
+     * `selectedKeys` holds every selected element and follows it when it is set directly.
+     */
+    const selectedKeys = ref<number[]>([]);
+    watch(selectedKey, (key) => {
+        if (key === null) {
+            selectedKeys.value = [];
+        } else if (!selectedKeys.value.includes(key)) {
+            selectedKeys.value = [key];
+        }
+    });
+    const selection = computed(() => items.value.filter((item) => selectedKeys.value.includes(item.key)));
+
+    /** Select one element, or add/remove it from the selection (Shift/Ctrl-click). */
+    function select(key: number | null, additive = false): void {
+        if (key === null || !additive) {
+            selectedKeys.value = key === null ? [] : [key];
+            selectedKey.value = key;
+
+            return;
+        }
+        const keys = selectedKeys.value.includes(key) ? selectedKeys.value.filter((candidate) => candidate !== key) : [...selectedKeys.value, key];
+        selectedKeys.value = keys;
+        selectedKey.value = keys.at(-1) ?? null;
+    }
+
+    function selectMany(keys: number[]): void {
+        selectedKeys.value = keys;
+        selectedKey.value = keys.at(-1) ?? null;
+    }
     const snapshot = computed(() => JSON.stringify(items.value.map(toPayload)));
     const dirty = computed(() => snapshot.value !== savedSnapshot.value);
 
@@ -246,11 +280,78 @@ export function useDesigner() {
         }
     }
 
-    /** Move by a number of millimetres, staying on the card. */
+    /** Selected elements that may be moved (not locked, not the background). */
+    function movable(keys: number[]): DesignerItem[] {
+        return items.value.filter((item) => keys.includes(item.key) && item.type !== 'background' && !item.style.locked);
+    }
+
+    /**
+     * Move elements together by a number of millimetres. The step is shortened so the whole group
+     * stays on the card and keeps its arrangement.
+     */
+    function moveBy(keys: number[], dx: number, dy: number, from?: Map<number, Rect>): void {
+        const group = movable(keys);
+        if (!group.length) {
+            return;
+        }
+        const start = (item: DesignerItem): Rect => from?.get(item.key) ?? item;
+        const left = Math.min(...group.map((item) => start(item).x));
+        const top = Math.min(...group.map((item) => start(item).y));
+        const right = Math.max(...group.map((item) => start(item).x + start(item).width));
+        const bottom = Math.max(...group.map((item) => start(item).y + start(item).height));
+        const stepX = Math.min(Math.max(dx, -left), size.value.width - right);
+        const stepY = Math.min(Math.max(dy, -top), size.value.height - bottom);
+        for (const item of group) {
+            const rect = start(item);
+            Object.assign(item, { x: roundMm(rect.x + stepX), y: roundMm(rect.y + stepY) });
+        }
+    }
+
     function nudge(key: number, dx: number, dy: number): void {
-        const item = items.value.find((candidate) => candidate.key === key);
-        if (item && item.type !== 'background' && !item.style.locked) {
-            setRect(key, { x: item.x + dx, y: item.y + dy, width: item.width, height: item.height });
+        moveBy([key], dx, dy);
+    }
+
+    /**
+     * Line elements up: with several selected, along the selection's edges or centre; with one, on the card.
+     */
+    function align(keys: number[], mode: AlignMode): void {
+        const group = movable(keys);
+        if (!group.length) {
+            return;
+        }
+        const bounds =
+            group.length > 1
+                ? {
+                      left: Math.min(...group.map((item) => item.x)),
+                      top: Math.min(...group.map((item) => item.y)),
+                      right: Math.max(...group.map((item) => item.x + item.width)),
+                      bottom: Math.max(...group.map((item) => item.y + item.height)),
+                  }
+                : { left: 0, top: 0, right: size.value.width, bottom: size.value.height };
+        for (const item of group) {
+            const x = { left: bounds.left, center: (bounds.left + bounds.right - item.width) / 2, right: bounds.right - item.width }[mode as 'left' | 'center' | 'right'];
+            const y = { top: bounds.top, middle: (bounds.top + bounds.bottom - item.height) / 2, bottom: bounds.bottom - item.height }[mode as 'top' | 'middle' | 'bottom'];
+            Object.assign(item, clampRect({ x: x ?? item.x, y: y ?? item.y, width: item.width, height: item.height }));
+        }
+    }
+
+    /** Equal gaps between three or more elements, keeping the outer two in place. */
+    function distribute(keys: number[], axis: 'horizontal' | 'vertical'): void {
+        const group = movable(keys);
+        if (group.length < 3) {
+            return;
+        }
+        const position = axis === 'horizontal' ? 'x' : 'y';
+        const length = axis === 'horizontal' ? 'width' : 'height';
+        const sorted = [...group].sort((a, b) => a[position] - b[position]);
+        const first = sorted[0];
+        const last = sorted[sorted.length - 1];
+        const used = sorted.reduce((total, item) => total + item[length], 0);
+        const gap = (last[position] + last[length] - first[position] - used) / (sorted.length - 1);
+        let cursor = first[position];
+        for (const item of sorted) {
+            item[position] = roundMm(cursor);
+            cursor += item[length] + gap;
         }
     }
 
@@ -375,6 +476,13 @@ export function useDesigner() {
         items,
         side,
         selectedKey,
+        selectedKeys,
+        selection,
+        select,
+        selectMany,
+        moveBy,
+        align,
+        distribute,
         loading,
         saving,
         errors,

@@ -759,7 +759,7 @@
         "redo": "আবার করুন",
         "snap": "গ্রিডে বসানো",
         "snapOff": "স্ন্যাপ বন্ধ",
-        "shortcuts": "তীর ১ mm সরায় (Shift দিলে ০.১ mm) · Del মোছে · Ctrl+D কপি · Ctrl+Z আগের অবস্থা · Ctrl+S সংরক্ষণ",
+        "shortcuts": "তীর ১ mm সরায় (Shift দিলে ০.১ mm) · Shift-ক্লিক / বাক্সে একাধিক বাছাই · Del মোছে · Ctrl+D কপি · Ctrl+Z আগের অবস্থা · Ctrl+S সংরক্ষণ",
         "previewWith": "প্রিভিউ:",
         "sampleData": "নমুনা ডেটা",
         "findCardholder": "কার্ডধারী খুঁজুন…",
@@ -828,6 +828,20 @@
             "dashed": "ড্যাশ",
             "dotted": "ডট"
         },
-        "rotation": "ঘোরানো"
+        "rotation": "ঘোরানো",
+        "alignSelection": "বাছাইগুলো সারিবদ্ধ",
+        "alignCard": "কার্ডে সারিবদ্ধ",
+        "alignModes": {
+            "left": "বাঁ কিনারা",
+            "center": "মাঝ (আড়াআড়ি)",
+            "right": "ডান কিনারা",
+            "top": "উপরের কিনারা",
+            "middle": "মাঝ (খাড়া)",
+            "bottom": "নিচের কিনারা"
+        },
+        "distributeHorizontal": "আড়াআড়ি সমান ফাঁক",
+        "distributeVertical": "খাড়া সমান ফাঁক",
+        "selectedCount": "{n}টা উপাদান বাছাই করা",
+        "multiHint": "যেকোনোটা টানলে সব সরবে। Shift-ক্লিকে যোগ বা বাদ; কার্ডের ফাঁকা জায়গা থেকে টেনে বাক্স দিয়ে বাছাই; Ctrl+A দিয়ে সব।"
     }
 }
