@@ -93,7 +93,7 @@ function setStyle<K extends keyof DesignElementStyle>(key: K, value: DesignEleme
     }
 }
 
-function toggle(key: 'bold' | 'italic' | 'underline' | 'uppercase'): void {
+function toggle(key: 'bold' | 'italic' | 'underline' | 'uppercase' | 'auto_fit' | 'single_line'): void {
     setStyle(key, !props.item.style[key]);
 }
 
@@ -353,6 +353,19 @@ function removeImage(): void {
                     </label>
                 </div>
 
+                <div class="flex flex-wrap gap-1.5">
+                    <button
+                        v-for="flag in ['auto_fit', 'single_line'] as const"
+                        :key="flag"
+                        class="rounded-md border border-line px-2 py-1 text-xs"
+                        :class="item.style[flag] ? 'bg-brand text-brand-contrast' : 'text-fg hover:bg-surface-2'"
+                        :aria-pressed="!!item.style[flag]"
+                        :data-toggle="flag"
+                        @click="toggle(flag)"
+                    >
+                        {{ t(`designer.textFlags.${flag}`) }}
+                    </button>
+                </div>
                 <p v-if="item.style.font_family && catalog.system_fonts.includes(item.style.font_family)" class="text-xs text-warning" data-font-warning>
                     {{ t(item.style.font_family === 'SutonnyMJ' ? 'designer.ansiFontHint' : 'designer.systemFontHint') }}
                 </p>

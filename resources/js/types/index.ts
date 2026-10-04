@@ -295,6 +295,10 @@ export interface DesignElementStyle {
     /** Points. */
     letter_spacing?: number;
     uppercase?: boolean;
+    /** Shrink the font (down to 4 pt) until the text fits its box. */
+    auto_fit?: boolean;
+    /** Never wrap the text. */
+    single_line?: boolean;
     /** Millimetres, like every size below. */
     padding?: number;
     /** Second colour of a gradient fill that starts with `background`. */

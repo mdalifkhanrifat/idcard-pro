@@ -30,6 +30,7 @@ export function textCss(style: DesignElementStyle, scale: number): Record<string
         lineHeight: style.line_height ?? 1.2,
         letterSpacing: style.letter_spacing ? `${style.letter_spacing * PT_TO_MM * scale}px` : undefined,
         textTransform: style.uppercase ? 'uppercase' : undefined,
+        whiteSpace: style.single_line ? 'nowrap' : undefined,
         color: style.color ?? '#111111',
         fontWeight: style.bold ? 700 : 400,
         fontStyle: style.italic ? 'italic' : 'normal',

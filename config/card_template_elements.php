@@ -50,6 +50,8 @@ return [
         'text' => [
             'font_family', 'font_size', 'color', 'label_color', 'bold', 'italic', 'underline', 'align',
             'vertical_align', 'line_height', 'letter_spacing', 'uppercase', 'padding',
+            // auto_fit: shrink the font (down to 4 pt) until the text fits its box; single_line: never wrap
+            'auto_fit', 'single_line',
         ],
         'image' => ['fit'],
         'shape' => ['shape'],

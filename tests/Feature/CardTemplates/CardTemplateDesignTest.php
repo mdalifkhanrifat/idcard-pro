@@ -264,9 +264,11 @@ it('keeps rotation, border style, locked and hidden flags', function () {
     Sanctum::actingAs($this->owner);
 
     $this->putJson($this->url, ['elements' => [
-        designElement(['style' => ['rotation' => '90', 'border_style' => 'dashed', 'border_width' => 0.3, 'locked' => '1', 'hidden' => false]]),
+        designElement(['style' => ['rotation' => '90', 'border_style' => 'dashed', 'border_width' => 0.3, 'locked' => '1', 'hidden' => false, 'auto_fit' => '1', 'single_line' => true]]),
     ]])
         ->assertOk()
+        ->assertJsonPath('data.0.style.auto_fit', true)
+        ->assertJsonPath('data.0.style.single_line', true)
         ->assertJsonPath('data.0.style.rotation', 90)
         ->assertJsonPath('data.0.style.border_style', 'dashed')
         ->assertJsonPath('data.0.style.locked', true)

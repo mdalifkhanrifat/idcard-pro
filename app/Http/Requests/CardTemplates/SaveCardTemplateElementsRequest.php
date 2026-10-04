@@ -59,6 +59,8 @@ class SaveCardTemplateElementsRequest extends FormRequest
             'elements.*.style.line_height' => ['nullable', 'numeric', 'between:0.5,3'],
             'elements.*.style.letter_spacing' => ['nullable', 'numeric', 'between:-2,20'],
             'elements.*.style.uppercase' => ['nullable', 'boolean'],
+            'elements.*.style.auto_fit' => ['nullable', 'boolean'],
+            'elements.*.style.single_line' => ['nullable', 'boolean'],
             'elements.*.style.padding' => ['nullable', 'numeric', 'between:0,20'],
             'elements.*.style.gradient_to' => $colour,
             'elements.*.style.gradient_direction' => ['nullable', Rule::in((array) config('card_template_elements.gradient_directions'))],

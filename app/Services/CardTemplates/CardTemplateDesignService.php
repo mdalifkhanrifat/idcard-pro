@@ -266,7 +266,7 @@ class CardTemplateDesignService
     {
         $style = array_filter($style ?? [], fn ($value) => $value !== null && $value !== '');
 
-        foreach (['bold', 'italic', 'underline', 'uppercase', 'locked', 'hidden'] as $flag) {
+        foreach (['bold', 'italic', 'underline', 'uppercase', 'auto_fit', 'single_line', 'locked', 'hidden'] as $flag) {
             if (isset($style[$flag])) {
                 $style[$flag] = filter_var($style[$flag], FILTER_VALIDATE_BOOL);
             }

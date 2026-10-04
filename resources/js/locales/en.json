@@ -842,6 +842,10 @@
         "distributeHorizontal": "Equal gaps across",
         "distributeVertical": "Equal gaps down",
         "selectedCount": "{n} elements selected",
-        "multiHint": "Drag any of them to move all. Shift-click adds or removes one; drag on an empty part of the card to select with a box; Ctrl+A selects all."
+        "multiHint": "Drag any of them to move all. Shift-click adds or removes one; drag on an empty part of the card to select with a box; Ctrl+A selects all.",
+        "textFlags": {
+            "auto_fit": "Shrink to fit",
+            "single_line": "Single line"
+        }
     }
 }
