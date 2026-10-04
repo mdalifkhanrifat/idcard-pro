@@ -114,9 +114,41 @@ function start(event: PointerEvent, item: DesignerItem, mode: 'move' | Handle): 
     event.preventDefault();
     const group = inGroup ? new Map(props.items.filter((candidate) => selectedSet.value.has(candidate.key)).map((candidate) => [candidate.key, { x: candidate.x, y: candidate.y, width: candidate.width, height: candidate.height }])) : null;
     drag = { key: item.key, mode, pointerX: event.clientX, pointerY: event.clientY, start: { x: item.x, y: item.y, width: item.width, height: item.height }, moved: false, group };
+    collectTargets(new Set(group ? group.keys() : [item.key]));
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', stop);
     window.addEventListener('pointercancel', stop);
+}
+
+/*
+ * Smart guides: while dragging, edges and centres jump to the edges and centres of other elements
+ * and of the card when they come within a few screen pixels. Hold Alt to place freely.
+ */
+const GUIDE_PX = 6;
+const guideLines = ref<{ x: number[]; y: number[] }>({ x: [], y: [] });
+let guideTargets: { x: number[]; y: number[] } = { x: [], y: [] };
+
+function collectTargets(excluded: Set<number>): void {
+    const others = layers.value.filter((item) => !excluded.has(item.key) && !item.style.hidden);
+    guideTargets = {
+        x: [0, props.width / 2, props.width, ...others.flatMap((item) => [item.x, item.x + item.width / 2, item.x + item.width])],
+        y: [0, props.height / 2, props.height, ...others.flatMap((item) => [item.y, item.y + item.height / 2, item.y + item.height])],
+    };
+}
+
+/** Closest guide for any of the given positions: the shift to apply and where to draw the line. */
+function nearestGuide(positions: number[], targets: number[]): { shift: number; line: number } | null {
+    let best: { shift: number; line: number } | null = null;
+    for (const position of positions) {
+        for (const target of targets) {
+            const shift = target - position;
+            if (Math.abs(shift) * props.scale <= GUIDE_PX && (!best || Math.abs(shift) < Math.abs(best.shift))) {
+                best = { shift, line: target };
+            }
+        }
+    }
+
+    return best;
 }
 
 /** Round a position to the snap grid (when snapping is on). */
@@ -141,14 +173,29 @@ function move(event: PointerEvent): void {
     drag.moved = true;
 
     const { x, y, width, height } = drag.start;
-    if (drag.mode === 'move' && drag.group) {
-        // The grabbed element snaps; the others keep their distance to it.
-        emit('moveGroup', [...drag.group.keys()], snapped(x + dx) - x, snapped(y + dy) - y, drag.group);
-
-        return;
-    }
+    const useGuides = !event.altKey;
+    guideLines.value = { x: [], y: [] };
     if (drag.mode === 'move') {
-        emit('rect', drag.key, { x: snapped(x + dx), y: snapped(y + dy), width, height });
+        let left = snapped(x + dx);
+        let top = snapped(y + dy);
+        if (useGuides) {
+            // Guides follow the grabbed element; for a group the others keep their distance to it.
+            const guideX = nearestGuide([x + dx, x + dx + width / 2, x + dx + width], guideTargets.x);
+            const guideY = nearestGuide([y + dy, y + dy + height / 2, y + dy + height], guideTargets.y);
+            if (guideX) {
+                left = x + dx + guideX.shift;
+                guideLines.value.x = [guideX.line];
+            }
+            if (guideY) {
+                top = y + dy + guideY.shift;
+                guideLines.value.y = [guideY.line];
+            }
+        }
+        if (drag.group) {
+            emit('moveGroup', [...drag.group.keys()], left - x, top - y, drag.group);
+        } else {
+            emit('rect', drag.key, { x: left, y: top, width, height });
+        }
 
         return;
     }
@@ -157,17 +204,28 @@ function move(event: PointerEvent): void {
     let top = y;
     let right = x + width;
     let bottom = y + height;
+    /** A dragged edge jumps to a nearby guide, otherwise to the grid. */
+    const guided = (value: number, axis: 'x' | 'y'): number => {
+        const guide = useGuides ? nearestGuide([value], guideTargets[axis]) : null;
+        if (guide) {
+            guideLines.value[axis] = [guide.line];
+
+            return guide.line;
+        }
+
+        return snapped(value);
+    };
     if (drag.mode.includes('w')) {
-        left = edge(snapped(x + dx), right, props.width, true);
+        left = edge(guided(x + dx, 'x'), right, props.width, true);
     }
     if (drag.mode.includes('e')) {
-        right = edge(snapped(right + dx), left, props.width, false);
+        right = edge(guided(right + dx, 'x'), left, props.width, false);
     }
     if (drag.mode.includes('n')) {
-        top = edge(snapped(y + dy), bottom, props.height, true);
+        top = edge(guided(y + dy, 'y'), bottom, props.height, true);
     }
     if (drag.mode.includes('s')) {
-        bottom = edge(snapped(bottom + dy), top, props.height, false);
+        bottom = edge(guided(bottom + dy, 'y'), top, props.height, false);
     }
     emit('rect', drag.key, { x: roundMm(left), y: roundMm(top), width: roundMm(right - left), height: roundMm(bottom - top) });
 }
@@ -180,6 +238,7 @@ function stop(): void {
         emit('select', drag.key);
     }
     drag = null;
+    guideLines.value = { x: [], y: [] };
     window.removeEventListener('pointermove', move);
     window.removeEventListener('pointerup', stop);
     window.removeEventListener('pointercancel', stop);
@@ -266,6 +325,8 @@ onBeforeUnmount(() => {
             :style="{ left: `${marquee.x * scale}px`, top: `${marquee.y * scale}px`, width: `${marquee.width * scale}px`, height: `${marquee.height * scale}px` }"
             data-marquee
         />
+        <div v-for="line in guideLines.x" :key="`gx${line}`" class="pointer-events-none absolute inset-y-0 z-20 w-px bg-fuchsia-500" :style="{ left: `${line * scale}px` }" data-guide-line />
+        <div v-for="line in guideLines.y" :key="`gy${line}`" class="pointer-events-none absolute inset-x-0 z-20 h-px bg-fuchsia-500" :style="{ top: `${line * scale}px` }" data-guide-line />
         <template v-if="guides">
             <div
                 class="pointer-events-none absolute rounded-[2%] border border-dashed border-rose-500/70"
