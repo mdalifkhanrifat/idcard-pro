@@ -1,7 +1,7 @@
 # IDCard Pro: কাজের অগ্রগতি ও হ্যান্ডঅফ
 
 > নতুন চ্যাট বা নতুন ডেভেলপার এই ফাইল থেকে শুরু করবেন। পুরো পরিকল্পনা আছে [ROADMAP.md](ROADMAP.md)-এ।
-> সর্বশেষ আপডেট: ৪ অক্টোবর ২০২৬। **Phase 1 আর Phase 2 সম্পন্ন।** Phase 3 চলছে: ৩.১ Signatories, ৩.২ কার্ড নম্বর আর ৩.৩ টেমপ্লেট সম্পন্ন। পরের কাজ ৩.৪, টেমপ্লেট ডিজাইনার (§৮ দেখুন)।
+> সর্বশেষ আপডেট: ৪ অক্টোবর ২০২৬। **Phase 1 আর Phase 2 সম্পন্ন।** Phase 3 চলছে: ৩.১ Signatories, ৩.২ কার্ড নম্বর, ৩.৩ টেমপ্লেট আর ৩.৪ক (ডিজাইনারের টেবিল) সম্পন্ন। পরের কাজ ৩.৪খ, ডিজাইনারের API (§৮ দেখুন)।
 
 ---
 
@@ -24,7 +24,7 @@
 | 2.5 | শিক্ষা ও প্রশিক্ষণ কোর্স (এক টেবিলে), কাস্টম ফিল্ড (সেটআপ পেজ, প্রিসেট, ফর্ম ট্যাব, ফিল্টার) | `QualificationService`, `app/Services/CustomFields`, `config/custom_field_presets.php`, `pages/custom-fields` |
 | 2.6 | CSV/XLSX ইমপোর্ট: যাচাই আর প্রিভিউ, queue-তে ইমপোর্ট, ইতিহাস, টেমপ্লেট | `CardholderImportService`, `CardholderImportMapper`, `app/Jobs/ImportCardholders.php`, `app/Support/Spreadsheets`, `config/cardholder_import.php` |
 
-**মান:** ১৩৬টা টেস্ট পাস (১২৫ feature + ১১ unit), Larastan (level 5) আর Pint পরিষ্কার, TypeScript টাইপ-চেক পরিষ্কার। প্রতিটা পেজ headless Chrome-এ চালিয়ে যাচাই করা হয়েছে।
+**মান:** ১৩৭টা টেস্ট পাস (১২৬ feature + ১১ unit), Larastan (level 5) আর Pint পরিষ্কার, TypeScript টাইপ-চেক পরিষ্কার। প্রতিটা পেজ headless Chrome-এ চালিয়ে যাচাই করা হয়েছে।
 
 **বর্তমান মডিউল আর তাদের service:**
 
@@ -199,7 +199,27 @@ docker compose run --rm --no-deps vite npx vue-tsc --noEmit
    - ব্যবহৃত `card_type`/`authority_type` master data থেকে মোছা যায় না। পারমিশন `templates.*`, Operator পায় শুধু `templates.view`।
    - পেজ: মেনু → Cards → Card templates, আসল অনুপাতে কার্ডের আকৃতি, ফিল্টার, ডায়ালগ (CR80 বোতাম), কপি। ৬টা টেস্ট।
    - `UiInput`-এ `step` prop যোগ হয়েছে। দশমিক সংখ্যার ঘরে `step="any"` না দিলে ব্রাউজার ফর্ম জমাই দেয় না, আর কিছু জানায়ও না।
-4. ➡️ **এখান থেকে শুরু, ৩.৪ টেমপ্লেট ডিজাইনার** (পুরনো `template_sections`): লোগো, ব্যাকগ্রাউন্ড, ছবি, সই, ডেটাবেস ফিল্ড (কাস্টম ফিল্ডসহ), QR, টেক্সট; পজিশন, ফন্ট, রঙ; ড্র্যাগ-ড্রপ।
+4. **৩.৪ টেমপ্লেট ডিজাইনার** (ইউজার অনুমোদিত: পুরনোটার সব থাকবে, সাথে নতুন সুবিধা)
+
+   **পুরনো ডিজাইনার যেভাবে কাজ করে** (`../idcard/resources/js/views/backend/Template/Create.vue`, `DesignModule.vue`, `TemplateSection.vue`):
+   - টেমপ্লেট তৈরির পেজেই ডিজাইনার: বাঁ দিকে সেকশনের তালিকা আর সেটিংস, ডান দিকে কার্ডের প্রিভিউ (ডিফল্ট 332×214 px), উপরে Front/Back টগল।
+   - প্রতিটা সেকশন jQuery UI `draggable({containment: 'parent'})` দিয়ে কার্ডের ভেতরে টেনে বসানো যায়। ছাড়লে `left/top` সেভ হয় `section_position`-এ, আর `width/height` সেভ হয় `section_width/height`-এ (CSS স্ট্রিং, px)। সাইজ টেনে বদলানো যায় না, ঘরে লিখতে হয়।
+   - সেকশনের ধরন: `fr_logo1-5`, `bg_logo1-5`, `bg_image`/`back_bg_image`, `profile`, `sign` (authority type-এর সক্রিয় সইকারী), `emp_sign`, `qr_code` (+ `qrcode_info`), `db_field` (+ `relation_name`: personalInfo / familyInfo / studentInfo / custom), `general_section`।
+   - স্টাইল: label, label_color, fornt_family (Arial, Arial Narrow/Black, Berlin, GILC, Impact, ParashMJ, SutonnyMJ, sans-serif, monospace, cursive, roboto, SolaimanLipi, AdorshoLipi, Nikosh), fornt_size, fornt_color, bg_color, font_weight, font_style, text_decoration, text_align।
+   - পুরনো সিস্টেম চালাতে: `cd ../idcard && php7.4 artisan serve --port=8000` (nginx-এর `php74.local` 500 দেয়, কারণ `storage`-এর মালিক `alif` আর FPM চলে `www-data` হিসেবে)। লগইন লাগে, seeder-এ কোনো অ্যাডমিন নেই।
+
+   - ✅ **৩.৪ক সম্পন্ন:** `config/card_template_elements.php` (উপাদানের ধরন, পুরনো → নতুন ম্যাপ, ঘরের তালিকা: cardholder / family / card, ফন্ট), `card_template_elements` টেবিল (side front/back, type, field, label, content, image, **x/y/width/height mm-এ**, z_index, style JSON), `CardTemplateElement` model, `CardTemplate::elements()`। টেমপ্লেট কপি করলে উপাদানও কপি হয়।
+   - ➡️ **এখান থেকে শুরু, ৩.৪খ — উপাদানের API:**
+     - `GET /card-templates/{id}/elements`
+     - `PUT /card-templates/{id}/elements`: পুরো লেআউট একবারে সেভ। ট্রানজ্যাকশনে replace হবে, প্রতিটা উপাদান যাচাই হবে (type config-এ আছে কিনা, field তালিকায় আছে কিনা বা `custom.<key>`, উপাদান কার্ডের সীমার ভেতরে কিনা, background প্রতি পাশে একটা)। নকশা বদলালে `version++`।
+     - লোগো আর ব্যাকগ্রাউন্ডের ছবি আপলোড: `ImageSanitizer` দিয়ে পরিষ্কার করে private ডিস্কে রাখা, signed link দিয়ে দেখানো (`SignatoryService`-এর ধরন অনুসরণ করুন)।
+     - CardholderService-এর মতো Controller → Service → Repository। টেস্ট লাগবে।
+   - **৩.৪গ — ডিজাইনার পেজ** (`/card-templates/{id}/design`): কার্ডের আসল অনুপাতে ক্যানভাস (mm → px স্কেল), Front/Back টগল, বাঁ দিকে "উপাদান যোগ করুন" প্যালেট, ডান দিকে নির্বাচিত উপাদানের সেটিংস (ঘর, লেবেল, ফন্ট, সাইজ, রঙ, ব্যাকগ্রাউন্ড, বোল্ড/ইটালিক/আন্ডারলাইন, alignment, লেবেলের রঙ)।
+     - **টেনে সরানো আর কোণা/পাশের হ্যান্ডেল দিয়ে সাইজ বদলানো,** pointer event দিয়ে, নতুন প্যাকেজ ছাড়া। কার্ডের বাইরে যাবে না।
+     - কিবোর্ডের তীর দিয়ে ১ mm (Shift দিলে ০.১ mm) সরানো, গ্রিডে স্ন্যাপ, লেয়ার উপরে/নিচে, কপি, মোছা, Undo।
+     - প্রিভিউতে নমুনা ডেটা দেখানো, আর চাইলে একজন আসল কার্ডধারী বেছে তার ডেটা দেখা।
+   - **৩.৪ঘ — ফন্ট:** বাংলা ফন্ট (SolaimanLipi, Nikosh ইত্যাদি) প্রজেক্টের ভেতরে self-hosted করতে হবে, কোনো CDN নয়। লাইসেন্স দেখে নিতে হবে। SutonnyMJ ANSI ফন্ট, তাই এটা Unicode লেখার সাথে মিলবে না, নোট রাখতে হবে।
+   - **৩.৪ঙ — টেমপ্লেট তালিকা থেকে "Design" বোতাম** আর কার্ডের থাম্বনেইলে আসল ডিজাইন দেখানো।
 5. **৩.৫ কার্ড ইস্যু** (পুরনো `card_information`): কারণ (new / promotion / lost / renewal), নোট, মেয়াদ, RF card no। প্রতিবার ইস্যুতে নতুন রেকর্ড, আগের কার্ড বাতিল। **যে ছবি, সই আর টেমপ্লেট সংস্করণ ব্যবহার হলো তার id রাখতে হবে।** পরিবারের সদস্যের কার্ডও এখানে।
 6. **৩.৬ প্রিন্ট আর ইতিহাস** (পুরনো `card_print_history`): ব্রাউজার প্রিন্ট আর সার্ভারে PDF (CR80), ব্যাচ প্রিন্ট, প্রতিটা প্রিন্ট ইউজারের নামে লগ।
 7. **৩.৭ স্বাক্ষরিত QR আর পাবলিক ভেরিফিকেশন পেজ।**
