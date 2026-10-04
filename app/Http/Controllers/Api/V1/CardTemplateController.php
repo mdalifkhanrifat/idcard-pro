@@ -68,8 +68,12 @@ class CardTemplateController extends Controller
     {
         Gate::authorize('templates.create');
 
-        $name = $request->validate(['name' => ['required', 'string', 'max:255']])['name'];
+        // Legacy "copy template" asked for a new title and code.
+        $input = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'code' => ['nullable', 'string', 'max:20', 'regex:/^[A-Za-z0-9\-_]+$/'],
+        ]);
 
-        return (new CardTemplateResource($this->templates->duplicate($template, $name, $request->user())))->response()->setStatusCode(201);
+        return (new CardTemplateResource($this->templates->duplicate($template, $input['name'], $request->user(), $input['code'] ?? null)))->response()->setStatusCode(201);
     }
 }

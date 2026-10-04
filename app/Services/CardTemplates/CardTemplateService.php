@@ -85,15 +85,16 @@ class CardTemplateService
     /**
      * Copy a template as a new, inactive draft (legacy "copy template").
      */
-    public function duplicate(CardTemplate $template, string $name, User $actor): CardTemplate
+    public function duplicate(CardTemplate $template, string $name, User $actor, ?string $code = null): CardTemplate
     {
-        return DB::transaction(function () use ($template, $name, $actor): CardTemplate {
+        return DB::transaction(function () use ($template, $name, $actor, $code): CardTemplate {
             $copy = $this->templates->create([
                 ...$template->only([
                     'code', 'card_type_id', 'audience', 'orientation', 'width', 'height', 'size_unit',
                     'authority_type_id', 'validity_months', 'is_double_sided',
                 ]),
                 'name' => $name,
+                'code' => $code !== null && $code !== '' ? strtoupper($code) : $template->code,
                 'is_active' => false,
                 'created_by' => $actor->id,
             ]);

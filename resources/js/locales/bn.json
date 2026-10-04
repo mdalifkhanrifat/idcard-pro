@@ -596,7 +596,9 @@
         "duplicateName": "{name} (কপি)",
         "duplicated": "টেমপ্লেটটি নিষ্ক্রিয় খসড়া হিসেবে কপি হয়েছে",
         "deleteConfirm": "“{name}” টেমপ্লেট মুছবেন?",
-        "useDefaultSize": "ডিফল্ট মাপ ({width} × {height} mm)"
+        "useDefaultSize": "ডিফল্ট মাপ ({width} × {height} mm)",
+        "copyTitle": "টেমপ্লেট কপি",
+        "copyHint": "পুরো নকশাসহ কপিটা নিষ্ক্রিয় খসড়া হিসেবে সেভ হবে।"
     },
     "designer": {
         "title": "টেমপ্লেট ডিজাইনার",

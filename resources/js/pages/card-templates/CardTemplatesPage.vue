@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import { watchDebounced } from '@vueuse/core';
 import { useI18n } from 'vue-i18n';
 import { Copy, Palette, Pencil, Plus, Search, Trash2 } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
+import UiDialog from '@/components/ui/UiDialog.vue';
+import UiInput from '@/components/ui/UiInput.vue';
 import UiEmpty from '@/components/ui/UiEmpty.vue';
 import UiPageHeader from '@/components/ui/UiPageHeader.vue';
 import UiSelect from '@/components/ui/UiSelect.vue';
@@ -60,13 +62,38 @@ function openForm(template: CardTemplate | null): void {
     dialogOpen.value = true;
 }
 
-async function duplicate(template: CardTemplate): Promise<void> {
+/** Legacy "copy template": a new title and code for the copy. */
+const copying = ref<CardTemplate | null>(null);
+const copyForm = reactive({ name: '', code: '' });
+const copyErrors = ref<Record<string, string[]>>({});
+const copyBusy = ref(false);
+const copyOpen = computed({ get: () => copying.value !== null, set: (value) => !value && (copying.value = null) });
+
+function openCopy(template: CardTemplate): void {
+    copying.value = template;
+    copyErrors.value = {};
+    Object.assign(copyForm, { name: t('templates.duplicateName', { name: template.name }), code: template.code });
+}
+
+async function duplicate(): Promise<void> {
+    if (!copying.value) {
+        return;
+    }
+    copyBusy.value = true;
+    copyErrors.value = {};
     try {
-        await http.post(`/card-templates/${template.id}/duplicate`, { name: t('templates.duplicateName', { name: template.name }) });
+        await http.post(`/card-templates/${copying.value.id}/duplicate`, { name: copyForm.name, code: copyForm.code });
         ui.notify(t('templates.duplicated'));
+        copying.value = null;
         await load();
     } catch (error) {
-        ui.notify(toApiError(error).message, 'error');
+        const apiError = toApiError(error);
+        copyErrors.value = apiError.errors;
+        if (!Object.keys(apiError.errors).length) {
+            ui.notify(apiError.message, 'error');
+        }
+    } finally {
+        copyBusy.value = false;
     }
 }
 
@@ -139,7 +166,7 @@ async function remove(template: CardTemplate): Promise<void> {
                         <RouterLink :to="{ name: 'card-templates.design', params: { id: item.id } }" class="mr-auto inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium text-brand hover:bg-brand/10">
                             <Palette class="size-4" />{{ t('designer.design') }}
                         </RouterLink>
-                        <button v-if="auth.can('templates.create')" class="rounded-md p-2 text-muted hover:bg-surface-2 hover:text-fg" :title="t('templates.duplicate')" @click="duplicate(item)"><Copy class="size-4" /></button>
+                        <button v-if="auth.can('templates.create')" class="rounded-md p-2 text-muted hover:bg-surface-2 hover:text-fg" :title="t('templates.duplicate')" @click="openCopy(item)"><Copy class="size-4" /></button>
                         <button v-if="auth.can('templates.update')" class="rounded-md p-2 text-muted hover:bg-surface-2 hover:text-fg" :title="t('common.edit')" @click="openForm(item)"><Pencil class="size-4" /></button>
                         <button v-if="auth.can('templates.delete')" class="rounded-md p-2 text-muted hover:bg-danger/10 hover:text-danger" :title="t('common.delete')" @click="remove(item)"><Trash2 class="size-4" /></button>
                     </div>
@@ -149,5 +176,16 @@ async function remove(template: CardTemplate): Promise<void> {
         <div v-else-if="!loading" class="rounded-xl border border-line bg-surface"><UiEmpty :title="t('templates.empty')" /></div>
 
         <CardTemplateDialog v-model:open="dialogOpen" :template="editing" @saved="load" />
+
+        <UiDialog v-model:open="copyOpen" :title="t('templates.copyTitle')" :description="t('templates.copyHint')">
+            <form id="copy-template" class="space-y-4" @submit.prevent="duplicate">
+                <UiInput v-model="copyForm.name" :label="t('templates.name')" required :maxlength="255" :error="copyErrors.name" />
+                <UiInput v-model="copyForm.code" :label="t('templates.code')" :hint="t('templates.codeHint')" :maxlength="20" :error="copyErrors.code" />
+            </form>
+            <template #footer>
+                <UiButton variant="secondary" @click="copying = null">{{ t('common.cancel') }}</UiButton>
+                <UiButton type="submit" form="copy-template" :loading="copyBusy" data-copy-submit>{{ t('templates.duplicate') }}</UiButton>
+            </template>
+        </UiDialog>
     </div>
 </template>

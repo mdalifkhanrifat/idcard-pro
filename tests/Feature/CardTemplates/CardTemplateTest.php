@@ -58,7 +58,11 @@ it('duplicates a template as an inactive draft', function () {
         ->assertJsonPath('data.name', 'Staff copy')
         ->assertJsonPath('data.orientation', 'vertical')
         ->assertJsonPath('data.width', 54)
-        ->assertJsonPath('data.is_active', false);
+        ->assertJsonPath('data.is_active', false)
+        ->assertJsonPath('data.code', 'EMP');
+
+    $this->postJson("/api/v1/card-templates/{$id}/duplicate", ['name' => 'Contractors', 'code' => 'con-1'])->assertCreated()->assertJsonPath('data.code', 'CON-1');
+    $this->postJson("/api/v1/card-templates/{$id}/duplicate", ['name' => 'Bad', 'code' => 'A B'])->assertJsonValidationErrors('code');
 });
 
 it('copies designer elements when duplicating', function () {
