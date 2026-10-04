@@ -42,9 +42,10 @@ class SaveCardTemplateElementsRequest extends FormRequest
             'elements.*.image' => ['nullable', 'string', 'regex:'.CardTemplateImageService::NAME_PATTERN],
             'elements.*.x' => ['required', 'numeric', 'min:0', 'max:1000'],
             'elements.*.y' => ['required', 'numeric', 'min:0', 'max:1000'],
-            'elements.*.width' => ['required', 'numeric', 'min:0.5', 'max:1000'],
-            'elements.*.height' => ['required', 'numeric', 'min:0.5', 'max:1000'],
-            'elements.*.style' => ['nullable', 'array:font_family,font_size,color,label_color,background,bold,italic,underline,align'],
+            // 0.2 mm allows thin lines
+            'elements.*.width' => ['required', 'numeric', 'min:0.2', 'max:1000'],
+            'elements.*.height' => ['required', 'numeric', 'min:0.2', 'max:1000'],
+            'elements.*.style' => ['nullable', 'array:'.implode(',', array_merge(...array_values((array) config('card_template_elements.style'))))],
             'elements.*.style.font_family' => ['nullable', Rule::in((array) config('card_template_elements.fonts'))],
             'elements.*.style.font_size' => ['nullable', 'numeric', 'between:1,72'],
             'elements.*.style.color' => $colour,
@@ -54,6 +55,19 @@ class SaveCardTemplateElementsRequest extends FormRequest
             'elements.*.style.italic' => ['nullable', 'boolean'],
             'elements.*.style.underline' => ['nullable', 'boolean'],
             'elements.*.style.align' => ['nullable', Rule::in(['left', 'center', 'right'])],
+            'elements.*.style.vertical_align' => ['nullable', Rule::in(['top', 'middle', 'bottom'])],
+            'elements.*.style.line_height' => ['nullable', 'numeric', 'between:0.5,3'],
+            'elements.*.style.letter_spacing' => ['nullable', 'numeric', 'between:-2,20'],
+            'elements.*.style.uppercase' => ['nullable', 'boolean'],
+            'elements.*.style.padding' => ['nullable', 'numeric', 'between:0,20'],
+            'elements.*.style.gradient_to' => $colour,
+            'elements.*.style.gradient_direction' => ['nullable', Rule::in((array) config('card_template_elements.gradient_directions'))],
+            'elements.*.style.border_color' => $colour,
+            'elements.*.style.border_width' => ['nullable', 'numeric', 'between:0,10'],
+            'elements.*.style.border_radius' => ['nullable', 'numeric', 'between:0,100'],
+            'elements.*.style.opacity' => ['nullable', 'numeric', 'between:0.05,1'],
+            'elements.*.style.fit' => ['nullable', Rule::in(['cover', 'contain'])],
+            'elements.*.style.shape' => ['nullable', Rule::in(['rectangle', 'ellipse'])],
         ];
     }
 }

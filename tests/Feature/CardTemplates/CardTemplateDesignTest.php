@@ -202,3 +202,30 @@ it('gives a duplicated template its own images and deletes them with the templat
     $this->deleteJson("/api/v1/card-templates/{$this->template->public_id}")->assertNoContent();
     expect($disk->allFiles())->toHaveCount(0);
 });
+
+it('saves shapes, lines, colour backgrounds and box styles', function () {
+    Sanctum::actingAs($this->owner);
+
+    $this->putJson($this->url, ['elements' => [
+        designElement(['type' => 'background', 'field' => null, 'x' => 0, 'y' => 0, 'width' => 85.6, 'height' => 54, 'style' => [
+            'background' => '#0f62fe', 'gradient_to' => '#ffffff', 'gradient_direction' => 'to bottom',
+        ]]),
+        designElement(['type' => 'shape', 'field' => null, 'x' => 0, 'y' => 0, 'width' => 85.6, 'height' => 10, 'style' => ['background' => '#111111', 'opacity' => '0.8']]),
+        designElement(['type' => 'shape', 'field' => null, 'x' => 5, 'y' => 30, 'width' => 75, 'height' => 0.3, 'style' => ['background' => '#cccccc']]),
+        designElement(['type' => 'photo', 'field' => null, 'x' => 3, 'y' => 12, 'width' => 22, 'height' => 22, 'style' => [
+            'border_radius' => 11, 'border_width' => '0.5', 'border_color' => '#ffffff', 'fit' => 'cover',
+        ]]),
+        designElement(['style' => ['uppercase' => '1', 'vertical_align' => 'middle', 'line_height' => 1.2, 'letter_spacing' => 0.5, 'padding' => 1]]),
+    ]])
+        ->assertOk()
+        ->assertJsonPath('data.0.style.gradient_to', '#ffffff')
+        ->assertJsonPath('data.1.type', 'shape')
+        ->assertJsonPath('data.1.style.opacity', 0.8)
+        ->assertJsonPath('data.2.height', 0.3)
+        ->assertJsonPath('data.3.style.border_radius', 11)
+        ->assertJsonPath('data.4.style.uppercase', true);
+
+    $this->putJson($this->url, ['elements' => [
+        designElement(['type' => 'shape', 'field' => null, 'style' => ['shape' => 'star', 'opacity' => 0, 'gradient_direction' => 'sideways', 'fit' => 'stretch']]),
+    ]])->assertJsonValidationErrors(['elements.0.style.shape', 'elements.0.style.opacity', 'elements.0.style.gradient_direction', 'elements.0.style.fit']);
+});

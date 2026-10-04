@@ -265,13 +265,15 @@ class CardTemplateDesignService
     {
         $style = array_filter($style ?? [], fn ($value) => $value !== null && $value !== '');
 
-        foreach (['bold', 'italic', 'underline'] as $flag) {
+        foreach (['bold', 'italic', 'underline', 'uppercase'] as $flag) {
             if (isset($style[$flag])) {
                 $style[$flag] = filter_var($style[$flag], FILTER_VALIDATE_BOOL);
             }
         }
-        if (isset($style['font_size'])) {
-            $style['font_size'] = (float) $style['font_size'];
+        foreach (['font_size', 'line_height', 'letter_spacing', 'padding', 'border_width', 'border_radius', 'opacity'] as $number) {
+            if (isset($style[$number])) {
+                $style[$number] = (float) $style[$number];
+            }
         }
 
         return $style === [] ? null : $style;
