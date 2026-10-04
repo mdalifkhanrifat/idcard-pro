@@ -31,9 +31,9 @@
 | Education info, Other course | শিক্ষা ও প্রশিক্ষণ (এক টেবিলে, কোর্স এখন ব্যক্তির সাথে যুক্ত) ✅ | 2 |
 | Student info | কাস্টম ফিল্ড + "student" প্রিসেট; যেকোনো প্রতিষ্ঠান নিজের ঘর বানাতে পারে ✅ | 2 |
 | Picture, holder sign, PDF, files আপলোড | ছবি/সই (সংস্করণসহ) আর একাধিক ডকুমেন্ট, ছবি পরিশোধন, private disk, signed link ✅ | 2 |
-| Template Type, Template, Template Setup | Card templates: ড্র্যাগ-ড্রপ ডিজাইনার, সামনে/পেছনে, ভার্সনিং | 3 |
-| Authorized Signature, Authority Type | Signatories (সই, পদ, কার্যকর তারিখ) | 3 |
-| Auto card number `CODE/YY######` | কনফিগারযোগ্য নম্বর ফরম্যাট, ট্রানজ্যাকশন আর লক দিয়ে, unique | 3 |
+| Template Type, Template, Template Setup | Card templates: ড্র্যাগ-ড্রপ ডিজাইনার (হ্যান্ডেল, mm, স্ন্যাপ, লেয়ার, Undo, আকৃতি, গ্রেডিয়েন্ট, বর্ডার), সামনে/পেছনে, ভার্সনিং, আসল কার্ডধারী দিয়ে প্রিভিউ, self-hosted ফন্ট ✅ | 3 |
+| Authorized Signature, Authority Type | Signatories (সই, পদ, কার্যকর তারিখ) ✅ | 3 |
+| Auto card number `CODE/YY######` | কনফিগারযোগ্য নম্বর ফরম্যাট, ট্রানজ্যাকশন আর লক দিয়ে, unique ✅ | 3 |
 | Card print + reason (New/Promotion/Lost) + history | Card issuance: প্রতিবার ইস্যুতে নতুন রেকর্ড, কারণ, নোট, প্রিন্ট ইতিহাস, পুরনো কার্ড বাতিল | 3 |
 | QR code (টেক্সট) | স্বাক্ষরিত QR + পাবলিক ভেরিফিকেশন পেজ | 3 |
 | Browser print (PrintArea) | ব্রাউজার প্রিন্ট আর সার্ভারে PDF (CR80), ব্যাচ প্রিন্ট | 3 |
@@ -61,8 +61,8 @@
 ## ৪. Phase পরিকল্পনা
 
 - **Phase 1: ভিত্তি।** ✅ সম্পন্ন (৩ অক্টোবর ২০২৬)। Docker, tenancy, custom auth (MFA সহ), RBAC, users, audit, SPA shell, i18n (en/bn), ২৮টা feature test।
-- **Phase 2: Master data।** ✅ সম্পন্ন (৩ অক্টোবর ২০২৬)। Lookup lists, cardholders (ফাইল, পরিবার, শিক্ষা, কাস্টম ফিল্ড), অ্যাডভান্সড ফিল্টার, CSV/XLSX ইমপোর্ট, ১১২টা টেস্ট। কার্ড নম্বরের ফরম্যাট সেটিং কার্ড মডিউলের সাথে Phase 3-এ যাবে। বিস্তারিত: [PROGRESS.md](PROGRESS.md)। বিস্তারিত: [PROGRESS.md](PROGRESS.md)।
-- **Phase 3: কার্ড।** টেমপ্লেট ডিজাইনার, signatories, নম্বর সিকোয়েন্স, issuance আর প্রিন্ট, PDF, স্বাক্ষরিত QR ও ভেরিফিকেশন।
+- **Phase 2: Master data।** ✅ সম্পন্ন (৩ অক্টোবর ২০২৬)। Lookup lists, cardholders (ফাইল, পরিবার, শিক্ষা, কাস্টম ফিল্ড), অ্যাডভান্সড ফিল্টার, CSV/XLSX ইমপোর্ট, ১১২টা টেস্ট। কার্ড নম্বরের ফরম্যাট সেটিং কার্ড মডিউলের সাথে Phase 3-এ যাবে। বিস্তারিত: [PROGRESS.md](PROGRESS.md)।
+- **Phase 3: কার্ড।** চলছে। ✅ signatories, নম্বর সিকোয়েন্স, টেমপ্লেট আর ডিজাইনার (৪ অক্টোবর ২০২৬)। বাকি: issuance আর প্রিন্ট, PDF, স্বাক্ষরিত QR ও ভেরিফিকেশন।
 - **Phase 4: Biometrics।** Driver interface, simulator আর upload, bridge agent spec, enrollment UI।
 - **Phase 5: অপারেশন।** অ্যাপয়েন্টমেন্ট আর নোটিফিকেশন (ইমেইল/SMS), রিপোর্ট আর এক্সপোর্ট, মেয়াদ শেষের রিমাইন্ডার, ইমপোর্ট।
 - **Phase 6: ইন্টিগ্রেশন।** Webhooks, API token UI, SSO, পুরনো সিস্টেম থেকে ডেটা মাইগ্রেশন টুল।
