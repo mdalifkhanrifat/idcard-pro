@@ -102,6 +102,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('card-templates/{template}/elements', [CardTemplateElementController::class, 'index'])->name('card-templates.elements.index');
             Route::put('card-templates/{template}/elements', [CardTemplateElementController::class, 'update'])->name('card-templates.elements.update');
             Route::post('card-templates/{template}/images', [CardTemplateElementController::class, 'uploadImage'])->name('card-templates.images.store');
+            Route::get('card-templates/{template}/preview', [CardTemplateElementController::class, 'preview'])->name('card-templates.preview');
 
             Route::apiResource('signatories', SignatoryController::class);
             Route::post('signatories/{signatory}/signature', [SignatoryController::class, 'uploadSignature'])->name('signatories.signature.store');

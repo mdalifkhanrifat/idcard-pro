@@ -16,4 +16,38 @@ return [
         'outside_card' => 'উপাদানটা কার্ডের ভেতরে থাকতে হবে (:width × :height mm)।',
         'image_missing' => 'ছবিটা পাওয়া যায়নি। আবার আপলোড করুন।',
     ],
+    // Printed values, in the organization's language (CardDataResolver)
+    'values' => [
+        'gender' => [
+            'male' => 'পুরুষ',
+            'female' => 'নারী',
+            'other' => 'অন্যান্য',
+        ],
+        'marital_status' => [
+            'single' => 'অবিবাহিত',
+            'married' => 'বিবাহিত',
+            'divorced' => 'তালাকপ্রাপ্ত',
+            'widowed' => 'বিধবা/বিপত্নীক',
+        ],
+        'employment_type' => [
+            'staff' => 'কর্মী',
+            'contractor' => 'ঠিকাদার',
+            'visitor' => 'অতিথি',
+            'student' => 'ছাত্র/ছাত্রী',
+            'other' => 'অন্যান্য',
+        ],
+        'relation' => [
+            'father' => 'পিতা',
+            'mother' => 'মাতা',
+            'father_in_law' => 'শ্বশুর',
+            'mother_in_law' => 'শাশুড়ি',
+            'spouse' => 'স্বামী/স্ত্রী',
+            'son' => 'পুত্র',
+            'daughter' => 'কন্যা',
+            'sibling' => 'ভাই/বোন',
+            'other' => 'অন্যান্য',
+        ],
+        'yes' => 'হ্যাঁ',
+        'no' => 'না',
+    ],
 ];

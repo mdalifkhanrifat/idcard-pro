@@ -5,6 +5,7 @@ namespace App\Repositories\Eloquent;
 use App\Models\MasterDataItem;
 use App\Models\Signatory;
 use App\Repositories\Contracts\SignatoryRepositoryInterface;
+use Carbon\CarbonInterface;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
@@ -35,6 +36,20 @@ class SignatoryRepository extends EloquentRepository implements SignatoryReposit
     public function findAnyTenant(string $publicId): ?Signatory
     {
         return Signatory::query()->withoutGlobalScopes()->where('public_id', $publicId)->first();
+    }
+
+    public function activeFor(int $authorityTypeId, CarbonInterface $on): ?Signatory
+    {
+        $day = $on->toDateString();
+
+        return $this->query()
+            ->where('authority_type_id', $authorityTypeId)
+            ->where('is_active', true)
+            ->where(fn (Builder $q) => $q->whereNull('effective_from')->orWhereDate('effective_from', '<=', $day))
+            ->where(fn (Builder $q) => $q->whereNull('effective_to')->orWhereDate('effective_to', '>=', $day))
+            ->orderByDesc('effective_from')
+            ->orderByDesc('id')
+            ->first();
     }
 
     public function usesMasterDataItem(MasterDataItem $item): bool

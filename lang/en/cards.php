@@ -16,4 +16,38 @@ return [
         'outside_card' => 'The element must stay inside the card (:width × :height mm).',
         'image_missing' => 'The image was not found. Upload it again.',
     ],
+    // Printed values, in the organization's language (CardDataResolver)
+    'values' => [
+        'gender' => [
+            'male' => 'Male',
+            'female' => 'Female',
+            'other' => 'Other',
+        ],
+        'marital_status' => [
+            'single' => 'Single',
+            'married' => 'Married',
+            'divorced' => 'Divorced',
+            'widowed' => 'Widowed',
+        ],
+        'employment_type' => [
+            'staff' => 'Staff',
+            'contractor' => 'Contractor',
+            'visitor' => 'Visitor',
+            'student' => 'Student',
+            'other' => 'Other',
+        ],
+        'relation' => [
+            'father' => 'Father',
+            'mother' => 'Mother',
+            'father_in_law' => 'Father-in-law',
+            'mother_in_law' => 'Mother-in-law',
+            'spouse' => 'Spouse',
+            'son' => 'Son',
+            'daughter' => 'Daughter',
+            'sibling' => 'Sibling',
+            'other' => 'Other',
+        ],
+        'yes' => 'Yes',
+        'no' => 'No',
+    ],
 ];

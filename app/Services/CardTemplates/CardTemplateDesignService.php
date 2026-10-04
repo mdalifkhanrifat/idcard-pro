@@ -6,12 +6,16 @@ use App\Enums\TemplateAudience;
 use App\Models\CardTemplate;
 use App\Models\CardTemplateElement;
 use App\Models\CustomField;
+use App\Repositories\Contracts\CardholderRepositoryInterface;
 use App\Repositories\Contracts\CardTemplateElementRepositoryInterface;
 use App\Repositories\Contracts\CardTemplateRepositoryInterface;
 use App\Repositories\Contracts\CustomFieldRepositoryInterface;
+use App\Repositories\Contracts\FamilyMemberRepositoryInterface;
+use App\Services\Cards\CardDataResolver;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * The template designer: the elements placed on each card side (legacy "template sections").
@@ -34,6 +38,9 @@ class CardTemplateDesignService
         private CardTemplateRepositoryInterface $templates,
         private CustomFieldRepositoryInterface $customFields,
         private CardTemplateImageService $images,
+        private CardholderRepositoryInterface $cardholders,
+        private FamilyMemberRepositoryInterface $familyMembers,
+        private CardDataResolver $cardData,
     ) {}
 
     /**
@@ -61,6 +68,26 @@ class CardTemplateDesignService
             'fonts' => config('card_template_elements.fonts'),
             'size_mm' => $template->sizeInMm(),
         ];
+    }
+
+    /**
+     * Real values of one cardholder (and, for family cards, one of their family members) for the designer preview.
+     * Card fields (number, dates) are only known once a card is issued, so they are not included.
+     *
+     * @return array{fields: array<string, string>, images: array<string, string|null>}
+     */
+    public function preview(CardTemplate $template, string $cardholderId, ?string $familyMemberId): array
+    {
+        $cardholder = $this->cardholders->findByPublicId($cardholderId) ?? throw new NotFoundHttpException;
+        $member = null;
+        if ($familyMemberId !== null) {
+            $member = $this->familyMembers->findByPublicId($familyMemberId);
+            if ($member === null || $member->cardholder_id !== $cardholder->id) {
+                throw new NotFoundHttpException;
+            }
+        }
+
+        return $this->cardData->resolve($template, $cardholder, $member);
     }
 
     /**

@@ -41,6 +41,22 @@ class CardTemplateElementController extends Controller
     }
 
     /**
+     * Values of a real cardholder for the designer preview: ?cardholder=<id>[&family_member=<id>].
+     */
+    public function preview(Request $request, CardTemplate $template): JsonResponse
+    {
+        Gate::authorize('templates.view');
+        Gate::authorize('cardholders.view');
+
+        $input = $request->validate([
+            'cardholder' => ['required', 'string', 'size:26'],
+            'family_member' => ['nullable', 'string', 'size:26'],
+        ]);
+
+        return response()->json(['data' => $this->design->preview($template, $input['cardholder'], $input['family_member'] ?? null)]);
+    }
+
+    /**
      * Upload a logo or background image; the returned name is then used in a layout save.
      */
     public function uploadImage(Request $request, CardTemplate $template): JsonResponse
