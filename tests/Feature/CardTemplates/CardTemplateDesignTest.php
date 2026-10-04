@@ -70,6 +70,8 @@ it('raises the version only when the design changes', function () {
     $this->putJson($this->url, ['elements' => [designElement()]])->assertJsonPath('meta.version', 2);
     $this->putJson($this->url, ['elements' => [designElement(['style' => ['font_family' => 'Inter', 'font_size' => '9', 'color' => '#111111', 'bold' => '1', 'align' => 'left']])]])
         ->assertJsonPath('meta.version', 2);
+    $this->putJson($this->url, ['elements' => [designElement(['style' => ['font_family' => 'Inter', 'font_size' => 9, 'color' => '#111111', 'bold' => true, 'align' => 'left', 'locked' => true]])]])
+        ->assertJsonPath('meta.version', 2);
     $this->putJson($this->url, ['elements' => [designElement(['x' => 31])]])->assertJsonPath('meta.version', 3);
     $this->putJson($this->url, ['elements' => []])->assertJsonPath('meta.version', 4)->assertJsonCount(0, 'data');
 
@@ -256,4 +258,20 @@ it('lists templates with their layout for thumbnails', function () {
         ->assertJsonPath('data.0.elements.1.field', 'full_name');
     $this->getJson('/api/v1/card-templates')->assertJsonMissingPath('data.0.elements');
     $this->getJson('/api/v1/card-templates?include=everything')->assertJsonValidationErrors('include');
+});
+
+it('keeps rotation, border style, locked and hidden flags', function () {
+    Sanctum::actingAs($this->owner);
+
+    $this->putJson($this->url, ['elements' => [
+        designElement(['style' => ['rotation' => '90', 'border_style' => 'dashed', 'border_width' => 0.3, 'locked' => '1', 'hidden' => false]]),
+    ]])
+        ->assertOk()
+        ->assertJsonPath('data.0.style.rotation', 90)
+        ->assertJsonPath('data.0.style.border_style', 'dashed')
+        ->assertJsonPath('data.0.style.locked', true)
+        ->assertJsonMissingPath('data.0.style.hidden');
+
+    $this->putJson($this->url, ['elements' => [designElement(['style' => ['rotation' => 45, 'border_style' => 'double']])]])
+        ->assertJsonValidationErrors(['elements.0.style.rotation', 'elements.0.style.border_style']);
 });

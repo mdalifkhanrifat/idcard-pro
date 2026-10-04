@@ -266,7 +266,7 @@ class CardTemplateDesignService
     {
         $style = array_filter($style ?? [], fn ($value) => $value !== null && $value !== '');
 
-        foreach (['bold', 'italic', 'underline', 'uppercase'] as $flag) {
+        foreach (['bold', 'italic', 'underline', 'uppercase', 'locked', 'hidden'] as $flag) {
             if (isset($style[$flag])) {
                 $style[$flag] = filter_var($style[$flag], FILTER_VALIDATE_BOOL);
             }
@@ -277,6 +277,12 @@ class CardTemplateDesignService
             }
         }
 
+        if (isset($style['rotation'])) {
+            $style['rotation'] = (int) $style['rotation'];
+        }
+        // False flags and no rotation are the defaults; keep layouts small and comparisons stable.
+        $style = array_filter($style, fn ($value) => $value !== false && $value !== 0);
+
         return $style === [] ? null : $style;
     }
 
@@ -285,9 +291,12 @@ class CardTemplateDesignService
      */
     private function designSignature(Collection $elements): string
     {
-        return (string) json_encode($elements->map(fn (CardTemplateElement $element) => array_map(
-            fn ($value) => is_numeric($value) ? (float) $value : $value,
-            $element->only(self::DESIGN_COLUMNS),
-        ))->values()->all());
+        return (string) json_encode($elements->map(function (CardTemplateElement $element): array {
+            $columns = array_map(fn ($value) => is_numeric($value) ? (float) $value : $value, $element->only(self::DESIGN_COLUMNS));
+            // Locking only affects editing, not the printed card.
+            unset($columns['style']['locked']);
+
+            return $columns;
+        })->values()->all());
     }
 }

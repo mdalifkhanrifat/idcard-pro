@@ -44,7 +44,9 @@ return [
      * Box keys apply to every element; the rest only where they make sense.
      */
     'style' => [
-        'box' => ['background', 'gradient_to', 'gradient_direction', 'border_color', 'border_width', 'border_radius', 'opacity'],
+        'box' => ['background', 'gradient_to', 'gradient_direction', 'border_color', 'border_width', 'border_style', 'border_radius', 'opacity', 'rotation'],
+        // Editing state: locked elements cannot be moved or changed; hidden ones are kept but not printed.
+        'state' => ['locked', 'hidden'],
         'text' => [
             'font_family', 'font_size', 'color', 'label_color', 'bold', 'italic', 'underline', 'align',
             'vertical_align', 'line_height', 'letter_spacing', 'uppercase', 'padding',
