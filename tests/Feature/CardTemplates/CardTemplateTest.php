@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\CardTemplate;
+use App\Models\CardTemplateElement;
 use App\Models\MasterDataItem;
 use App\Support\Tenancy\TenantContext;
 use Laravel\Sanctum\Sanctum;
@@ -58,6 +59,23 @@ it('duplicates a template as an inactive draft', function () {
         ->assertJsonPath('data.orientation', 'vertical')
         ->assertJsonPath('data.width', 54)
         ->assertJsonPath('data.is_active', false);
+});
+
+it('copies designer elements when duplicating', function () {
+    Sanctum::actingAs($this->owner);
+    $template = app(TenantContext::class)->run($this->tenant, fn () => CardTemplate::factory()->create(['tenant_id' => $this->tenant->id]));
+    app(TenantContext::class)->run($this->tenant, function () use ($template) {
+        CardTemplateElement::factory()->create(['tenant_id' => $this->tenant->id, 'card_template_id' => $template->id, 'field' => 'full_name']);
+        CardTemplateElement::factory()->create(['tenant_id' => $this->tenant->id, 'card_template_id' => $template->id, 'side' => 'back', 'type' => 'qr_code', 'field' => null]);
+    });
+
+    $copyId = $this->postJson("/api/v1/card-templates/{$template->public_id}/duplicate", ['name' => 'Copy'])->assertCreated()->json('data.id');
+
+    $copy = CardTemplate::where('public_id', $copyId)->sole();
+    expect($copy->elements)->toHaveCount(2)
+        ->and($copy->elements->pluck('type')->sort()->values()->all())->toBe(['field', 'qr_code'])
+        ->and($copy->elements->first()->style['font_family'])->toBe('Inter')
+        ->and(CardTemplateElement::count())->toBe(4);
 });
 
 it('validates templates', function () {

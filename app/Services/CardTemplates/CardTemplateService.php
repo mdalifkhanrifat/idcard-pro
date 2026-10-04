@@ -89,6 +89,13 @@ class CardTemplateService
                 'created_by' => $actor->id,
             ]);
 
+            // Uploaded images are shared by reference; a later upload on either template stores a new file.
+            foreach ($template->elements as $element) {
+                $copy->elements()->create($element->only([
+                    'side', 'type', 'field', 'label', 'content', 'image_disk', 'image_path', 'x', 'y', 'width', 'height', 'z_index', 'style',
+                ]));
+            }
+
             return $copy->load(['cardType', 'authorityType']);
         });
     }
