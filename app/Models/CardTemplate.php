@@ -116,6 +116,21 @@ class CardTemplate extends Model
     }
 
     /**
+     * Card size in millimetres (designer elements are stored in mm); px sizes use 96 dpi.
+     *
+     * @return array{width: float, height: float}
+     */
+    public function sizeInMm(): array
+    {
+        $factor = $this->size_unit === 'px' ? 25.4 / 96 : 1.0;
+
+        return [
+            'width' => round((float) $this->width * $factor, 2),
+            'height' => round((float) $this->height * $factor, 2),
+        ];
+    }
+
+    /**
      * Designer elements of both sides, bottom layer first.
      *
      * @return HasMany<CardTemplateElement, $this>
