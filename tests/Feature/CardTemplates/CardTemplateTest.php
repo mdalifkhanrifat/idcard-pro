@@ -66,7 +66,7 @@ it('copies designer elements when duplicating', function () {
     $template = app(TenantContext::class)->run($this->tenant, fn () => CardTemplate::factory()->create(['tenant_id' => $this->tenant->id]));
     app(TenantContext::class)->run($this->tenant, function () use ($template) {
         CardTemplateElement::factory()->create(['tenant_id' => $this->tenant->id, 'card_template_id' => $template->id, 'field' => 'full_name']);
-        CardTemplateElement::factory()->create(['tenant_id' => $this->tenant->id, 'card_template_id' => $template->id, 'side' => 'back', 'type' => 'qr_code', 'field' => null]);
+        CardTemplateElement::factory()->create(['tenant_id' => $this->tenant->id, 'card_template_id' => $template->id, 'side' => 'back', 'type' => 'qr_code', 'field' => null, 'qr_lines' => [['field' => 'employee_no', 'label' => 'ID'], ['text' => 'Property of the organization']]]);
     });
 
     $copyId = $this->postJson("/api/v1/card-templates/{$template->public_id}/duplicate", ['name' => 'Copy'])->assertCreated()->json('data.id');
@@ -75,6 +75,7 @@ it('copies designer elements when duplicating', function () {
     expect($copy->elements)->toHaveCount(2)
         ->and($copy->elements->pluck('type')->sort()->values()->all())->toBe(['field', 'qr_code'])
         ->and($copy->elements->first()->style['font_family'])->toBe('Inter')
+        ->and($copy->elements->firstWhere('type', 'qr_code')->qr_lines[1]['text'])->toBe('Property of the organization')
         ->and(CardTemplateElement::count())->toBe(4);
 });
 

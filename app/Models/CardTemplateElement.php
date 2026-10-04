@@ -23,6 +23,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string|null $field
  * @property string|null $label
  * @property string|null $content
+ * @property array<int, array{field?: string, label?: string|null, text?: string}>|null $qr_lines lines encoded in a qr_code element
  * @property string|null $image_disk
  * @property string|null $image_path
  * @property string $x
@@ -34,7 +35,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property-read CardTemplate $template
  */
 #[Fillable([
-    'card_template_id', 'side', 'type', 'field', 'label', 'content', 'image_disk', 'image_path',
+    'card_template_id', 'side', 'type', 'field', 'label', 'content', 'qr_lines', 'image_disk', 'image_path',
     'x', 'y', 'width', 'height', 'z_index', 'style',
 ])]
 class CardTemplateElement extends Model
@@ -68,6 +69,7 @@ class CardTemplateElement extends Model
             'width' => 'decimal:2',
             'height' => 'decimal:2',
             'z_index' => 'integer',
+            'qr_lines' => 'array',
             'style' => 'array',
         ];
     }
