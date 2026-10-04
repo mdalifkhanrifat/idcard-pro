@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { computed, nextTick, ref, useTemplateRef } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { AlignCenter, AlignLeft, AlignRight, Bold, ImagePlus, Italic, Loader2, Plus, Trash2, Underline, X } from 'lucide-vue-next';
+import { AlignCenter, AlignLeft, AlignRight, ArrowDown, ArrowDownToLine, ArrowUp, ArrowUpToLine, Bold, Copy, ImagePlus, Italic, Loader2, Plus, Trash2, Underline, X } from 'lucide-vue-next';
 import FieldSelect from './FieldSelect.vue';
-import type { DesignerItem, Rect } from './useDesigner';
+import type { DesignerItem, LayerMove, Rect } from './useDesigner';
 import { http, toApiError } from '@/lib/http';
 import { useUiStore } from '@/stores/ui';
 import type { DesignElementStyle, DesignerCatalog } from '@/types';
@@ -22,7 +22,7 @@ const props = defineProps<{
     errors: string[];
 }>();
 
-const emit = defineEmits<{ rect: [rect: Rect]; remove: [] }>();
+const emit = defineEmits<{ rect: [rect: Rect]; remove: []; duplicate: []; layer: [move: LayerMove] }>();
 const { t } = useI18n();
 const ui = useUiStore();
 
@@ -95,11 +95,27 @@ function removeImage(): void {
 
 <template>
     <div class="space-y-4 text-sm">
-        <div class="flex items-start justify-between gap-2">
-            <p class="font-medium text-fg">{{ t(`designer.types.${item.type}`) }}</p>
-            <button class="rounded-md p-1.5 text-muted hover:bg-danger/10 hover:text-danger" :title="t('common.delete')" data-remove @click="emit('remove')">
-                <Trash2 class="size-4" />
-            </button>
+        <div class="space-y-2">
+            <div class="flex items-start justify-between gap-2">
+                <p class="font-medium text-fg">{{ t(`designer.types.${item.type}`) }}</p>
+                <button class="rounded-md p-1.5 text-muted hover:bg-danger/10 hover:text-danger" :title="`${t('common.delete')} (Del)`" data-remove @click="emit('remove')">
+                    <Trash2 class="size-4" />
+                </button>
+            </div>
+            <div v-if="item.type !== 'background'" class="flex flex-wrap gap-0.5">
+                <button class="rounded-md p-1.5 text-muted hover:bg-surface-2 hover:text-fg" :title="`${t('designer.duplicate')} (Ctrl+D)`" data-duplicate @click="emit('duplicate')"><Copy class="size-4" /></button>
+                <span class="mx-1 h-5 w-px self-center bg-line" />
+                <button
+                    v-for="layer in [{ move: 'top', icon: ArrowUpToLine }, { move: 'up', icon: ArrowUp }, { move: 'down', icon: ArrowDown }, { move: 'bottom', icon: ArrowDownToLine }] as const"
+                    :key="layer.move"
+                    class="rounded-md p-1.5 text-muted hover:bg-surface-2 hover:text-fg"
+                    :title="t(`designer.layer.${layer.move}`)"
+                    :data-layer="layer.move"
+                    @click="emit('layer', layer.move)"
+                >
+                    <component :is="layer.icon" class="size-4" />
+                </button>
+            </div>
         </div>
 
         <ul v-if="errors.length" class="space-y-1 rounded-md bg-danger/5 p-2 text-xs text-danger" role="alert">
@@ -237,12 +253,12 @@ function removeImage(): void {
         </div>
 
         <!-- Position and size (mm) -->
-        <div v-if="item.type !== 'background'" class="grid grid-cols-4 gap-2 border-t border-line pt-3">
+        <div v-if="item.type !== 'background'" class="grid grid-cols-2 gap-2 border-t border-line pt-3">
             <label v-for="key in ['x', 'y', 'width', 'height'] as const" :key="key" class="block space-y-1">
                 <span class="text-xs font-medium text-muted">{{ t(`designer.geometry.${key}`) }}</span>
-                <input :value="item[key]" type="number" step="0.1" min="0" :class="[inputClass, 'px-1.5']" :data-geometry="key" @change="setGeometry(key, $event)" />
+                <input :value="item[key]" type="number" step="0.1" min="0" :class="inputClass" :data-geometry="key" @change="setGeometry(key, $event)" />
             </label>
-            <p class="col-span-4 text-xs text-muted">{{ t('designer.mmHint') }}</p>
+            <p class="col-span-2 text-xs text-muted">{{ t('designer.mmHint') }}</p>
         </div>
     </div>
 </template>

@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
 import { onBeforeRouteLeave, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { AlertCircle, ArrowLeft, Layers, Plus, Save, ZoomIn, ZoomOut } from 'lucide-vue-next';
+import { AlertCircle, ArrowLeft, Grid3x3, Layers, Plus, Redo2, Save, Undo2, ZoomIn, ZoomOut } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import DesignerCanvas from './designer/DesignerCanvas.vue';
@@ -21,7 +21,11 @@ const auth = useAuthStore();
 const ui = useUiStore();
 const { confirm } = useConfirm();
 const designer = useDesigner();
-const { template, catalog, items, side, sideItems, selected, selectedKey, loading, saving, errors, dirty, size } = designer;
+const { template, catalog, items, side, sideItems, selected, selectedKey, loading, saving, errors, dirty, size, canUndo, canRedo } = designer;
+
+/** Grid step (mm) for snapping while dragging; 0 = off. */
+const SNAP_STEPS = [0, 0.5, 1, 2, 5];
+const snap = ref(0);
 
 /** Operators may look at a design but not change it. */
 const editable = computed(() => auth.can('templates.update'));
@@ -61,9 +65,63 @@ function add(type: DesignElementType): void {
 }
 
 function remove(): void {
-    items.value = items.value.filter((item) => item.key !== selectedKey.value);
-    selectedKey.value = null;
+    if (selectedKey.value !== null) {
+        designer.remove(selectedKey.value);
+    }
 }
+
+function isTyping(target: EventTarget | null): boolean {
+    return target instanceof HTMLElement && !!target.closest('input, textarea, select, [contenteditable="true"]');
+}
+
+/**
+ * Shortcuts: arrows move 1 mm (Shift: 0.1 mm), Delete removes, Ctrl+D copies, Ctrl+Z / Ctrl+Shift+Z / Ctrl+Y
+ * undo and redo, Ctrl+S saves, Esc clears the selection. Ignored while typing in a field.
+ */
+function onKeydown(event: KeyboardEvent): void {
+    if (!editable.value || isTyping(event.target) || document.querySelector('[role="dialog"]')) {
+        return;
+    }
+    const key = event.key.toLowerCase();
+    const command = event.ctrlKey || event.metaKey;
+    if (command && (key === 'z' || key === 'y')) {
+        event.preventDefault();
+        if (key === 'y' || event.shiftKey) {
+            designer.redo();
+        } else {
+            designer.undo();
+        }
+
+        return;
+    }
+    if (command && key === 's') {
+        event.preventDefault();
+        if (dirty.value && !saving.value) {
+            save();
+        }
+
+        return;
+    }
+    if (selectedKey.value === null) {
+        return;
+    }
+    const step = event.shiftKey ? 0.1 : 1;
+    const moves: Record<string, [number, number]> = { arrowleft: [-step, 0], arrowright: [step, 0], arrowup: [0, -step], arrowdown: [0, step] };
+    if (moves[key]) {
+        event.preventDefault();
+        designer.nudge(selectedKey.value, ...moves[key]);
+    } else if (key === 'delete' || key === 'backspace') {
+        event.preventDefault();
+        remove();
+    } else if (command && key === 'd') {
+        event.preventDefault();
+        designer.duplicate(selectedKey.value);
+    } else if (key === 'escape') {
+        selectedKey.value = null;
+    }
+}
+window.addEventListener('keydown', onKeydown);
+onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown));
 
 async function save(): Promise<void> {
     if (await designer.save()) {
@@ -148,6 +206,16 @@ function itemTitle(item: DesignerItem): string {
                     <span class="w-12 text-center text-xs text-muted tabular-nums">{{ Math.round((scale / ACTUAL_SIZE) * 100) }}%</span>
                     <button class="p-2 text-muted hover:text-fg disabled:opacity-40" :disabled="zoom === ZOOM_STEPS.length - 1" :title="t('designer.zoomIn')" @click="zoom++"><ZoomIn class="size-4" /></button>
                 </div>
+                <div v-if="editable" class="inline-flex items-center rounded-lg border border-line bg-surface">
+                    <button class="p-2 text-muted hover:text-fg disabled:opacity-40" :disabled="!canUndo" :title="`${t('designer.undo')} (Ctrl+Z)`" data-undo @click="designer.undo()"><Undo2 class="size-4" /></button>
+                    <button class="p-2 text-muted hover:text-fg disabled:opacity-40" :disabled="!canRedo" :title="`${t('designer.redo')} (Ctrl+Shift+Z)`" data-redo @click="designer.redo()"><Redo2 class="size-4" /></button>
+                </div>
+                <label v-if="editable" class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-line bg-surface pr-1 pl-2 text-muted" :title="t('designer.snap')">
+                    <Grid3x3 class="size-4" />
+                    <select v-model.number="snap" class="bg-transparent text-xs text-fg focus:outline-none" data-snap>
+                        <option v-for="step in SNAP_STEPS" :key="step" :value="step">{{ step ? `${step} mm` : t('designer.snapOff') }}</option>
+                    </select>
+                </label>
                 <template v-if="editable">
                     <span v-if="dirty" class="text-xs text-warning">{{ t('designer.unsaved') }}</span>
                     <UiButton :loading="saving" :disabled="!dirty" data-save @click="save"><Save class="size-4" />{{ t('common.save') }}</UiButton>
@@ -182,7 +250,7 @@ function itemTitle(item: DesignerItem): string {
                 </button>
             </aside>
 
-            <section ref="stage" class="order-first flex min-h-[24rem] overflow-auto rounded-xl border border-line bg-surface-2 p-6 lg:order-none">
+            <section ref="stage" class="relative order-first flex min-h-[24rem] overflow-auto rounded-xl border border-line bg-surface-2 p-6 lg:order-none">
                 <DesignerCanvas
                     class="m-auto"
                     :width="size.width"
@@ -193,9 +261,11 @@ function itemTitle(item: DesignerItem): string {
                     :value-of="valueOf"
                     :editable="editable"
                     :invalid-keys="invalidKeys"
+                    :snap="snap"
                     @select="selectedKey = $event"
                     @rect="designer.setRect"
                 />
+                <p v-if="editable" class="absolute right-3 bottom-2 hidden text-[11px] text-muted lg:block">{{ t('designer.shortcuts') }}</p>
             </section>
 
             <aside class="rounded-xl border border-line bg-surface p-4 text-sm">
@@ -210,6 +280,8 @@ function itemTitle(item: DesignerItem): string {
                     :errors="errors[selected.key] ?? []"
                     @rect="designer.setRect(selected.key, $event)"
                     @remove="remove"
+                    @duplicate="designer.duplicate(selected.key)"
+                    @layer="designer.moveLayer(selected.key, $event)"
                 />
                 <template v-else-if="selected">
                     <p class="font-medium text-fg">{{ itemTitle(selected) }}</p>

@@ -18,6 +18,8 @@ const props = defineProps<{
     editable: boolean;
     /** Keys of elements the server rejected. */
     invalidKeys?: number[];
+    /** Grid step in mm that dragged positions and edges snap to; 0 = off. */
+    snap?: number;
 }>();
 
 const emit = defineEmits<{
@@ -74,6 +76,11 @@ function start(event: PointerEvent, item: DesignerItem, mode: 'move' | Handle): 
     window.addEventListener('pointercancel', stop);
 }
 
+/** Round a position to the snap grid (when snapping is on). */
+function snapped(value: number): number {
+    return props.snap ? Math.round(value / props.snap) * props.snap : value;
+}
+
 /** Moves one edge, keeping it on the card and at least MIN_SIZE away from the opposite edge. */
 function edge(value: number, fixed: number, limit: number, before: boolean): number {
     return before ? Math.min(Math.max(value, 0), fixed - MIN_SIZE) : Math.max(Math.min(value, limit), fixed + MIN_SIZE);
@@ -92,7 +99,7 @@ function move(event: PointerEvent): void {
 
     const { x, y, width, height } = drag.start;
     if (drag.mode === 'move') {
-        emit('rect', drag.key, { x: x + dx, y: y + dy, width, height });
+        emit('rect', drag.key, { x: snapped(x + dx), y: snapped(y + dy), width, height });
 
         return;
     }
@@ -102,16 +109,16 @@ function move(event: PointerEvent): void {
     let right = x + width;
     let bottom = y + height;
     if (drag.mode.includes('w')) {
-        left = edge(x + dx, right, props.width, true);
+        left = edge(snapped(x + dx), right, props.width, true);
     }
     if (drag.mode.includes('e')) {
-        right = edge(right + dx, left, props.width, false);
+        right = edge(snapped(right + dx), left, props.width, false);
     }
     if (drag.mode.includes('n')) {
-        top = edge(y + dy, bottom, props.height, true);
+        top = edge(snapped(y + dy), bottom, props.height, true);
     }
     if (drag.mode.includes('s')) {
-        bottom = edge(bottom + dy, top, props.height, false);
+        bottom = edge(snapped(bottom + dy), top, props.height, false);
     }
     emit('rect', drag.key, { x: roundMm(left), y: roundMm(top), width: roundMm(right - left), height: roundMm(bottom - top) });
 }
@@ -141,6 +148,15 @@ onBeforeUnmount(stop);
         }"
         @pointerdown.self="emit('select', background?.key ?? null)"
     >
+        <div
+            v-if="snap"
+            class="pointer-events-none absolute inset-0 rounded-[inherit] opacity-60"
+            :style="{
+                backgroundImage: 'linear-gradient(to right, rgb(148 163 184 / 0.35) 1px, transparent 1px), linear-gradient(to bottom, rgb(148 163 184 / 0.35) 1px, transparent 1px)',
+                backgroundSize: `${snap * scale}px ${snap * scale}px`,
+            }"
+            data-grid
+        />
         <div
             v-for="item in layers"
             :key="item.key"

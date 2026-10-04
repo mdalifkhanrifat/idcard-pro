@@ -737,6 +737,18 @@
             "width": "Width",
             "height": "Height"
         },
-        "mmHint": "Millimetres from the top-left corner of the card."
+        "mmHint": "Millimetres from the top-left corner of the card.",
+        "duplicate": "Duplicate",
+        "layer": {
+            "top": "Bring to front",
+            "up": "Bring forward",
+            "down": "Send backward",
+            "bottom": "Send to back"
+        },
+        "undo": "Undo",
+        "redo": "Redo",
+        "snap": "Snap to grid",
+        "snapOff": "No snap",
+        "shortcuts": "Arrows move 1 mm (Shift 0.1 mm) · Del removes · Ctrl+D copies · Ctrl+Z undoes · Ctrl+S saves"
     }
 }

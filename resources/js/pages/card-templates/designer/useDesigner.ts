@@ -1,4 +1,4 @@
-import { computed, ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { http, toApiError } from '@/lib/http';
 import type { CardSide, CardTemplate, DesignElement, DesignElementType, DesignerCatalog } from '@/types';
 
@@ -16,6 +16,11 @@ export interface Rect {
 
 /** Smallest element edge, in millimetres. */
 export const MIN_SIZE = 1;
+
+/** Undo steps kept in memory. */
+const HISTORY_LIMIT = 100;
+
+export type LayerMove = 'up' | 'down' | 'top' | 'bottom';
 
 /** Default size (mm) and style of new elements; text sizes are in points. */
 const DEFAULTS: Record<DesignElementType, Partial<DesignElement> & { width: number; height: number }> = {
@@ -80,6 +85,64 @@ export function useDesigner() {
     const snapshot = computed(() => JSON.stringify(items.value.map(toPayload)));
     const dirty = computed(() => snapshot.value !== savedSnapshot.value);
 
+    /*
+     * Undo history: whole-layout states (with local keys and image links). Changes are recorded once they
+     * settle, so a drag or a burst of typing is one step.
+     */
+    const history = ref<string[]>([]);
+    const historyIndex = ref(-1);
+    const canUndo = computed(() => historyIndex.value > 0);
+    const canRedo = computed(() => historyIndex.value < history.value.length - 1);
+    let historyTimer: ReturnType<typeof setTimeout> | undefined;
+
+    function record(): void {
+        clearTimeout(historyTimer);
+        const state = JSON.stringify(items.value);
+        if (state === history.value[historyIndex.value]) {
+            return;
+        }
+        history.value = [...history.value.slice(0, historyIndex.value + 1), state].slice(-HISTORY_LIMIT);
+        historyIndex.value = history.value.length - 1;
+    }
+
+    function resetHistory(): void {
+        clearTimeout(historyTimer);
+        history.value = [JSON.stringify(items.value)];
+        historyIndex.value = 0;
+    }
+
+    watch(
+        items,
+        () => {
+            clearTimeout(historyTimer);
+            historyTimer = setTimeout(record, 400);
+        },
+        { deep: true },
+    );
+
+    function restore(index: number): void {
+        historyIndex.value = index;
+        items.value = JSON.parse(history.value[index]) as DesignerItem[];
+        clearTimeout(historyTimer);
+        if (!items.value.some((item) => item.key === selectedKey.value)) {
+            selectedKey.value = null;
+        }
+    }
+
+    function undo(): void {
+        record();
+        if (canUndo.value) {
+            restore(historyIndex.value - 1);
+        }
+    }
+
+    function redo(): void {
+        record();
+        if (canRedo.value) {
+            restore(historyIndex.value + 1);
+        }
+    }
+
     async function load(id: string): Promise<void> {
         loading.value = true;
         try {
@@ -90,6 +153,7 @@ export function useDesigner() {
             savedSnapshot.value = snapshot.value;
             selectedKey.value = null;
             errors.value = {};
+            resetHistory();
         } finally {
             loading.value = false;
         }
@@ -161,6 +225,53 @@ export function useDesigner() {
         }
     }
 
+    function remove(key: number): void {
+        items.value = items.value.filter((item) => item.key !== key);
+        if (selectedKey.value === key) {
+            selectedKey.value = null;
+        }
+    }
+
+    /** Move by a number of millimetres, staying on the card. */
+    function nudge(key: number, dx: number, dy: number): void {
+        const item = items.value.find((candidate) => candidate.key === key);
+        if (item && item.type !== 'background') {
+            setRect(key, { x: item.x + dx, y: item.y + dy, width: item.width, height: item.height });
+        }
+    }
+
+    /** Copy an element just above itself, slightly offset (a side keeps a single background). */
+    function duplicate(key: number): void {
+        const index = items.value.findIndex((item) => item.key === key);
+        const source = items.value[index];
+        if (!source || source.type === 'background') {
+            return;
+        }
+        const copy = toItem({ ...source, id: undefined });
+        Object.assign(copy, clampRect({ x: source.x + 2, y: source.y + 2, width: source.width, height: source.height }));
+        items.value.splice(index + 1, 0, copy);
+        selectedKey.value = copy.key;
+    }
+
+    /**
+     * Change the stacking order within the element's side. The background stays at the bottom,
+     * because it is drawn behind everything else.
+     */
+    function moveLayer(key: number, move: LayerMove): void {
+        const item = items.value.find((candidate) => candidate.key === key);
+        if (!item || item.type === 'background') {
+            return;
+        }
+        const others = items.value.filter((candidate) => candidate.side !== item.side);
+        const sideLayers = items.value.filter((candidate) => candidate.side === item.side);
+        const backgrounds = sideLayers.filter((candidate) => candidate.type === 'background');
+        const stack = sideLayers.filter((candidate) => candidate.type !== 'background' && candidate.key !== key);
+        const position = sideLayers.filter((candidate) => candidate.type !== 'background').indexOf(item);
+        const target = { up: position + 1, down: position - 1, top: stack.length, bottom: 0 }[move];
+        stack.splice(Math.min(Math.max(target, 0), stack.length), 0, item);
+        items.value = [...others, ...backgrounds, ...stack];
+    }
+
     async function save(): Promise<boolean> {
         if (!template.value) {
             return false;
@@ -208,7 +319,34 @@ export function useDesigner() {
         savedSnapshot.value = snapshot.value;
     }
 
-    return { template, catalog, items, side, selectedKey, loading, saving, errors, dirty, size, sideItems, selected, load, showSide, add, setRect, clampRect, save };
+    return {
+        template,
+        catalog,
+        items,
+        side,
+        selectedKey,
+        loading,
+        saving,
+        errors,
+        dirty,
+        size,
+        sideItems,
+        selected,
+        canUndo,
+        canRedo,
+        load,
+        showSide,
+        add,
+        remove,
+        nudge,
+        duplicate,
+        moveLayer,
+        setRect,
+        clampRect,
+        save,
+        undo,
+        redo,
+    };
 }
 
 export type Designer = ReturnType<typeof useDesigner>;
