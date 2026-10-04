@@ -237,6 +237,9 @@ export function useDesigner() {
     }
 
     function remove(key: number): void {
+        if (items.value.find((item) => item.key === key)?.style.locked) {
+            return;
+        }
         items.value = items.value.filter((item) => item.key !== key);
         if (selectedKey.value === key) {
             selectedKey.value = null;
@@ -246,7 +249,7 @@ export function useDesigner() {
     /** Move by a number of millimetres, staying on the card. */
     function nudge(key: number, dx: number, dy: number): void {
         const item = items.value.find((candidate) => candidate.key === key);
-        if (item && item.type !== 'background') {
+        if (item && item.type !== 'background' && !item.style.locked) {
             setRect(key, { x: item.x + dx, y: item.y + dy, width: item.width, height: item.height });
         }
     }
@@ -262,6 +265,42 @@ export function useDesigner() {
         Object.assign(copy, clampRect({ x: source.x + 2, y: source.y + 2, width: source.width, height: source.height }));
         items.value.splice(index + 1, 0, copy);
         selectedKey.value = copy.key;
+    }
+
+    /** Lock (no moving or editing) or hide (kept, not printed) an element. */
+    function toggleFlag(key: number, flag: 'locked' | 'hidden'): void {
+        const item = items.value.find((candidate) => candidate.key === key);
+        if (!item) {
+            return;
+        }
+        if (item.style[flag]) {
+            delete item.style[flag];
+        } else {
+            item.style[flag] = true;
+        }
+    }
+
+    /**
+     * Copy an element to the same place on the other side, on top. Returns false when that side already
+     * has a background (one per side).
+     */
+    function copyToOtherSide(key: number): boolean {
+        const source = items.value.find((item) => item.key === key);
+        if (!source) {
+            return false;
+        }
+        const target: CardSide = source.side === 'front' ? 'back' : 'front';
+        if (source.type === 'background' && items.value.some((item) => item.side === target && item.type === 'background')) {
+            return false;
+        }
+        const copy = toItem({ ...source, id: undefined, side: target });
+        if (source.type === 'background') {
+            items.value.unshift(copy);
+        } else {
+            items.value.push(copy);
+        }
+
+        return true;
     }
 
     /**
@@ -352,6 +391,8 @@ export function useDesigner() {
         nudge,
         duplicate,
         moveLayer,
+        toggleFlag,
+        copyToOtherSide,
         setRect,
         clampRect,
         save,

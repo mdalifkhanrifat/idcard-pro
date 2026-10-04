@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
 import { onBeforeRouteLeave, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { AlertCircle, ArrowLeft, Grid3x3, Layers, Plus, Redo2, Save, Undo2, ZoomIn, ZoomOut } from 'lucide-vue-next';
+import { AlertCircle, ArrowLeft, EyeOff, Frame, Grid3x3, Layers, Lock, Plus, Redo2, Save, Undo2, ZoomIn, ZoomOut } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import DesignerCanvas from './designer/DesignerCanvas.vue';
@@ -27,6 +27,8 @@ const { template, catalog, items, side, sideItems, selected, selectedKey, loadin
 /** Grid step (mm) for snapping while dragging; 0 = off. */
 const SNAP_STEPS = [0, 0.5, 1, 2, 5];
 const snap = ref(0);
+/** Safe-area and centre-line guides. */
+const guides = ref(false);
 
 /** Operators may look at a design but not change it. */
 const editable = computed(() => auth.can('templates.update'));
@@ -63,6 +65,14 @@ onMounted(async () => {
 
 function add(type: DesignElementType, preset?: string): void {
     designer.add(type, t('designer.defaultText'), preset);
+}
+
+function copyToOtherSide(key: number): void {
+    if (designer.copyToOtherSide(key)) {
+        ui.notify(t('designer.copiedToOtherSide'));
+    } else {
+        ui.notify(t('designer.backgroundExistsOtherSide'), 'error');
+    }
 }
 
 function remove(): void {
@@ -233,6 +243,16 @@ function itemTitle(item: DesignerItem): string {
                     <button class="p-2 text-muted hover:text-fg disabled:opacity-40" :disabled="!canUndo" :title="`${t('designer.undo')} (Ctrl+Z)`" data-undo @click="designer.undo()"><Undo2 class="size-4" /></button>
                     <button class="p-2 text-muted hover:text-fg disabled:opacity-40" :disabled="!canRedo" :title="`${t('designer.redo')} (Ctrl+Shift+Z)`" data-redo @click="designer.redo()"><Redo2 class="size-4" /></button>
                 </div>
+                <button
+                    class="inline-flex h-9 items-center rounded-lg border border-line px-2"
+                    :class="guides ? 'bg-brand text-brand-contrast' : 'bg-surface text-muted hover:text-fg'"
+                    :title="t('designer.guides')"
+                    :aria-pressed="guides"
+                    data-guides
+                    @click="guides = !guides"
+                >
+                    <Frame class="size-4" />
+                </button>
                 <label v-if="editable" class="inline-flex h-9 items-center gap-1.5 rounded-lg border border-line bg-surface pr-1 pl-2 text-muted" :title="t('designer.snap')">
                     <Grid3x3 class="size-4" />
                     <select v-model.number="snap" class="bg-transparent text-xs text-fg focus:outline-none" data-snap>
@@ -268,8 +288,12 @@ function itemTitle(item: DesignerItem): string {
                     :class="item.key === selectedKey ? 'bg-brand text-brand-contrast' : 'text-fg hover:bg-surface-2'"
                     @click="selectedKey = item.key"
                 >
-                    <span class="truncate">{{ itemTitle(item) }}</span>
-                    <AlertCircle v-if="errors[item.key]" class="ml-auto size-4 shrink-0" :class="item.key === selectedKey ? '' : 'text-danger'" />
+                    <span class="truncate" :class="item.style.hidden && 'line-through opacity-60'">{{ itemTitle(item) }}</span>
+                    <span class="ml-auto flex shrink-0 gap-1 opacity-70">
+                        <Lock v-if="item.style.locked" class="size-3.5" />
+                        <EyeOff v-if="item.style.hidden" class="size-3.5" />
+                    </span>
+                    <AlertCircle v-if="errors[item.key]" class="size-4 shrink-0" :class="item.key === selectedKey ? '' : 'text-danger'" />
                 </button>
             </aside>
 
@@ -293,6 +317,7 @@ function itemTitle(item: DesignerItem): string {
                     :editable="editable"
                     :invalid-keys="invalidKeys"
                     :snap="snap"
+                    :guides="guides"
                     @select="selectedKey = $event"
                     @rect="designer.setRect"
                 />
@@ -311,6 +336,9 @@ function itemTitle(item: DesignerItem): string {
                     :errors="errors[selected.key] ?? []"
                     @rect="designer.setRect(selected.key, $event)"
                     @remove="remove"
+                    :double-sided="template.is_double_sided"
+                    @flag="designer.toggleFlag(selected.key, $event)"
+                    @other-side="copyToOtherSide(selected.key)"
                     @duplicate="designer.duplicate(selected.key)"
                     @layer="designer.moveLayer(selected.key, $event)"
                 />

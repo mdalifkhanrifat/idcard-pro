@@ -306,6 +306,13 @@ export interface DesignElementStyle {
     opacity?: number;
     fit?: 'cover' | 'contain';
     shape?: 'rectangle' | 'ellipse';
+    border_style?: 'solid' | 'dashed' | 'dotted';
+    /** Degrees; the content turns inside the unrotated box. */
+    rotation?: 0 | 90 | 180 | 270;
+    /** Editing only: cannot be moved or changed. */
+    locked?: boolean;
+    /** Kept in the design but not printed. */
+    hidden?: boolean;
 }
 
 export interface QrLine {

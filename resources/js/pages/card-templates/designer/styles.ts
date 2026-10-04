@@ -16,7 +16,7 @@ export function fillCss(style: DesignElementStyle): Record<string, string | unde
 export function boxCss(style: DesignElementStyle, scale: number): Record<string, string | number | undefined> {
     return {
         ...fillCss(style),
-        border: style.border_width ? `${Math.max(style.border_width * scale, 0.5)}px solid ${style.border_color ?? '#111111'}` : undefined,
+        border: style.border_width ? `${Math.max(style.border_width * scale, 0.5)}px ${style.border_style ?? 'solid'} ${style.border_color ?? '#111111'}` : undefined,
         borderRadius: style.shape === 'ellipse' ? '50%' : style.border_radius ? `${style.border_radius * scale}px` : undefined,
         opacity: style.opacity,
     };
@@ -37,6 +37,28 @@ export function textCss(style: DesignElementStyle, scale: number): Record<string
         textAlign: style.align ?? 'left',
         padding: style.padding ? `${style.padding * scale}px` : undefined,
         justifyContent: { top: 'flex-start', middle: 'center', bottom: 'flex-end' }[style.vertical_align ?? 'top'],
+    };
+}
+
+/**
+ * Turned content: laid out in the rotated box size and centred, so a 90° text runs along the element's height.
+ */
+export function rotationCss(element: Pick<DesignElement, 'width' | 'height' | 'style'>, scale: number): Record<string, string> | null {
+    const rotation = element.style.rotation ?? 0;
+    if (!rotation) {
+        return null;
+    }
+    const sideways = rotation === 90 || rotation === 270;
+    const width = (sideways ? element.height : element.width) * scale;
+    const height = (sideways ? element.width : element.height) * scale;
+
+    return {
+        position: 'absolute',
+        width: `${width}px`,
+        height: `${height}px`,
+        left: `${(element.width * scale - width) / 2}px`,
+        top: `${(element.height * scale - height) / 2}px`,
+        transform: `rotate(${rotation}deg)`,
     };
 }
 

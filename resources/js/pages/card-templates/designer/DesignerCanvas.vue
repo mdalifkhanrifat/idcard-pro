@@ -23,9 +23,14 @@ const props = defineProps<{
     invalidKeys?: number[];
     /** Grid step in mm that dragged positions and edges snap to; 0 = off. */
     snap?: number;
-    /** Only what prints: no outlines or handles (thumbnails). */
+    /** Only what prints: no outlines, handles or hidden elements (thumbnails). */
     bare?: boolean;
+    /** Show the safe area and centre lines. */
+    guides?: boolean;
 }>();
+
+/** Keep important content this far inside the card edge (cutting and printer tolerance). */
+const SAFE_MARGIN_MM = 3;
 
 const emit = defineEmits<{
     select: [key: number | null];
@@ -46,8 +51,8 @@ const HANDLES: { handle: Handle; style: Record<string, string>; cursor: string }
     { handle: 'w', style: { left: '0', top: '50%' }, cursor: 'ew-resize' },
 ];
 
-const background = computed(() => props.items.find((item) => item.type === 'background') ?? null);
-const layers = computed(() => props.items.filter((item) => item.type !== 'background'));
+const background = computed(() => props.items.find((item) => item.type === 'background' && !(props.bare && item.style.hidden)) ?? null);
+const layers = computed(() => props.items.filter((item) => item.type !== 'background' && !(props.bare && item.style.hidden)));
 
 function box(item: DesignerItem): Record<string, string> {
     return {
@@ -71,7 +76,7 @@ let drag: { key: number; mode: 'move' | Handle; pointerX: number; pointerY: numb
 
 function start(event: PointerEvent, item: DesignerItem, mode: 'move' | Handle): void {
     emit('select', item.key);
-    if (!props.editable || event.button !== 0) {
+    if (!props.editable || event.button !== 0 || item.style.locked) {
         return;
     }
     event.preventDefault();
@@ -149,7 +154,7 @@ onBeforeUnmount(stop);
     >
         <!-- What prints: clipped to the card's rounded corners -->
         <div class="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]">
-            <div v-for="item in layers" :key="item.key" class="absolute" :style="box(item)" :data-content-key="item.key">
+            <div v-for="item in layers" :key="item.key" class="absolute" :class="item.style.hidden && 'opacity-25'" :style="box(item)" :data-content-key="item.key">
                 <DesignerElement :element="item" :scale="scale" :value="valueOf(item)" :image-url="imageOf?.(item)" />
             </div>
         </div>
@@ -162,6 +167,15 @@ onBeforeUnmount(stop);
             }"
             data-grid
         />
+        <template v-if="guides">
+            <div
+                class="pointer-events-none absolute rounded-[2%] border border-dashed border-rose-500/70"
+                :style="{ inset: `${SAFE_MARGIN_MM * scale}px` }"
+                data-safe-area
+            />
+            <div class="pointer-events-none absolute inset-y-0 left-1/2 border-l border-dashed border-sky-500/60" />
+            <div class="pointer-events-none absolute inset-x-0 top-1/2 border-t border-dashed border-sky-500/60" />
+        </template>
         <!-- Editing layer: outlines and handles stay visible above everything and past the corners -->
         <div
             v-for="item in bare ? [] : layers"
@@ -172,7 +186,7 @@ onBeforeUnmount(stop);
             :data-key="item.key"
             @pointerdown.stop="start($event, item, 'move')"
         >
-            <template v-if="editable && item.key === selectedKey">
+            <template v-if="editable && item.key === selectedKey && !item.style.locked">
                 <span
                     v-for="handle in HANDLES"
                     :key="handle.handle"

@@ -811,6 +811,23 @@
         "systemFonts": "Only if installed on the computer",
         "systemFontHint": "This font is not included. It shows only on computers that have it installed; elsewhere a standard font is used.",
         "ansiFontHint": "SutonnyMJ is an ANSI (Bijoy) font: Unicode Bangla text will not print correctly in it. Use a Bangla font from “Included fonts”.",
-        "fallbackHint": "Optional. Printed only when the real one is missing (legacy template image), e.g. a fixed signature or a placeholder photo."
+        "fallbackHint": "Optional. Printed only when the real one is missing (legacy template image), e.g. a fixed signature or a placeholder photo.",
+        "hide": "Hide (not printed)",
+        "show": "Show",
+        "lock": "Lock",
+        "unlock": "Unlock",
+        "copyToOtherSide": "Copy to the other side",
+        "copiedToOtherSide": "Copied to the other side",
+        "backgroundExistsOtherSide": "The other side already has a background.",
+        "lockedHint": "Locked: it cannot be moved or changed. Unlock it with the lock button.",
+        "hiddenHint": "Hidden: kept in the design but not printed.",
+        "guides": "Safe area and centre lines",
+        "borderStyle": "Border style",
+        "borderStyles": {
+            "solid": "Solid",
+            "dashed": "Dashed",
+            "dotted": "Dotted"
+        },
+        "rotation": "Rotation"
     }
 }
