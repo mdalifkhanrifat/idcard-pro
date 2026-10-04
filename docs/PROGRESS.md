@@ -1,7 +1,7 @@
 # IDCard Pro: কাজের অগ্রগতি ও হ্যান্ডঅফ
 
 > নতুন চ্যাট বা নতুন ডেভেলপার এই ফাইল থেকে শুরু করবেন। পুরো পরিকল্পনা আছে [ROADMAP.md](ROADMAP.md)-এ।
-> সর্বশেষ আপডেট: ৩ অক্টোবর ২০২৬। **Phase 1 আর Phase 2 সম্পন্ন।** Phase 3 চলছে: ৩.১ Signatories আর ৩.২ কার্ড নম্বরের ফরম্যাট সম্পন্ন। পরের কাজ ৩.৩, কার্ড টেমপ্লেট (§৮ দেখুন)।
+> সর্বশেষ আপডেট: ৪ অক্টোবর ২০২৬। **Phase 1 আর Phase 2 সম্পন্ন।** Phase 3 চলছে: ৩.১ Signatories, ৩.২ কার্ড নম্বর আর ৩.৩ টেমপ্লেট সম্পন্ন। পরের কাজ ৩.৪, টেমপ্লেট ডিজাইনার (§৮ দেখুন)।
 
 ---
 
@@ -24,7 +24,7 @@
 | 2.5 | শিক্ষা ও প্রশিক্ষণ কোর্স (এক টেবিলে), কাস্টম ফিল্ড (সেটআপ পেজ, প্রিসেট, ফর্ম ট্যাব, ফিল্টার) | `QualificationService`, `app/Services/CustomFields`, `config/custom_field_presets.php`, `pages/custom-fields` |
 | 2.6 | CSV/XLSX ইমপোর্ট: যাচাই আর প্রিভিউ, queue-তে ইমপোর্ট, ইতিহাস, টেমপ্লেট | `CardholderImportService`, `CardholderImportMapper`, `app/Jobs/ImportCardholders.php`, `app/Support/Spreadsheets`, `config/cardholder_import.php` |
 
-**মান:** ১৩০টা টেস্ট পাস (১১৯ feature + ১১ unit), Larastan (level 5) আর Pint পরিষ্কার, TypeScript টাইপ-চেক পরিষ্কার। প্রতিটা পেজ headless Chrome-এ চালিয়ে যাচাই করা হয়েছে।
+**মান:** ১৩৬টা টেস্ট পাস (১২৫ feature + ১১ unit), Larastan (level 5) আর Pint পরিষ্কার, TypeScript টাইপ-চেক পরিষ্কার। প্রতিটা পেজ headless Chrome-এ চালিয়ে যাচাই করা হয়েছে।
 
 **বর্তমান মডিউল আর তাদের service:**
 
@@ -139,6 +139,7 @@ docker compose run --rm --no-deps vite npx vue-tsc --noEmit
 | FormRequest-এ `validator()` নামে নিজের মেথড | Laravel এটাকে নিজের hook হিসেবে ডাকে। অন্য নাম দিন |
 | `apiResource`-এ `$this->route('customField')` null | রাউট প্যারামিটার snake_case (`custom_field`)। Controller-এর আর্গুমেন্ট camelCase হলেও চলে |
 | `type="number"` ইনপুটের মান `.trim()`-এ এরর | Vue এই মানকে সংখ্যা বানায়। `String(value ?? '').trim()` |
+| দশমিক মানসহ (যেমন 85.6) ফর্ম জমাই হয় না, কোনো বার্তাও আসে না | `type="number"`-এর ডিফল্ট step 1। `UiInput`-এ `step="any"` দিন |
 | Signed link এক হোস্টে বানানো, অন্য হোস্টে 403 | ফাইলের লিংক relative signed (`signed:relative`), তাই `localhost` আর `127.0.0.1` দুটোতেই চলে |
 
 ## ৭. Phase 2-এ নেওয়া সিদ্ধান্ত (পরের কাজের জন্য জরুরি)
@@ -191,8 +192,14 @@ docker compose run --rm --no-deps vite npx vue-tsc --noEmit
    - `CardNumberService::next($code)` `lockForUpdate` দিয়ে নম্বর দেয়। **৩.৫-এ কার্ড সেভ করার ট্রানজ্যাকশনের ভেতরেই এটা ডাকতে হবে**, আর কার্ডের টেবিলে `(tenant_id, number)` unique দিতে হবে।
    - সেটিংস পেজে "কার্ড নম্বর" অংশ আছে, সার্ভার থেকে লাইভ প্রিভিউসহ (`GET /settings/card-number-preview`, কোনো নম্বর আটকে রাখে না)। ১৩টা টেস্ট।
    - vue-i18n বার্তায় `{CODE}` লিখতে হলে literal সিনট্যাক্স `{'{CODE}'}` ব্যবহার করুন, নইলে ফাঁকা দেখায়।
-3. ➡️ **এখান থেকে শুরু, ৩.৩ টেমপ্লেট** (পুরনো `templates` + template type): title, type (কর্মী/পরিবার/অতিথি...), code, orientation, width/height (mm), সামনে/পেছনে, status, সংস্করণ।
-4. **৩.৪ টেমপ্লেট ডিজাইনার** (পুরনো `template_sections`): লোগো, ব্যাকগ্রাউন্ড, ছবি, সই, ডেটাবেস ফিল্ড (কাস্টম ফিল্ডসহ), QR, টেক্সট; পজিশন, ফন্ট, রঙ; ড্র্যাগ-ড্রপ।
+3. ✅ **৩.৩ টেমপ্লেট সম্পন্ন** (পুরনো `templates`: template_type, title, code, template_structure, card_width/height, h_w_extention, status, authority_type)
+   - `card_templates` টেবিল: name, code (কার্ড নম্বরের `{CODE}`, বড় হাতের অক্ষরে রাখা হয়), `card_type_id` (master data-র নতুন `card_type` তালিকা, ডিফল্ট Employee/Family/Visitor Card, পুরনো `employee_types`), `audience` (cardholder / family_member; পুরনো "Family Card" টেমপ্লেট), orientation, width/height + `size_unit` (mm/px, ডিফল্ট CR80 85.6×54 mm), `authority_type_id` (সক্রিয় সইকারী বাছতে), `validity_months` (আগে ইমপোর্টে ২ বছর কোডে বাঁধা ছিল), `is_double_sided`, `is_active`, `version`।
+   - নকশার ঘর (orientation, মাপ, একক, দুই পাশ) বদলালে `version` বাড়ে। শুধু নাম বদলালে বাড়ে না।
+   - `POST /card-templates/{id}/duplicate`: পুরনো "copy template", কপি নিষ্ক্রিয় খসড়া হিসেবে আসে। **৩.৪-এ সেকশনগুলোও কপি করতে হবে।**
+   - ব্যবহৃত `card_type`/`authority_type` master data থেকে মোছা যায় না। পারমিশন `templates.*`, Operator পায় শুধু `templates.view`।
+   - পেজ: মেনু → Cards → Card templates, আসল অনুপাতে কার্ডের আকৃতি, ফিল্টার, ডায়ালগ (CR80 বোতাম), কপি। ৬টা টেস্ট।
+   - `UiInput`-এ `step` prop যোগ হয়েছে। দশমিক সংখ্যার ঘরে `step="any"` না দিলে ব্রাউজার ফর্ম জমাই দেয় না, আর কিছু জানায়ও না।
+4. ➡️ **এখান থেকে শুরু, ৩.৪ টেমপ্লেট ডিজাইনার** (পুরনো `template_sections`): লোগো, ব্যাকগ্রাউন্ড, ছবি, সই, ডেটাবেস ফিল্ড (কাস্টম ফিল্ডসহ), QR, টেক্সট; পজিশন, ফন্ট, রঙ; ড্র্যাগ-ড্রপ।
 5. **৩.৫ কার্ড ইস্যু** (পুরনো `card_information`): কারণ (new / promotion / lost / renewal), নোট, মেয়াদ, RF card no। প্রতিবার ইস্যুতে নতুন রেকর্ড, আগের কার্ড বাতিল। **যে ছবি, সই আর টেমপ্লেট সংস্করণ ব্যবহার হলো তার id রাখতে হবে।** পরিবারের সদস্যের কার্ডও এখানে।
 6. **৩.৬ প্রিন্ট আর ইতিহাস** (পুরনো `card_print_history`): ব্রাউজার প্রিন্ট আর সার্ভারে PDF (CR80), ব্যাচ প্রিন্ট, প্রতিটা প্রিন্ট ইউজারের নামে লগ।
 7. **৩.৭ স্বাক্ষরিত QR আর পাবলিক ভেরিফিকেশন পেজ।**
