@@ -13,6 +13,8 @@ export interface Tenant {
     primary_color: string;
     logo_url: string | null;
     card_number_format?: string;
+    /** Landscape default for new templates, in mm. */
+    default_card_size?: { width: number; height: number };
     status: 'active' | 'suspended';
     users_count?: number;
     created_at: string;

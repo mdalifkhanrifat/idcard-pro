@@ -86,4 +86,16 @@ class Tenant extends Model
             ->dontLogEmptyChanges()
             ->useLogName('tenant');
     }
+
+    /**
+     * Default card size in mm, landscape (legacy "Template Setup"); CR80 unless the organization set one.
+     *
+     * @return array{width: float, height: float}
+     */
+    public function defaultCardSize(): array
+    {
+        $size = $this->settings['default_card_size'] ?? null;
+
+        return is_array($size) ? ['width' => (float) $size['width'], 'height' => (float) $size['height']] : CardTemplate::CR80;
+    }
 }

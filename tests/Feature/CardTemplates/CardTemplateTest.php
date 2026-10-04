@@ -106,3 +106,19 @@ it('keeps templates per organization and enforces permissions', function () {
     $this->getJson('/api/v1/card-templates')->assertOk();
     $this->postJson('/api/v1/card-templates', ['name' => 'A', 'code' => 'A'])->assertForbidden();
 });
+
+it('uses the organization default card size for new templates', function () {
+    Sanctum::actingAs($this->owner);
+    $settings = ['name' => 'Acme', 'timezone' => 'UTC', 'locale' => 'en', 'primary_color' => '#112233'];
+
+    $this->post('/api/v1/settings', [...$settings, 'default_card_size' => ['width' => 90, 'height' => 55]], ['Accept' => 'application/json'])
+        ->assertOk()
+        ->assertJsonPath('data.default_card_size', ['width' => 90, 'height' => 55])
+        ->assertJsonPath('data.card_number_format', '{CODE}/{YY}{SEQ:6}');
+
+    $this->postJson('/api/v1/card-templates', ['name' => 'Wide', 'code' => 'W'])->assertJsonPath('data.width', 90)->assertJsonPath('data.height', 55);
+    $this->postJson('/api/v1/card-templates', ['name' => 'Tall', 'code' => 'T', 'orientation' => 'vertical'])->assertJsonPath('data.width', 55)->assertJsonPath('data.height', 90);
+
+    $this->post('/api/v1/settings', [...$settings, 'default_card_size' => ['width' => 40, 'height' => 60]], ['Accept' => 'application/json'])
+        ->assertJsonValidationErrors('default_card_size.width');
+});

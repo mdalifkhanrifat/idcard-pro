@@ -204,6 +204,12 @@
             "sampleCode": "Sample card type code",
             "next": "Next number:",
             "tokens": "{'{CODE}'} card type code · {'{YYYY}'} / {'{YY}'} year · {'{MM}'} month · {'{SEQ:6}'} running number with 6 digits. Default {'{CODE}'}/{'{YY}'}{'{SEQ:6}'} gives EMP/26000001."
+        },
+        "cardSize": {
+            "title": "Default card size",
+            "description": "Used for new card templates (landscape; vertical templates turn it). The legacy “Template Setup”.",
+            "width": "Width (mm)",
+            "height": "Height (mm)"
         }
     },
     "account": {
@@ -589,7 +595,8 @@
         "duplicate": "Duplicate",
         "duplicateName": "{name} (copy)",
         "duplicated": "Template duplicated as an inactive draft",
-        "deleteConfirm": "Delete the template “{name}”?"
+        "deleteConfirm": "Delete the template “{name}”?",
+        "useDefaultSize": "Use default size ({width} × {height} mm)"
     },
     "designer": {
         "title": "Template designer",

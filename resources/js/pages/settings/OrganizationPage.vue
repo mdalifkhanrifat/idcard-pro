@@ -19,6 +19,8 @@ const auth = useAuthStore();
 const ui = useUiStore();
 
 const form = reactive({ name: '', legal_name: '', email: '', phone: '', country_code: '', timezone: 'UTC', locale: 'en', primary_color: '#0f62fe', card_number_format: '{CODE}/{YY}{SEQ:6}' });
+/** Landscape default size of new card templates in mm (legacy Template Setup). */
+const cardSize = reactive({ width: 85.6 as number | string, height: 54 as number | string });
 const sampleCode = ref('EMP');
 const numberPreview = ref('');
 const previewError = ref('');
@@ -36,6 +38,7 @@ onMounted(async () => {
         legal_name: data.data.legal_name ?? '', email: data.data.email ?? '', phone: data.data.phone ?? '', country_code: data.data.country_code ?? '',
     });
     logoPreview.value = data.data.logo_url;
+    Object.assign(cardSize, data.data.default_card_size ?? {});
 });
 
 watch(() => form.primary_color, (color) => applyBrand(color));
@@ -67,6 +70,8 @@ async function save(): Promise<void> {
     errors.value = {};
     const body = new FormData();
     Object.entries(form).forEach(([k, v]) => body.append(k, v ?? ''));
+    body.append('default_card_size[width]', String(cardSize.width));
+    body.append('default_card_size[height]', String(cardSize.height));
     if (logo.value) {
         body.append('logo', logo.value);
     }
@@ -131,6 +136,15 @@ async function save(): Promise<void> {
                         <span class="ml-1 rounded-md bg-surface-2 px-2 py-1 font-mono text-fg">{{ previewError ? '—' : numberPreview }}</span>
                     </p>
                     <p class="mt-3 text-xs text-muted">{{ t('settings.cardNumber.tokens') }}</p>
+                </UiCard>
+                <UiCard :title="t('settings.cardSize.title')" :description="t('settings.cardSize.description')">
+                    <fieldset :disabled="!canEdit" class="grid gap-4 sm:grid-cols-3">
+                        <UiInput v-model="cardSize.width" type="number" step="any" :label="t('settings.cardSize.width')" :error="errors['default_card_size.width']" />
+                        <UiInput v-model="cardSize.height" type="number" step="any" :label="t('settings.cardSize.height')" :error="errors['default_card_size.height']" />
+                        <div class="flex items-end pb-2">
+                            <button type="button" class="text-sm text-brand hover:underline" data-cr80 @click="Object.assign(cardSize, { width: 85.6, height: 54 })">{{ t('templates.useCr80') }}</button>
+                        </div>
+                    </fieldset>
                 </UiCard>
             </div>
 

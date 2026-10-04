@@ -7,6 +7,7 @@ use App\Models\CardTemplate;
 use App\Models\User;
 use App\Repositories\Contracts\CardTemplateRepositoryInterface;
 use App\Repositories\Contracts\MasterDataRepositoryInterface;
+use App\Support\Tenancy\TenantContext;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
@@ -24,6 +25,7 @@ class CardTemplateService
         private CardTemplateRepositoryInterface $templates,
         private MasterDataRepositoryInterface $masterData,
         private CardTemplateImageService $images,
+        private TenantContext $tenants,
     ) {}
 
     /**
@@ -39,11 +41,16 @@ class CardTemplateService
      */
     public function create(array $data, User $actor): CardTemplate
     {
+        // Without a size, the organization's default (legacy Template Setup) is used, turned for vertical cards.
+        $default = $this->tenants->get()?->defaultCardSize() ?? CardTemplate::CR80;
+        if (($data['orientation'] ?? 'horizontal') === 'vertical') {
+            $default = ['width' => $default['height'], 'height' => $default['width']];
+        }
         $template = $this->templates->create([
             ...$this->resolveLookups($data),
             'code' => strtoupper($data['code']),
-            'width' => $data['width'] ?? CardTemplate::CR80['width'],
-            'height' => $data['height'] ?? CardTemplate::CR80['height'],
+            'width' => $data['width'] ?? $default['width'],
+            'height' => $data['height'] ?? $default['height'],
             'created_by' => $actor->id,
         ]);
 

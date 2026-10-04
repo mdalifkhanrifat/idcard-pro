@@ -8,6 +8,7 @@ import UiInput from '@/components/ui/UiInput.vue';
 import UiSelect from '@/components/ui/UiSelect.vue';
 import { useMasterDataOptions } from '@/composables/useMasterDataOptions';
 import { http, toApiError } from '@/lib/http';
+import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
 import type { CardTemplate } from '@/types';
 
@@ -15,13 +16,16 @@ const props = defineProps<{ template: CardTemplate | null }>();
 const open = defineModel<boolean>('open', { default: false });
 const emit = defineEmits<{ saved: [] }>();
 const { t } = useI18n();
+const auth = useAuthStore();
 const ui = useUiStore();
 const lookups = useMasterDataOptions();
 
 const CR80 = { width: 85.6, height: 54 };
+/** The organization's default size (Settings → default card size), landscape. */
+const defaultSize = computed(() => auth.tenant?.default_card_size ?? CR80);
 const blank = () => ({
     name: '', code: '', card_type_id: '', audience: 'cardholder', orientation: 'horizontal', size_unit: 'mm',
-    width: String(CR80.width) as string | number, height: String(CR80.height) as string | number,
+    width: String(defaultSize.value.width) as string | number, height: String(defaultSize.value.height) as string | number,
     authority_type_id: '', validity_months: '24' as string | number, is_double_sided: true, is_active: true,
 });
 const form = reactive(blank());
@@ -47,11 +51,23 @@ watch(open, (value) => {
     } : {});
 });
 
-/** Standard ID card size, turned for vertical cards. */
-function useCr80(): void {
+/** A landscape size, turned for vertical cards. */
+function useSize(size: { width: number; height: number }): void {
     form.size_unit = 'mm';
-    [form.width, form.height] = form.orientation === 'vertical' ? [CR80.height, CR80.width] : [CR80.width, CR80.height];
+    [form.width, form.height] = form.orientation === 'vertical' ? [size.height, size.width] : [size.width, size.height];
 }
+
+// Changing the orientation turns the card, as the legacy template structure select did.
+watch(
+    () => form.orientation,
+    (orientation) => {
+        const width = Number(form.width);
+        const height = Number(form.height);
+        if ((orientation === 'vertical' && width > height) || (orientation === 'horizontal' && width < height)) {
+            [form.width, form.height] = [form.height, form.width];
+        }
+    },
+);
 
 async function submit(): Promise<void> {
     busy.value = true;
@@ -94,7 +110,8 @@ async function submit(): Promise<void> {
             <UiInput v-model="form.width" type="number" step="any" :label="t('templates.width')" required :error="errors.width" />
             <UiInput v-model="form.height" type="number" step="any" :label="t('templates.height')" required :error="errors.height" />
             <div class="sm:col-span-2">
-                <button type="button" class="text-sm text-brand hover:underline" @click="useCr80">{{ t('templates.useCr80') }}</button>
+                <button type="button" class="text-sm text-brand hover:underline" data-default-size @click="useSize(defaultSize)">{{ t('templates.useDefaultSize', { width: defaultSize.width, height: defaultSize.height }) }}</button>
+                <button type="button" class="text-sm text-brand hover:underline" @click="useSize(CR80)">{{ t('templates.useCr80') }}</button>
             </div>
             <UiSelect
                 v-model="form.authority_type_id"
