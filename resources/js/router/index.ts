@@ -42,6 +42,7 @@ const routes: RouteRecordRaw[] = [
             { path: 'cardholders/:id', name: 'cardholders.show', component: () => import('@/pages/cardholders/CardholderShowPage.vue'), meta: { permission: 'cardholders.view', title: 'nav.cardholders' } },
             { path: 'cardholders', name: 'cardholders', component: () => import('@/pages/cardholders/CardholdersPage.vue'), meta: { permission: 'cardholders.view', title: 'nav.cardholders' } },
             { path: 'master-data/:type?', name: 'master-data', component: () => import('@/pages/master-data/MasterDataPage.vue'), meta: { permission: 'master_data.view', title: 'nav.masterData' } },
+            { path: 'card-templates/:id/design', name: 'card-templates.design', component: () => import('@/pages/card-templates/CardTemplateDesignerPage.vue'), meta: { permission: 'templates.view', title: 'designer.title' } },
             { path: 'card-templates', name: 'card-templates', component: () => import('@/pages/card-templates/CardTemplatesPage.vue'), meta: { permission: 'templates.view', title: 'nav.templates' } },
             { path: 'signatories', name: 'signatories', component: () => import('@/pages/signatories/SignatoriesPage.vue'), meta: { permission: 'signatories.view', title: 'nav.signatories' } },
             { path: 'custom-fields', name: 'custom-fields', component: () => import('@/pages/custom-fields/CustomFieldsPage.vue'), meta: { permission: 'settings.view', title: 'nav.customFields' } },

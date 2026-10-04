@@ -44,7 +44,8 @@
         "light": "Light",
         "dark": "Dark",
         "areYouSure": "Are you sure?",
-        "irreversible": "This action cannot be undone."
+        "irreversible": "This action cannot be undone.",
+        "back": "Back"
     },
     "auth": {
         "signIn": "Sign in",
@@ -553,7 +554,7 @@
     },
     "templates": {
         "title": "Card templates",
-        "subtitle": "Card layouts, sizes and types. The design editor comes next.",
+        "subtitle": "Card layouts, sizes and types. Open a template to design both sides.",
         "new": "New template",
         "editTitle": "Edit template",
         "empty": "No templates yet.",
@@ -589,5 +590,96 @@
         "duplicateName": "{name} (copy)",
         "duplicated": "Template duplicated as an inactive draft",
         "deleteConfirm": "Delete the template “{name}”?"
+    },
+    "designer": {
+        "title": "Template designer",
+        "subtitle": "Card size {width} × {height} mm",
+        "design": "Design",
+        "sides": {
+            "front": "Front",
+            "back": "Back"
+        },
+        "zoomIn": "Zoom in",
+        "zoomOut": "Zoom out",
+        "layers": "Layers",
+        "noElements": "Nothing on this side yet.",
+        "selectHint": "Select an element on the card to change it.",
+        "position": "x {x} · y {y} · {width} × {height} mm",
+        "sampleSignature": "Signature",
+        "types": {
+            "logo": "Logo",
+            "background": "Background image",
+            "photo": "Photo",
+            "signatory_signature": "Authorized signature",
+            "cardholder_signature": "Cardholder signature",
+            "qr_code": "QR code",
+            "field": "Data field",
+            "text": "Text"
+        },
+        "fields": {
+            "full_name": "Full name",
+            "full_name_local": "Name (local language)",
+            "date_of_birth": "Date of birth",
+            "gender": "Gender",
+            "marital_status": "Marital status",
+            "nationality": "Nationality",
+            "national_id": "National ID",
+            "passport_no": "Passport no",
+            "blood_group": "Blood group",
+            "religion": "Religion",
+            "email": "Email",
+            "personal_phone": "Phone",
+            "emergency_phone": "Emergency phone",
+            "present_address": "Present address",
+            "permanent_address": "Permanent address",
+            "region": "Region / district",
+            "sub_region": "Area / sub-district",
+            "postal_code": "Postal code",
+            "height": "Height",
+            "weight": "Weight",
+            "eye_color": "Eye colour",
+            "complexion": "Complexion",
+            "identification_mark": "Identification mark",
+            "employee_no": "Employee no",
+            "secondary_no": "Secondary no",
+            "employment_type": "Employment type",
+            "department": "Department",
+            "unit": "Unit",
+            "rank": "Rank / grade",
+            "designation": "Designation",
+            "branch": "Branch",
+            "trade": "Trade",
+            "appointment": "Appointment",
+            "joining_date": "Joining date",
+            "retirement_date": "Retirement date",
+            "retired_id_no": "Retired ID no",
+            "posting": "Posting",
+            "company_name": "Company name",
+            "family": {
+                "name": "Family member: name",
+                "name_local": "Family member: name (local)",
+                "relation": "Family member: relation",
+                "date_of_birth": "Family member: date of birth",
+                "gender": "Family member: gender",
+                "phone": "Family member: phone",
+                "blood_group": "Family member: blood group",
+                "national_id": "Family member: national ID",
+                "passport_no": "Family member: passport no",
+                "identification_mark": "Family member: identification mark",
+                "card_no": "Family member: card no"
+            },
+            "card": {
+                "number": "Card number",
+                "issue_date": "Issue date",
+                "expiry_date": "Expiry date"
+            },
+            "signatory": {
+                "name": "Signatory name",
+                "designation": "Signatory designation"
+            },
+            "organization": {
+                "name": "Organization name"
+            }
+        }
     }
 }

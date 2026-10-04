@@ -270,3 +270,52 @@ export interface CardTemplate {
     version: number;
     updated_at: string;
 }
+
+export type CardSide = 'front' | 'back';
+
+export type DesignElementType = 'logo' | 'background' | 'photo' | 'signatory_signature' | 'cardholder_signature' | 'qr_code' | 'field' | 'text';
+
+export interface DesignElementStyle {
+    font_family?: string;
+    /** Points. */
+    font_size?: number;
+    color?: string;
+    label_color?: string;
+    background?: string;
+    bold?: boolean;
+    italic?: boolean;
+    underline?: boolean;
+    align?: 'left' | 'center' | 'right';
+}
+
+export interface QrLine {
+    field?: string;
+    label?: string;
+    text?: string;
+}
+
+/** One item on a card side; position and size in millimetres from the top-left corner. */
+export interface DesignElement {
+    id?: string;
+    side: CardSide;
+    type: DesignElementType;
+    field: string | null;
+    label: string | null;
+    content: string | null;
+    qr_lines: QrLine[] | null;
+    image: string | null;
+    image_url?: string | null;
+    x: number;
+    y: number;
+    width: number;
+    height: number;
+    style: DesignElementStyle;
+}
+
+export interface DesignerCatalog {
+    types: Record<DesignElementType, { image?: boolean; single_per_side?: boolean; needs_field?: boolean; needs_content?: boolean }>;
+    fields: Record<string, string[]>;
+    custom_fields: { key: string; label: string; label_local: string | null }[];
+    fonts: string[];
+    size_mm: { width: number; height: number };
+}

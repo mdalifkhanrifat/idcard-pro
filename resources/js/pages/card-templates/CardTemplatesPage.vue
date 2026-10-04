@@ -2,7 +2,7 @@
 import { onMounted, reactive, ref } from 'vue';
 import { watchDebounced } from '@vueuse/core';
 import { useI18n } from 'vue-i18n';
-import { Copy, Pencil, Plus, Search, Trash2 } from 'lucide-vue-next';
+import { Copy, Palette, Pencil, Plus, Search, Trash2 } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiEmpty from '@/components/ui/UiEmpty.vue';
@@ -131,6 +131,9 @@ async function remove(template: CardTemplate): Promise<void> {
                         <UiBadge v-if="item.authority_type" tone="brand">{{ item.authority_type.name }}</UiBadge>
                     </div>
                     <div class="mt-auto flex justify-end gap-1 pt-2">
+                        <RouterLink :to="{ name: 'card-templates.design', params: { id: item.id } }" class="mr-auto inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium text-brand hover:bg-brand/10">
+                            <Palette class="size-4" />{{ t('designer.design') }}
+                        </RouterLink>
                         <button v-if="auth.can('templates.create')" class="rounded-md p-2 text-muted hover:bg-surface-2 hover:text-fg" :title="t('templates.duplicate')" @click="duplicate(item)"><Copy class="size-4" /></button>
                         <button v-if="auth.can('templates.update')" class="rounded-md p-2 text-muted hover:bg-surface-2 hover:text-fg" :title="t('common.edit')" @click="openForm(item)"><Pencil class="size-4" /></button>
                         <button v-if="auth.can('templates.delete')" class="rounded-md p-2 text-muted hover:bg-danger/10 hover:text-danger" :title="t('common.delete')" @click="remove(item)"><Trash2 class="size-4" /></button>

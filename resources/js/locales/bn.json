@@ -44,7 +44,8 @@
         "light": "লাইট",
         "dark": "ডার্ক",
         "areYouSure": "আপনি কি নিশ্চিত?",
-        "irreversible": "এই কাজটি আর ফেরানো যাবে না।"
+        "irreversible": "এই কাজটি আর ফেরানো যাবে না।",
+        "back": "ফেরত"
     },
     "auth": {
         "signIn": "লগইন",
@@ -553,7 +554,7 @@
     },
     "templates": {
         "title": "কার্ড টেমপ্লেট",
-        "subtitle": "কার্ডের নকশা, মাপ আর ধরন। ডিজাইন এডিটর আসছে পরের ধাপে।",
+        "subtitle": "কার্ডের লেআউট, মাপ আর ধরন। দুই পাশের নকশা করতে টেমপ্লেট খুলুন।",
         "new": "নতুন টেমপ্লেট",
         "editTitle": "টেমপ্লেট সম্পাদনা",
         "empty": "এখনো কোনো টেমপ্লেট নেই।",
@@ -589,5 +590,96 @@
         "duplicateName": "{name} (কপি)",
         "duplicated": "টেমপ্লেটটি নিষ্ক্রিয় খসড়া হিসেবে কপি হয়েছে",
         "deleteConfirm": "“{name}” টেমপ্লেট মুছবেন?"
+    },
+    "designer": {
+        "title": "টেমপ্লেট ডিজাইনার",
+        "subtitle": "কার্ডের মাপ {width} × {height} mm",
+        "design": "ডিজাইন",
+        "sides": {
+            "front": "সামনে",
+            "back": "পেছনে"
+        },
+        "zoomIn": "বড় করুন",
+        "zoomOut": "ছোট করুন",
+        "layers": "লেয়ার",
+        "noElements": "এই পাশে এখনো কিছু নেই।",
+        "selectHint": "বদলাতে কার্ডের কোনো উপাদানে ক্লিক করুন।",
+        "position": "x {x} · y {y} · {width} × {height} mm",
+        "sampleSignature": "স্বাক্ষর",
+        "types": {
+            "logo": "লোগো",
+            "background": "ব্যাকগ্রাউন্ডের ছবি",
+            "photo": "ছবি",
+            "signatory_signature": "অনুমোদিত স্বাক্ষর",
+            "cardholder_signature": "কার্ডধারীর স্বাক্ষর",
+            "qr_code": "QR কোড",
+            "field": "ডেটার ঘর",
+            "text": "লেখা"
+        },
+        "fields": {
+            "full_name": "পূর্ণ নাম",
+            "full_name_local": "নাম (স্থানীয় ভাষায়)",
+            "date_of_birth": "জন্ম তারিখ",
+            "gender": "লিঙ্গ",
+            "marital_status": "বৈবাহিক অবস্থা",
+            "nationality": "জাতীয়তা",
+            "national_id": "জাতীয় পরিচয়পত্র",
+            "passport_no": "পাসপোর্ট নম্বর",
+            "blood_group": "রক্তের গ্রুপ",
+            "religion": "ধর্ম",
+            "email": "ইমেইল",
+            "personal_phone": "ফোন",
+            "emergency_phone": "জরুরি ফোন",
+            "present_address": "বর্তমান ঠিকানা",
+            "permanent_address": "স্থায়ী ঠিকানা",
+            "region": "অঞ্চল / জেলা",
+            "sub_region": "এলাকা / উপজেলা",
+            "postal_code": "পোস্ট কোড",
+            "height": "উচ্চতা",
+            "weight": "ওজন",
+            "eye_color": "চোখের রঙ",
+            "complexion": "গায়ের রঙ",
+            "identification_mark": "সনাক্তকরণ চিহ্ন",
+            "employee_no": "কর্মী নম্বর",
+            "secondary_no": "দ্বিতীয় নম্বর",
+            "employment_type": "চাকরির ধরন",
+            "department": "বিভাগ",
+            "unit": "ইউনিট",
+            "rank": "পদমর্যাদা / গ্রেড",
+            "designation": "পদবি",
+            "branch": "শাখা",
+            "trade": "ট্রেড",
+            "appointment": "নিয়োগ",
+            "joining_date": "যোগদানের তারিখ",
+            "retirement_date": "অবসরের তারিখ",
+            "retired_id_no": "অবসরপ্রাপ্ত আইডি নম্বর",
+            "posting": "পোস্টিং",
+            "company_name": "প্রতিষ্ঠানের নাম",
+            "family": {
+                "name": "পরিবারের সদস্য: নাম",
+                "name_local": "পরিবারের সদস্য: নাম (স্থানীয়)",
+                "relation": "পরিবারের সদস্য: সম্পর্ক",
+                "date_of_birth": "পরিবারের সদস্য: জন্ম তারিখ",
+                "gender": "পরিবারের সদস্য: লিঙ্গ",
+                "phone": "পরিবারের সদস্য: ফোন",
+                "blood_group": "পরিবারের সদস্য: রক্তের গ্রুপ",
+                "national_id": "পরিবারের সদস্য: জাতীয় পরিচয়পত্র",
+                "passport_no": "পরিবারের সদস্য: পাসপোর্ট নম্বর",
+                "identification_mark": "পরিবারের সদস্য: সনাক্তকরণ চিহ্ন",
+                "card_no": "পরিবারের সদস্য: কার্ড নম্বর"
+            },
+            "card": {
+                "number": "কার্ড নম্বর",
+                "issue_date": "ইস্যুর তারিখ",
+                "expiry_date": "মেয়াদ শেষের তারিখ"
+            },
+            "signatory": {
+                "name": "সইকারীর নাম",
+                "designation": "সইকারীর পদবি"
+            },
+            "organization": {
+                "name": "প্রতিষ্ঠানের নাম"
+            }
+        }
     }
 }
