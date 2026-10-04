@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
 import { onBeforeRouteLeave, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { AlertCircle, ArrowLeft, EyeOff, Frame, Grid3x3, Layers, Lock, Plus, Redo2, Save, Undo2, ZoomIn, ZoomOut } from 'lucide-vue-next';
+import { AlertCircle, ArrowLeft, Download, EyeOff, Frame, Grid3x3, LayoutTemplate, Layers, Lock, Plus, Redo2, Save, Undo2, Upload, ZoomIn, ZoomOut } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import DesignerCanvas from './designer/DesignerCanvas.vue';
@@ -10,9 +10,12 @@ import AlignTools from './designer/AlignTools.vue';
 import ElementPalette from './designer/ElementPalette.vue';
 import ElementSettings from './designer/ElementSettings.vue';
 import PreviewPicker, { type PreviewData } from './designer/PreviewPicker.vue';
+import StarterPicker from './designer/StarterPicker.vue';
+import { buildLayoutFile, downloadLayout, importLayout, parseLayoutFile, type LayoutFile } from './designer/transfer';
 import { sampleValue } from './designer/sample';
 import { useDesigner, type DesignerItem } from './designer/useDesigner';
 import { useConfirm } from '@/composables/useConfirm';
+import { toApiError } from '@/lib/http';
 import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
 import type { CardSide, DesignElementType } from '@/types';
@@ -44,12 +47,13 @@ const zoom = ref(3);
 const scale = computed(() => ZOOM_STEPS[zoom.value]);
 const stage = useTemplateRef<HTMLElement>('stage');
 
-/** Largest zoom at which the whole card fits the canvas area. */
+/** Largest zoom at which the whole card fits the canvas area and the window height. */
 function fitZoom(): void {
-    const room = (stage.value?.clientWidth ?? 600) - 48;
+    const roomWidth = (stage.value?.clientWidth ?? 600) - 48;
+    const roomHeight = Math.max(300, window.innerHeight - 320);
     let fitting = 0;
     ZOOM_STEPS.forEach((step, index) => {
-        if (step * size.value.width <= room) {
+        if (step * size.value.width <= roomWidth && step * size.value.height <= roomHeight) {
             fitting = index;
         }
     });
@@ -66,6 +70,61 @@ onMounted(async () => {
 
 function add(type: DesignElementType, preset?: string): void {
     designer.add(type, t('designer.defaultText'), preset);
+}
+
+/*
+ * Layout files and ready-made designs.
+ */
+const startersOpen = ref(false);
+const transferring = ref(false);
+const importInput = useTemplateRef<HTMLInputElement>('importInput');
+
+async function exportLayout(): Promise<void> {
+    if (!template.value) {
+        return;
+    }
+    transferring.value = true;
+    try {
+        downloadLayout(await buildLayoutFile(items.value, size.value), template.value);
+    } catch (error) {
+        ui.notify(toApiError(error).message, 'error');
+    } finally {
+        transferring.value = false;
+    }
+}
+
+/** Put a layout file on this template; the back is dropped on single-sided templates. */
+async function applyLayout(file: LayoutFile): Promise<void> {
+    if (!template.value || (items.value.length && !(await confirm({ title: t('designer.replaceConfirm'), confirmLabel: t('designer.replace') })))) {
+        return;
+    }
+    transferring.value = true;
+    try {
+        const sides = template.value.is_double_sided ? file.elements : file.elements.filter((element) => element.side === 'front');
+        const { elements, scaled, turned } = await importLayout({ ...file, elements: sides }, template.value.id, size.value);
+        designer.replaceAll(elements);
+        designer.showSide('front');
+        startersOpen.value = false;
+        ui.notify(t(turned ? 'designer.importedTurned' : scaled ? 'designer.importedScaled' : 'designer.imported'));
+    } catch (error) {
+        ui.notify(toApiError(error).message, 'error');
+    } finally {
+        transferring.value = false;
+    }
+}
+
+async function importFile(event: Event): Promise<void> {
+    const input = event.target as HTMLInputElement;
+    const chosen = input.files?.[0];
+    input.value = '';
+    if (!chosen) {
+        return;
+    }
+    try {
+        await applyLayout(parseLayoutFile(await chosen.text()));
+    } catch {
+        ui.notify(t('designer.importInvalid'), 'error');
+    }
 }
 
 function copyToOtherSide(key: number): void {
@@ -270,6 +329,12 @@ function itemTitle(item: DesignerItem): string {
                         <option v-for="step in SNAP_STEPS" :key="step" :value="step">{{ step ? `${step} mm` : t('designer.snapOff') }}</option>
                     </select>
                 </label>
+                <div class="inline-flex items-center rounded-lg border border-line bg-surface">
+                    <button v-if="editable" class="p-2 text-muted hover:text-fg disabled:opacity-40" :disabled="transferring" :title="t('designer.startersTitle')" data-starters @click="startersOpen = true"><LayoutTemplate class="size-4" /></button>
+                    <button class="p-2 text-muted hover:text-fg disabled:opacity-40" :disabled="transferring" :title="t('designer.export')" data-export @click="exportLayout"><Download class="size-4" /></button>
+                    <button v-if="editable" class="p-2 text-muted hover:text-fg disabled:opacity-40" :disabled="transferring" :title="t('designer.import')" data-import @click="importInput?.click()"><Upload class="size-4" /></button>
+                    <input ref="importInput" type="file" accept="application/json,.json" class="hidden" data-import-file @change="importFile" />
+                </div>
                 <template v-if="editable">
                     <span v-if="dirty" class="text-xs text-warning">{{ t('designer.unsaved') }}</span>
                     <UiButton :loading="saving" :disabled="!dirty" data-save @click="save"><Save class="size-4" />{{ t('common.save') }}</UiButton>
@@ -377,6 +442,7 @@ function itemTitle(item: DesignerItem): string {
                 <p v-else-if="!selected" class="text-muted">{{ t('designer.selectHint') }}</p>
             </aside>
         </div>
+        <StarterPicker v-model:open="startersOpen" @apply="applyLayout" />
     </div>
     <p v-else-if="loading" class="py-16 text-center text-sm text-muted">{{ t('common.loading') }}</p>
 </template>

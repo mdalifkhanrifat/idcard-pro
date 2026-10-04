@@ -846,6 +846,21 @@
         "textFlags": {
             "auto_fit": "Shrink to fit",
             "single_line": "Single line"
-        }
+        },
+        "startersTitle": "Start from a design",
+        "startersHint": "Replaces the current layout with a ready-made design using real data fields. Change anything afterwards; nothing is saved until you save.",
+        "starters": {
+            "band": "Header band",
+            "stripe": "Side stripe",
+            "portrait": "Portrait"
+        },
+        "export": "Download layout file",
+        "import": "Load layout file",
+        "replaceConfirm": "Replace the current layout? You can undo it until you save.",
+        "replace": "Replace",
+        "imported": "Layout loaded — review it and save",
+        "importedScaled": "Layout loaded and scaled evenly to this card size — review it and save",
+        "importInvalid": "This is not a card layout file.",
+        "importedTurned": "Layout loaded; the card is turned the other way, so it was scaled down without stretching — rearrange it and save"
     }
 }

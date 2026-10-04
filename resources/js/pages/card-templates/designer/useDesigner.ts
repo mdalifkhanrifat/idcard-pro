@@ -368,6 +368,12 @@ export function useDesigner() {
         selectedKey.value = copy.key;
     }
 
+    /** Replace the whole layout (imported file or ready-made design); stays unsaved and can be undone. */
+    function replaceAll(elements: DesignElement[]): void {
+        items.value = elements.map((element) => toItem(element));
+        selectedKey.value = null;
+    }
+
     /** Lock (no moving or editing) or hide (kept, not printed) an element. */
     function toggleFlag(key: number, flag: 'locked' | 'hidden'): void {
         const item = items.value.find((candidate) => candidate.key === key);
@@ -501,6 +507,7 @@ export function useDesigner() {
         moveLayer,
         toggleFlag,
         copyToOtherSide,
+        replaceAll,
         setRect,
         clampRect,
         save,
