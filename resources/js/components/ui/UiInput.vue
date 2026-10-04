@@ -15,6 +15,7 @@ const props = withDefaults(
         inputmode?: 'text' | 'numeric' | 'email' | 'tel' | 'search';
         maxlength?: number;
         autofocus?: boolean;
+        step?: string;
     }>(),
     { type: 'text' },
 );
@@ -42,6 +43,7 @@ const inputType = computed(() => (props.type === 'password' && reveal.value ? 't
                 :disabled="disabled"
                 :inputmode="inputmode"
                 :maxlength="maxlength"
+                :step="step"
                 :autofocus="autofocus"
                 :aria-invalid="!!message"
                 :aria-describedby="message || hint ? `${id}-desc` : undefined"

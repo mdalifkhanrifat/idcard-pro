@@ -33,10 +33,12 @@ const sections = computed<{ title?: string; items: NavItem[] }[]>(() => {
         if (auth.can('cardholders.view')) {
             result.push({ title: t('nav.records'), items: [{ to: '/cardholders', label: t('nav.cardholders'), icon: ContactRound }] });
         }
+        if (auth.can('templates.view')) {
+            result.push({ title: t('nav.cardsSection'), items: [{ to: '/card-templates', label: t('nav.templates'), icon: LayoutTemplate }] });
+        }
         result.push({
             title: t('nav.comingSoon'),
             items: [
-                { label: t('nav.templates'), icon: LayoutTemplate, soon: true },
                 { label: t('nav.cards'), icon: CreditCard, soon: true },
                 { label: t('nav.appointments'), icon: CalendarClock, soon: true },
                 { label: t('nav.reports'), icon: FileBarChart, soon: true },

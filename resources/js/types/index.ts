@@ -252,3 +252,21 @@ export interface Signatory {
     is_active: boolean;
     updated_at: string;
 }
+
+export interface CardTemplate {
+    id: string;
+    name: string;
+    code: string;
+    card_type?: { id: string; name: string } | null;
+    audience: 'cardholder' | 'family_member';
+    orientation: 'horizontal' | 'vertical';
+    width: number;
+    height: number;
+    size_unit: 'mm' | 'px';
+    authority_type?: { id: string; name: string } | null;
+    validity_months: number | null;
+    is_double_sided: boolean;
+    is_active: boolean;
+    version: number;
+    updated_at: string;
+}

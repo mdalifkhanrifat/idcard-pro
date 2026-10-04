@@ -94,7 +94,8 @@
         "setup": "সেটআপ",
         "records": "রেকর্ড",
         "customFields": "কাস্টম ফিল্ড",
-        "signatories": "সইকারী"
+        "signatories": "সইকারী",
+        "cardsSection": "কার্ড"
     },
     "dashboard": {
         "welcome": "স্বাগতম, {name}",
@@ -549,5 +550,44 @@
         "deleteConfirm": "{name} মুছবেন?",
         "uploadFailed": "সই আপলোড হয়নি: {message}",
         "always": "সীমা নেই"
+    },
+    "templates": {
+        "title": "কার্ড টেমপ্লেট",
+        "subtitle": "কার্ডের নকশা, মাপ আর ধরন। ডিজাইন এডিটর আসছে পরের ধাপে।",
+        "new": "নতুন টেমপ্লেট",
+        "editTitle": "টেমপ্লেট সম্পাদনা",
+        "empty": "এখনো কোনো টেমপ্লেট নেই।",
+        "searchPlaceholder": "নাম বা কোড",
+        "name": "নাম",
+        "code": "কোড",
+        "codeHint": "কার্ড নম্বরের {'{CODE}'} হিসেবেও ব্যবহার হয়।",
+        "cardType": "কার্ডের ধরন",
+        "audience": "কার জন্য",
+        "audiences": {
+            "cardholder": "কার্ডধারী",
+            "family_member": "পরিবারের সদস্য"
+        },
+        "orientation": "দিক",
+        "orientations": {
+            "horizontal": "অনুভূমিক",
+            "vertical": "উল্লম্ব"
+        },
+        "width": "প্রস্থ",
+        "height": "উচ্চতা",
+        "unit": "একক",
+        "useCr80": "সাধারণ মাপ (CR80) ব্যবহার করুন",
+        "authorityType": "যে কর্তৃপক্ষ সই করবে",
+        "authorityHint": "এই কর্তৃপক্ষের সক্রিয় সইকারী কার্ডে সই করবেন।",
+        "validity": "মেয়াদ (মাস)",
+        "validityHint": "মেয়াদহীন কার্ডের জন্য খালি রাখুন।",
+        "doubleSided": "দুই পাশে ছাপা হবে",
+        "active": "সক্রিয় (নতুন কার্ডে ব্যবহার করা যাবে)",
+        "version": "সংস্করণ {n}",
+        "months": "{n} মাস",
+        "noExpiry": "মেয়াদহীন",
+        "duplicate": "কপি করুন",
+        "duplicateName": "{name} (কপি)",
+        "duplicated": "টেমপ্লেটটি নিষ্ক্রিয় খসড়া হিসেবে কপি হয়েছে",
+        "deleteConfirm": "“{name}” টেমপ্লেট মুছবেন?"
     }
 }

@@ -94,7 +94,8 @@
         "setup": "Setup",
         "records": "Records",
         "customFields": "Custom fields",
-        "signatories": "Signatories"
+        "signatories": "Signatories",
+        "cardsSection": "Cards"
     },
     "dashboard": {
         "welcome": "Welcome, {name}",
@@ -549,5 +550,44 @@
         "deleteConfirm": "Delete {name}?",
         "uploadFailed": "The signature could not be uploaded: {message}",
         "always": "No limit"
+    },
+    "templates": {
+        "title": "Card templates",
+        "subtitle": "Card layouts, sizes and types. The design editor comes next.",
+        "new": "New template",
+        "editTitle": "Edit template",
+        "empty": "No templates yet.",
+        "searchPlaceholder": "Name or code",
+        "name": "Name",
+        "code": "Code",
+        "codeHint": "Also used as {'{CODE}'} in card numbers.",
+        "cardType": "Card type",
+        "audience": "Printed for",
+        "audiences": {
+            "cardholder": "Cardholders",
+            "family_member": "Family members"
+        },
+        "orientation": "Orientation",
+        "orientations": {
+            "horizontal": "Horizontal",
+            "vertical": "Vertical"
+        },
+        "width": "Width",
+        "height": "Height",
+        "unit": "Unit",
+        "useCr80": "Use standard size (CR80)",
+        "authorityType": "Signed by authority",
+        "authorityHint": "The active signatory of this authority type signs the card.",
+        "validity": "Validity (months)",
+        "validityHint": "Leave empty for cards without an expiry date.",
+        "doubleSided": "Printed on both sides",
+        "active": "Active (can be used for new cards)",
+        "version": "v{n}",
+        "months": "{n} months",
+        "noExpiry": "No expiry",
+        "duplicate": "Duplicate",
+        "duplicateName": "{name} (copy)",
+        "duplicated": "Template duplicated as an inactive draft",
+        "deleteConfirm": "Delete the template “{name}”?"
     }
 }
