@@ -28,7 +28,7 @@ const TYPES: { type: DesignElementType; icon: Component }[] = [
         <button
             v-for="item in TYPES"
             :key="item.type"
-            class="flex flex-col items-center gap-1 rounded-lg border border-line px-1 py-2 text-center text-xs text-fg hover:border-brand hover:bg-brand/5 hover:text-brand"
+            class="flex flex-col items-center gap-1 rounded-lg border border-line px-1 py-2 text-center text-xs text-fg hover:border-brand hover:bg-surface-2"
             :data-add="item.type"
             :title="item.type === 'background' && hasBackground ? t('designer.backgroundExists') : undefined"
             @click="emit('add', item.type)"

@@ -687,6 +687,56 @@
         "unsaved": "Unsaved changes",
         "saveFailed": "The design could not be saved. Check the marked elements.",
         "leaveConfirm": "Leave the designer? Unsaved changes will be lost.",
-        "leave": "Leave"
+        "leave": "Leave",
+        "field": "Data field",
+        "chooseField": "Choose a field…",
+        "content": "Text",
+        "label": "Label",
+        "labelHint": "Optional, printed before the value",
+        "fieldGroups": {
+            "cardholder": "Cardholder",
+            "family_member": "Family member",
+            "card": "Card",
+            "custom": "Custom fields"
+        },
+        "qrLines": "Encoded lines",
+        "qrField": "Data field",
+        "qrText": "Custom text",
+        "qrLabel": "Label (optional)",
+        "addQrLine": "Add line",
+        "qrHint": "Each line is encoded on its own row, as “label:value”. A signed verification link is added when card verification is set up.",
+        "uploadImage": "Upload image",
+        "replaceImage": "Replace",
+        "removeImage": "Remove",
+        "logoHint": "PNG keeps transparency. Images are cleaned and stored privately.",
+        "backgroundHint": "Covers the whole side. Use the card’s proportions (e.g. 1012 × 638 px for CR80) to avoid cropping.",
+        "photoHint": "Prints the cardholder’s current photo.",
+        "cardholderSignatureHint": "Prints the cardholder’s current signature.",
+        "signatoryHint": "Prints the signature of the active signatory of “{authority}”.",
+        "signatoryMissing": "Choose “Signed by authority” in the template settings so the right signature is printed.",
+        "font": "Font",
+        "defaultFont": "Default",
+        "fontSize": "Size (pt)",
+        "bold": "Bold",
+        "italic": "Italic",
+        "underline": "Underline",
+        "align": {
+            "left": "Align left",
+            "center": "Centre",
+            "right": "Align right"
+        },
+        "colours": {
+            "color": "Value",
+            "label_color": "Label",
+            "background": "Background"
+        },
+        "clearColour": "Use default",
+        "geometry": {
+            "x": "X",
+            "y": "Y",
+            "width": "Width",
+            "height": "Height"
+        },
+        "mmHint": "Millimetres from the top-left corner of the card."
     }
 }

@@ -2,11 +2,12 @@
 import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
 import { onBeforeRouteLeave, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { AlertCircle, ArrowLeft, Layers, Plus, Save, Trash2, ZoomIn, ZoomOut } from 'lucide-vue-next';
+import { AlertCircle, ArrowLeft, Layers, Plus, Save, ZoomIn, ZoomOut } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import DesignerCanvas from './designer/DesignerCanvas.vue';
 import ElementPalette from './designer/ElementPalette.vue';
+import ElementSettings from './designer/ElementSettings.vue';
 import { sampleValue } from './designer/sample';
 import { useDesigner, type DesignerItem } from './designer/useDesigner';
 import { useConfirm } from '@/composables/useConfirm';
@@ -173,11 +174,11 @@ function itemTitle(item: DesignerItem): string {
                     v-for="item in [...sideItems].reverse()"
                     :key="item.key"
                     class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm"
-                    :class="item.key === selectedKey ? 'bg-brand/10 text-brand' : 'text-fg hover:bg-surface-2'"
+                    :class="item.key === selectedKey ? 'bg-brand text-brand-contrast' : 'text-fg hover:bg-surface-2'"
                     @click="selectedKey = item.key"
                 >
                     <span class="truncate">{{ itemTitle(item) }}</span>
-                    <AlertCircle v-if="errors[item.key]" class="ml-auto size-4 shrink-0 text-danger" />
+                    <AlertCircle v-if="errors[item.key]" class="ml-auto size-4 shrink-0" :class="item.key === selectedKey ? '' : 'text-danger'" />
                 </button>
             </aside>
 
@@ -198,13 +199,21 @@ function itemTitle(item: DesignerItem): string {
             </section>
 
             <aside class="rounded-xl border border-line bg-surface p-4 text-sm">
-                <template v-if="selected">
+                <ElementSettings
+                    v-if="selected && editable && catalog"
+                    :key="selected.key"
+                    :item="selected"
+                    :catalog="catalog"
+                    :template-id="template.id"
+                    :authority-type="template.authority_type?.name ?? null"
+                    :field-label="fieldLabel"
+                    :errors="errors[selected.key] ?? []"
+                    @rect="designer.setRect(selected.key, $event)"
+                    @remove="remove"
+                />
+                <template v-else-if="selected">
                     <p class="font-medium text-fg">{{ itemTitle(selected) }}</p>
                     <p class="mt-1 text-xs text-muted">{{ t('designer.position', { x: selected.x, y: selected.y, width: selected.width, height: selected.height }) }}</p>
-                    <ul v-if="errors[selected.key]" class="mt-3 space-y-1 text-xs text-danger" role="alert">
-                        <li v-for="message in errors[selected.key]" :key="message">{{ message }}</li>
-                    </ul>
-                    <UiButton v-if="editable" variant="secondary" size="sm" class="mt-4 text-danger" data-remove @click="remove"><Trash2 class="size-4" />{{ t('common.delete') }}</UiButton>
                 </template>
                 <p v-else class="text-muted">{{ t('designer.selectHint') }}</p>
             </aside>
