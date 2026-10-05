@@ -12,13 +12,34 @@ export function fillCss(style: DesignElementStyle): Record<string, string | unde
     return { backgroundColor: style.background };
 }
 
-/** Fill, border, rounded corners and opacity of an element box, at `scale` pixels per millimetre. */
+/** `#rrggbb` with an opacity as an rgba() colour. */
+function rgba(hex: string, alpha: number): string {
+    const value = Number.parseInt(hex.slice(1), 16);
+
+    return `rgba(${(value >> 16) & 255}, ${(value >> 8) & 255}, ${value & 255}, ${alpha})`;
+}
+
+/**
+ * Shadow as a drop-shadow filter on the element box: it follows whatever is drawn, so letters of text
+ * without a fill, transparent PNG logos and ellipses cast their own shape. Offsets and blur are in mm.
+ */
+export function shadowCss(style: DesignElementStyle, scale: number): string | undefined {
+    if (!style.shadow_color) {
+        return undefined;
+    }
+    const px = (mm: number | undefined) => `${(mm ?? 0) * scale}px`;
+
+    return `drop-shadow(${px(style.shadow_x)} ${px(style.shadow_y)} ${px(style.shadow_blur)} ${rgba(style.shadow_color, style.shadow_opacity ?? 1)})`;
+}
+
+/** Fill, border, rounded corners, opacity and shadow of an element box, at `scale` pixels per millimetre. */
 export function boxCss(style: DesignElementStyle, scale: number): Record<string, string | number | undefined> {
     return {
         ...fillCss(style),
         border: style.border_width ? `${Math.max(style.border_width * scale, 0.5)}px ${style.border_style ?? 'solid'} ${style.border_color ?? '#111111'}` : undefined,
         borderRadius: style.shape === 'ellipse' ? '50%' : style.border_radius ? `${style.border_radius * scale}px` : undefined,
         opacity: style.opacity,
+        filter: shadowCss(style, scale),
     };
 }
 

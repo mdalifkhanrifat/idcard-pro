@@ -100,6 +100,31 @@ function setBarcodeFormat(value: string): void {
     setStyle('barcode_format', value === 'code128' ? undefined : (value as DesignElementStyle['barcode_format']));
 }
 
+/** Shadow offsets and blur (mm); set explicitly so 0 is kept as 0. */
+const SHADOW_NUMBERS = [
+    { key: 'shadow_x', min: -10, max: 10 },
+    { key: 'shadow_y', min: -10, max: 10 },
+    { key: 'shadow_blur', min: 0, max: 10 },
+] as const;
+
+function addShadow(): void {
+    Object.assign(props.item.style, { shadow_color: '#000000', shadow_x: 0.5, shadow_y: 0.5, shadow_blur: 0.8, shadow_opacity: 0.35 });
+}
+
+function removeShadow(): void {
+    for (const key of ['shadow_color', 'shadow_x', 'shadow_y', 'shadow_blur', 'shadow_opacity'] as const) {
+        delete props.item.style[key];
+    }
+}
+
+function setShadowNumber(key: 'shadow_x' | 'shadow_y' | 'shadow_blur', event: Event, min: number, max: number): void {
+    const input = event.target as HTMLInputElement;
+    const value = Number.parseFloat(input.value);
+    const clamped = Number.isFinite(value) ? Math.min(max, Math.max(min, value)) : 0;
+    input.value = String(clamped);
+    props.item.style[key] = clamped;
+}
+
 const GRADIENT_DIRECTIONS = ['to bottom', 'to right', 'to bottom right', 'to top right'] as const;
 
 /** Text spacing settings: line height (×), letter spacing (pt) and padding (mm). */
@@ -566,6 +591,51 @@ function pickLibraryImage(image: LibraryImage): void {
                         </span>
                         <input :value="(item.style.opacity ?? 1) * 100" type="range" min="5" max="100" step="5" class="w-full accent-[var(--brand)]" data-setting="opacity" @input="setOpacity($event)" />
                     </label>
+                </template>
+            </div>
+
+            <!-- Shadow (follows the drawn shape: letters, transparent logos, ellipses) -->
+            <div v-if="item.type !== 'background'" class="space-y-3 border-t border-line pt-3" data-shadow>
+                <div class="flex items-center justify-between gap-2">
+                    <p class="text-xs font-semibold tracking-wide text-muted uppercase">{{ t('designer.shadow') }}</p>
+                    <button v-if="!item.style.shadow_color" class="inline-flex items-center gap-1 rounded-md border border-line px-2 py-1 text-xs text-fg hover:bg-surface-2" data-add-shadow @click="addShadow">
+                        <Plus class="size-3.5" />{{ t('designer.addShadow') }}
+                    </button>
+                    <button v-else class="rounded-md px-2 py-1 text-xs text-muted hover:text-danger" data-remove-shadow @click="removeShadow">{{ t('designer.removeShadow') }}</button>
+                </div>
+                <template v-if="item.style.shadow_color">
+                    <div class="grid grid-cols-[1fr_repeat(3,4rem)] gap-2">
+                        <ColorInput :model-value="item.style.shadow_color" :label="t('designer.shadowColour')" name="shadow_color" @update:model-value="$event ? (item.style.shadow_color = $event) : removeShadow()" />
+                        <label v-for="number in SHADOW_NUMBERS" :key="number.key" class="block space-y-1">
+                            <span class="block truncate text-xs font-medium text-muted">{{ t(`designer.shadowNumbers.${number.key}`) }}</span>
+                            <input
+                                :value="item.style[number.key] ?? 0"
+                                type="number"
+                                :min="number.min"
+                                :max="number.max"
+                                step="0.1"
+                                :class="inputClass"
+                                :data-setting="number.key"
+                                @change="setShadowNumber(number.key, $event, number.min, number.max)"
+                            />
+                        </label>
+                    </div>
+                    <label class="block space-y-1">
+                        <span class="flex justify-between text-xs font-medium text-muted">
+                            {{ t('designer.shadowStrength') }}<span class="tabular-nums">{{ Math.round((item.style.shadow_opacity ?? 1) * 100) }}%</span>
+                        </span>
+                        <input
+                            :value="(item.style.shadow_opacity ?? 1) * 100"
+                            type="range"
+                            min="5"
+                            max="100"
+                            step="5"
+                            class="w-full accent-[var(--brand)]"
+                            data-setting="shadow_opacity"
+                            @input="item.style.shadow_opacity = Number(($event.target as HTMLInputElement).value) / 100"
+                        />
+                    </label>
+                    <p class="text-xs text-muted">{{ t('designer.shadowHint') }}</p>
                 </template>
             </div>
 

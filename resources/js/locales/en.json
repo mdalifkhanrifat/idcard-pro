@@ -885,7 +885,18 @@
         "chooseFromLibrary": "Choose from library",
         "libraryEmpty": "The image library is empty.",
         "fromLibrary": "From the image library",
-        "libraryHint": "Linked from the library: replacing it there changes every template that uses it."
+        "libraryHint": "Linked from the library: replacing it there changes every template that uses it.",
+        "shadow": "Shadow",
+        "addShadow": "Add shadow",
+        "removeShadow": "Remove",
+        "shadowColour": "Colour",
+        "shadowNumbers": {
+            "shadow_x": "Right",
+            "shadow_y": "Down",
+            "shadow_blur": "Blur"
+        },
+        "shadowStrength": "Strength",
+        "shadowHint": "In mm; negative values move the shadow left or up. Text without a fill and transparent logos cast the shadow of their own shape."
     },
     "fonts": {
         "title": "Fonts",

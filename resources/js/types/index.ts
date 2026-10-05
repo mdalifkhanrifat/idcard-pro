@@ -349,6 +349,12 @@ export interface DesignElementStyle {
     locked?: boolean;
     /** Kept in the design but not printed. */
     hidden?: boolean;
+    /** Shadow, on when a colour is set; offsets and blur in mm. */
+    shadow_color?: string;
+    shadow_x?: number;
+    shadow_y?: number;
+    shadow_blur?: number;
+    shadow_opacity?: number;
     /** Barcode symbology; Code 128 when not set. */
     barcode_format?: 'code128' | 'code39' | 'ean13' | 'ean8' | 'upc' | 'itf' | 'codabar';
     /** Print the encoded value under the bars. */
