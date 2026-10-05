@@ -277,7 +277,7 @@ export interface CardTemplate {
 
 export type CardSide = 'front' | 'back';
 
-export type DesignElementType = 'logo' | 'background' | 'photo' | 'signatory_signature' | 'cardholder_signature' | 'qr_code' | 'field' | 'text' | 'shape';
+export type DesignElementType = 'logo' | 'background' | 'photo' | 'signatory_signature' | 'cardholder_signature' | 'qr_code' | 'field' | 'text' | 'shape' | 'barcode';
 
 export interface DesignElementStyle {
     font_family?: string;
@@ -317,6 +317,10 @@ export interface DesignElementStyle {
     locked?: boolean;
     /** Kept in the design but not printed. */
     hidden?: boolean;
+    /** Barcode symbology; Code 128 when not set. */
+    barcode_format?: 'code128' | 'code39' | 'ean13' | 'ean8' | 'upc' | 'itf' | 'codabar';
+    /** Print the encoded value under the bars. */
+    barcode_text?: boolean;
 }
 
 export interface QrLine {
@@ -351,5 +355,6 @@ export interface DesignerCatalog {
     fonts: string[];
     /** Render only where installed on the computer. */
     system_fonts: string[];
+    barcode_formats: NonNullable<DesignElementStyle['barcode_format']>[];
     size_mm: { width: number; height: number };
 }

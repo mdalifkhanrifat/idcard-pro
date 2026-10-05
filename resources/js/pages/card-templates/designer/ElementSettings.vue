@@ -29,8 +29,10 @@ import {
     Underline,
     X,
 } from 'lucide-vue-next';
+import { BARCODE_FORMAT_NAMES, MIN_MODULE_MM, QUIET_ZONE_MODULES, encodeBarcode } from './barcode';
 import ColorInput from './ColorInput.vue';
 import FieldSelect from './FieldSelect.vue';
+import { sampleValue } from './sample';
 import { imageFit } from './styles';
 import type { DesignerItem, LayerMove, Rect } from './useDesigner';
 import { http, toApiError } from '@/lib/http';
@@ -59,7 +61,39 @@ const ui = useUiStore();
 
 const isText = computed(() => props.item.type === 'field' || props.item.type === 'text');
 const hasImage = computed(() => props.catalog.types[props.item.type]?.image === true);
+const isBarcode = computed(() => props.item.type === 'barcode');
+/** Narrowest bar (mm) with the sample value, so a too-small barcode is noticed before printing; 0 = cannot encode. */
+const barcodeModule = computed(() => {
+    if (!isBarcode.value) {
+        return null;
+    }
+    const encoded = encodeBarcode(sampleValue(props.item.field), props.item.style.barcode_format);
+    if (!encoded) {
+        return 0;
+    }
+    const sideways = props.item.style.rotation === 90 || props.item.style.rotation === 270;
+
+    return Math.round(((sideways ? props.item.height : props.item.width) / (encoded.modules + QUIET_ZONE_MODULES * 2)) * 100) / 100;
+});
 const isImage = computed(() => ['logo', 'background', 'photo', 'signatory_signature', 'cardholder_signature'].includes(props.item.type));
+
+const TEXT_FLAGS = [
+    { key: 'bold', icon: Bold },
+    { key: 'italic', icon: Italic },
+    { key: 'underline', icon: Underline },
+    { key: 'uppercase', icon: CaseUpper },
+] as const;
+/** A barcode's text is its encoded value, so it is never re-cased or underlined. */
+const textFlags = computed(() => (isText.value ? TEXT_FLAGS : TEXT_FLAGS.filter((flag) => flag.key === 'bold' || flag.key === 'italic')));
+const VERTICAL_ALIGNS = [
+    { key: 'top', icon: AlignVerticalJustifyStart },
+    { key: 'middle', icon: AlignVerticalJustifyCenter },
+    { key: 'bottom', icon: AlignVerticalJustifyEnd },
+] as const;
+
+function setBarcodeFormat(value: string): void {
+    setStyle('barcode_format', value === 'code128' ? undefined : (value as DesignElementStyle['barcode_format']));
+}
 
 const GRADIENT_DIRECTIONS = ['to bottom', 'to right', 'to bottom right', 'to top right'] as const;
 
@@ -237,7 +271,7 @@ function removeImage(): void {
         <fieldset :disabled="item.style.locked" class="min-w-0 space-y-4 disabled:opacity-60">
 
             <!-- Content -->
-            <label v-if="item.type === 'field'" class="block space-y-1">
+            <label v-if="item.type === 'field' || isBarcode" class="block space-y-1">
                 <span class="text-xs font-medium text-muted">{{ t('designer.field') }}</span>
                 <FieldSelect v-model="item.field" :catalog="catalog" :field-label="fieldLabel" data-setting="field" />
             </label>
@@ -271,6 +305,25 @@ function removeImage(): void {
                     <Plus class="size-3.5" />{{ t('designer.addQrLine') }}
                 </button>
                 <p class="text-xs text-muted">{{ t('designer.qrHint') }}</p>
+            </div>
+
+            <!-- Barcode -->
+            <div v-if="isBarcode" class="space-y-2">
+                <label class="block space-y-1">
+                    <span class="text-xs font-medium text-muted">{{ t('designer.barcodeFormat') }}</span>
+                    <select :value="item.style.barcode_format ?? 'code128'" :class="inputClass" data-setting="barcode_format" @change="setBarcodeFormat(($event.target as HTMLSelectElement).value)">
+                        <option v-for="format in catalog.barcode_formats" :key="format" :value="format">{{ BARCODE_FORMAT_NAMES[format] ?? format }}</option>
+                    </select>
+                </label>
+                <label class="flex items-center gap-2 text-sm text-fg">
+                    <input type="checkbox" :checked="!!item.style.barcode_text" class="size-4 accent-[var(--brand)]" data-setting="barcode_text" @change="setStyle('barcode_text', ($event.target as HTMLInputElement).checked)" />
+                    {{ t('designer.barcodeText') }}
+                </label>
+                <p v-if="barcodeModule === 0" class="text-xs text-warning" data-barcode-warning>{{ t('designer.barcodeSampleInvalid') }}</p>
+                <p v-else-if="barcodeModule !== null" class="text-xs" :class="barcodeModule < MIN_MODULE_MM ? 'text-warning' : 'text-muted'" data-barcode-module>
+                    {{ t(barcodeModule < MIN_MODULE_MM ? 'designer.barcodeModuleSmall' : 'designer.barcodeModule', { mm: barcodeModule }) }}
+                </p>
+                <p class="text-xs text-muted">{{ t('designer.barcodeHint') }}</p>
             </div>
 
             <!-- Images (logos and backgrounds) -->
@@ -333,89 +386,92 @@ function removeImage(): void {
             </div>
 
             <!-- Text style -->
-            <div v-if="isText" class="space-y-3 border-t border-line pt-3">
-                <div class="grid grid-cols-[1fr_5rem] gap-2">
-                    <label class="block space-y-1">
-                        <span class="text-xs font-medium text-muted">{{ t('designer.font') }}</span>
-                        <select :value="item.style.font_family ?? ''" :class="inputClass" data-setting="font_family" @change="setStyle('font_family', ($event.target as HTMLSelectElement).value)">
-                            <option value="">{{ t('designer.defaultFont') }}</option>
-                            <optgroup :label="t('designer.bundledFonts')">
-                                <option v-for="font in catalog.fonts" :key="font" :value="font" :style="{ fontFamily: font }">{{ font }}</option>
-                            </optgroup>
-                            <optgroup :label="t('designer.systemFonts')">
-                                <option v-for="font in catalog.system_fonts" :key="font" :value="font">{{ font }}</option>
-                            </optgroup>
-                        </select>
-                    </label>
-                    <label class="block space-y-1">
-                        <span class="text-xs font-medium text-muted">{{ t('designer.fontSize') }}</span>
-                        <input :value="item.style.font_size ?? 8" type="number" min="1" max="72" step="0.5" :class="inputClass" data-setting="font_size" @change="setNumber('font_size', $event, 1, 72)" />
-                    </label>
-                </div>
+            <div v-if="isText || isBarcode" class="space-y-3 border-t border-line pt-3">
+                <!-- A barcode only has text when its value is shown under the bars -->
+                <template v-if="isText || item.style.barcode_text">
+                    <div class="grid grid-cols-[1fr_5rem] gap-2">
+                        <label class="block space-y-1">
+                            <span class="text-xs font-medium text-muted">{{ t('designer.font') }}</span>
+                            <select :value="item.style.font_family ?? ''" :class="inputClass" data-setting="font_family" @change="setStyle('font_family', ($event.target as HTMLSelectElement).value)">
+                                <option value="">{{ t('designer.defaultFont') }}</option>
+                                <optgroup :label="t('designer.bundledFonts')">
+                                    <option v-for="font in catalog.fonts" :key="font" :value="font" :style="{ fontFamily: font }">{{ font }}</option>
+                                </optgroup>
+                                <optgroup :label="t('designer.systemFonts')">
+                                    <option v-for="font in catalog.system_fonts" :key="font" :value="font">{{ font }}</option>
+                                </optgroup>
+                            </select>
+                        </label>
+                        <label class="block space-y-1">
+                            <span class="text-xs font-medium text-muted">{{ t('designer.fontSize') }}</span>
+                            <input :value="item.style.font_size ?? 8" type="number" min="1" max="72" step="0.5" :class="inputClass" data-setting="font_size" @change="setNumber('font_size', $event, 1, 72)" />
+                        </label>
+                    </div>
 
-                <div class="flex flex-wrap gap-1.5">
-                    <button
-                        v-for="flag in ['auto_fit', 'single_line'] as const"
-                        :key="flag"
-                        class="rounded-md border border-line px-2 py-1 text-xs"
-                        :class="item.style[flag] ? 'bg-brand text-brand-contrast' : 'text-fg hover:bg-surface-2'"
-                        :aria-pressed="!!item.style[flag]"
-                        :data-toggle="flag"
-                        @click="toggle(flag)"
-                    >
-                        {{ t(`designer.textFlags.${flag}`) }}
-                    </button>
-                </div>
-                <p v-if="item.style.font_family && catalog.system_fonts.includes(item.style.font_family)" class="text-xs text-warning" data-font-warning>
-                    {{ t(item.style.font_family === 'SutonnyMJ' ? 'designer.ansiFontHint' : 'designer.systemFontHint') }}
-                </p>
+                    <div v-if="isText" class="flex flex-wrap gap-1.5">
+                        <button
+                            v-for="flag in ['auto_fit', 'single_line'] as const"
+                            :key="flag"
+                            class="rounded-md border border-line px-2 py-1 text-xs"
+                            :class="item.style[flag] ? 'bg-brand text-brand-contrast' : 'text-fg hover:bg-surface-2'"
+                            :aria-pressed="!!item.style[flag]"
+                            :data-toggle="flag"
+                            @click="toggle(flag)"
+                        >
+                            {{ t(`designer.textFlags.${flag}`) }}
+                        </button>
+                    </div>
+                    <p v-if="item.style.font_family && catalog.system_fonts.includes(item.style.font_family)" class="text-xs text-warning" data-font-warning>
+                        {{ t(item.style.font_family === 'SutonnyMJ' ? 'designer.ansiFontHint' : 'designer.systemFontHint') }}
+                    </p>
 
-                <div class="flex flex-wrap items-center gap-1">
-                    <button
-                        v-for="flag in [{ key: 'bold', icon: Bold }, { key: 'italic', icon: Italic }, { key: 'underline', icon: Underline }, { key: 'uppercase', icon: CaseUpper }] as const"
-                        :key="flag.key"
-                        class="rounded-md p-1.5"
-                        :class="item.style[flag.key] ? 'bg-brand text-brand-contrast' : 'text-muted hover:bg-surface-2 hover:text-fg'"
-                        :title="t(`designer.${flag.key}`)"
-                        :aria-pressed="!!item.style[flag.key]"
-                        :data-toggle="flag.key"
-                        @click="toggle(flag.key)"
-                    >
-                        <component :is="flag.icon" class="size-4" />
-                    </button>
-                </div>
-                <div class="flex flex-wrap items-center gap-1">
-                    <button
-                        v-for="align in [{ key: 'left', icon: AlignLeft }, { key: 'center', icon: AlignCenter }, { key: 'right', icon: AlignRight }] as const"
-                        :key="align.key"
-                        class="rounded-md p-1.5"
-                        :class="(item.style.align ?? 'left') === align.key ? 'bg-brand text-brand-contrast' : 'text-muted hover:bg-surface-2 hover:text-fg'"
-                        :title="t(`designer.align.${align.key}`)"
-                        :aria-pressed="(item.style.align ?? 'left') === align.key"
-                        :data-align="align.key"
-                        @click="setStyle('align', align.key === 'left' ? undefined : align.key)"
-                    >
-                        <component :is="align.icon" class="size-4" />
-                    </button>
-                    <span class="mx-1 h-5 w-px bg-line" />
-                    <button
-                        v-for="vertical in [{ key: 'top', icon: AlignVerticalJustifyStart }, { key: 'middle', icon: AlignVerticalJustifyCenter }, { key: 'bottom', icon: AlignVerticalJustifyEnd }] as const"
-                        :key="vertical.key"
-                        class="rounded-md p-1.5"
-                        :class="(item.style.vertical_align ?? 'top') === vertical.key ? 'bg-brand text-brand-contrast' : 'text-muted hover:bg-surface-2 hover:text-fg'"
-                        :title="t(`designer.vertical.${vertical.key}`)"
-                        :data-vertical="vertical.key"
-                        @click="setStyle('vertical_align', vertical.key === 'top' ? undefined : vertical.key)"
-                    >
-                        <component :is="vertical.icon" class="size-4" />
-                    </button>
-                </div>
+                    <div class="flex flex-wrap items-center gap-1">
+                        <button
+                            v-for="flag in textFlags"
+                            :key="flag.key"
+                            class="rounded-md p-1.5"
+                            :class="item.style[flag.key] ? 'bg-brand text-brand-contrast' : 'text-muted hover:bg-surface-2 hover:text-fg'"
+                            :title="t(`designer.${flag.key}`)"
+                            :aria-pressed="!!item.style[flag.key]"
+                            :data-toggle="flag.key"
+                            @click="toggle(flag.key)"
+                        >
+                            <component :is="flag.icon" class="size-4" />
+                        </button>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-1">
+                        <button
+                            v-for="align in [{ key: 'left', icon: AlignLeft }, { key: 'center', icon: AlignCenter }, { key: 'right', icon: AlignRight }] as const"
+                            :key="align.key"
+                            class="rounded-md p-1.5"
+                            :class="(item.style.align ?? 'left') === align.key ? 'bg-brand text-brand-contrast' : 'text-muted hover:bg-surface-2 hover:text-fg'"
+                            :title="t(`designer.align.${align.key}`)"
+                            :aria-pressed="(item.style.align ?? 'left') === align.key"
+                            :data-align="align.key"
+                            @click="setStyle('align', align.key === 'left' ? undefined : align.key)"
+                        >
+                            <component :is="align.icon" class="size-4" />
+                        </button>
+                        <span v-if="isText" class="mx-1 h-5 w-px bg-line" />
+                        <button
+                            v-for="vertical in isText ? VERTICAL_ALIGNS : []"
+                            :key="vertical.key"
+                            class="rounded-md p-1.5"
+                            :class="(item.style.vertical_align ?? 'top') === vertical.key ? 'bg-brand text-brand-contrast' : 'text-muted hover:bg-surface-2 hover:text-fg'"
+                            :title="t(`designer.vertical.${vertical.key}`)"
+                            :data-vertical="vertical.key"
+                            @click="setStyle('vertical_align', vertical.key === 'top' ? undefined : vertical.key)"
+                        >
+                            <component :is="vertical.icon" class="size-4" />
+                        </button>
+                    </div>
+                </template>
 
                 <div class="grid grid-cols-2 gap-2">
-                    <ColorInput :model-value="item.style.color" :label="t('designer.colours.color')" placeholder="#111111" name="color" @update:model-value="setStyle('color', $event)" />
-                    <ColorInput :model-value="item.style.label_color" :label="t('designer.colours.label_color')" placeholder="#111111" name="label_color" @update:model-value="setStyle('label_color', $event)" />
+                    <ColorInput :model-value="item.style.color" :label="t(isBarcode ? 'designer.barcodeColour' : 'designer.colours.color')" placeholder="#111111" name="color" @update:model-value="setStyle('color', $event)" />
+                    <ColorInput v-if="isText" :model-value="item.style.label_color" :label="t('designer.colours.label_color')" placeholder="#111111" name="label_color" @update:model-value="setStyle('label_color', $event)" />
                 </div>
-                <div class="grid grid-cols-3 gap-2">
+                <div v-if="isText" class="grid grid-cols-3 gap-2">
                     <label v-for="number in TEXT_NUMBERS" :key="number.key" class="block space-y-1">
                         <span class="block truncate text-xs font-medium text-muted">{{ t(`designer.textNumbers.${number.key}`) }}</span>
                         <input

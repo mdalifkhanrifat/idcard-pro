@@ -2,6 +2,7 @@
 import { computed, nextTick, onMounted, ref, useTemplateRef, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ImageIcon, PenLine, QrCode, UserRound } from 'lucide-vue-next';
+import { QUIET_ZONE_MODULES, encodeBarcode } from './barcode';
 import { PT_TO_MM, boxCss, imageFit, rotationCss, textCss } from './styles';
 import type { DesignElement } from '@/types';
 
@@ -81,6 +82,8 @@ onMounted(() => {
 });
 const labelStyle = computed(() => ({ color: props.element.style.label_color ?? props.element.style.color ?? '#111111' }));
 const fit = computed(() => (imageFit(props.element) === 'cover' ? 'object-cover' : 'object-contain'));
+/** Bars stretch to the box; the value shows under them in the element's font when asked. */
+const barcode = computed(() => (props.element.type === 'barcode' ? encodeBarcode(props.value, props.element.style.barcode_format) : null));
 const image = computed(() => (props.element.type === 'logo' ? props.element.image_url : (props.imageUrl ?? props.element.image_url)));
 </script>
 
@@ -95,6 +98,24 @@ const image = computed(() => (props.element.type === 'logo' ? props.element.imag
                         <span v-else> </span>
                     </template>
                     <span>{{ element.type === 'field' ? value : element.content }}</span>
+                </div>
+            </div>
+
+            <div v-else-if="element.type === 'barcode'" class="flex size-full flex-col overflow-hidden" :style="text" data-barcode>
+                <template v-if="barcode">
+                    <svg class="min-h-0 w-full flex-1" :viewBox="`0 0 ${barcode.modules + QUIET_ZONE_MODULES * 2} 1`" preserveAspectRatio="none" shape-rendering="crispEdges" aria-hidden="true">
+                        <rect v-for="bar in barcode.bars" :key="bar[0]" :x="bar[0] + QUIET_ZONE_MODULES" y="0" :width="bar[1]" height="1" :fill="element.style.color ?? '#000000'" />
+                    </svg>
+                    <div v-if="element.style.barcode_text" class="shrink-0 leading-tight whitespace-nowrap">{{ barcode.text }}</div>
+                </template>
+                <!-- A value the format cannot encode: never print a wrong barcode -->
+                <div
+                    v-else-if="value"
+                    class="flex size-full items-center justify-center bg-danger/10 p-0.5 text-center leading-tight text-danger"
+                    :style="{ fontSize: `${Math.max(7, scale * 1.8)}px`, fontFamily: 'sans-serif', fontWeight: 400, fontStyle: 'normal' }"
+                    data-barcode-invalid
+                >
+                    {{ t('designer.barcodeInvalid') }}
                 </div>
             </div>
 

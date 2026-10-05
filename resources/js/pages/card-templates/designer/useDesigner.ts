@@ -35,6 +35,8 @@ const DEFAULTS: Record<DesignElementType, Partial<DesignElement> & { width: numb
     field: { width: 40, height: 5, field: 'full_name', style: { font_family: 'Inter', font_size: 8, color: '#111111' } },
     text: { width: 40, height: 5, style: { font_family: 'Inter', font_size: 8, color: '#111111' } },
     shape: { width: 30, height: 12, style: { background: '#1e3a8a' } },
+    // A white fill keeps the quiet zone light on coloured cards.
+    barcode: { width: 40, height: 10, field: 'employee_no', style: { font_family: 'Inter', font_size: 6, color: '#000000', background: '#ffffff', align: 'center' } },
 };
 
 /** Ready-made variants offered in the palette. */

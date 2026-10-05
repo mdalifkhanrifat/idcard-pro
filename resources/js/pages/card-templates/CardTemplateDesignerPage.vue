@@ -263,6 +263,9 @@ function itemTitle(item: DesignerItem): string {
     if (item.type === 'field') {
         return fieldLabel(item.field) || t('designer.types.field');
     }
+    if (item.type === 'barcode') {
+        return `${t('designer.types.barcode')}: ${fieldLabel(item.field)}`;
+    }
     if (item.type === 'text') {
         return item.content || t('designer.types.text');
     }

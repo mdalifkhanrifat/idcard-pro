@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { Component } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Database, ImageIcon, Minus, PanelTop, PenLine, QrCode, Signature, Square, Type, UserRound, Wallpaper } from 'lucide-vue-next';
+import { Barcode, Database, ImageIcon, Minus, PanelTop, PenLine, QrCode, Signature, Square, Type, UserRound, Wallpaper } from 'lucide-vue-next';
 import type { DesignElementType } from '@/types';
 
 /**
@@ -19,6 +19,7 @@ const TYPES: { type: DesignElementType; preset?: string; icon: Component }[] = [
     { type: 'signatory_signature', icon: Signature },
     { type: 'cardholder_signature', icon: PenLine },
     { type: 'qr_code', icon: QrCode },
+    { type: 'barcode', icon: Barcode },
     { type: 'shape', icon: Square },
     { type: 'shape', preset: 'line', icon: Minus },
     { type: 'shape', preset: 'band', icon: PanelTop },
