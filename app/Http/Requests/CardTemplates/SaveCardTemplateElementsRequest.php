@@ -76,6 +76,9 @@ class SaveCardTemplateElementsRequest extends FormRequest
             'elements.*.style.border_style' => ['nullable', Rule::in(['solid', 'dashed', 'dotted'])],
             // Content turns inside the (unrotated) element box, so the card bounds still apply to the box.
             'elements.*.style.rotation' => ['nullable', 'integer', Rule::in([0, 90, 180, 270])],
+            // Tilt of the whole element around its centre; the tilted corners must stay on the card unless `bleed`
+            'elements.*.style.angle' => ['nullable', 'numeric', 'between:-180,180'],
+            'elements.*.style.bleed' => ['nullable', 'boolean'],
             'elements.*.style.locked' => ['nullable', 'boolean'],
             'elements.*.style.hidden' => ['nullable', 'boolean'],
             'elements.*.style.border_radius' => ['nullable', 'numeric', 'between:0,100'],

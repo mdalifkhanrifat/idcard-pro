@@ -14,6 +14,7 @@ return [
         'content_required' => 'Enter the text to show.',
         'qr_line_invalid' => 'Each QR line needs a data field or custom text.',
         'outside_card' => 'The element must stay inside the card (:width × :height mm).',
+        'tilted_outside_card' => 'Tilted like this, the element reaches past the card edge. Move it inward, reduce the angle, or allow it to be cut at the edge.',
         'image_missing' => 'The image was not found. Upload it again.',
         'image_or_library' => 'Use either an uploaded image or a library image, not both.',
     ],

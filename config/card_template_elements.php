@@ -47,7 +47,9 @@ return [
      * Box keys apply to every element; the rest only where they make sense.
      */
     'style' => [
-        'box' => ['background', 'gradient_to', 'gradient_direction', 'border_color', 'border_width', 'border_style', 'border_radius', 'opacity', 'rotation'],
+        // rotation: 0/90/180/270, the content turns inside the box (legacy layouts keep working);
+        // angle: −180..180°, the whole element tilts around its centre; bleed: may reach past the card edge (cut off there)
+        'box' => ['background', 'gradient_to', 'gradient_direction', 'border_color', 'border_width', 'border_style', 'border_radius', 'opacity', 'rotation', 'angle', 'bleed'],
         // Shadow (on when shadow_color is set): text casts it from its letters, images from their shape, other boxes from the box
         'shadow' => ['shadow_color', 'shadow_x', 'shadow_y', 'shadow_blur', 'shadow_opacity'],
         // Editing state: locked elements cannot be moved or changed; hidden ones are kept but not printed.

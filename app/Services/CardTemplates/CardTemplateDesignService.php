@@ -204,6 +204,8 @@ class CardTemplateDesignService
             $height = round((float) $element['height'], 2);
             if ($x + $width > $size['width'] + self::BOUNDS_TOLERANCE_MM || $y + $height > $size['height'] + self::BOUNDS_TOLERANCE_MM) {
                 $errors["{$key}.x"] = __('cards.designer.outside_card', ['width' => $size['width'], 'height' => $size['height']]);
+            } elseif (! $this->tiltedInside($element['style'] ?? [], $x, $y, $width, $height, $size)) {
+                $errors["{$key}.style.angle"] = __('cards.designer.tilted_outside_card');
             }
 
             $imagePath = null;
@@ -251,6 +253,31 @@ class CardTemplateDesignService
     }
 
     /**
+     * A tilted element (style.angle) must keep its turned corners on the card, unless it may bleed past the edge.
+     *
+     * @param  array<string, mixed>  $style
+     * @param  array{width: float, height: float}  $size
+     */
+    private function tiltedInside(array $style, float $x, float $y, float $width, float $height, array $size): bool
+    {
+        $angle = deg2rad((float) ($style['angle'] ?? 0));
+        if ($angle == 0.0 || filter_var($style['bleed'] ?? false, FILTER_VALIDATE_BOOL)) {
+            return true;
+        }
+
+        // Half the size of the turned element's bounding box, around the same centre
+        $halfWidth = abs($width / 2 * cos($angle)) + abs($height / 2 * sin($angle));
+        $halfHeight = abs($width / 2 * sin($angle)) + abs($height / 2 * cos($angle));
+        $centreX = $x + $width / 2;
+        $centreY = $y + $height / 2;
+
+        return $centreX - $halfWidth >= -self::BOUNDS_TOLERANCE_MM
+            && $centreY - $halfHeight >= -self::BOUNDS_TOLERANCE_MM
+            && $centreX + $halfWidth <= $size['width'] + self::BOUNDS_TOLERANCE_MM
+            && $centreY + $halfHeight <= $size['height'] + self::BOUNDS_TOLERANCE_MM;
+    }
+
+    /**
      * Data fields by group; family fields are only offered on family member templates.
      *
      * @return array<string, array<int, string>>
@@ -288,7 +315,7 @@ class CardTemplateDesignService
     {
         $style = array_filter($style ?? [], fn ($value) => $value !== null && $value !== '');
 
-        foreach (['bold', 'italic', 'underline', 'uppercase', 'auto_fit', 'single_line', 'locked', 'hidden', 'barcode_text'] as $flag) {
+        foreach (['bold', 'italic', 'underline', 'uppercase', 'auto_fit', 'single_line', 'locked', 'hidden', 'barcode_text', 'bleed'] as $flag) {
             if (isset($style[$flag])) {
                 $style[$flag] = filter_var($style[$flag], FILTER_VALIDATE_BOOL);
             }
@@ -301,6 +328,12 @@ class CardTemplateDesignService
 
         if (isset($style['rotation'])) {
             $style['rotation'] = (int) $style['rotation'];
+        }
+        if (isset($style['angle'])) {
+            $style['angle'] = round((float) $style['angle'], 1);
+            if ($style['angle'] == 0) {
+                unset($style['angle']);
+            }
         }
         // False flags and no rotation are the defaults; keep layouts small and comparisons stable.
         $style = array_filter($style, fn ($value) => $value !== false && $value !== 0);

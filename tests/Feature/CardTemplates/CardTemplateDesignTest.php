@@ -363,3 +363,27 @@ it('saves shadows and counts them as a design change', function () {
     $this->putJson($this->url, ['elements' => [designElement(['style' => ['shadow_color' => 'black', 'shadow_x' => 20, 'shadow_blur' => -1, 'shadow_opacity' => 0]])]])
         ->assertJsonValidationErrors(['elements.0.style.shadow_color', 'elements.0.style.shadow_x', 'elements.0.style.shadow_blur', 'elements.0.style.shadow_opacity']);
 });
+
+it('tilts elements to any angle inside the card unless they may bleed past the edge', function () {
+    Sanctum::actingAs($this->owner);
+
+    $this->putJson($this->url, ['elements' => [
+        designElement(['style' => ['angle' => '-30', 'rotation' => 90]]),
+        designElement(['x' => 0, 'y' => 0, 'style' => ['angle' => 45, 'bleed' => '1']]),
+        designElement(['style' => ['angle' => 0]]),
+    ]])
+        ->assertOk()
+        ->assertJsonPath('data.0.style.angle', -30)
+        ->assertJsonPath('data.0.style.rotation', 90)
+        ->assertJsonPath('data.1.style.bleed', true)
+        ->assertJsonMissingPath('data.2.style.angle');
+
+    // The same corner element without bleed: its turned corners leave the card
+    $this->putJson($this->url, ['elements' => [designElement(['x' => 0, 'y' => 0, 'style' => ['angle' => 45]])]])
+        ->assertJsonValidationErrors(['elements.0.style.angle' => __('cards.designer.tilted_outside_card')]);
+    // Bleed never lets the untilted box itself leave the card
+    $this->putJson($this->url, ['elements' => [designElement(['x' => 60, 'style' => ['angle' => 10, 'bleed' => true]])]])
+        ->assertJsonValidationErrors('elements.0.x');
+    $this->putJson($this->url, ['elements' => [designElement(['style' => ['angle' => 200]])]])
+        ->assertJsonValidationErrors('elements.0.style.angle');
+});
