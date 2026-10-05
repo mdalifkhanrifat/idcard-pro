@@ -1,6 +1,7 @@
 <?php
 
 use App\Models\Cardholder;
+use App\Models\CardTemplate;
 use App\Models\MasterDataItem;
 use App\Models\Tenant;
 use App\Models\User;
@@ -104,4 +105,19 @@ function masterItem(Tenant $tenant, array $attributes): MasterDataItem
 function cardholder(Tenant $tenant, array $attributes = []): Cardholder
 {
     return app(TenantContext::class)->run($tenant, fn () => Cardholder::factory()->create([...$attributes, 'tenant_id' => $tenant->id]));
+}
+
+/**
+ * An active card template with one data field element.
+ *
+ * @param  array<string, mixed>  $attributes
+ */
+function cardTemplate($tenant, array $attributes = []): CardTemplate
+{
+    return app(TenantContext::class)->run($tenant, function () use ($tenant, $attributes) {
+        $template = CardTemplate::factory()->create(['tenant_id' => $tenant->id, 'is_active' => true, ...$attributes]);
+        $template->elements()->create(['side' => 'front', 'type' => 'field', 'field' => 'full_name', 'x' => 5, 'y' => 5, 'width' => 40, 'height' => 6, 'z_index' => 0, 'style' => ['font_size' => 9]]);
+
+        return $template;
+    });
 }

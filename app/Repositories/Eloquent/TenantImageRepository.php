@@ -34,6 +34,11 @@ class TenantImageRepository extends EloquentRepository implements TenantImageRep
         return TenantImage::query()->withoutGlobalScopes()->where('public_id', $publicId)->first();
     }
 
+    public function findManyById(array $ids): Collection
+    {
+        return $ids === [] ? collect() : $this->query()->whereKey($ids)->get()->keyBy('id');
+    }
+
     public function idsForPublicIds(array $publicIds): array
     {
         return $publicIds === [] ? [] : $this->query()->whereIn('public_id', $publicIds)->pluck('id', 'public_id')->all();

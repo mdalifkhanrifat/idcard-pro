@@ -38,6 +38,7 @@ class CardIssueService
         private CardNumberService $numbers,
         private CardTemplateDesignService $design,
         private CardholderFileService $fileService,
+        private CardDataResolver $cardData,
     ) {}
 
     /**
@@ -85,6 +86,7 @@ class CardIssueService
                 'card_template_id' => $template->id,
                 'template_version' => $template->version,
                 'layout' => $this->design->snapshot($template),
+                'values' => $this->cardData->fields($template, $cardholder, $member, $issueDate),
                 'number' => $number,
                 'rf_card_no' => $data->rfCardNo,
                 'reason' => $data->reason,

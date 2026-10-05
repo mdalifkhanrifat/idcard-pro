@@ -8,6 +8,7 @@ use App\Models\CardTemplateElement;
 use App\Models\CustomField;
 use App\Models\TenantFont;
 use App\Repositories\Contracts\CardholderRepositoryInterface;
+use App\Repositories\Contracts\CardRepositoryInterface;
 use App\Repositories\Contracts\CardTemplateElementRepositoryInterface;
 use App\Repositories\Contracts\CardTemplateRepositoryInterface;
 use App\Repositories\Contracts\CustomFieldRepositoryInterface;
@@ -46,6 +47,7 @@ class CardTemplateDesignService
         private CardDataResolver $cardData,
         private TenantFontService $fonts,
         private TenantImageRepositoryInterface $library,
+        private CardRepositoryInterface $cards,
     ) {}
 
     /**
@@ -147,8 +149,9 @@ class CardTemplateDesignService
             return [$saved, $previous->pluck('image_path')->filter()->diff($saved->pluck('image_path')->filter())];
         });
 
-        // Replaced or removed images; uploads never saved in a layout stay until the template is deleted.
-        $this->images->delete($unusedImages->unique());
+        // Replaced or removed images; uploads never saved in a layout stay until the template is deleted,
+        // and images that issued cards print stay with them.
+        $this->images->delete($unusedImages->unique()->diff($this->cards->snapshotImagePaths($template)));
 
         return $saved;
     }

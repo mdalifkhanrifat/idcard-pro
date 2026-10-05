@@ -4,6 +4,7 @@ namespace App\Repositories\Eloquent;
 
 use App\Models\Card;
 use App\Models\Cardholder;
+use App\Models\CardTemplate;
 use App\Repositories\Contracts\CardRepositoryInterface;
 use Illuminate\Support\Collection;
 
@@ -50,5 +51,18 @@ class CardRepository extends EloquentRepository implements CardRepositoryInterfa
             ->whereNotNull('active_holder_key')
             ->where('active_holder_key', '!=', $exceptHolderKey)
             ->exists();
+    }
+
+    public function snapshotImagePaths(CardTemplate $template): array
+    {
+        // Cards of one template version share the same layout, so one snapshot per version is enough
+        $ids = $this->query()->where('card_template_id', $template->id)->groupBy('template_version')->selectRaw('min(id) as id')->pluck('id');
+
+        return $this->query()->whereKey($ids)->get(['id', 'layout'])
+            ->flatMap(fn (Card $card) => array_column($card->layout['elements'] ?? [], 'image_path'))
+            ->filter()
+            ->unique()
+            ->values()
+            ->all();
     }
 }

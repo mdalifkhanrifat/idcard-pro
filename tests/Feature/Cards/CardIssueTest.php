@@ -1,7 +1,6 @@
 <?php
 
 use App\Models\Card;
-use App\Models\CardTemplate;
 use App\Models\FamilyMember;
 use App\Models\Signatory;
 use App\Support\Tenancy\TenantContext;
@@ -17,19 +16,6 @@ beforeEach(function () {
     $this->url = "/api/v1/cardholders/{$this->holder->public_id}/cards";
     $this->year = now()->format('y');
 });
-
-/**
- * @param  array<string, mixed>  $attributes
- */
-function cardTemplate($tenant, array $attributes = []): CardTemplate
-{
-    return app(TenantContext::class)->run($tenant, function () use ($tenant, $attributes) {
-        $template = CardTemplate::factory()->create(['tenant_id' => $tenant->id, 'is_active' => true, ...$attributes]);
-        $template->elements()->create(['side' => 'front', 'type' => 'field', 'field' => 'full_name', 'x' => 5, 'y' => 5, 'width' => 40, 'height' => 6, 'z_index' => 0, 'style' => ['font_size' => 9]]);
-
-        return $template;
-    });
-}
 
 it('issues a card with a new number, the design snapshot and the expiry from the template', function () {
     Sanctum::actingAs($this->owner);

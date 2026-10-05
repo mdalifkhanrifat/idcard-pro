@@ -4,6 +4,7 @@ namespace App\Repositories\Contracts;
 
 use App\Models\Card;
 use App\Models\Cardholder;
+use App\Models\CardTemplate;
 use Illuminate\Support\Collection;
 
 /**
@@ -32,4 +33,11 @@ interface CardRepositoryInterface extends RepositoryInterface
      * Whether another holder's active card carries this RF card number.
      */
     public function rfCardInUse(string $rfCardNo, string $exceptHolderKey): bool;
+
+    /**
+     * Template image files that issued cards of this template still print (one snapshot per template version).
+     *
+     * @return array<int, string>
+     */
+    public function snapshotImagePaths(CardTemplate $template): array;
 }

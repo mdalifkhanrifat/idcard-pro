@@ -2,6 +2,7 @@
 
 namespace App\Services\Cards;
 
+use App\Models\Card;
 use App\Models\Cardholder;
 use App\Models\CardTemplate;
 use App\Models\FamilyMember;
@@ -46,6 +47,52 @@ class CardDataResolver
      */
     public function resolve(CardTemplate $template, Cardholder $cardholder, ?FamilyMember $member = null, ?CarbonInterface $on = null): array
     {
+        $signatory = $template->authority_type_id === null ? null : $this->signatories->activeFor($template->authority_type_id, $on ?? now());
+
+        return [
+            'fields' => $this->fields($template, $cardholder, $member, $on),
+            'images' => [
+                // Family cards show the cardholder's photo, as in the legacy system (family members have none of their own).
+                'photo' => $cardholder->photo ? $this->files->temporaryUrl($cardholder->photo) : null,
+                'cardholder_signature' => $cardholder->signature ? $this->files->temporaryUrl($cardholder->signature) : null,
+                'signatory_signature' => $signatory ? $this->signatoryService->signatureUrl($signatory) : null,
+            ],
+        ];
+    }
+
+    /**
+     * What an issued card prints: its text fixed at issue, its number and dates, and the photo,
+     * signatures and signatory it was issued with.
+     *
+     * @return array{fields: array<string, string>, images: array{photo: string|null, cardholder_signature: string|null, signatory_signature: string|null}}
+     */
+    public function forCard(Card $card): array
+    {
+        $card->loadMissing(['photo', 'signature', 'signatory']);
+        $fields = [
+            ...($card->values ?? []),
+            'card.number' => $card->number,
+            'card.issue_date' => $this->date($card->issue_date),
+            'card.expiry_date' => $this->date($card->expiry_date),
+        ];
+
+        return [
+            'fields' => array_filter($fields, fn (string $value) => $value !== ''),
+            'images' => [
+                'photo' => $card->photo ? $this->files->temporaryUrl($card->photo) : null,
+                'cardholder_signature' => $card->signature ? $this->files->temporaryUrl($card->signature) : null,
+                'signatory_signature' => $card->signatory ? $this->signatoryService->signatureUrl($card->signatory) : null,
+            ],
+        ];
+    }
+
+    /**
+     * Text values of a cardholder (and family member) as printed; `card.*` fields come from the issued card.
+     *
+     * @return array<string, string>
+     */
+    public function fields(CardTemplate $template, Cardholder $cardholder, ?FamilyMember $member = null, ?CarbonInterface $on = null): array
+    {
         $locale = $cardholder->tenant->locale ?: app()->getLocale();
         $cardholder->loadMissing([...Cardholder::lookupRelations(), 'photo', 'signature', 'tenant']);
         $fields = [];
@@ -83,15 +130,7 @@ class CardDataResolver
         $fields['signatory.designation'] = (string) $signatory?->designation;
         $fields['organization.name'] = $cardholder->tenant->name;
 
-        return [
-            'fields' => array_filter($fields, fn (string $value) => $value !== ''),
-            'images' => [
-                // Family cards show the cardholder's photo, as in the legacy system (family members have none of their own).
-                'photo' => $cardholder->photo ? $this->files->temporaryUrl($cardholder->photo) : null,
-                'cardholder_signature' => $cardholder->signature ? $this->files->temporaryUrl($cardholder->signature) : null,
-                'signatory_signature' => $signatory ? $this->signatoryService->signatureUrl($signatory) : null,
-            ],
-        ];
+        return array_filter($fields, fn (string $value) => $value !== '');
     }
 
     private function date(?CarbonInterface $date): string

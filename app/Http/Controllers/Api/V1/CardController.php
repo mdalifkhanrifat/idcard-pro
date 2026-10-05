@@ -6,8 +6,11 @@ use App\Data\Cards\IssueCardData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Cards\IssueCardRequest;
 use App\Http\Resources\CardResource;
+use App\Models\Card;
 use App\Models\Cardholder;
+use App\Services\Cards\CardDataResolver;
 use App\Services\Cards\CardIssueService;
+use App\Services\Cards\CardLayoutPresenter;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -32,6 +35,17 @@ class CardController extends Controller
         $card = $this->cards->issue($cardholder, IssueCardData::fromArray($request->validated(), $request->file('document')), $request->user());
 
         return (new CardResource($card))->response()->setStatusCode(201);
+    }
+
+    /**
+     * One card with what it prints: `meta.layout` (design snapshot) and `meta.values` (text and images).
+     */
+    public function show(Card $card, CardLayoutPresenter $layout, CardDataResolver $cardData): CardResource
+    {
+        Gate::authorize('cards.view');
+
+        return (new CardResource($card->load(['template', 'familyMember', 'cardholder', 'issuer', 'replacedBy', 'document'])))
+            ->additional(['meta' => ['layout' => $layout->present($card), 'values' => $cardData->forCard($card)]]);
     }
 
     /**

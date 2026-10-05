@@ -29,4 +29,10 @@ interface TenantImageRepositoryInterface extends RepositoryInterface
      * @return array<string, int> public id => id
      */
     public function idsForPublicIds(array $publicIds): array;
+
+    /**
+     * @param  array<int, int>  $ids
+     * @return Collection<int, TenantImage> keyed by id
+     */
+    public function findManyById(array $ids): Collection;
 }

@@ -26,6 +26,7 @@ use Spatie\Activitylog\Support\LogOptions;
  * @property int $card_template_id
  * @property int $template_version
  * @property array{size_mm: array{width: float, height: float}, orientation: string, is_double_sided: bool, elements: array<int, array<string, mixed>>} $layout
+ * @property array<string, string>|null $values printed text fixed at issue (CardDataResolver fields)
  * @property string $number
  * @property string|null $rf_card_no
  * @property string $reason key of config('cards.reasons')
@@ -56,7 +57,7 @@ use Spatie\Activitylog\Support\LogOptions;
  * @property-read User|null $issuer
  */
 #[Fillable([
-    'cardholder_id', 'family_member_id', 'card_template_id', 'template_version', 'layout', 'number', 'rf_card_no',
+    'cardholder_id', 'family_member_id', 'card_template_id', 'template_version', 'layout', 'values', 'number', 'rf_card_no',
     'reason', 'notes', 'document_file_id', 'photo_file_id', 'signature_file_id', 'signatory_id', 'issue_date',
     'expiry_date', 'status', 'status_changed_at', 'status_note', 'replaced_by_id', 'issued_by',
     'active_number_key', 'active_holder_key',
@@ -93,6 +94,7 @@ class Card extends Model
     {
         return [
             'layout' => 'array',
+            'values' => 'array',
             'template_version' => 'integer',
             'issue_date' => 'date',
             'expiry_date' => 'date',
