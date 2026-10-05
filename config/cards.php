@@ -35,6 +35,17 @@ return [
 
     'default_number_on_reissue' => 'keep',
 
+    /*
+     * Printing an issued card (3.6). Every print is logged in card_prints with its method;
+     * a new method (e.g. a card printer driver) only needs a new entry here.
+     */
+    'print' => [
+        'methods' => ['browser', 'pdf'],
+        'max_copies' => 10,
+        // Cards printed together in one batch
+        'max_batch' => 200,
+    ],
+
     // active: the holder's current card; replaced: a newer card was issued; revoked: cancelled (e.g. reported lost)
     'statuses' => ['active', 'replaced', 'revoked'],
 

@@ -6,10 +6,12 @@ use App\Enums\CardStatus;
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\CardFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
@@ -42,6 +44,8 @@ use Spatie\Activitylog\Support\LogOptions;
  * @property string|null $status_note
  * @property int|null $replaced_by_id
  * @property int|null $issued_by
+ * @property int $print_count copies printed so far; 0 = not printed yet (legacy "PENDING")
+ * @property Carbon|null $last_printed_at
  * @property string|null $active_number_key
  * @property string|null $active_holder_key
  * @property Carbon|null $created_at
@@ -55,12 +59,13 @@ use Spatie\Activitylog\Support\LogOptions;
  * @property-read Signatory|null $signatory
  * @property-read Card|null $replacedBy
  * @property-read User|null $issuer
+ * @property-read Collection<int, CardPrint> $prints
  */
 #[Fillable([
     'cardholder_id', 'family_member_id', 'card_template_id', 'template_version', 'layout', 'values', 'number', 'rf_card_no',
     'reason', 'notes', 'document_file_id', 'photo_file_id', 'signature_file_id', 'signatory_id', 'issue_date',
     'expiry_date', 'status', 'status_changed_at', 'status_note', 'replaced_by_id', 'issued_by',
-    'active_number_key', 'active_holder_key',
+    'active_number_key', 'active_holder_key', 'print_count', 'last_printed_at',
 ])]
 class Card extends Model
 {
@@ -100,6 +105,8 @@ class Card extends Model
             'expiry_date' => 'date',
             'status' => CardStatus::class,
             'status_changed_at' => 'datetime',
+            'print_count' => 'integer',
+            'last_printed_at' => 'datetime',
         ];
     }
 
@@ -119,6 +126,11 @@ class Card extends Model
     public function isExpired(): bool
     {
         return $this->expiry_date !== null && $this->expiry_date->lt(today());
+    }
+
+    public function isPrinted(): bool
+    {
+        return $this->print_count > 0;
     }
 
     /**
@@ -191,6 +203,16 @@ class Card extends Model
     public function issuer(): BelongsTo
     {
         return $this->belongsTo(User::class, 'issued_by');
+    }
+
+    /**
+     * Every printing of this card, newest first.
+     *
+     * @return HasMany<CardPrint, $this>
+     */
+    public function prints(): HasMany
+    {
+        return $this->hasMany(CardPrint::class)->latest('printed_at')->latest('id');
     }
 
     /**

@@ -41,6 +41,11 @@ return [
         'correction' => 'Correction',
     ],
 
+    'print' => [
+        'unknown' => 'One or more cards could not be found.',
+        'not_printable' => 'Only active, unexpired cards can be printed: :numbers. Issue a new card instead.',
+    ],
+
     'lifecycle' => [
         'not_active' => 'Only an active card can be revoked.',
     ],

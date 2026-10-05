@@ -153,14 +153,18 @@
             "signatories": "Signatories",
             "templates": "Card templates",
             "fonts": "Fonts",
-            "images": "Image library"
+            "images": "Image library",
+            "cards": "Issued cards"
         },
         "abilities": {
             "view": "View",
             "create": "Create",
             "update": "Edit",
             "delete": "Delete",
-            "import": "Import"
+            "import": "Import",
+            "issue": "Issue",
+            "print": "Print",
+            "revoke": "Revoke"
         }
     },
     "audit": {

@@ -6,6 +6,7 @@ use App\Data\Cards\CardFilter;
 use App\Models\Card;
 use App\Models\Cardholder;
 use App\Models\CardTemplate;
+use DateTimeInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
@@ -76,4 +77,19 @@ interface CardRepositoryInterface extends RepositoryInterface
     public function usesFile(int $fileId): bool;
 
     public function usesSignatory(int $signatoryId): bool;
+
+    /**
+     * Cards by public id, locked for a printing transaction, in the order given. Unknown ids are left out.
+     *
+     * @param  array<int, string>  $publicIds
+     * @return Collection<int, Card>
+     */
+    public function lockedByPublicIds(array $publicIds): Collection;
+
+    /**
+     * Add printed copies to the cards' running totals.
+     *
+     * @param  array<int, int>  $cardIds
+     */
+    public function addPrints(array $cardIds, int $copies, DateTimeInterface $printedAt): void;
 }

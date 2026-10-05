@@ -30,6 +30,8 @@ class CardResource extends JsonResource
             'status_changed_at' => $this->status_changed_at,
             'status_note' => $this->status_note,
             'template_version' => $this->template_version,
+            'print_count' => $this->print_count,
+            'last_printed_at' => $this->last_printed_at,
             'template' => $this->whenLoaded('template', fn () => ['id' => $this->template->public_id, 'name' => $this->template->name, 'code' => $this->template->code]),
             'family_member' => $this->whenLoaded('familyMember', fn () => $this->familyMember ? [
                 'id' => $this->familyMember->public_id, 'name' => $this->familyMember->name, 'relation' => $this->familyMember->relation->value,

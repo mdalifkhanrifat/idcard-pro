@@ -10,6 +10,7 @@ use App\Models\Cardholder;
 use App\Models\CardTemplate;
 use App\Models\MasterDataItem;
 use App\Repositories\Contracts\CardRepositoryInterface;
+use DateTimeInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -159,5 +160,17 @@ class CardRepository extends EloquentRepository implements CardRepositoryInterfa
     public function usesSignatory(int $signatoryId): bool
     {
         return $this->query()->where('signatory_id', $signatoryId)->exists();
+    }
+
+    public function lockedByPublicIds(array $publicIds): Collection
+    {
+        $cards = $this->query()->whereIn('public_id', $publicIds)->orderBy('id')->lockForUpdate()->get()->keyBy('public_id');
+
+        return collect($publicIds)->map(fn (string $id) => $cards->get($id))->filter()->values();
+    }
+
+    public function addPrints(array $cardIds, int $copies, DateTimeInterface $printedAt): void
+    {
+        $this->query()->whereKey($cardIds)->increment('print_count', $copies, ['last_printed_at' => $printedAt]);
     }
 }

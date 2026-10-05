@@ -153,14 +153,18 @@
             "signatories": "সইকারী",
             "templates": "কার্ড টেমপ্লেট",
             "fonts": "ফন্ট",
-            "images": "ছবির লাইব্রেরি"
+            "images": "ছবির লাইব্রেরি",
+            "cards": "ইস্যু হওয়া কার্ড"
         },
         "abilities": {
             "view": "দেখা",
             "create": "তৈরি",
             "update": "সম্পাদনা",
             "delete": "মোছা",
-            "import": "ইমপোর্ট"
+            "import": "ইমপোর্ট",
+            "issue": "ইস্যু",
+            "print": "প্রিন্ট",
+            "revoke": "বাতিল"
         }
     },
     "audit": {
