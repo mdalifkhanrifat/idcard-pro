@@ -2,7 +2,7 @@
 import { computed, reactive, ref, useTemplateRef, watch } from 'vue';
 import { watchDebounced } from '@vueuse/core';
 import { useI18n } from 'vue-i18n';
-import { FileUp, Loader2 } from 'lucide-vue-next';
+import { FileUp, Loader2, TriangleAlert } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiDialog from '@/components/ui/UiDialog.vue';
@@ -10,7 +10,7 @@ import UiInput from '@/components/ui/UiInput.vue';
 import UiSelect from '@/components/ui/UiSelect.vue';
 import UiTextarea from '@/components/ui/UiTextarea.vue';
 import CardRender from './CardRender.vue';
-import { useCardReasons } from './cards';
+import { missingImages, useCardReasons } from './cards';
 import { http, toApiError } from '@/lib/http';
 import { formatBytes } from '@/lib/format';
 import { useUiStore } from '@/stores/ui';
@@ -39,6 +39,8 @@ const busy = ref(false);
 const nextNumber = ref<{ number: string; kept: boolean } | null>(null);
 const preview = ref<{ layout: CardLayout; values: CardValues } | null>(null);
 const previewLoading = ref(false);
+/** Photo or signatures the card has a place for but nothing to print. */
+const missing = computed(() => (preview.value ? missingImages(preview.value.layout, preview.value.values) : []));
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -220,6 +222,13 @@ async function submit(): Promise<void> {
                     <UiBadge :tone="nextNumber.kept ? 'neutral' : 'success'">{{ t(nextNumber.kept ? 'cards.numberKept' : 'cards.numberNew') }}</UiBadge>
                 </template>
                 <CardRender v-if="preview" :layout="preview.layout" :values="preview.values" :box="300" />
+                <div v-if="missing.length" class="flex gap-2 rounded-lg border border-warning/40 bg-warning/10 p-3 text-xs text-fg" role="status" data-missing-images>
+                    <TriangleAlert class="size-4 shrink-0 text-warning" />
+                    <div class="space-y-1">
+                        <p class="font-medium">{{ missing.map((key) => t(`cards.missingImage.${key}`)).join(', ') }}</p>
+                        <p class="text-muted">{{ t(form.holder ? 'cards.missingImageFamily' : 'cards.missingImageHint') }}</p>
+                    </div>
+                </div>
                 <p v-else class="text-sm text-muted">{{ t('cards.previewEmpty') }}</p>
                 <p class="text-xs text-muted">{{ t('cards.previewHint') }}</p>
             </div>

@@ -1,6 +1,6 @@
 import { ref } from 'vue';
 import { http } from '@/lib/http';
-import type { IssuedCard } from '@/types';
+import type { CardLayout, CardValues, IssuedCard } from '@/types';
 
 export interface CardReasonOption {
     key: string;
@@ -41,4 +41,20 @@ export function displayStatus(card: Pick<IssuedCard, 'status' | 'is_expired'>): 
 
 export function statusTone(status: ReturnType<typeof displayStatus>): 'success' | 'neutral' | 'danger' | 'warning' {
     return ({ active: 'success', replaced: 'neutral', revoked: 'danger', expired: 'warning' } as const)[status];
+}
+
+export type CardImageKey = keyof CardValues['images'];
+
+/**
+ * Image elements of a card (photo, signatures) that have nothing to print for this holder, e.g. a family
+ * member without their own photo. Hidden elements are ignored; the element's placeholder image, if any,
+ * prints instead.
+ */
+export function missingImages(layout: CardLayout, values: CardValues): CardImageKey[] {
+    const keys = Object.keys(values.images) as CardImageKey[];
+    const missing = layout.elements
+        .filter((element) => !element.style.hidden && keys.includes(element.type as CardImageKey) && !values.images[element.type as CardImageKey])
+        .map((element) => element.type as CardImageKey);
+
+    return [...new Set(missing)];
 }

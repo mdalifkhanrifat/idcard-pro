@@ -183,6 +183,9 @@ export interface FamilyMember {
     identification_mark: string | null;
     card_no: string | null;
     sort_order: number;
+    /** The member's own photo and signature, printed on family cards. */
+    photo?: FileSummary | null;
+    signature?: FileSummary | null;
     updated_at: string;
 }
 

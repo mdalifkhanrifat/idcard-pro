@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Pencil, Plus, Trash2 } from 'lucide-vue-next';
+import { Pencil, Plus, Trash2, UserRound } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiEmpty from '@/components/ui/UiEmpty.vue';
@@ -87,8 +87,16 @@ onMounted(load);
                 <tbody>
                     <tr v-for="member in members" :key="member.id" class="border-b border-line last:border-0">
                         <td class="px-5 py-3">
-                            <p class="font-medium text-fg">{{ member.name }}</p>
-                            <p v-if="member.name_local" class="text-xs text-muted">{{ member.name_local }}</p>
+                            <div class="flex items-center gap-3">
+                                <img v-if="member.photo" :src="member.photo.url" alt="" loading="lazy" class="size-10 shrink-0 rounded-lg border border-line object-cover" />
+                                <span v-else class="flex size-10 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-muted" :title="t('cardholders.noPhoto')">
+                                    <UserRound class="size-5" />
+                                </span>
+                                <span class="min-w-0">
+                                    <span class="block font-medium text-fg">{{ member.name }}</span>
+                                    <span v-if="member.name_local" class="block text-xs text-muted">{{ member.name_local }}</span>
+                                </span>
+                            </div>
                         </td>
                         <td class="px-5 py-3">
                             <div class="flex flex-wrap gap-1">

@@ -1,3 +1,4 @@
+import { http, toApiError } from '@/lib/http';
 import type { Cardholder, CardholderStatus } from '@/types';
 
 export function statusTone(status: CardholderStatus): 'success' | 'neutral' | 'warning' {
@@ -6,6 +7,37 @@ export function statusTone(status: CardholderStatus): 'success' | 'neutral' | 'w
 
 /** Upload limits in KB; keep in sync with config/cardholder_files.php. */
 export const FILE_LIMITS = { photo: 5120, signature: 2048, document: 10240 } as const;
+
+export type HolderImage = 'photo' | 'signature';
+
+/**
+ * Upload the photo and signature picked in a form, for the cardholder or one of their family members.
+ * Each image is uploaded on its own, so one failing does not stop the other; failures are reported back.
+ */
+export async function uploadHolderImages(
+    cardholderId: string,
+    images: Partial<Record<HolderImage, File | null>>,
+    onError: (collection: HolderImage, message: string) => void,
+    familyMemberId: string | null = null,
+): Promise<void> {
+    for (const [collection, file] of Object.entries(images) as [HolderImage, File | null][]) {
+        if (!file) {
+            continue;
+        }
+        const body = new FormData();
+        body.append('collection', collection);
+        body.append('file', file);
+        if (familyMemberId) {
+            body.append('family_member', familyMemberId);
+        }
+        try {
+            await http.post(`/cardholders/${cardholderId}/files`, body);
+        } catch (error) {
+            const apiError = toApiError(error);
+            onError(collection, apiError.errors.file?.[0] ?? apiError.message);
+        }
+    }
+}
 
 /** Master data reference fields: form field => master data type. */
 export const LOOKUP_FIELDS = {

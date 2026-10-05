@@ -419,6 +419,7 @@
             "details": "Details"
         },
         "family": {
+            "imagesHint": "Their own photo and signature are printed on family cards. Without them the card prints no photo (not the cardholder's).",
             "title": "Family members",
             "add": "Add family member",
             "editTitle": "Edit family member",
@@ -1004,6 +1005,13 @@
         "documentHint": "PDF or image (e.g. a police report for a lost card). Kept with the cardholder’s documents.",
         "preview": "Preview",
         "previewEmpty": "Choose a template to see the card.",
+        "missingImage": {
+            "photo": "No photo",
+            "cardholder_signature": "No holder signature",
+            "signatory_signature": "No signatory signature"
+        },
+        "missingImageHint": "The template's placeholder image prints instead, or nothing. Add it on the cardholder page to print it.",
+        "missingImageFamily": "Family cards print the member's own photo and signature, never the cardholder's. Add them in the Family tab, or the template's placeholder image (or nothing) prints.",
         "previewHint": "With the current details. The number is reserved only when you issue the card; text and images are then fixed on the card.",
         "numberKept": "Same number as the previous card",
         "numberNew": "New number",

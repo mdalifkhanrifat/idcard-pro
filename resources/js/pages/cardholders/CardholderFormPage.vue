@@ -14,7 +14,7 @@ import CustomFieldInputs from './CustomFieldInputs.vue';
 import { useCustomFields } from '@/composables/useCustomFields';
 import { useMasterDataOptions } from '@/composables/useMasterDataOptions';
 import { http, toApiError } from '@/lib/http';
-import { blankForm, FILE_LIMITS, formFromCardholder, LOOKUP_FIELDS, toPayload } from './cardholder';
+import { blankForm, FILE_LIMITS, formFromCardholder, LOOKUP_FIELDS, toPayload, uploadHolderImages } from './cardholder';
 import { useUiStore } from '@/stores/ui';
 import type { Cardholder } from '@/types';
 
@@ -91,21 +91,9 @@ onMounted(async () => {
     }
 });
 
-async function uploadImages(id: string): Promise<void> {
-    for (const [collection, file] of [['photo', photo.value], ['signature', signature.value]] as const) {
-        if (!file) {
-            continue;
-        }
-        const body = new FormData();
-        body.append('collection', collection);
-        body.append('file', file);
-        try {
-            await http.post(`/cardholders/${id}/files`, body);
-        } catch (error) {
-            const apiError = toApiError(error);
-            ui.notify(t('cardholders.files.uploadFailed', { name: t(`cardholders.files.${collection}`), message: apiError.errors.file?.[0] ?? apiError.message }), 'error');
-        }
-    }
+function uploadImages(id: string): Promise<void> {
+    return uploadHolderImages(id, { photo: photo.value, signature: signature.value }, (collection, message) =>
+        ui.notify(t('cardholders.files.uploadFailed', { name: t(`cardholders.files.${collection}`), message }), 'error'));
 }
 
 async function submit(): Promise<void> {

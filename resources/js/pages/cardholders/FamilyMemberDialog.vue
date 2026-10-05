@@ -5,6 +5,8 @@ import UiButton from '@/components/ui/UiButton.vue';
 import UiDialog from '@/components/ui/UiDialog.vue';
 import UiInput from '@/components/ui/UiInput.vue';
 import UiSelect from '@/components/ui/UiSelect.vue';
+import CardholderImagePicker from './CardholderImagePicker.vue';
+import { FILE_LIMITS, uploadHolderImages } from './cardholder';
 import { useMasterDataOptions } from '@/composables/useMasterDataOptions';
 import { http, toApiError } from '@/lib/http';
 import { useUiStore } from '@/stores/ui';
@@ -25,6 +27,8 @@ const blank = () => ({
 const form = reactive(blank());
 const errors = ref<Record<string, string[]>>({});
 const busy = ref(false);
+const photo = ref<File | null>(null);
+const signature = ref<File | null>(null);
 
 const relationOptions = computed(() => RELATIONS.map((value) => ({ value, label: t(`cardholders.family.relations.${value}`) })));
 const genderOptions = computed(() => (['male', 'female', 'other'] as const).map((value) => ({ value, label: t(`cardholders.gender.${value}`) })));
@@ -35,6 +39,8 @@ watch(open, (value) => {
     }
     lookups.load(['blood_group']);
     errors.value = {};
+    photo.value = null;
+    signature.value = null;
     const m = props.member;
     Object.assign(form, blank(), m ? {
         relation: m.relation, name: m.name, name_local: m.name_local ?? '', gender: m.gender ?? '', date_of_birth: m.date_of_birth ?? '', phone: m.phone ?? '',
@@ -49,7 +55,10 @@ async function submit(): Promise<void> {
     const payload = Object.fromEntries(Object.entries(form).map(([key, value]) => [key, value.trim() === '' ? null : value.trim()]));
     try {
         const base = `/cardholders/${props.cardholderId}/family-members`;
-        await (props.member ? http.put(`${base}/${props.member.id}`, payload) : http.post(base, payload));
+        const { data } = await (props.member ? http.put(`${base}/${props.member.id}`, payload) : http.post(base, payload));
+        // The member's own photo and signature are uploaded once the member is saved
+        await uploadHolderImages(props.cardholderId, { photo: photo.value, signature: signature.value }, (collection, message) =>
+            ui.notify(t('cardholders.files.uploadFailed', { name: t(`cardholders.files.${collection}`), message }), 'error'), data.data.id);
         ui.notify(t('common.saved'));
         open.value = false;
         emit('saved');
@@ -79,6 +88,11 @@ async function submit(): Promise<void> {
             <UiInput v-model="form.passport_no" :label="t('cardholders.fields.passport_no')" :error="errors.passport_no" />
             <UiInput v-model="form.card_no" :label="t('cardholders.family.cardNo')" :error="errors.card_no" />
             <UiInput v-model="form.identification_mark" :label="t('cardholders.fields.identification_mark')" :error="errors.identification_mark" class="sm:col-span-2" />
+            <div class="grid gap-4 sm:col-span-2 sm:grid-cols-2">
+                <CardholderImagePicker v-model="photo" :label="t('cardholders.files.photo')" :current-url="member?.photo?.url" :max-kb="FILE_LIMITS.photo" />
+                <CardholderImagePicker v-model="signature" :label="t('cardholders.files.signature')" :current-url="member?.signature?.url" :max-kb="FILE_LIMITS.signature" aspect="wide" />
+                <p class="text-xs text-muted sm:col-span-2">{{ t('cardholders.family.imagesHint') }}</p>
+            </div>
         </form>
         <template #footer>
             <UiButton variant="secondary" @click="open = false">{{ t('common.cancel') }}</UiButton>
