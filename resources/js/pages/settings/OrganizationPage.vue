@@ -18,7 +18,7 @@ const { t } = useI18n();
 const auth = useAuthStore();
 const ui = useUiStore();
 
-const form = reactive({ name: '', legal_name: '', email: '', phone: '', country_code: '', timezone: 'UTC', locale: 'en', primary_color: '#0f62fe', card_number_format: '{CODE}/{YY}{SEQ:6}' });
+const form = reactive({ name: '', legal_name: '', email: '', phone: '', country_code: '', timezone: 'UTC', locale: 'en', primary_color: '#0f62fe', card_number_format: '{CODE}/{YY}{SEQ:6}', card_number_on_reissue: 'keep' });
 /** Landscape default size of new card templates in mm (legacy Template Setup). */
 const cardSize = reactive({ width: 85.6 as number | string, height: 54 as number | string });
 const sampleCode = ref('EMP');
@@ -136,6 +136,16 @@ async function save(): Promise<void> {
                         <span class="ml-1 rounded-md bg-surface-2 px-2 py-1 font-mono text-fg">{{ previewError ? '—' : numberPreview }}</span>
                     </p>
                     <p class="mt-3 text-xs text-muted">{{ t('settings.cardNumber.tokens') }}</p>
+                    <fieldset :disabled="!canEdit" class="mt-4 border-t border-line pt-4">
+                        <UiSelect
+                            v-model="form.card_number_on_reissue"
+                            :label="t('settings.cardNumber.onReissue')"
+                            :options="(['keep', 'new'] as const).map((value) => ({ value, label: t(`settings.cardNumber.reissue.${value}`) }))"
+                            :error="errors.card_number_on_reissue"
+                            data-setting="card_number_on_reissue"
+                        />
+                        <p class="mt-1.5 text-xs text-muted">{{ t(`settings.cardNumber.reissueHint.${form.card_number_on_reissue}`) }}</p>
+                    </fieldset>
                 </UiCard>
                 <UiCard :title="t('settings.cardSize.title')" :description="t('settings.cardSize.description')">
                     <fieldset :disabled="!canEdit" class="grid gap-4 sm:grid-cols-3">

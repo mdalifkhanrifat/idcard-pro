@@ -13,6 +13,8 @@ export interface Tenant {
     primary_color: string;
     logo_url: string | null;
     card_number_format?: string;
+    /** Number when a holder gets another card from a template with the same code. */
+    card_number_on_reissue?: 'keep' | 'new';
     /** Landscape default for new templates, in mm. */
     default_card_size?: { width: number; height: number };
     status: 'active' | 'suspended';

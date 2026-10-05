@@ -211,7 +211,16 @@
             "format": "Format",
             "sampleCode": "Sample card type code",
             "next": "Next number:",
-            "tokens": "{'{CODE}'} card type code · {'{YYYY}'} / {'{YY}'} year · {'{MM}'} month · {'{SEQ:6}'} running number with 6 digits. Default {'{CODE}'}/{'{YY}'}{'{SEQ:6}'} gives EMP/26000001."
+            "tokens": "{'{CODE}'} card type code · {'{YYYY}'} / {'{YY}'} year · {'{MM}'} month · {'{SEQ:6}'} running number with 6 digits. Default {'{CODE}'}/{'{YY}'}{'{SEQ:6}'} gives EMP/26000001.",
+            "onReissue": "Number on a new card for the same person",
+            "reissue": {
+                "keep": "Keep the current number",
+                "new": "Always a new number"
+            },
+            "reissueHint": {
+                "keep": "A replacement card (lost, damaged, promotion…) from a template with the same code keeps the holder’s number, as in the previous system. The old card is marked replaced.",
+                "new": "Every card gets the next number; a lost card’s number never becomes valid again."
+            }
         },
         "cardSize": {
             "title": "Default card size",
@@ -1026,6 +1035,26 @@
             "lost": "Lost",
             "damaged": "Damaged",
             "correction": "Correction"
-        }
+        },
+        "pageTitle": "Card issuance",
+        "pageSubtitle": "Every card issued to cardholders and their families. Issue new cards from a cardholder’s Cards tab.",
+        "searchPlaceholder": "Search by card number, RF number, name or employee no.",
+        "summary": {
+            "active": "Active cards",
+            "expired": "Expired (still active)",
+            "expiring": "Expiring within {days} days",
+            "revoked": "Revoked"
+        },
+        "validityFilter": "Validity",
+        "validityOptions": {
+            "valid": "Valid",
+            "expiring": "Expiring within {days} days",
+            "expired": "Expired"
+        },
+        "expiringDays": "Days ahead",
+        "familyCards": "Family members",
+        "familyOf": "Family of {name}",
+        "listEmpty": "No cards match.",
+        "listEmptyHint": "Change the filters, or issue a card from a cardholder’s page."
     }
 }
