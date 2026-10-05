@@ -241,6 +241,23 @@ export interface CardholderImport {
     created_at: string;
 }
 
+/** An image in the organization library (logos, backgrounds), linked from card templates. */
+export interface LibraryImage {
+    id: string;
+    name: string;
+    /** Pixels. */
+    width: number;
+    height: number;
+    /** Bytes. */
+    size: number;
+    mime_type: string;
+    /** Signed link, stable for a day. */
+    url: string;
+    /** Templates linking this image (library listing only). */
+    templates_count?: number;
+    created_at: string;
+}
+
 /** A licensed font file uploaded by the organization (one weight and style of a family). */
 export interface TenantFont {
     id: string;
@@ -354,6 +371,8 @@ export interface DesignElement {
     content: string | null;
     qr_lines: QrLine[] | null;
     image: string | null;
+    /** Public id of a linked library image (instead of `image`). */
+    library_image?: string | null;
     image_url?: string | null;
     x: number;
     y: number;

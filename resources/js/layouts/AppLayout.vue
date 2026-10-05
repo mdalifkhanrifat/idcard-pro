@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuRoot, DropdownMenuSeparator, DropdownMenuTrigger } from 'reka-ui';
 import {
-    BadgeCheck, Building2, CalendarClock, Database, ChevronDown, ContactRound, CreditCard, FileBarChart, LayoutDashboard, LayoutTemplate, ListPlus,
+    BadgeCheck, Building2, CalendarClock, Database, ChevronDown, ContactRound, CreditCard, FileBarChart, Images, LayoutDashboard, LayoutTemplate, ListPlus,
     LogOut, Menu, ScrollText, Settings, ShieldCheck, Signature, Type, UserCog, Users, X,
 } from 'lucide-vue-next';
 import LocaleThemeSwitch from '@/components/LocaleThemeSwitch.vue';
@@ -48,6 +48,7 @@ const sections = computed<{ title?: string; items: NavItem[] }[]>(() => {
             { to: '/master-data', label: t('nav.masterData'), icon: Database, permission: 'master_data.view' },
             { to: '/custom-fields', label: t('nav.customFields'), icon: ListPlus, permission: 'settings.view' },
             { to: '/signatories', label: t('nav.signatories'), icon: Signature, permission: 'signatories.view' },
+            { to: '/image-library', label: t('nav.imageLibrary'), icon: Images, permission: 'images.view' },
             { to: '/fonts', label: t('nav.fonts'), icon: Type, permission: 'fonts.view' },
         ].filter((item) => auth.can(item.permission));
         if (setup.length) {

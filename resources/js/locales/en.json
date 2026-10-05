@@ -97,7 +97,8 @@
         "customFields": "Custom fields",
         "signatories": "Signatories",
         "cardsSection": "Cards",
-        "fonts": "Fonts"
+        "fonts": "Fonts",
+        "imageLibrary": "Image library"
     },
     "dashboard": {
         "welcome": "Welcome, {name}",
@@ -151,7 +152,8 @@
             "cardholders": "Cardholders",
             "signatories": "Signatories",
             "templates": "Card templates",
-            "fonts": "Fonts"
+            "fonts": "Fonts",
+            "images": "Image library"
         },
         "abilities": {
             "view": "View",
@@ -878,7 +880,12 @@
         "barcodeModuleSmall": "Bars are very thin ({mm} mm); widen the element or use a shorter field so scanners can read it.",
         "barcodeSampleInvalid": "The sample value cannot be encoded in this type; real values must match it (e.g. EAN-13 needs 12 or 13 digits).",
         "tenantFonts": "Organization fonts",
-        "importedMissingFonts": "These fonts are not uploaded here and were replaced by the default font: {fonts}. Upload them under Setup → Fonts to use them."
+        "importedMissingFonts": "These fonts are not uploaded here and were replaced by the default font: {fonts}. Upload them under Setup → Fonts to use them.",
+        "library": "Library",
+        "chooseFromLibrary": "Choose from library",
+        "libraryEmpty": "The image library is empty.",
+        "fromLibrary": "From the image library",
+        "libraryHint": "Linked from the library: replacing it there changes every template that uses it."
     },
     "fonts": {
         "title": "Fonts",
@@ -919,5 +926,29 @@
         "emptyHint": "The built-in Bangla and Latin fonts are always available.",
         "loadFailed": "This file could not be loaded by the browser.",
         "builtIn": "Built-in fonts (Inter, Roboto, Noto Sans and Serif Bengali, Hind Siliguri, Tiro Bangla, Baloo Da 2, Anek Bangla) are always available and need no upload."
+    },
+    "library": {
+        "title": "Image library",
+        "subtitle": "Logos and backgrounds uploaded once and used in any card template. To change a logo everywhere, upload the new one and replace the old one in every template.",
+        "upload": "Upload images",
+        "uploading": "Uploading {count}…",
+        "searchPlaceholder": "Search by name",
+        "empty": "No images in the library yet.",
+        "emptyHint": "PNG keeps transparency. Images are cleaned and stored privately.",
+        "selectHint": "Select an image to see where it is used.",
+        "dimensions": "{width} × {height} px",
+        "size": "Size",
+        "usedIn": "Used in",
+        "templates": "no templates | 1 template | {count} templates",
+        "rename": "Rename",
+        "name": "Name",
+        "replace": "Replace in every template",
+        "replaceTitle": "Replace “{name}”",
+        "replaceHint": "Choose the image that takes its place in {count} template(s). Each changed template gets a new version; cards already issued keep the old image.",
+        "replaceNone": "Upload the new image first, then replace.",
+        "replaceConfirm": "Replace everywhere",
+        "replaced": "Replaced in {count} template(s).",
+        "deleteConfirm": "Delete {name}?",
+        "inUseHint": "Images used by templates cannot be deleted. Remove them there or replace them first."
     }
 }
