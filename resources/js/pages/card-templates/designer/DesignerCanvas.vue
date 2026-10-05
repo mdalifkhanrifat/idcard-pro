@@ -39,8 +39,8 @@ const { t } = useI18n();
 const SAFE_MARGIN_MM = 3;
 
 const emit = defineEmits<{
-    /** `additive`: Shift/Ctrl-click adds to or removes from the selection. */
-    select: [key: number | null, additive?: boolean];
+    /** `additive`: Shift/Ctrl-click adds to or removes from the selection; `single`: one member of a group (double-click). */
+    select: [key: number | null, additive?: boolean, single?: boolean];
     /** Elements inside a dragged selection box. */
     selectMany: [keys: number[]];
     /** Several selected elements dragged together, by mm from where they started. */
@@ -112,7 +112,9 @@ function start(event: PointerEvent, item: DesignerItem, mode: 'move' | 'rotate' 
 
         return;
     }
-    const inGroup = mode === 'move' && selectedSet.value.size > 1 && selectedSet.value.has(item.key);
+    // A grouped element always moves with its group, even before the selection shows it.
+    const members = item.style.group ? layers.value.filter((candidate) => candidate.style.group === item.style.group).map((candidate) => candidate.key) : [];
+    const inGroup = mode === 'move' && ((selectedSet.value.size > 1 && selectedSet.value.has(item.key)) || members.length > 1);
     if (!inGroup) {
         emit('select', item.key);
     }
@@ -124,7 +126,8 @@ function start(event: PointerEvent, item: DesignerItem, mode: 'move' | 'rotate' 
         return;
     }
     event.preventDefault();
-    const group = inGroup ? new Map(props.items.filter((candidate) => selectedSet.value.has(candidate.key)).map((candidate) => [candidate.key, { x: candidate.x, y: candidate.y, width: candidate.width, height: candidate.height }])) : null;
+    const moving = new Set([...(selectedSet.value.has(item.key) ? selectedSet.value : []), ...members]);
+    const group = inGroup ? new Map(props.items.filter((candidate) => moving.has(candidate.key)).map((candidate) => [candidate.key, { x: candidate.x, y: candidate.y, width: candidate.width, height: candidate.height }])) : null;
     // The outline's screen box is centred on the element even when tilted.
     const outlineBox = (event.currentTarget as HTMLElement).closest('[data-key]')?.getBoundingClientRect();
     drag = {
@@ -422,6 +425,7 @@ onBeforeUnmount(() => {
             :style="box(item)"
             :data-key="item.key"
             @pointerdown.stop="start($event, item, 'move')"
+            @dblclick.stop="item.style.group && emit('select', item.key, false, true)"
         >
             <template v-if="editable && showHandles && item.key === selectedKey && !item.style.locked">
                 <span

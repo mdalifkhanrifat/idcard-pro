@@ -110,22 +110,38 @@ export function useDesigner() {
     });
     const selection = computed(() => items.value.filter((item) => selectedKeys.value.includes(item.key)));
 
-    /** Select one element, or add/remove it from the selection (Shift/Ctrl-click). */
-    function select(key: number | null, additive = false): void {
+    /** Keys of the element's group on its side (just the element when it is not grouped). */
+    function groupOf(key: number): number[] {
+        const item = items.value.find((candidate) => candidate.key === key);
+        if (!item?.style.group) {
+            return [key];
+        }
+
+        return items.value.filter((candidate) => candidate.side === item.side && candidate.style.group === item.style.group).map((candidate) => candidate.key);
+    }
+
+    /**
+     * Select one element (with its whole group), or add/remove it and its group (Shift/Ctrl-click).
+     * `single` picks one member of a group to edit it (layer list, double-click).
+     */
+    function select(key: number | null, additive = false, single = false): void {
         if (key === null || !additive) {
-            selectedKeys.value = key === null ? [] : [key];
+            selectedKeys.value = key === null ? [] : single ? [key] : groupOf(key);
             selectedKey.value = key;
 
             return;
         }
-        const keys = selectedKeys.value.includes(key) ? selectedKeys.value.filter((candidate) => candidate !== key) : [...selectedKeys.value, key];
+        const members = groupOf(key);
+        const keys = selectedKeys.value.includes(key) ? selectedKeys.value.filter((candidate) => !members.includes(candidate)) : [...new Set([...selectedKeys.value, ...members])];
         selectedKeys.value = keys;
-        selectedKey.value = keys.at(-1) ?? null;
+        selectedKey.value = keys.includes(key) ? key : (keys.at(-1) ?? null);
     }
 
+    /** Select several elements; touching one member of a group selects the whole group. */
     function selectMany(keys: number[]): void {
-        selectedKeys.value = keys;
-        selectedKey.value = keys.at(-1) ?? null;
+        const all = [...new Set(keys.flatMap(groupOf))];
+        selectedKeys.value = all;
+        selectedKey.value = keys.at(-1) ?? all.at(-1) ?? null;
     }
     const snapshot = computed(() => JSON.stringify(items.value.map(toPayload)));
     const dirty = computed(() => snapshot.value !== savedSnapshot.value);
@@ -383,15 +399,72 @@ export function useDesigner() {
 
     /** Copy an element just above itself, slightly offset (a side keeps a single background). */
     function duplicate(key: number): void {
-        const index = items.value.findIndex((item) => item.key === key);
-        const source = items.value[index];
-        if (!source || source.type === 'background') {
-            return;
+        duplicateMany([key]);
+    }
+
+    /**
+     * Copy several elements; copies of a whole group form a new group of their own, a lone copy leaves
+     * its group. The copies become the selection.
+     */
+    function duplicateMany(keys: number[]): void {
+        const sources = items.value.filter((item) => keys.includes(item.key) && item.type !== 'background');
+        const groups = new Map<string, string>();
+        const copies: number[] = [];
+        for (const source of sources) {
+            const copy = toItem({ ...source, id: undefined });
+            const group = source.style.group;
+            if (group && sources.filter((item) => item.style.group === group && item.side === source.side).length > 1) {
+                groups.set(group, groups.get(group) ?? newGroupId());
+                copy.style.group = groups.get(group);
+            } else {
+                delete copy.style.group;
+            }
+            Object.assign(copy, clampRect({ x: source.x + 2, y: source.y + 2, width: source.width, height: source.height }, source.style));
+            items.value.splice(items.value.indexOf(source) + 1, 0, copy);
+            copies.push(copy.key);
         }
-        const copy = toItem({ ...source, id: undefined });
-        Object.assign(copy, clampRect({ x: source.x + 2, y: source.y + 2, width: source.width, height: source.height }, source.style));
-        items.value.splice(index + 1, 0, copy);
-        selectedKey.value = copy.key;
+        if (copies.length) {
+            selectedKeys.value = copies;
+            selectedKey.value = copies.at(-1) ?? null;
+        }
+    }
+
+    /** A group id not used on either side yet. */
+    function newGroupId(): string {
+        const used = new Set(items.value.map((item) => item.style.group));
+        let id: string;
+        do {
+            id = `g${Math.random().toString(36).slice(2, 8)}`;
+        } while (used.has(id));
+
+        return id;
+    }
+
+    /**
+     * Join the selected elements of the current side into one group (they keep it when saved).
+     * Returns false when fewer than two elements can be grouped.
+     */
+    function group(keys: number[]): boolean {
+        const members = items.value.filter((item) => keys.includes(item.key) && item.side === side.value && item.type !== 'background');
+        if (members.length < 2) {
+            return false;
+        }
+        const id = newGroupId();
+        for (const item of members) {
+            item.style.group = id;
+        }
+
+        return true;
+    }
+
+    /** Break up the groups of the selected elements. */
+    function ungroup(keys: number[]): void {
+        const groups = new Set(items.value.filter((item) => keys.includes(item.key)).map((item) => item.style.group).filter(Boolean));
+        for (const item of items.value) {
+            if (item.side === side.value && groups.has(item.style.group)) {
+                delete item.style.group;
+            }
+        }
     }
 
     /** Replace the whole layout (imported file or ready-made design); stays unsaved and can be undone. */
@@ -427,6 +500,8 @@ export function useDesigner() {
             return false;
         }
         const copy = toItem({ ...source, id: undefined, side: target });
+        // A lone copy on the other side is not part of a group
+        delete copy.style.group;
         if (source.type === 'background') {
             items.value.unshift(copy);
         } else {
@@ -536,6 +611,9 @@ export function useDesigner() {
         replaceAll,
         setRect,
         setAngle,
+        group,
+        ungroup,
+        duplicateMany,
         clampRect,
         save,
         undo,

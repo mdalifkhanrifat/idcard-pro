@@ -353,6 +353,8 @@ export interface DesignElementStyle {
     locked?: boolean;
     /** Kept in the design but not printed. */
     hidden?: boolean;
+    /** Editing only: elements of a side with the same id are selected and moved together. */
+    group?: string;
     /** Shadow, on when a colour is set; offsets and blur in mm. */
     shadow_color?: string;
     shadow_x?: number;

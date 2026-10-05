@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref, useTemplateRef } from 'vue';
 import { onBeforeRouteLeave, useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { AlertCircle, ArrowLeft, Download, EyeOff, Frame, Grid3x3, LayoutTemplate, Layers, Lock, Plus, Redo2, Save, Undo2, Upload, ZoomIn, ZoomOut } from 'lucide-vue-next';
+import { AlertCircle, ArrowLeft, Download, EyeOff, Frame, Grid3x3, Group, Ungroup, LayoutTemplate, Layers, Lock, Plus, Redo2, Save, Undo2, Upload, ZoomIn, ZoomOut } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import DesignerCanvas from './designer/DesignerCanvas.vue';
@@ -217,8 +217,13 @@ function onKeydown(event: KeyboardEvent): void {
         remove();
     } else if (command && key === 'd') {
         event.preventDefault();
-        for (const selectedItem of selection.value) {
-            designer.duplicate(selectedItem.key);
+        designer.duplicateMany(selectedKeys.value);
+    } else if (command && key === 'g') {
+        event.preventDefault();
+        if (event.shiftKey) {
+            designer.ungroup(selectedKeys.value);
+        } else {
+            designer.group(selectedKeys.value);
         }
     } else if (key === 'escape') {
         designer.select(null);
@@ -388,10 +393,11 @@ function itemTitle(item: DesignerItem): string {
                     :key="item.key"
                     class="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm"
                     :class="selectedKeys.includes(item.key) ? 'bg-brand text-brand-contrast' : 'text-fg hover:bg-surface-2'"
-                    @click="designer.select(item.key, $event.shiftKey || $event.ctrlKey || $event.metaKey)"
+                    @click="designer.select(item.key, $event.shiftKey || $event.ctrlKey || $event.metaKey, true)"
                 >
                     <span class="truncate" :class="item.style.hidden && 'line-through opacity-60'">{{ itemTitle(item) }}</span>
                     <span class="ml-auto flex shrink-0 gap-1 opacity-70">
+                        <Group v-if="item.style.group" class="size-3.5" :title="t('designer.grouped')" data-grouped />
                         <Lock v-if="item.style.locked" class="size-3.5" />
                         <EyeOff v-if="item.style.hidden" class="size-3.5" />
                     </span>
@@ -421,7 +427,7 @@ function itemTitle(item: DesignerItem): string {
                     :invalid-keys="invalidKeys"
                     :snap="snap"
                     :guides="guides"
-                    @select="(key, additive) => designer.select(key, additive)"
+                    @select="(key, additive, single) => designer.select(key, additive, single)"
                     @select-many="designer.selectMany"
                     @move-group="designer.moveBy"
                     @rect="designer.setRect"
@@ -437,6 +443,28 @@ function itemTitle(item: DesignerItem): string {
                         <UiButton variant="secondary" size="sm" class="text-danger" @click="remove">{{ t('common.delete') }}</UiButton>
                     </div>
                     <AlignTools :count="selection.length" @align="designer.align(selectedKeys, $event)" @distribute="designer.distribute(selectedKeys, $event)" />
+                    <!-- Groups: kept when saved; a click selects the whole group, double-click or the layer list one member -->
+                    <div v-if="selection.length > 1 || selection.some((item) => item.style.group)" class="flex flex-wrap gap-1.5">
+                        <button
+                            v-if="selection.length > 1 && !(new Set(selection.map((item) => item.style.group)).size === 1 && selection[0].style.group)"
+                            class="inline-flex items-center gap-1 rounded-md border border-line px-2 py-1 text-xs text-fg hover:bg-surface-2"
+                            :title="'Ctrl+G'"
+                            data-group
+                            @click="designer.group(selectedKeys)"
+                        >
+                            <Group class="size-3.5" />{{ t('designer.group') }}
+                        </button>
+                        <button
+                            v-if="selection.some((item) => item.style.group)"
+                            class="inline-flex items-center gap-1 rounded-md border border-line px-2 py-1 text-xs text-fg hover:bg-surface-2"
+                            :title="'Ctrl+Shift+G'"
+                            data-ungroup
+                            @click="designer.ungroup(selectedKeys)"
+                        >
+                            <Ungroup class="size-3.5" />{{ t('designer.ungroup') }}
+                        </button>
+                        <p v-if="selection.some((item) => item.style.group)" class="w-full text-xs text-muted">{{ t('designer.groupHint') }}</p>
+                    </div>
                     <p class="text-xs text-muted">{{ t('designer.multiHint') }}</p>
                 </template>
                 <AlignTools

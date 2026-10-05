@@ -768,7 +768,7 @@
         "redo": "Redo",
         "snap": "Snap to grid",
         "snapOff": "No snap",
-        "shortcuts": "Arrows move 1 mm (Shift 0.1 mm) · edges snap to other elements (Alt: free) · Shift-click / box selects several · Del removes · Ctrl+D copies · Ctrl+Z undoes · Ctrl+S saves",
+        "shortcuts": "Arrows move 1 mm (Shift 0.1 mm) · edges snap to other elements (Alt: free) · Shift-click / box selects several · Ctrl+G groups, Ctrl+Shift+G ungroups · Del removes · Ctrl+D copies · Ctrl+Z undoes · Ctrl+S saves",
         "previewWith": "Preview with",
         "sampleData": "Sample data",
         "findCardholder": "Find a cardholder…",
@@ -900,7 +900,11 @@
         "tilt": "Tilt (°)",
         "bleed": "May be cut at the card edge",
         "bleedHint": "Lets a tilted element reach past the card edge, where it is cut off (e.g. a diagonal ribbon). Without it, the tilted element stays on the card.",
-        "tiltHandle": "Drag to tilt (Shift: 15° steps)"
+        "tiltHandle": "Drag to tilt (Shift: 15° steps)",
+        "group": "Group",
+        "ungroup": "Ungroup",
+        "grouped": "Grouped",
+        "groupHint": "A click selects the whole group; double-click an element or pick it in the layer list to change it alone."
     },
     "fonts": {
         "title": "Fonts",
