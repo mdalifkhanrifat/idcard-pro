@@ -40,4 +40,26 @@ interface CardRepositoryInterface extends RepositoryInterface
      * @return array<int, string>
      */
     public function snapshotImagePaths(CardTemplate $template): array;
+
+    /**
+     * Record the shared things (library images, fonts) a card's design uses.
+     *
+     * @param  array<string, array<int, string>>  $assets  kind => references
+     */
+    public function recordAssets(Card $card, array $assets): void;
+
+    public function usesAsset(string $kind, string $reference): bool;
+
+    public function existsForCardholder(int $cardholderId): bool;
+
+    public function existsForFamilyMember(int $familyMemberId): bool;
+
+    public function existsForTemplate(int $templateId): bool;
+
+    /**
+     * Whether a card printed this photo or signature file.
+     */
+    public function usesFile(int $fileId): bool;
+
+    public function usesSignatory(int $signatoryId): bool;
 }

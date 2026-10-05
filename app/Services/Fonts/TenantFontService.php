@@ -3,7 +3,9 @@
 namespace App\Services\Fonts;
 
 use App\Exceptions\BusinessRuleException;
+use App\Models\CardAsset;
 use App\Models\TenantFont;
+use App\Repositories\Contracts\CardRepositoryInterface;
 use App\Repositories\Contracts\CardTemplateElementRepositoryInterface;
 use App\Repositories\Contracts\TenantFontRepositoryInterface;
 use App\Support\Media\FontInspector;
@@ -34,6 +36,7 @@ class TenantFontService
         private CardTemplateElementRepositoryInterface $elements,
         private FontInspector $inspector,
         private TenantContext $tenancy,
+        private CardRepositoryInterface $cards,
     ) {}
 
     /**
@@ -101,6 +104,9 @@ class TenantFontService
             $templates = $this->elements->templatesUsingFont($font->family);
             if ($templates !== []) {
                 throw new BusinessRuleException(__('fonts.in_use', ['family' => $font->family, 'templates' => implode(', ', $templates)]));
+            }
+            if ($this->cards->usesAsset(CardAsset::FONT, $font->family)) {
+                throw new BusinessRuleException(__('cards.in_use.font', ['family' => $font->family]));
             }
         }
 

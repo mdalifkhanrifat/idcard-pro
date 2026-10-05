@@ -41,6 +41,20 @@ return [
         'correction' => 'Correction',
     ],
 
+    'lifecycle' => [
+        'not_active' => 'Only an active card can be revoked.',
+    ],
+
+    'in_use' => [
+        'cardholder' => 'This person has issued cards, which are kept as records. Mark them inactive instead of deleting.',
+        'family_member' => 'This family member has issued cards, which are kept as records.',
+        'template' => 'Cards were issued from this template. Deactivate it instead of deleting; issued cards keep their design.',
+        'signatory' => 'Issued cards carry this signatory’s signature. Deactivate the signatory instead of deleting.',
+        'file' => 'This photo or signature is printed on an issued card. Upload a new one instead; the old one stays with the card.',
+        'library_image' => 'Issued cards print this image, so it cannot be deleted.',
+        'font' => 'Issued cards print in “:family”, so its last file cannot be deleted.',
+    ],
+
     'values' => [
         'gender' => [
             'male' => 'Male',

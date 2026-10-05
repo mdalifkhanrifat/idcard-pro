@@ -3,7 +3,9 @@
 namespace App\Services\ImageLibrary;
 
 use App\Exceptions\BusinessRuleException;
+use App\Models\CardAsset;
 use App\Models\TenantImage;
+use App\Repositories\Contracts\CardRepositoryInterface;
 use App\Repositories\Contracts\CardTemplateElementRepositoryInterface;
 use App\Repositories\Contracts\CardTemplateRepositoryInterface;
 use App\Repositories\Contracts\TenantImageRepositoryInterface;
@@ -37,6 +39,7 @@ class TenantImageService
         private CardTemplateRepositoryInterface $templates,
         private ImageSanitizer $sanitizer,
         private TenantContext $tenancy,
+        private CardRepositoryInterface $cards,
     ) {}
 
     /**
@@ -82,6 +85,9 @@ class TenantImageService
         $templates = $this->elements->templatesUsingLibraryImage($image);
         if ($templates !== []) {
             throw new BusinessRuleException(__('images.in_use', ['templates' => implode(', ', $templates)]));
+        }
+        if ($this->cards->usesAsset(CardAsset::LIBRARY_IMAGE, (string) $image->id)) {
+            throw new BusinessRuleException(__('cards.in_use.library_image'));
         }
 
         $this->images->delete($image);

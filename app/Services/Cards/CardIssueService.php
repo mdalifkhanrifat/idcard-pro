@@ -6,6 +6,7 @@ use App\Data\Cards\IssueCardData;
 use App\Enums\CardStatus;
 use App\Enums\TemplateAudience;
 use App\Models\Card;
+use App\Models\CardAsset;
 use App\Models\Cardholder;
 use App\Models\CardTemplate;
 use App\Models\FamilyMember;
@@ -106,6 +107,7 @@ class CardIssueService
             if ($current !== null) {
                 $this->cards->update($current, ['replaced_by_id' => $card->id]);
             }
+            $this->cards->recordAssets($card, $this->assets($card->layout));
 
             return $card->load(['template', 'familyMember', 'issuer', 'document']);
         });
@@ -192,6 +194,22 @@ class CardIssueService
     private function number(Cardholder $cardholder, ?FamilyMember $member, CardTemplate $template, CarbonImmutable $issueDate): string
     {
         return $this->keptNumber($cardholder, $member, $template) ?? $this->numbers->next($template->code, $issueDate);
+    }
+
+    /**
+     * Library images and fonts the design uses; they must stay while the card exists.
+     *
+     * @param  array{elements: array<int, array<string, mixed>>}  $layout
+     * @return array<string, array<int, string>>
+     */
+    private function assets(array $layout): array
+    {
+        $elements = collect($layout['elements']);
+
+        return [
+            CardAsset::LIBRARY_IMAGE => $elements->pluck('library_image_id')->filter()->map(fn ($id) => (string) $id)->values()->all(),
+            CardAsset::FONT => $elements->pluck('style.font_family')->filter()->map(fn ($family) => (string) $family)->values()->all(),
+        ];
     }
 
     private function keptNumber(Cardholder $cardholder, ?FamilyMember $member, CardTemplate $template): ?string

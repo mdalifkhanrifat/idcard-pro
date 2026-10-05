@@ -3,9 +3,11 @@
 namespace App\Services\Cardholders;
 
 use App\Data\Cardholders\CardholderFilter;
+use App\Exceptions\BusinessRuleException;
 use App\Models\Cardholder;
 use App\Models\User;
 use App\Repositories\Contracts\CardholderRepositoryInterface;
+use App\Repositories\Contracts\CardRepositoryInterface;
 use App\Repositories\Contracts\MasterDataRepositoryInterface;
 use App\Services\CustomFields\CustomFieldService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -20,6 +22,7 @@ class CardholderService
         private MasterDataRepositoryInterface $masterData,
         private CardholderFileService $files,
         private CustomFieldService $customFields,
+        private CardRepositoryInterface $cards,
     ) {}
 
     /**
@@ -57,8 +60,14 @@ class CardholderService
     /**
      * Delete the cardholder; file records cascade in the database, stored files are removed afterwards.
      */
+    /**
+     * A cardholder with issued cards is kept: the cards are records of what was handed out.
+     */
     public function delete(Cardholder $cardholder): void
     {
+        if ($this->cards->existsForCardholder($cardholder->id)) {
+            throw new BusinessRuleException(__('cards.in_use.cardholder'));
+        }
         $locations = $this->files->storedLocations($cardholder);
 
         $this->cardholders->delete($cardholder);

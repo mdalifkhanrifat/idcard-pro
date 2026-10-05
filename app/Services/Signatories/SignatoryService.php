@@ -2,7 +2,9 @@
 
 namespace App\Services\Signatories;
 
+use App\Exceptions\BusinessRuleException;
 use App\Models\Signatory;
+use App\Repositories\Contracts\CardRepositoryInterface;
 use App\Repositories\Contracts\MasterDataRepositoryInterface;
 use App\Repositories\Contracts\SignatoryRepositoryInterface;
 use App\Support\Media\ImageSanitizer;
@@ -28,6 +30,7 @@ class SignatoryService
         private SignatoryRepositoryInterface $signatories,
         private MasterDataRepositoryInterface $masterData,
         private ImageSanitizer $images,
+        private CardRepositoryInterface $cards,
     ) {}
 
     /**
@@ -56,6 +59,9 @@ class SignatoryService
 
     public function delete(Signatory $signatory): void
     {
+        if ($this->cards->usesSignatory($signatory->id)) {
+            throw new BusinessRuleException(__('cards.in_use.signatory'));
+        }
         $this->signatories->delete($signatory);
         $this->removeSignatureFile($signatory);
     }

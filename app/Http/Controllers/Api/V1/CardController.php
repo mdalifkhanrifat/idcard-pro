@@ -11,6 +11,7 @@ use App\Models\Cardholder;
 use App\Services\Cards\CardDataResolver;
 use App\Services\Cards\CardIssueService;
 use App\Services\Cards\CardLayoutPresenter;
+use App\Services\Cards\CardService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -46,6 +47,34 @@ class CardController extends Controller
 
         return (new CardResource($card->load(['template', 'familyMember', 'cardholder', 'issuer', 'replacedBy', 'document'])))
             ->additional(['meta' => ['layout' => $layout->present($card), 'values' => $cardData->forCard($card)]]);
+    }
+
+    /**
+     * RF card number, notes and expiry of an issued card.
+     */
+    public function update(Request $request, Card $card, CardService $service): CardResource
+    {
+        Gate::authorize('cards.update');
+
+        $data = $request->validate([
+            'rf_card_no' => ['sometimes', 'nullable', 'string', 'max:60'],
+            'notes' => ['sometimes', 'nullable', 'string', 'max:1000'],
+            'expiry_date' => ['sometimes', 'nullable', 'date_format:Y-m-d'],
+        ]);
+
+        return new CardResource($service->update($card, $data)->load(['template', 'familyMember', 'issuer', 'replacedBy', 'document']));
+    }
+
+    /**
+     * Cancel an active card; a reason is required (it is shown in the history and, later, on verification).
+     */
+    public function revoke(Request $request, Card $card, CardService $service): CardResource
+    {
+        Gate::authorize('cards.revoke');
+
+        $note = $request->validate(['note' => ['required', 'string', 'max:255']])['note'];
+
+        return new CardResource($service->revoke($card, $note)->load(['template', 'familyMember', 'issuer', 'replacedBy', 'document']));
     }
 
     /**

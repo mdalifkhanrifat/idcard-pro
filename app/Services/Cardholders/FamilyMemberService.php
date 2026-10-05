@@ -2,8 +2,10 @@
 
 namespace App\Services\Cardholders;
 
+use App\Exceptions\BusinessRuleException;
 use App\Models\Cardholder;
 use App\Models\FamilyMember;
+use App\Repositories\Contracts\CardRepositoryInterface;
 use App\Repositories\Contracts\FamilyMemberRepositoryInterface;
 use App\Repositories\Contracts\MasterDataRepositoryInterface;
 use Illuminate\Support\Collection;
@@ -16,6 +18,7 @@ class FamilyMemberService
     public function __construct(
         private FamilyMemberRepositoryInterface $members,
         private MasterDataRepositoryInterface $masterData,
+        private CardRepositoryInterface $cards,
     ) {}
 
     /**
@@ -50,6 +53,9 @@ class FamilyMemberService
 
     public function delete(FamilyMember $member): void
     {
+        if ($this->cards->existsForFamilyMember($member->id)) {
+            throw new BusinessRuleException(__('cards.in_use.family_member'));
+        }
         $this->members->delete($member);
     }
 

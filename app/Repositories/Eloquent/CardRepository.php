@@ -3,6 +3,7 @@
 namespace App\Repositories\Eloquent;
 
 use App\Models\Card;
+use App\Models\CardAsset;
 use App\Models\Cardholder;
 use App\Models\CardTemplate;
 use App\Repositories\Contracts\CardRepositoryInterface;
@@ -64,5 +65,44 @@ class CardRepository extends EloquentRepository implements CardRepositoryInterfa
             ->unique()
             ->values()
             ->all();
+    }
+
+    public function recordAssets(Card $card, array $assets): void
+    {
+        foreach ($assets as $kind => $references) {
+            foreach (array_unique($references) as $reference) {
+                CardAsset::query()->create(['card_id' => $card->id, 'kind' => $kind, 'reference' => $reference]);
+            }
+        }
+    }
+
+    public function usesAsset(string $kind, string $reference): bool
+    {
+        return CardAsset::query()->where('kind', $kind)->where('reference', $reference)->exists();
+    }
+
+    public function existsForCardholder(int $cardholderId): bool
+    {
+        return $this->query()->where('cardholder_id', $cardholderId)->exists();
+    }
+
+    public function existsForFamilyMember(int $familyMemberId): bool
+    {
+        return $this->query()->where('family_member_id', $familyMemberId)->exists();
+    }
+
+    public function existsForTemplate(int $templateId): bool
+    {
+        return $this->query()->where('card_template_id', $templateId)->exists();
+    }
+
+    public function usesFile(int $fileId): bool
+    {
+        return $this->query()->where(fn ($q) => $q->where('photo_file_id', $fileId)->orWhere('signature_file_id', $fileId))->exists();
+    }
+
+    public function usesSignatory(int $signatoryId): bool
+    {
+        return $this->query()->where('signatory_id', $signatoryId)->exists();
     }
 }

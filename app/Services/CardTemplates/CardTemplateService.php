@@ -3,8 +3,10 @@
 namespace App\Services\CardTemplates;
 
 use App\Data\CardTemplates\CardTemplateFilter;
+use App\Exceptions\BusinessRuleException;
 use App\Models\CardTemplate;
 use App\Models\User;
+use App\Repositories\Contracts\CardRepositoryInterface;
 use App\Repositories\Contracts\CardTemplateRepositoryInterface;
 use App\Repositories\Contracts\MasterDataRepositoryInterface;
 use App\Support\Tenancy\TenantContext;
@@ -26,6 +28,7 @@ class CardTemplateService
         private MasterDataRepositoryInterface $masterData,
         private CardTemplateImageService $images,
         private TenantContext $tenants,
+        private CardRepositoryInterface $cards,
     ) {}
 
     /**
@@ -78,6 +81,9 @@ class CardTemplateService
 
     public function delete(CardTemplate $template): void
     {
+        if ($this->cards->existsForTemplate($template->id)) {
+            throw new BusinessRuleException(__('cards.in_use.template'));
+        }
         $this->templates->delete($template);
         $this->images->deleteAll($template);
     }

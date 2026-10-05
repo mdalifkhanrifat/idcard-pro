@@ -2,10 +2,12 @@
 
 namespace App\Services\Cardholders;
 
+use App\Exceptions\BusinessRuleException;
 use App\Models\Cardholder;
 use App\Models\CardholderFile;
 use App\Models\User;
 use App\Repositories\Contracts\CardholderFileRepositoryInterface;
+use App\Repositories\Contracts\CardRepositoryInterface;
 use App\Support\Media\ImageSanitizer;
 use App\Support\Media\UnreadableImageException;
 use Illuminate\Http\UploadedFile;
@@ -28,6 +30,7 @@ class CardholderFileService
     public function __construct(
         private CardholderFileRepositoryInterface $files,
         private ImageSanitizer $images,
+        private CardRepositoryInterface $cards,
     ) {}
 
     /**
@@ -83,6 +86,9 @@ class CardholderFileService
 
     public function delete(CardholderFile $file): void
     {
+        if ($this->cards->usesFile($file->id)) {
+            throw new BusinessRuleException(__('cards.in_use.file'));
+        }
         $this->files->delete($file);
         Storage::disk($file->disk)->delete($file->path);
     }
