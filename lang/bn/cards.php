@@ -19,6 +19,28 @@ return [
         'image_or_library' => 'আপলোড করা ছবি বা লাইব্রেরির ছবি, যেকোনো একটা দিন।',
     ],
     // Printed values, in the organization's language (CardDataResolver)
+    'issue' => [
+        'template_unavailable' => 'একটা সক্রিয় কার্ড টেমপ্লেট বাছুন।',
+        'family_member_unknown' => 'এই পরিবারের সদস্য এই কার্ডধারীর নন।',
+        'family_member_required' => 'এটা পরিবারের কার্ডের টেমপ্লেট: কার্ডটা কোন সদস্যের জন্য তা বাছুন।',
+        'template_not_for_family' => 'এই টেমপ্লেট কার্ডধারীর জন্য; পরিবারের সদস্যের জন্য পরিবারের কার্ডের টেমপ্লেট বাছুন।',
+        'note_required' => 'কারণ বুঝিয়ে একটা নোট লিখুন।',
+        'document_not_for_reason' => 'ডকুমেন্ট শুধু পদোন্নতি, হারানো বা নষ্ট কার্ডে দেওয়া যায়।',
+        'document_unknown' => 'কার্ডধারীর ডকুমেন্টগুলোর একটা বাছুন।',
+        'document_title' => 'কার্ড ইস্যুর প্রমাণ (:reason)',
+        'expiry_before_issue' => 'মেয়াদের তারিখ ইস্যুর তারিখের আগে হতে পারে না।',
+        'rf_in_use' => 'এই RF কার্ড নম্বর অন্য একজনের সক্রিয় কার্ডে আছে।',
+    ],
+
+    'reasons' => [
+        'new' => 'নতুন',
+        'renewal' => 'নবায়ন',
+        'promotion' => 'পদোন্নতি / পদাবনতি',
+        'lost' => 'হারানো',
+        'damaged' => 'নষ্ট',
+        'correction' => 'সংশোধন',
+    ],
+
     'values' => [
         'gender' => [
             'male' => 'পুরুষ',

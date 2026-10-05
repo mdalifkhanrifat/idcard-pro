@@ -6,6 +6,7 @@ use App\Repositories\Contracts\ActivityRepositoryInterface;
 use App\Repositories\Contracts\CardholderFileRepositoryInterface;
 use App\Repositories\Contracts\CardholderImportRepositoryInterface;
 use App\Repositories\Contracts\CardholderRepositoryInterface;
+use App\Repositories\Contracts\CardRepositoryInterface;
 use App\Repositories\Contracts\CardSequenceRepositoryInterface;
 use App\Repositories\Contracts\CardTemplateElementRepositoryInterface;
 use App\Repositories\Contracts\CardTemplateRepositoryInterface;
@@ -25,6 +26,7 @@ use App\Repositories\Eloquent\ActivityRepository;
 use App\Repositories\Eloquent\CardholderFileRepository;
 use App\Repositories\Eloquent\CardholderImportRepository;
 use App\Repositories\Eloquent\CardholderRepository;
+use App\Repositories\Eloquent\CardRepository;
 use App\Repositories\Eloquent\CardSequenceRepository;
 use App\Repositories\Eloquent\CardTemplateElementRepository;
 use App\Repositories\Eloquent\CardTemplateRepository;
@@ -61,6 +63,7 @@ class RepositoryServiceProvider extends ServiceProvider
         CardholderImportRepositoryInterface::class => CardholderImportRepository::class,
         SignatoryRepositoryInterface::class => SignatoryRepository::class,
         TenantFontRepositoryInterface::class => TenantFontRepository::class,
+        CardRepositoryInterface::class => CardRepository::class,
         TenantImageRepositoryInterface::class => TenantImageRepository::class,
         CardSequenceRepositoryInterface::class => CardSequenceRepository::class,
         CardTemplateRepositoryInterface::class => CardTemplateRepository::class,

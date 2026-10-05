@@ -57,6 +57,29 @@ class CardTemplateDesignService
     }
 
     /**
+     * The design as it is now, kept with an issued card so it always reprints the same, whatever
+     * happens to the template later. Image files and library images it uses are kept as well.
+     *
+     * @return array{size_mm: array{width: float, height: float}, orientation: string, is_double_sided: bool, elements: array<int, array<string, mixed>>}
+     */
+    public function snapshot(CardTemplate $template): array
+    {
+        return [
+            'size_mm' => $template->sizeInMm(),
+            'orientation' => $template->orientation->value,
+            'is_double_sided' => $template->is_double_sided,
+            'elements' => $this->elements->forTemplate($template)
+                ->map(fn (CardTemplateElement $element): array => [
+                    ...$element->only(['side', 'type', 'field', 'label', 'content', 'qr_lines', 'image_disk', 'image_path', 'library_image_id', 'z_index']),
+                    ...array_map(floatval(...), $element->only(['x', 'y', 'width', 'height'])),
+                    'style' => $element->style ?? [],
+                ])
+                ->values()
+                ->all(),
+        ];
+    }
+
+    /**
      * What the designer may place on this template: element types, data fields, fonts and the card size.
      *
      * @return array<string, mixed>

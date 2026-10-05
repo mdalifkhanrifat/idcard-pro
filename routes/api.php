@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
 use App\Http\Controllers\Api\V1\Auth\SessionController;
 use App\Http\Controllers\Api\V1\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\Api\V1\Auth\TwoFactorController;
+use App\Http\Controllers\Api\V1\CardController;
 use App\Http\Controllers\Api\V1\CardholderController;
 use App\Http\Controllers\Api\V1\CardholderFileController;
 use App\Http\Controllers\Api\V1\CardholderImportController;
@@ -120,6 +121,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::delete('signatories/{signatory}/signature', [SignatoryController::class, 'removeSignature'])->name('signatories.signature.destroy');
             Route::apiResource('cardholders.files', CardholderFileController::class)->only(['index', 'store', 'destroy'])->scoped(['cardholder' => 'public_id', 'file' => 'public_id']);
             Route::apiResource('cardholders.family-members', FamilyMemberController::class)->except('show')->scoped(['cardholder' => 'public_id', 'family_member' => 'public_id']);
+            Route::get('cardholders/{cardholder}/cards/next-number', [CardController::class, 'nextNumber'])->name('cardholders.cards.next-number');
+            Route::apiResource('cardholders.cards', CardController::class)->only(['index', 'store'])->scoped(['cardholder' => 'public_id']);
             Route::apiResource('cardholders.qualifications', QualificationController::class)->except('show')->scoped(['cardholder' => 'public_id', 'qualification' => 'public_id']);
         });
 

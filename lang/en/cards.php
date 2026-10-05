@@ -19,6 +19,28 @@ return [
         'image_or_library' => 'Use either an uploaded image or a library image, not both.',
     ],
     // Printed values, in the organization's language (CardDataResolver)
+    'issue' => [
+        'template_unavailable' => 'Choose an active card template.',
+        'family_member_unknown' => 'This family member does not belong to the cardholder.',
+        'family_member_required' => 'This is a family card template: choose the family member the card is for.',
+        'template_not_for_family' => 'This template is for cardholders; choose a family card template for a family member.',
+        'note_required' => 'Add a note explaining the reason.',
+        'document_not_for_reason' => 'A document can only be attached for promotion, lost or damaged cards.',
+        'document_unknown' => 'Choose one of the cardholder’s documents.',
+        'document_title' => 'Card issue proof (:reason)',
+        'expiry_before_issue' => 'The expiry date cannot be before the issue date.',
+        'rf_in_use' => 'This RF card number is on another person’s active card.',
+    ],
+
+    'reasons' => [
+        'new' => 'New',
+        'renewal' => 'Renewal',
+        'promotion' => 'Promotion / demotion',
+        'lost' => 'Lost',
+        'damaged' => 'Damaged',
+        'correction' => 'Correction',
+    ],
+
     'values' => [
         'gender' => [
             'male' => 'Male',
