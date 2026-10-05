@@ -65,3 +65,11 @@ it('keeps the list per organization and needs cards.view', function () {
     $this->getJson('/api/v1/cards')->assertForbidden();
     expect(Card::count())->toBe(4);
 });
+
+it('offers the reasons and statuses from the configuration', function () {
+    $this->getJson('/api/v1/cards/options')
+        ->assertOk()
+        ->assertJsonPath('data.reasons.0', ['key' => 'new', 'note' => false, 'document' => false])
+        ->assertJsonPath('data.reasons.3', ['key' => 'lost', 'note' => true, 'document' => true])
+        ->assertJsonPath('data.statuses', ['active', 'replaced', 'revoked']);
+});

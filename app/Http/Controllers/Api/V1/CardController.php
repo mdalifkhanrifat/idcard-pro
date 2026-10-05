@@ -35,6 +35,22 @@ class CardController extends Controller
     }
 
     /**
+     * Choices for card forms, from config/cards.php: reasons (with whether they need a note or allow a
+     * document) and statuses, so new reasons need no frontend change.
+     */
+    public function options(): JsonResponse
+    {
+        abort_unless(Gate::any(['cards.view', 'cards.issue']), 403);
+
+        return response()->json(['data' => [
+            'reasons' => collect((array) config('cards.reasons'))
+                ->map(fn (array $options, string $key) => ['key' => $key, 'note' => ! empty($options['note']), 'document' => ! empty($options['document'])])
+                ->values(),
+            'statuses' => config('cards.statuses'),
+        ]]);
+    }
+
+    /**
      * Counts for the cards overview.
      */
     public function summary(Request $request, CardService $service): JsonResponse

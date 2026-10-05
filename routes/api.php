@@ -125,6 +125,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::apiResource('cardholders.cards', CardController::class)->only(['index', 'store'])->scoped(['cardholder' => 'public_id']);
             Route::get('cards', [CardController::class, 'list'])->name('cards.index');
             Route::get('cards/summary', [CardController::class, 'summary'])->name('cards.summary');
+            Route::get('cards/options', [CardController::class, 'options'])->name('cards.options');
             Route::get('cards/{card}', [CardController::class, 'show'])->name('cards.show');
             Route::patch('cards/{card}', [CardController::class, 'update'])->name('cards.update');
             Route::post('cards/{card}/revoke', [CardController::class, 'revoke'])->name('cards.revoke');

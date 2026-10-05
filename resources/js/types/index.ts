@@ -287,6 +287,46 @@ export interface Signatory {
     updated_at: string;
 }
 
+export type CardStatus = 'active' | 'replaced' | 'revoked';
+
+/** An issued card (legacy card_information + print reason). */
+export interface IssuedCard {
+    id: string;
+    number: string;
+    rf_card_no: string | null;
+    /** Key of config/cards.php → reasons. */
+    reason: string;
+    notes: string | null;
+    status: CardStatus;
+    is_expired: boolean;
+    issue_date: string;
+    expiry_date: string | null;
+    status_changed_at: string | null;
+    status_note: string | null;
+    template_version: number;
+    template?: { id: string; name: string; code: string };
+    family_member?: { id: string; name: string; relation: string } | null;
+    cardholder?: { id: string; full_name: string; employee_no: string | null; department?: string | null };
+    issued_by?: string | null;
+    replaced_by?: { id: string; number: string } | null;
+    document?: { id: string; name: string; url: string } | null;
+    created_at: string;
+}
+
+/** The design a card was issued with, in the designer's element shape. */
+export interface CardLayout {
+    size_mm: { width: number; height: number };
+    orientation: string;
+    is_double_sided: boolean;
+    elements: DesignElement[];
+}
+
+/** What a card prints: text by data field, and the photo and signatures. */
+export interface CardValues {
+    fields: Record<string, string>;
+    images: { photo: string | null; cardholder_signature: string | null; signatory_signature: string | null };
+}
+
 export interface CardTemplate {
     id: string;
     name: string;

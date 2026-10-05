@@ -1,3 +1,5 @@
+import { http } from '@/lib/http';
+
 /**
  * Licensed fonts uploaded by the organization, registered with the browser through the FontFace API
  * so card templates can use them by family name. Files come from our own signed links only.
@@ -39,4 +41,20 @@ export async function loadTenantFonts(fonts: FontFile[]): Promise<FontFile[]> {
     );
 
     return results.filter((font): font is FontFile => font !== null);
+}
+
+let requested: Promise<void> | null = null;
+
+/** Fetch the organization's font list and load the fonts, once per page (cards, thumbnails). */
+export function ensureTenantFonts(): Promise<void> {
+    requested ??= http.get('/fonts').then(
+        async ({ data }) => {
+            await loadTenantFonts(data.data);
+        },
+        () => {
+            requested = null;
+        },
+    );
+
+    return requested;
 }
