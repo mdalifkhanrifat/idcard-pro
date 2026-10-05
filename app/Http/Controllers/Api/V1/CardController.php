@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Data\Cards\IssueCardData;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Cards\IssueCardRequest;
+use App\Http\Requests\Cards\ListCardsRequest;
 use App\Http\Resources\CardResource;
 use App\Models\Card;
 use App\Models\Cardholder;
@@ -23,6 +24,27 @@ use Illuminate\Support\Facades\Gate;
 class CardController extends Controller
 {
     public function __construct(private CardIssueService $cards) {}
+
+    /**
+     * All issued cards (legacy card print history and expired card reports). Filters: filter[search|status|reason|
+     * template|holder|issued_from|issued_to|validity|expiring_days|department|unit], sort, per_page.
+     */
+    public function list(ListCardsRequest $request, CardService $service): AnonymousResourceCollection
+    {
+        return CardResource::collection($service->list($request->toFilter()));
+    }
+
+    /**
+     * Counts for the cards overview.
+     */
+    public function summary(Request $request, CardService $service): JsonResponse
+    {
+        Gate::authorize('cards.view');
+
+        $days = (int) ($request->validate(['expiring_days' => ['sometimes', 'integer', 'between:1,365']])['expiring_days'] ?? 30);
+
+        return response()->json(['data' => $service->summary($days)]);
+    }
 
     public function index(Cardholder $cardholder): AnonymousResourceCollection
     {

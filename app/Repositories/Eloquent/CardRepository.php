@@ -2,11 +2,16 @@
 
 namespace App\Repositories\Eloquent;
 
+use App\Data\Cards\CardFilter;
+use App\Enums\CardStatus;
 use App\Models\Card;
 use App\Models\CardAsset;
 use App\Models\Cardholder;
 use App\Models\CardTemplate;
+use App\Models\MasterDataItem;
 use App\Repositories\Contracts\CardRepositoryInterface;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 /**
@@ -17,6 +22,56 @@ class CardRepository extends EloquentRepository implements CardRepositoryInterfa
     protected function model(): string
     {
         return Card::class;
+    }
+
+    public function list(CardFilter $filter): LengthAwarePaginator
+    {
+        $today = today()->toDateString();
+        $query = $this->query()
+            ->with(['template:id,public_id,name,code', 'familyMember:id,public_id,name,relation', 'cardholder:id,public_id,full_name,employee_no,department_id', 'cardholder.department', 'issuer:id,name'])
+            ->when($filter->search, fn (Builder $q, string $search) => $q->where(fn (Builder $w) => $w
+                ->where('number', 'like', "%{$search}%")
+                ->orWhere('rf_card_no', 'like', "%{$search}%")
+                ->orWhereHas('cardholder', fn (Builder $c) => $c->where('full_name', 'like', "%{$search}%")
+                    ->orWhere('full_name_local', 'like', "%{$search}%")
+                    ->orWhere('employee_no', 'like', "%{$search}%"))
+                ->orWhereHas('familyMember', fn (Builder $f) => $f->where('name', 'like', "%{$search}%"))))
+            ->when($filter->status, fn (Builder $q, string $status) => $q->where('status', $status))
+            ->when($filter->reason, fn (Builder $q, string $reason) => $q->where('reason', $reason))
+            ->when($filter->templatePublicId, fn (Builder $q, string $id) => $q->whereHas('template', fn (Builder $t) => $t->where('public_id', $id)))
+            ->when($filter->holder === 'family', fn (Builder $q) => $q->whereNotNull('family_member_id'))
+            ->when($filter->holder === 'cardholder', fn (Builder $q) => $q->whereNull('family_member_id'))
+            ->when($filter->issuedFrom, fn (Builder $q, string $date) => $q->whereDate('issue_date', '>=', $date))
+            ->when($filter->issuedTo, fn (Builder $q, string $date) => $q->whereDate('issue_date', '<=', $date))
+            ->when($filter->validity === 'expired', fn (Builder $q) => $q->where('status', CardStatus::Active)->whereDate('expiry_date', '<', $today))
+            ->when($filter->validity === 'expiring', fn (Builder $q) => $q->where('status', CardStatus::Active)
+                ->whereDate('expiry_date', '>=', $today)
+                ->whereDate('expiry_date', '<=', today()->addDays($filter->expiringDays)->toDateString()))
+            ->when($filter->validity === 'valid', fn (Builder $q) => $q->where('status', CardStatus::Active)
+                ->where(fn (Builder $w) => $w->whereNull('expiry_date')->orWhereDate('expiry_date', '>=', $today)));
+
+        foreach ($filter->lookups as $column => $publicId) {
+            $query->whereHas('cardholder', fn (Builder $c) => $c->whereIn($column, MasterDataItem::query()->where('public_id', $publicId)->select('id')));
+        }
+
+        return $query
+            ->orderBy($filter->sort, $filter->descending ? 'desc' : 'asc')
+            ->orderBy('id', 'desc')
+            ->paginate(min($filter->perPage, 100))
+            ->withQueryString();
+    }
+
+    public function summary(int $expiringDays): array
+    {
+        $today = today()->toDateString();
+        $active = fn () => $this->query()->where('status', CardStatus::Active);
+
+        return [
+            'active' => $active()->count(),
+            'expired' => $active()->whereDate('expiry_date', '<', $today)->count(),
+            'expiring' => $active()->whereDate('expiry_date', '>=', $today)->whereDate('expiry_date', '<=', today()->addDays($expiringDays)->toDateString())->count(),
+            'revoked' => $this->query()->where('status', CardStatus::Revoked)->count(),
+        ];
     }
 
     public function forCardholder(Cardholder $cardholder): Collection

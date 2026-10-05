@@ -123,6 +123,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::apiResource('cardholders.family-members', FamilyMemberController::class)->except('show')->scoped(['cardholder' => 'public_id', 'family_member' => 'public_id']);
             Route::get('cardholders/{cardholder}/cards/next-number', [CardController::class, 'nextNumber'])->name('cardholders.cards.next-number');
             Route::apiResource('cardholders.cards', CardController::class)->only(['index', 'store'])->scoped(['cardholder' => 'public_id']);
+            Route::get('cards', [CardController::class, 'list'])->name('cards.index');
+            Route::get('cards/summary', [CardController::class, 'summary'])->name('cards.summary');
             Route::get('cards/{card}', [CardController::class, 'show'])->name('cards.show');
             Route::patch('cards/{card}', [CardController::class, 'update'])->name('cards.update');
             Route::post('cards/{card}/revoke', [CardController::class, 'revoke'])->name('cards.revoke');

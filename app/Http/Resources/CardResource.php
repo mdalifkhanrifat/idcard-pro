@@ -36,6 +36,7 @@ class CardResource extends JsonResource
             ] : null),
             'cardholder' => $this->whenLoaded('cardholder', fn () => [
                 'id' => $this->cardholder->public_id, 'full_name' => $this->cardholder->full_name, 'employee_no' => $this->cardholder->employee_no,
+                'department' => $this->cardholder->relationLoaded('department') ? $this->cardholder->department?->name : null,
             ]),
             'issued_by' => $this->whenLoaded('issuer', fn () => $this->issuer?->name),
             'replaced_by' => $this->whenLoaded('replacedBy', fn () => $this->replacedBy ? ['id' => $this->replacedBy->public_id, 'number' => $this->replacedBy->number] : null),

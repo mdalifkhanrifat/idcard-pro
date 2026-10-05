@@ -2,11 +2,13 @@
 
 namespace App\Services\Cards;
 
+use App\Data\Cards\CardFilter;
 use App\Enums\CardStatus;
 use App\Exceptions\BusinessRuleException;
 use App\Models\Card;
 use App\Repositories\Contracts\CardRepositoryInterface;
 use Carbon\CarbonImmutable;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Validation\ValidationException;
 
 /**
@@ -16,6 +18,22 @@ use Illuminate\Validation\ValidationException;
 class CardService
 {
     public function __construct(private CardRepositoryInterface $cards) {}
+
+    /**
+     * @return LengthAwarePaginator<int, Card>
+     */
+    public function list(CardFilter $filter): LengthAwarePaginator
+    {
+        return $this->cards->list($filter);
+    }
+
+    /**
+     * @return array{active: int, expired: int, expiring: int, revoked: int}
+     */
+    public function summary(int $expiringDays = 30): array
+    {
+        return $this->cards->summary($expiringDays);
+    }
 
     /**
      * @param  array{rf_card_no?: string|null, notes?: string|null, expiry_date?: string|null}  $data

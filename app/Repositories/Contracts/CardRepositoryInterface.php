@@ -2,9 +2,11 @@
 
 namespace App\Repositories\Contracts;
 
+use App\Data\Cards\CardFilter;
 use App\Models\Card;
 use App\Models\Cardholder;
 use App\Models\CardTemplate;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
 /**
@@ -12,6 +14,18 @@ use Illuminate\Support\Collection;
  */
 interface CardRepositoryInterface extends RepositoryInterface
 {
+    /**
+     * @return LengthAwarePaginator<int, Card>
+     */
+    public function list(CardFilter $filter): LengthAwarePaginator;
+
+    /**
+     * Counts for the cards overview: active, expired (active past expiry) and expiring within the given days.
+     *
+     * @return array{active: int, expired: int, expiring: int, revoked: int}
+     */
+    public function summary(int $expiringDays): array;
+
     /**
      * Every card of a cardholder and their family members, newest first.
      *
