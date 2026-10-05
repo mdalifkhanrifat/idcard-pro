@@ -75,6 +75,8 @@ class SaveCardTemplateElementsRequest extends FormRequest
             'elements.*.style.opacity' => ['nullable', 'numeric', 'between:0.05,1'],
             'elements.*.style.fit' => ['nullable', Rule::in(['cover', 'contain'])],
             'elements.*.style.shape' => ['nullable', Rule::in(['rectangle', 'ellipse'])],
+            'elements.*.style.barcode_format' => ['nullable', Rule::in((array) config('card_template_elements.barcode_formats'))],
+            'elements.*.style.barcode_text' => ['nullable', 'boolean'],
         ];
     }
 }

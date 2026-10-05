@@ -21,6 +21,8 @@
 |   general_section             => text
 |   (new) shape                 => coloured rectangle, ellipse or line; replaces empty
 |                                  general sections that were only used for their bg_color
+|   (new) barcode               => one data field as a 1D barcode; the legacy BarcodeTrait
+|                                  (Code128, no text) existed but was never printed
 |
 */
 
@@ -37,6 +39,7 @@ return [
         'field' => ['needs_field' => true],
         'text' => ['needs_content' => true],
         'shape' => [],
+        'barcode' => ['needs_field' => true],
     ],
 
     /*
@@ -55,7 +58,15 @@ return [
         ],
         'image' => ['fit'],
         'shape' => ['shape'],
+        // barcode_text: print the encoded value under the bars, in the element's font and colour
+        'barcode' => ['barcode_format', 'barcode_text'],
     ],
+
+    /*
+     * Barcode symbologies (drawn in the browser by JsBarcode). Values that a format cannot encode
+     * (letters in EAN, Bangla in Code128...) show as an error box instead of a wrong barcode.
+     */
+    'barcode_formats' => ['code128', 'code39', 'ean13', 'ean8', 'upc', 'itf', 'codabar'],
 
     'gradient_directions' => ['to bottom', 'to right', 'to bottom right', 'to top right'],
 

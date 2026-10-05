@@ -67,6 +67,7 @@ class CardTemplateDesignService
                 ->all(),
             'fonts' => config('card_template_elements.bundled_fonts'),
             'system_fonts' => config('card_template_elements.system_fonts'),
+            'barcode_formats' => config('card_template_elements.barcode_formats'),
             'size_mm' => $template->sizeInMm(),
         ];
     }
@@ -266,7 +267,7 @@ class CardTemplateDesignService
     {
         $style = array_filter($style ?? [], fn ($value) => $value !== null && $value !== '');
 
-        foreach (['bold', 'italic', 'underline', 'uppercase', 'auto_fit', 'single_line', 'locked', 'hidden'] as $flag) {
+        foreach (['bold', 'italic', 'underline', 'uppercase', 'auto_fit', 'single_line', 'locked', 'hidden', 'barcode_text'] as $flag) {
             if (isset($style[$flag])) {
                 $style[$flag] = filter_var($style[$flag], FILTER_VALIDATE_BOOL);
             }

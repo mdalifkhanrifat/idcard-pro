@@ -277,3 +277,27 @@ it('keeps rotation, border style, locked and hidden flags', function () {
     $this->putJson($this->url, ['elements' => [designElement(['style' => ['rotation' => 45, 'border_style' => 'double']])]])
         ->assertJsonValidationErrors(['elements.0.style.rotation', 'elements.0.style.border_style']);
 });
+
+it('saves barcodes of a data field with their format and text option', function () {
+    Sanctum::actingAs($this->owner);
+
+    $this->putJson($this->url, ['elements' => [
+        designElement(['type' => 'barcode', 'field' => 'card.number', 'label' => null, 'height' => 10, 'style' => ['barcode_format' => 'code39', 'barcode_text' => '1', 'color' => '#000000']]),
+        designElement(['type' => 'barcode', 'field' => 'employee_no', 'label' => null, 'style' => ['barcode_text' => false]]),
+    ]])
+        ->assertOk()
+        ->assertJsonPath('data.0.type', 'barcode')
+        ->assertJsonPath('data.0.field', 'card.number')
+        ->assertJsonPath('data.0.style.barcode_format', 'code39')
+        ->assertJsonPath('data.0.style.barcode_text', true)
+        ->assertJsonMissingPath('data.1.style.barcode_text');
+
+    $this->getJson($this->url)->assertJsonPath('meta.catalog.barcode_formats.0', 'code128');
+
+    $this->putJson($this->url, ['elements' => [
+        designElement(['type' => 'barcode', 'field' => null]),
+        designElement(['type' => 'barcode', 'field' => 'family.name']),
+    ]])->assertJsonValidationErrors(['elements.0.field', 'elements.1.field']);
+    $this->putJson($this->url, ['elements' => [designElement(['type' => 'barcode', 'style' => ['barcode_format' => 'qr']])]])
+        ->assertJsonValidationErrors(['elements.0.style.barcode_format']);
+});
