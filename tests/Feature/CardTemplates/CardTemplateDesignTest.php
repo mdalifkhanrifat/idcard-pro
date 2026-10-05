@@ -387,3 +387,26 @@ it('tilts elements to any angle inside the card unless they may bleed past the e
     $this->putJson($this->url, ['elements' => [designElement(['style' => ['angle' => 200]])]])
         ->assertJsonValidationErrors('elements.0.style.angle');
 });
+
+it('keeps groups of two or more elements per side without changing the version', function () {
+    Sanctum::actingAs($this->owner);
+    $this->putJson($this->url, ['elements' => [designElement(), designElement(), designElement(['side' => 'back'])]])->assertOk();
+    $version = $this->template->fresh()->version;
+
+    $grouped = fn (array $overrides = []) => designElement([...$overrides, 'style' => [...designElement()['style'], 'group' => 'g1']]);
+    $this->putJson($this->url, ['elements' => [
+        $grouped(),
+        $grouped(),
+        // Alone on its side: the group is dropped
+        $grouped(['side' => 'back']),
+    ]])
+        ->assertOk()
+        ->assertJsonPath('data.1.style.group', 'g1')
+        ->assertJsonPath('data.2.style.group', 'g1')
+        ->assertJsonMissingPath('data.0.style.group');
+    // Only grouping changed
+    expect($this->template->fresh()->version)->toBe($version);
+
+    $this->putJson($this->url, ['elements' => [designElement(['style' => ['group' => 'Group 1']])]])
+        ->assertJsonValidationErrors('elements.0.style.group');
+});

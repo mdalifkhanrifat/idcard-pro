@@ -81,6 +81,7 @@ class SaveCardTemplateElementsRequest extends FormRequest
             'elements.*.style.bleed' => ['nullable', 'boolean'],
             'elements.*.style.locked' => ['nullable', 'boolean'],
             'elements.*.style.hidden' => ['nullable', 'boolean'],
+            'elements.*.style.group' => ['nullable', 'string', 'regex:/^[a-z0-9]{1,12}$/'],
             'elements.*.style.border_radius' => ['nullable', 'numeric', 'between:0,100'],
             'elements.*.style.opacity' => ['nullable', 'numeric', 'between:0.05,1'],
             'elements.*.style.shadow_color' => $colour,

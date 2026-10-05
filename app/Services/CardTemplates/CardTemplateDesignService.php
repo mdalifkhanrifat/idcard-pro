@@ -249,6 +249,33 @@ class CardTemplateDesignService
             throw ValidationException::withMessages($errors);
         }
 
+        return $this->dropSingleGroups($rows);
+    }
+
+    /**
+     * A group needs at least two elements on the same side; a group left with one element is dropped.
+     *
+     * @param  array<int, array<string, mixed>>  $rows
+     * @return array<int, array<string, mixed>>
+     */
+    private function dropSingleGroups(array $rows): array
+    {
+        $sizes = [];
+        foreach ($rows as $row) {
+            if (isset($row['style']['group'])) {
+                $sizes[$row['side'].'|'.$row['style']['group']] = ($sizes[$row['side'].'|'.$row['style']['group']] ?? 0) + 1;
+            }
+        }
+
+        foreach ($rows as $index => $row) {
+            if (isset($row['style']['group']) && $sizes[$row['side'].'|'.$row['style']['group']] < 2) {
+                unset($rows[$index]['style']['group']);
+                if ($rows[$index]['style'] === []) {
+                    $rows[$index]['style'] = null;
+                }
+            }
+        }
+
         return $rows;
     }
 
@@ -348,8 +375,8 @@ class CardTemplateDesignService
     {
         return (string) json_encode($elements->map(function (CardTemplateElement $element): array {
             $columns = array_map(fn ($value) => is_numeric($value) ? (float) $value : $value, $element->only(self::DESIGN_COLUMNS));
-            // Locking only affects editing, not the printed card.
-            unset($columns['style']['locked']);
+            // Locking and grouping only affect editing, not the printed card.
+            unset($columns['style']['locked'], $columns['style']['group']);
 
             return $columns;
         })->values()->all());

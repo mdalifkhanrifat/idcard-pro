@@ -52,8 +52,9 @@ return [
         'box' => ['background', 'gradient_to', 'gradient_direction', 'border_color', 'border_width', 'border_style', 'border_radius', 'opacity', 'rotation', 'angle', 'bleed'],
         // Shadow (on when shadow_color is set): text casts it from its letters, images from their shape, other boxes from the box
         'shadow' => ['shadow_color', 'shadow_x', 'shadow_y', 'shadow_blur', 'shadow_opacity'],
-        // Editing state: locked elements cannot be moved or changed; hidden ones are kept but not printed.
-        'state' => ['locked', 'hidden'],
+        // Editing state: locked elements cannot be moved or changed; hidden ones are kept but not printed;
+        // elements of one side with the same group id are selected and moved together (no effect on printing).
+        'state' => ['locked', 'hidden', 'group'],
         'text' => [
             'font_family', 'font_size', 'color', 'label_color', 'bold', 'italic', 'underline', 'align',
             'vertical_align', 'line_height', 'letter_spacing', 'uppercase', 'padding',
