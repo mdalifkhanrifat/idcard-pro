@@ -12,6 +12,7 @@ use App\Repositories\Contracts\CardTemplateElementRepositoryInterface;
 use App\Repositories\Contracts\CardTemplateRepositoryInterface;
 use App\Repositories\Contracts\CustomFieldRepositoryInterface;
 use App\Repositories\Contracts\FamilyMemberRepositoryInterface;
+use App\Repositories\Contracts\TenantImageRepositoryInterface;
 use App\Services\Cards\CardDataResolver;
 use App\Services\Fonts\TenantFontService;
 use Illuminate\Support\Collection;
@@ -33,7 +34,7 @@ class CardTemplateDesignService
     /**
      * Columns compared to decide whether a save changed the printed design.
      */
-    private const DESIGN_COLUMNS = ['side', 'type', 'field', 'label', 'content', 'qr_lines', 'image_path', 'x', 'y', 'width', 'height', 'z_index', 'style'];
+    private const DESIGN_COLUMNS = ['side', 'type', 'field', 'label', 'content', 'qr_lines', 'image_path', 'library_image_id', 'x', 'y', 'width', 'height', 'z_index', 'style'];
 
     public function __construct(
         private CardTemplateElementRepositoryInterface $elements,
@@ -44,6 +45,7 @@ class CardTemplateDesignService
         private FamilyMemberRepositoryInterface $familyMembers,
         private CardDataResolver $cardData,
         private TenantFontService $fonts,
+        private TenantImageRepositoryInterface $library,
     ) {}
 
     /**
@@ -143,6 +145,7 @@ class CardTemplateDesignService
         $rows = [];
         $layers = ['front' => 0, 'back' => 0];
         $backgrounds = [];
+        $libraryIds = $this->library->idsForPublicIds(array_values(array_filter(array_column($input, 'library_image'))));
 
         foreach ($input as $index => $element) {
             $key = "elements.{$index}";
@@ -204,7 +207,16 @@ class CardTemplateDesignService
             }
 
             $imagePath = null;
-            if (! empty($options['image']) && ($element['image'] ?? null) !== null) {
+            $libraryImageId = null;
+            if (! empty($options['image']) && ($element['library_image'] ?? null) !== null) {
+                // A library image is linked instead of an own upload
+                $libraryImageId = $libraryIds[$element['library_image']] ?? null;
+                if ($libraryImageId === null) {
+                    $errors["{$key}.library_image"] = __('cards.designer.image_missing');
+                } elseif (($element['image'] ?? null) !== null) {
+                    $errors["{$key}.image"] = __('cards.designer.image_or_library');
+                }
+            } elseif (! empty($options['image']) && ($element['image'] ?? null) !== null) {
                 if ($this->images->exists($template, $element['image'])) {
                     $imagePath = $this->images->path($template, $element['image']);
                 } else {
@@ -221,6 +233,7 @@ class CardTemplateDesignService
                 'qr_lines' => $qrLines,
                 'image_disk' => $imagePath === null ? null : $this->images->diskName(),
                 'image_path' => $imagePath,
+                'library_image_id' => $libraryImageId,
                 'x' => $x,
                 'y' => $y,
                 'width' => $width,

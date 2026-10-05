@@ -3,6 +3,7 @@
 use App\Models\CardTemplate;
 use App\Models\CardTemplateElement;
 use App\Models\TenantFont;
+use App\Models\TenantImage;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -315,4 +316,33 @@ it('offers and accepts the organization own fonts', function () {
 
     $this->putJson($this->url, ['elements' => [designElement(['style' => ['font_family' => 'Unknown Lipi']])]])
         ->assertJsonValidationErrors('elements.0.style.font_family');
+});
+
+it('links library images, shares them with copies and counts a new image as a design change', function () {
+    Sanctum::actingAs($this->owner);
+    [$logo, $newLogo] = app(TenantContext::class)->run($this->tenant, fn () => TenantImage::factory()->count(2)->create(['tenant_id' => $this->tenant->id]));
+    $version = $this->template->fresh()->version;
+
+    $this->putJson($this->url, ['elements' => [designElement(['type' => 'logo', 'field' => null, 'library_image' => $logo->public_id])]])
+        ->assertOk()
+        ->assertJsonPath('data.0.library_image', $logo->public_id)
+        ->assertJsonPath('data.0.image', null)
+        ->assertJson(fn ($json) => $json->where('data.0.image_url', fn (string $url) => str_starts_with($url, '/api/v1/library-image-files/'))->etc());
+    expect($this->template->fresh()->version)->toBe($version + 1);
+
+    $this->putJson($this->url, ['elements' => [designElement(['type' => 'logo', 'field' => null, 'library_image' => $newLogo->public_id])]])->assertOk();
+    expect($this->template->fresh()->version)->toBe($version + 2);
+
+    $copy = $this->postJson("/api/v1/card-templates/{$this->template->public_id}/duplicate", ['name' => 'Copy'])->assertCreated()->json('data.id');
+    $this->getJson("/api/v1/card-templates/{$copy}/elements")->assertJsonPath('data.0.library_image', $newLogo->public_id);
+    $this->getJson('/api/v1/card-templates?include=elements')->assertJsonPath('data.0.elements.0.library_image', $newLogo->public_id);
+
+    // Unknown or foreign image, or an upload and a library image together
+    [$other] = tenantWithOwner('other', 'owner@other.test');
+    $foreign = app(TenantContext::class)->run($other, fn () => TenantImage::factory()->create(['tenant_id' => $other->id]));
+    $upload = $this->post("/api/v1/card-templates/{$this->template->public_id}/images", ['file' => UploadedFile::fake()->image('a.png')], ['Accept' => 'application/json'])->json('data.image');
+    $this->putJson($this->url, ['elements' => [
+        designElement(['type' => 'logo', 'field' => null, 'library_image' => $foreign->public_id]),
+        designElement(['type' => 'logo', 'field' => null, 'library_image' => $logo->public_id, 'image' => $upload]),
+    ]])->assertJsonValidationErrors(['elements.0.library_image', 'elements.1.image']);
 });

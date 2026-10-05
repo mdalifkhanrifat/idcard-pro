@@ -99,11 +99,12 @@ class CardTemplateService
                 'created_by' => $actor->id,
             ]);
 
-            // The copy gets its own image files, so removing a logo from one template never breaks the other.
+            // The copy gets its own image files, so removing a logo from one template never breaks the other;
+            // library images stay linked (they never change and cannot be deleted while used).
             $imagePaths = $this->images->copyAll($template, $copy);
             foreach ($template->elements as $element) {
                 $copy->elements()->create([
-                    ...$element->only(['side', 'type', 'field', 'label', 'content', 'qr_lines', 'image_disk', 'x', 'y', 'width', 'height', 'z_index', 'style']),
+                    ...$element->only(['side', 'type', 'field', 'label', 'content', 'qr_lines', 'image_disk', 'library_image_id', 'x', 'y', 'width', 'height', 'z_index', 'style']),
                     'image_path' => $imagePaths[$element->image_path] ?? null,
                 ]);
             }

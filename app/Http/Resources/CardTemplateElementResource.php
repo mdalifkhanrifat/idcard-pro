@@ -4,6 +4,7 @@ namespace App\Http\Resources;
 
 use App\Models\CardTemplateElement;
 use App\Services\CardTemplates\CardTemplateImageService;
+use App\Services\ImageLibrary\TenantImageService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -28,7 +29,10 @@ class CardTemplateElementResource extends JsonResource
             'content' => $this->content,
             'qr_lines' => $this->qr_lines,
             'image' => $this->image_path === null ? null : basename($this->image_path),
-            'image_url' => app(CardTemplateImageService::class)->url($this->template, $this->image_path),
+            'library_image' => $this->libraryImage?->public_id,
+            'image_url' => $this->libraryImage !== null
+                ? app(TenantImageService::class)->url($this->libraryImage)
+                : app(CardTemplateImageService::class)->url($this->template, $this->image_path),
             'x' => (float) $this->x,
             'y' => (float) $this->y,
             'width' => (float) $this->width,

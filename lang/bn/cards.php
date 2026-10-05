@@ -15,6 +15,7 @@ return [
         'qr_line_invalid' => 'QR-এর প্রতিটা লাইনে একটা ঘর বা কাস্টম লেখা থাকতে হবে।',
         'outside_card' => 'উপাদানটা কার্ডের ভেতরে থাকতে হবে (:width × :height mm)।',
         'image_missing' => 'ছবিটা পাওয়া যায়নি। আবার আপলোড করুন।',
+        'image_or_library' => 'আপলোড করা ছবি বা লাইব্রেরির ছবি, যেকোনো একটা দিন।',
     ],
     // Printed values, in the organization's language (CardDataResolver)
     'values' => [

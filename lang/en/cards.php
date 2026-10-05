@@ -15,6 +15,7 @@ return [
         'qr_line_invalid' => 'Each QR line needs a data field or custom text.',
         'outside_card' => 'The element must stay inside the card (:width × :height mm).',
         'image_missing' => 'The image was not found. Upload it again.',
+        'image_or_library' => 'Use either an uploaded image or a library image, not both.',
     ],
     // Printed values, in the organization's language (CardDataResolver)
     'values' => [

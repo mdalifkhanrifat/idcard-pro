@@ -28,7 +28,7 @@ class SaveCardTemplateElementsRequest extends FormRequest
 
         return [
             'elements' => ['present', 'array', 'max:200'],
-            'elements.*' => ['array:side,type,field,label,content,qr_lines,image,x,y,width,height,style'],
+            'elements.*' => ['array:side,type,field,label,content,qr_lines,image,library_image,x,y,width,height,style'],
             'elements.*.side' => ['required', Rule::in(CardTemplateElement::SIDES)],
             'elements.*.type' => ['required', Rule::in(array_keys((array) config('card_template_elements.types')))],
             'elements.*.field' => ['nullable', 'string', 'max:60'],
@@ -41,6 +41,8 @@ class SaveCardTemplateElementsRequest extends FormRequest
             'elements.*.qr_lines.*.text' => ['nullable', 'string', 'max:200'],
             // Name returned by POST /card-templates/{id}/images
             'elements.*.image' => ['nullable', 'string', 'regex:'.CardTemplateImageService::NAME_PATTERN],
+            // Public id of an image in the organization library (GET /library-images), instead of `image`
+            'elements.*.library_image' => ['nullable', 'string', 'size:26'],
             'elements.*.x' => ['required', 'numeric', 'min:0', 'max:1000'],
             'elements.*.y' => ['required', 'numeric', 'min:0', 'max:1000'],
             // 0.2 mm allows thin lines
