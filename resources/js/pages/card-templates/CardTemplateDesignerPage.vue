@@ -15,11 +15,11 @@ import { buildLayoutFile, downloadLayout, importLayout, parseLayoutFile, type La
 import { sampleValue } from './designer/sample';
 import { useDesigner, type DesignerItem } from './designer/useDesigner';
 import { useConfirm } from '@/composables/useConfirm';
-import { toApiError } from '@/lib/http';
+import { http, toApiError } from '@/lib/http';
 import { loadTenantFonts } from '@/lib/tenantFonts';
 import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
-import type { CardSide, DesignElement, DesignElementType } from '@/types';
+import type { CardSide, DesignElement, DesignElementType, LibraryImage } from '@/types';
 
 const { t, te } = useI18n();
 const route = useRoute();
@@ -105,7 +105,8 @@ async function applyLayout(file: LayoutFile): Promise<void> {
     transferring.value = true;
     try {
         const sides = template.value.is_double_sided ? file.elements : file.elements.filter((element) => element.side === 'front');
-        const { elements, scaled, turned } = await importLayout({ ...file, elements: sides }, template.value.id, size.value);
+        const library = new Map<string, string>(((await http.get('/library-images')).data.data as LibraryImage[]).map((image) => [image.id, image.url]));
+        const { elements, scaled, turned } = await importLayout({ ...file, elements: sides }, template.value.id, size.value, library);
         const missingFonts = dropUnknownFonts(elements);
         designer.replaceAll(elements);
         designer.showSide('front');

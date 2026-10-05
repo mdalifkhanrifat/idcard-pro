@@ -66,6 +66,7 @@ function toPayload(item: DesignerItem): Omit<DesignElement, 'id' | 'image_url'> 
         content: item.content,
         qr_lines: item.qr_lines,
         image: item.image,
+        library_image: item.library_image ?? null,
         x: item.x,
         y: item.y,
         width: item.width,

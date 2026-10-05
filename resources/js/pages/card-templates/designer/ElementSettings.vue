@@ -20,6 +20,7 @@ import {
     Copy,
     EyeOff,
     ImagePlus,
+    Images,
     Italic,
     Loader2,
     Lock,
@@ -31,13 +32,14 @@ import {
 } from 'lucide-vue-next';
 import { BARCODE_FORMAT_NAMES, MIN_MODULE_MM, QUIET_ZONE_MODULES, encodeBarcode } from './barcode';
 import ColorInput from './ColorInput.vue';
+import LibraryPicker from './LibraryPicker.vue';
 import FieldSelect from './FieldSelect.vue';
 import { sampleValue } from './sample';
 import { imageFit } from './styles';
 import type { DesignerItem, LayerMove, Rect } from './useDesigner';
 import { http, toApiError } from '@/lib/http';
 import { useUiStore } from '@/stores/ui';
-import type { DesignElementStyle, DesignerCatalog } from '@/types';
+import type { DesignElementStyle, DesignerCatalog, LibraryImage } from '@/types';
 
 /**
  * Settings of the selected element (legacy section form): data field, label, text, font, colours,
@@ -193,6 +195,7 @@ async function upload(event: Event): Promise<void> {
         const { data } = await http.post(`/card-templates/${props.templateId}/images`, body);
         props.item.image = data.data.image;
         props.item.image_url = data.data.image_url;
+        props.item.library_image = null;
     } catch (error) {
         const apiError = toApiError(error);
         ui.notify(apiError.errors.file?.[0] ?? apiError.message, 'error');
@@ -206,7 +209,17 @@ async function upload(event: Event): Promise<void> {
 
 function removeImage(): void {
     props.item.image = null;
+    props.item.library_image = null;
     props.item.image_url = null;
+}
+
+/** A library image is linked, not copied: replacing it in the library changes this template too. */
+const libraryOpen = ref(false);
+
+function pickLibraryImage(image: LibraryImage): void {
+    props.item.library_image = image.id;
+    props.item.image = null;
+    props.item.image_url = image.url;
 }
 </script>
 
@@ -335,12 +348,17 @@ function removeImage(): void {
                     <img v-if="item.image_url" :src="item.image_url" alt="" class="max-h-full max-w-full object-contain" />
                     <ImagePlus v-else class="size-6 text-muted" />
                 </div>
-                <div class="flex gap-2">
-                    <button class="inline-flex h-8 items-center gap-1.5 rounded-md border border-line px-3 text-sm hover:bg-surface-2" :disabled="uploading" @click="fileInput?.click()">
+                <div class="flex flex-wrap gap-2">
+                    <button class="inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-md border border-line px-3 text-sm hover:bg-surface-2" :disabled="uploading" @click="fileInput?.click()">
                         <Loader2 v-if="uploading" class="size-4 animate-spin" /><ImagePlus v-else class="size-4" />{{ item.image ? t('designer.replaceImage') : t('designer.uploadImage') }}
                     </button>
-                    <button v-if="item.image" class="inline-flex h-8 items-center rounded-md px-2 text-sm text-muted hover:text-danger" @click="removeImage">{{ t('designer.removeImage') }}</button>
+                    <button class="inline-flex h-8 items-center gap-1.5 whitespace-nowrap rounded-md border border-line px-3 text-sm hover:bg-surface-2" data-choose-library @click="libraryOpen = true">
+                        <Images class="size-4" />{{ t('designer.library') }}
+                    </button>
+                    <button v-if="item.image || item.library_image" class="inline-flex h-8 items-center rounded-md px-2 text-sm text-muted hover:text-danger" @click="removeImage">{{ t('designer.removeImage') }}</button>
                 </div>
+                <p v-if="item.library_image" class="rounded-md bg-surface-2 p-2 text-xs text-muted" data-library-linked>{{ t('designer.libraryHint') }}</p>
+                <LibraryPicker v-model:open="libraryOpen" @pick="pickLibraryImage" />
                 <input ref="file" type="file" accept="image/png,image/jpeg,image/webp" class="hidden" data-upload @change="upload" />
                 <p class="text-xs text-muted">{{ t(item.type === 'background' ? 'designer.backgroundHint' : item.type === 'logo' ? 'designer.logoHint' : 'designer.fallbackHint') }}</p>
             </div>

@@ -43,6 +43,7 @@ export async function buildLayoutFile(elements: DesignElement[], size: { width: 
             width: element.width,
             height: element.height,
             style: { ...element.style },
+            library_image: element.library_image ?? null,
             image_data: element.image_url ? await toDataUrl(element.image_url) : null,
         });
     }
@@ -75,7 +76,13 @@ const SCALED_STYLE = ['font_size', 'letter_spacing', 'padding', 'border_width', 
  * differs, everything is scaled by one factor (so nothing is stretched) and centred; a background
  * always covers the whole side. `turned` tells that the orientation differs, so the result needs rearranging.
  */
-export async function importLayout(file: LayoutFile, templateId: string, size: { width: number; height: number }): Promise<{ elements: DesignElement[]; scaled: boolean; turned: boolean }> {
+export async function importLayout(
+    file: LayoutFile,
+    templateId: string,
+    size: { width: number; height: number },
+    /** This organization's library (id => url): images from it are linked again instead of uploaded. */
+    library: Map<string, string> = new Map(),
+): Promise<{ elements: DesignElement[]; scaled: boolean; turned: boolean }> {
     const factor = Math.min(size.width / file.size_mm.width, size.height / file.size_mm.height);
     const scaled = Math.abs(factor - 1) > 0.001 || Math.abs(size.width - file.size_mm.width) > 0.05 || Math.abs(size.height - file.size_mm.height) > 0.05;
     const turned = (size.width > size.height) !== (file.size_mm.width > file.size_mm.height);
@@ -84,10 +91,13 @@ export async function importLayout(file: LayoutFile, templateId: string, size: {
     const round = (value: number) => Math.round(value * 10) / 10;
     const elements: DesignElement[] = [];
 
-    for (const { image_data: imageData, ...element } of file.elements) {
+    for (const { image_data: imageData, library_image: libraryImage, ...element } of file.elements) {
         let image: string | null = null;
         let imageUrl: string | null = null;
-        if (imageData) {
+        const linked = libraryImage && library.has(libraryImage) ? libraryImage : null;
+        if (linked) {
+            imageUrl = library.get(linked) ?? null;
+        } else if (imageData) {
             const blob = await (await fetch(imageData)).blob();
             const body = new FormData();
             body.append('file', blob, `image.${blob.type.split('/')[1] ?? 'png'}`);
@@ -115,7 +125,7 @@ export async function importLayout(file: LayoutFile, templateId: string, size: {
                       width: Math.max(0.2, Math.min(round(element.width * factor), size.width)),
                       height: Math.max(0.2, Math.min(round(element.height * factor), size.height)),
                   };
-        elements.push({ ...element, style, image, image_url: imageUrl, ...rect });
+        elements.push({ ...element, style, image, library_image: linked, image_url: imageUrl, ...rect });
     }
 
     return { elements, scaled, turned };
