@@ -25,4 +25,11 @@ interface CardTemplateElementRepositoryInterface extends RepositoryInterface
      * @return Collection<int, CardTemplateElement>
      */
     public function replaceForTemplate(CardTemplate $template, array $elements): Collection;
+
+    /**
+     * Names of the templates with an element in the given font family.
+     *
+     * @return array<int, string>
+     */
+    public function templatesUsingFont(string $family): array;
 }

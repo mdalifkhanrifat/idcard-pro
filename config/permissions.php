@@ -25,6 +25,8 @@ return [
         'cardholders' => ['view', 'create', 'update', 'delete', 'import'],
         'signatories' => ['view', 'create', 'update', 'delete'],
         'templates' => ['view', 'create', 'update', 'delete'],
+        // Licensed fonts for card templates; anyone with templates.view can also use (list) them
+        'fonts' => ['view', 'create', 'delete'],
     ],
 
     'default_roles' => [
@@ -36,6 +38,7 @@ return [
             'cardholders.view', 'cardholders.create', 'cardholders.update', 'cardholders.delete', 'cardholders.import',
             'signatories.view', 'signatories.create', 'signatories.update', 'signatories.delete',
             'templates.view', 'templates.create', 'templates.update', 'templates.delete',
+            'fonts.view', 'fonts.create', 'fonts.delete',
         ],
         'Operator' => ['users.view', 'master_data.view', 'cardholders.view', 'cardholders.create', 'cardholders.update', 'templates.view'],
         'Viewer' => ['users.view', 'audit.view', 'master_data.view', 'cardholders.view'],

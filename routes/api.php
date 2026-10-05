@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\V1\Platform\TenantController;
 use App\Http\Controllers\Api\V1\QualificationController;
 use App\Http\Controllers\Api\V1\RoleController;
 use App\Http\Controllers\Api\V1\SignatoryController;
+use App\Http\Controllers\Api\V1\TenantFontController;
 use App\Http\Controllers\Api\V1\TenantSettingsController;
 use App\Http\Controllers\Api\V1\UserController;
 use Illuminate\Support\Facades\Route;
@@ -45,6 +46,9 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::get('card-template-images/{template}/{image}', [CardTemplateElementController::class, 'image'])
         ->middleware(['signed:relative', 'throttle:120,1'])
         ->name('card-template-images.show');
+    Route::get('font-files/{font}', [TenantFontController::class, 'file'])
+        ->middleware(['signed:relative', 'throttle:120,1'])
+        ->name('font-files.show');
 
     Route::middleware(['auth:sanctum', 'tenant'])->group(function () {
 
@@ -105,6 +109,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('card-templates/{template}/preview', [CardTemplateElementController::class, 'preview'])->name('card-templates.preview');
 
             Route::apiResource('signatories', SignatoryController::class);
+            Route::apiResource('fonts', TenantFontController::class)->only(['index', 'store', 'destroy']);
             Route::post('signatories/{signatory}/signature', [SignatoryController::class, 'uploadSignature'])->name('signatories.signature.store');
             Route::delete('signatories/{signatory}/signature', [SignatoryController::class, 'removeSignature'])->name('signatories.signature.destroy');
             Route::apiResource('cardholders.files', CardholderFileController::class)->only(['index', 'store', 'destroy'])->scoped(['cardholder' => 'public_id', 'file' => 'public_id']);

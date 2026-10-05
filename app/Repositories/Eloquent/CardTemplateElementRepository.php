@@ -32,4 +32,15 @@ class CardTemplateElementRepository extends EloquentRepository implements CardTe
 
         return $this->forTemplate($template);
     }
+
+    public function templatesUsingFont(string $family): array
+    {
+        return $this->query()
+            ->where('style->font_family', $family)
+            ->join('card_templates', 'card_templates.id', '=', 'card_template_elements.card_template_id')
+            ->distinct()
+            ->orderBy('card_templates.name')
+            ->pluck('card_templates.name')
+            ->all();
+    }
 }
