@@ -345,6 +345,10 @@ export interface DesignElementStyle {
     border_style?: 'solid' | 'dashed' | 'dotted';
     /** Degrees; the content turns inside the unrotated box. */
     rotation?: 0 | 90 | 180 | 270;
+    /** Degrees (−180..180): the whole element tilts around its centre, after `rotation`. */
+    angle?: number;
+    /** A tilted element may reach past the card edge and is cut off there. */
+    bleed?: boolean;
     /** Editing only: cannot be moved or changed. */
     locked?: boolean;
     /** Kept in the design but not printed. */

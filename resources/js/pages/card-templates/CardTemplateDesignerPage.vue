@@ -425,6 +425,7 @@ function itemTitle(item: DesignerItem): string {
                     @select-many="designer.selectMany"
                     @move-group="designer.moveBy"
                     @rect="designer.setRect"
+                    @tilt="designer.setAngle"
                 />
                 <p v-if="editable" class="absolute right-3 bottom-2 hidden text-[11px] text-muted lg:block">{{ t('designer.shortcuts') }}</p>
             </section>
@@ -454,6 +455,7 @@ function itemTitle(item: DesignerItem): string {
                     :field-label="fieldLabel"
                     :errors="errors[selected.key] ?? []"
                     @rect="designer.setRect(selected.key, $event)"
+                    @tilt="designer.setAngle(selected.key, $event)"
                     @remove="remove"
                     :double-sided="template.is_double_sided"
                     @flag="designer.toggleFlag(selected.key, $event)"

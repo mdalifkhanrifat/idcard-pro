@@ -1,6 +1,7 @@
 import { computed, ref, watch } from 'vue';
 import { http, toApiError } from '@/lib/http';
-import type { CardSide, CardTemplate, DesignElement, DesignElementType, DesignerCatalog } from '@/types';
+import { coveredArea, fitTilted, normaliseAngle } from './geometry';
+import type { CardSide, CardTemplate, DesignElement, DesignElementStyle, DesignElementType, DesignerCatalog } from '@/types';
 
 /** A designer element with a local key; server ids change on every save. */
 export interface DesignerItem extends DesignElement {
@@ -208,17 +209,37 @@ export function useDesigner() {
         selectedKey.value = null;
     }
 
-    /** Keep a rectangle inside the card and at least MIN_SIZE wide and high. */
-    function clampRect(rect: Rect): Rect {
+    /**
+     * Keep a rectangle inside the card and at least MIN_SIZE wide and high. With the element's style,
+     * a tilted element (without bleed) also keeps its tilted area on the card.
+     */
+    function clampRect(rect: Rect, style: DesignElementStyle = {}): Rect {
         const width = roundMm(Math.min(Math.max(rect.width, MIN_SIZE), size.value.width));
         const height = roundMm(Math.min(Math.max(rect.height, MIN_SIZE), size.value.height));
-
-        return {
-            x: roundMm(Math.min(Math.max(rect.x, 0), size.value.width - width)),
-            y: roundMm(Math.min(Math.max(rect.y, 0), size.value.height - height)),
+        const inside = {
+            x: Math.min(Math.max(rect.x, 0), size.value.width - width),
+            y: Math.min(Math.max(rect.y, 0), size.value.height - height),
             width,
             height,
         };
+        const fitted = fitTilted(inside, style, size.value);
+
+        return { x: roundMm(fitted.x), y: roundMm(fitted.y), width, height };
+    }
+
+    /** Tilt an element (degrees, −180..180); it moves inward when the tilt would leave the card. */
+    function setAngle(key: number, angle: number): void {
+        const item = items.value.find((candidate) => candidate.key === key);
+        if (!item || item.style.locked) {
+            return;
+        }
+        const value = normaliseAngle(angle);
+        if (value === 0) {
+            delete item.style.angle;
+        } else {
+            item.style.angle = value;
+        }
+        Object.assign(item, clampRect(item, item.style));
     }
 
     /**
@@ -269,7 +290,7 @@ export function useDesigner() {
     function setRect(key: number, rect: Rect): void {
         const item = items.value.find((candidate) => candidate.key === key);
         if (item) {
-            Object.assign(item, clampRect(rect));
+            Object.assign(item, clampRect(rect, item.style));
         }
     }
 
@@ -298,10 +319,12 @@ export function useDesigner() {
             return;
         }
         const start = (item: DesignerItem): Rect => from?.get(item.key) ?? item;
-        const left = Math.min(...group.map((item) => start(item).x));
-        const top = Math.min(...group.map((item) => start(item).y));
-        const right = Math.max(...group.map((item) => start(item).x + start(item).width));
-        const bottom = Math.max(...group.map((item) => start(item).y + start(item).height));
+        // Tilted elements count with the area they cover, so a group never pushes one past the edge.
+        const areas = group.map((item) => coveredArea(start(item), item.style));
+        const left = Math.min(...areas.map((area) => area.left));
+        const top = Math.min(...areas.map((area) => area.top));
+        const right = Math.max(...areas.map((area) => area.right));
+        const bottom = Math.max(...areas.map((area) => area.bottom));
         const stepX = Math.min(Math.max(dx, -left), size.value.width - right);
         const stepY = Math.min(Math.max(dy, -top), size.value.height - bottom);
         for (const item of group) {
@@ -334,7 +357,7 @@ export function useDesigner() {
         for (const item of group) {
             const x = { left: bounds.left, center: (bounds.left + bounds.right - item.width) / 2, right: bounds.right - item.width }[mode as 'left' | 'center' | 'right'];
             const y = { top: bounds.top, middle: (bounds.top + bounds.bottom - item.height) / 2, bottom: bounds.bottom - item.height }[mode as 'top' | 'middle' | 'bottom'];
-            Object.assign(item, clampRect({ x: x ?? item.x, y: y ?? item.y, width: item.width, height: item.height }));
+            Object.assign(item, clampRect({ x: x ?? item.x, y: y ?? item.y, width: item.width, height: item.height }, item.style));
         }
     }
 
@@ -366,7 +389,7 @@ export function useDesigner() {
             return;
         }
         const copy = toItem({ ...source, id: undefined });
-        Object.assign(copy, clampRect({ x: source.x + 2, y: source.y + 2, width: source.width, height: source.height }));
+        Object.assign(copy, clampRect({ x: source.x + 2, y: source.y + 2, width: source.width, height: source.height }, source.style));
         items.value.splice(index + 1, 0, copy);
         selectedKey.value = copy.key;
     }
@@ -512,6 +535,7 @@ export function useDesigner() {
         copyToOtherSide,
         replaceAll,
         setRect,
+        setAngle,
         clampRect,
         save,
         undo,

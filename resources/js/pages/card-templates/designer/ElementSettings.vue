@@ -57,7 +57,7 @@ const props = defineProps<{
     doubleSided: boolean;
 }>();
 
-const emit = defineEmits<{ rect: [rect: Rect]; remove: []; duplicate: []; layer: [move: LayerMove]; flag: [flag: 'locked' | 'hidden']; otherSide: [] }>();
+const emit = defineEmits<{ rect: [rect: Rect]; tilt: [angle: number]; remove: []; duplicate: []; layer: [move: LayerMove]; flag: [flag: 'locked' | 'hidden']; otherSide: [] }>();
 const { t } = useI18n();
 const ui = useUiStore();
 
@@ -179,6 +179,17 @@ function setNumber(key: NumberKey, event: Event, min: number, max: number): void
 
 function borderStyle(value: string): DesignElementStyle['border_style'] {
     return value === 'dashed' || value === 'dotted' ? value : undefined;
+}
+
+function setTilt(event: Event): void {
+    const value = Number.parseFloat((event.target as HTMLInputElement).value);
+    emit('tilt', Number.isFinite(value) ? value : 0);
+}
+
+/** Turning bleed off may pull the element back onto the card. */
+function setBleed(event: Event): void {
+    setStyle('bleed', (event.target as HTMLInputElement).checked);
+    emit('rect', { x: props.item.x, y: props.item.y, width: props.item.width, height: props.item.height });
 }
 
 function setOpacity(event: Event): void {
@@ -584,6 +595,16 @@ function pickLibraryImage(image: LibraryImage): void {
                                 </button>
                             </div>
                         </div>
+                    </div>
+                    <div class="grid grid-cols-[6rem_1fr] items-end gap-2">
+                        <label class="block space-y-1">
+                            <span class="block truncate text-xs font-medium text-muted">{{ t('designer.tilt') }}</span>
+                            <input :value="item.style.angle ?? 0" type="number" min="-180" max="180" step="1" :class="inputClass" data-setting="angle" @change="setTilt($event)" />
+                        </label>
+                        <label class="flex h-8 items-center gap-2 text-xs text-fg" :title="t('designer.bleedHint')">
+                            <input type="checkbox" :checked="!!item.style.bleed" class="size-4 accent-[var(--brand)]" data-setting="bleed" @change="setBleed($event)" />
+                            {{ t('designer.bleed') }}
+                        </label>
                     </div>
                     <label class="block space-y-1">
                         <span class="flex justify-between text-xs font-medium text-muted">

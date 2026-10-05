@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import './cardFonts';
 import DesignerElement from './DesignerElement.vue';
+import { normaliseAngle } from './geometry';
 import { sideCss } from './styles';
 import { MIN_SIZE, roundMm, type DesignerItem, type Rect } from './useDesigner';
 
@@ -31,6 +33,8 @@ const props = defineProps<{
     guides?: boolean;
 }>();
 
+const { t } = useI18n();
+
 /** Keep important content this far inside the card edge (cutting and printer tolerance). */
 const SAFE_MARGIN_MM = 3;
 
@@ -42,6 +46,8 @@ const emit = defineEmits<{
     /** Several selected elements dragged together, by mm from where they started. */
     moveGroup: [keys: number[], dx: number, dy: number, from: Map<number, Rect>];
     rect: [key: number, rect: Rect];
+    /** The rotate handle was dragged: the element's new tilt in degrees. */
+    tilt: [key: number, angle: number];
     /** A drag or resize finished and changed something. */
     changed: [key: number];
 }>();
@@ -61,12 +67,14 @@ const HANDLES: { handle: Handle; style: Record<string, string>; cursor: string }
 const background = computed(() => props.items.find((item) => item.type === 'background' && !(props.bare && item.style.hidden)) ?? null);
 const layers = computed(() => props.items.filter((item) => item.type !== 'background' && !(props.bare && item.style.hidden)));
 
-function box(item: DesignerItem): Record<string, string> {
+/** Position and size; a tilted element turns around its centre, its outline and handles with it. */
+function box(item: DesignerItem): Record<string, string | undefined> {
     return {
         left: `${item.x * props.scale}px`,
         top: `${item.y * props.scale}px`,
         width: `${item.width * props.scale}px`,
         height: `${item.height * props.scale}px`,
+        transform: item.style.angle ? `rotate(${item.style.angle}deg)` : undefined,
     };
 }
 
@@ -85,16 +93,20 @@ function outline(item: DesignerItem): string {
 
 let drag: {
     key: number;
-    mode: 'move' | Handle;
+    mode: 'move' | 'rotate' | Handle;
     pointerX: number;
     pointerY: number;
     start: Rect;
+    /** Tilt in degrees when the drag started. */
+    angle: number;
+    /** Screen position of the element centre (rotating). */
+    centre: { x: number; y: number };
     moved: boolean;
     /** Start positions of the other selected elements when moving a group. */
     group: Map<number, Rect> | null;
 } | null = null;
 
-function start(event: PointerEvent, item: DesignerItem, mode: 'move' | Handle): void {
+function start(event: PointerEvent, item: DesignerItem, mode: 'move' | 'rotate' | Handle): void {
     if (event.shiftKey || event.ctrlKey || event.metaKey) {
         emit('select', item.key, true);
 
@@ -113,7 +125,19 @@ function start(event: PointerEvent, item: DesignerItem, mode: 'move' | Handle): 
     }
     event.preventDefault();
     const group = inGroup ? new Map(props.items.filter((candidate) => selectedSet.value.has(candidate.key)).map((candidate) => [candidate.key, { x: candidate.x, y: candidate.y, width: candidate.width, height: candidate.height }])) : null;
-    drag = { key: item.key, mode, pointerX: event.clientX, pointerY: event.clientY, start: { x: item.x, y: item.y, width: item.width, height: item.height }, moved: false, group };
+    // The outline's screen box is centred on the element even when tilted.
+    const outlineBox = (event.currentTarget as HTMLElement).closest('[data-key]')?.getBoundingClientRect();
+    drag = {
+        key: item.key,
+        mode,
+        pointerX: event.clientX,
+        pointerY: event.clientY,
+        start: { x: item.x, y: item.y, width: item.width, height: item.height },
+        angle: item.style.angle ?? 0,
+        centre: outlineBox ? { x: outlineBox.left + outlineBox.width / 2, y: outlineBox.top + outlineBox.height / 2 } : { x: event.clientX, y: event.clientY },
+        moved: false,
+        group,
+    };
     collectTargets(new Set(group ? group.keys() : [item.key]));
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', stop);
@@ -175,6 +199,19 @@ function move(event: PointerEvent): void {
     const { x, y, width, height } = drag.start;
     const useGuides = !event.altKey;
     guideLines.value = { x: [], y: [] };
+    if (drag.mode === 'rotate') {
+        // Angle of the pointer around the centre; the handle sits above the element (−90°). Shift: 15° steps.
+        const pointer = (Math.atan2(event.clientY - drag.centre.y, event.clientX - drag.centre.x) * 180) / Math.PI + 90;
+        const angle = event.shiftKey ? Math.round(pointer / 15) * 15 : Math.round(pointer);
+        emit('tilt', drag.key, normaliseAngle(angle));
+
+        return;
+    }
+    if (drag.mode !== 'move' && drag.angle) {
+        resizeTilted(drag.mode, dx, dy);
+
+        return;
+    }
     if (drag.mode === 'move') {
         let left = snapped(x + dx);
         let top = snapped(y + dy);
@@ -228,6 +265,46 @@ function move(event: PointerEvent): void {
         bottom = edge(guided(bottom + dy, 'y'), top, props.height, false);
     }
     emit('rect', drag.key, { x: roundMm(left), y: roundMm(top), width: roundMm(right - left), height: roundMm(bottom - top) });
+}
+
+/**
+ * Resizing a tilted element: the pointer movement is turned into the element's own axes, and the
+ * opposite edge stays where it is on screen (no guides or grid, they follow the card's axes).
+ */
+function resizeTilted(handle: Handle, dx: number, dy: number): void {
+    if (!drag) {
+        return;
+    }
+    const { x, y, width, height } = drag.start;
+    const radians = (drag.angle * Math.PI) / 180;
+    const cos = Math.cos(radians);
+    const sin = Math.sin(radians);
+    const localX = dx * cos + dy * sin;
+    const localY = -dx * sin + dy * cos;
+    let left = 0;
+    let top = 0;
+    let right = width;
+    let bottom = height;
+    if (handle.includes('w')) {
+        left = Math.min(localX, width - MIN_SIZE);
+    }
+    if (handle.includes('e')) {
+        right = Math.max(width + localX, MIN_SIZE);
+    }
+    if (handle.includes('n')) {
+        top = Math.min(localY, height - MIN_SIZE);
+    }
+    if (handle.includes('s')) {
+        bottom = Math.max(height + localY, MIN_SIZE);
+    }
+    // Where the centre moved, in the element's axes, then on the card
+    const shiftX = (left + right) / 2 - width / 2;
+    const shiftY = (top + bottom) / 2 - height / 2;
+    const centreX = x + width / 2 + shiftX * cos - shiftY * sin;
+    const centreY = y + height / 2 + shiftX * sin + shiftY * cos;
+    const newWidth = right - left;
+    const newHeight = bottom - top;
+    emit('rect', drag.key, { x: roundMm(centreX - newWidth / 2), y: roundMm(centreY - newHeight / 2), width: roundMm(newWidth), height: roundMm(newHeight) });
 }
 
 function stop(): void {
@@ -354,6 +431,15 @@ onBeforeUnmount(() => {
                     :style="{ ...handle.style, cursor: handle.cursor }"
                     :data-handle="handle.handle"
                     @pointerdown.stop="start($event, item, handle.handle)"
+                />
+                <!-- Rotate handle: drag to tilt (Shift: 15° steps) -->
+                <span class="absolute left-1/2 h-4 w-px -translate-x-1/2 bg-[var(--brand)]" style="top: -16px" />
+                <span
+                    class="absolute left-1/2 z-10 size-3 -translate-x-1/2 cursor-grab rounded-full border border-white bg-[var(--brand)] shadow"
+                    style="top: -22px"
+                    :title="t('designer.tiltHandle')"
+                    data-handle="rotate"
+                    @pointerdown.stop="start($event, item, 'rotate')"
                 />
             </template>
         </div>

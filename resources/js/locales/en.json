@@ -896,7 +896,11 @@
             "shadow_blur": "Blur"
         },
         "shadowStrength": "Strength",
-        "shadowHint": "In mm; negative values move the shadow left or up. Text without a fill and transparent logos cast the shadow of their own shape."
+        "shadowHint": "In mm; negative values move the shadow left or up. Text without a fill and transparent logos cast the shadow of their own shape.",
+        "tilt": "Tilt (°)",
+        "bleed": "May be cut at the card edge",
+        "bleedHint": "Lets a tilted element reach past the card edge, where it is cut off (e.g. a diagonal ribbon). Without it, the tilted element stays on the card.",
+        "tiltHandle": "Drag to tilt (Shift: 15° steps)"
     },
     "fonts": {
         "title": "Fonts",
