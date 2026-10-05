@@ -2,6 +2,7 @@
 
 use App\Models\CardTemplate;
 use App\Models\CardTemplateElement;
+use App\Models\TenantFont;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -300,4 +301,18 @@ it('saves barcodes of a data field with their format and text option', function 
     ]])->assertJsonValidationErrors(['elements.0.field', 'elements.1.field']);
     $this->putJson($this->url, ['elements' => [designElement(['type' => 'barcode', 'style' => ['barcode_format' => 'qr']])]])
         ->assertJsonValidationErrors(['elements.0.style.barcode_format']);
+});
+
+it('offers and accepts the organization own fonts', function () {
+    Sanctum::actingAs($this->owner);
+    app(TenantContext::class)->run($this->tenant, fn () => TenantFont::factory()->create(['tenant_id' => $this->tenant->id, 'family' => 'Licensed Lipi', 'weight' => 700]));
+
+    $this->putJson($this->url, ['elements' => [designElement(['style' => ['font_family' => 'Licensed Lipi']])]])->assertOk();
+    $this->getJson($this->url)
+        ->assertJsonPath('meta.catalog.tenant_fonts.0.family', 'Licensed Lipi')
+        ->assertJsonPath('meta.catalog.tenant_fonts.0.weight', 700)
+        ->assertJson(fn ($json) => $json->where('meta.catalog.tenant_fonts.0.url', fn (string $url) => str_starts_with($url, '/api/v1/font-files/'))->etc());
+
+    $this->putJson($this->url, ['elements' => [designElement(['style' => ['font_family' => 'Unknown Lipi']])]])
+        ->assertJsonValidationErrors('elements.0.style.font_family');
 });

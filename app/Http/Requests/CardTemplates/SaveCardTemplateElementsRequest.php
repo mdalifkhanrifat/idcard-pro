@@ -4,6 +4,7 @@ namespace App\Http\Requests\CardTemplates;
 
 use App\Models\CardTemplateElement;
 use App\Services\CardTemplates\CardTemplateImageService;
+use App\Services\Fonts\TenantFontService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -46,7 +47,11 @@ class SaveCardTemplateElementsRequest extends FormRequest
             'elements.*.width' => ['required', 'numeric', 'min:0.2', 'max:1000'],
             'elements.*.height' => ['required', 'numeric', 'min:0.2', 'max:1000'],
             'elements.*.style' => ['nullable', 'array:'.implode(',', array_merge(...array_values((array) config('card_template_elements.style'))))],
-            'elements.*.style.font_family' => ['nullable', Rule::in([...(array) config('card_template_elements.bundled_fonts'), ...(array) config('card_template_elements.system_fonts')])],
+            'elements.*.style.font_family' => ['nullable', Rule::in([
+                ...(array) config('card_template_elements.bundled_fonts'),
+                ...(array) config('card_template_elements.system_fonts'),
+                ...app(TenantFontService::class)->families(),
+            ])],
             'elements.*.style.font_size' => ['nullable', 'numeric', 'between:1,72'],
             'elements.*.style.color' => $colour,
             'elements.*.style.label_color' => $colour,

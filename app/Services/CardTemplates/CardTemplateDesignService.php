@@ -6,12 +6,14 @@ use App\Enums\TemplateAudience;
 use App\Models\CardTemplate;
 use App\Models\CardTemplateElement;
 use App\Models\CustomField;
+use App\Models\TenantFont;
 use App\Repositories\Contracts\CardholderRepositoryInterface;
 use App\Repositories\Contracts\CardTemplateElementRepositoryInterface;
 use App\Repositories\Contracts\CardTemplateRepositoryInterface;
 use App\Repositories\Contracts\CustomFieldRepositoryInterface;
 use App\Repositories\Contracts\FamilyMemberRepositoryInterface;
 use App\Services\Cards\CardDataResolver;
+use App\Services\Fonts\TenantFontService;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -41,6 +43,7 @@ class CardTemplateDesignService
         private CardholderRepositoryInterface $cardholders,
         private FamilyMemberRepositoryInterface $familyMembers,
         private CardDataResolver $cardData,
+        private TenantFontService $fonts,
     ) {}
 
     /**
@@ -67,6 +70,11 @@ class CardTemplateDesignService
                 ->all(),
             'fonts' => config('card_template_elements.bundled_fonts'),
             'system_fonts' => config('card_template_elements.system_fonts'),
+            // Licensed fonts uploaded by the organization, one entry per file
+            'tenant_fonts' => $this->fonts->list()
+                ->map(fn (TenantFont $font) => ['family' => $font->family, 'weight' => $font->weight, 'style' => $font->style, 'url' => $this->fonts->url($font)])
+                ->values()
+                ->all(),
             'barcode_formats' => config('card_template_elements.barcode_formats'),
             'size_mm' => $template->sizeInMm(),
         ];
