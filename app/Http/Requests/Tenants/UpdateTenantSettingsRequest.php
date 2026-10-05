@@ -33,6 +33,7 @@ class UpdateTenantSettingsRequest extends FormRequest
             'default_card_size' => ['sometimes', 'array:width,height'],
             'default_card_size.width' => ['required_with:default_card_size', 'numeric', 'between:10,500', 'gte:default_card_size.height'],
             'default_card_size.height' => ['required_with:default_card_size', 'numeric', 'between:10,500'],
+            'card_number_on_reissue' => ['sometimes', Rule::in((array) config('cards.number_on_reissue'))],
             'card_number_format' => ['sometimes', 'string', 'max:60', function (string $attribute, mixed $value, \Closure $fail): void {
                 if (is_string($value) && ($problem = CardNumberFormat::problem($value)) !== null) {
                     $fail($problem);

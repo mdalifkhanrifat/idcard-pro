@@ -88,6 +88,16 @@ class Tenant extends Model
     }
 
     /**
+     * Card number when a holder gets another card from a template with the same code: keep or new.
+     */
+    public function cardNumberOnReissue(): string
+    {
+        $value = $this->settings['card_number_on_reissue'] ?? null;
+
+        return in_array($value, (array) config('cards.number_on_reissue'), true) ? $value : (string) config('cards.default_number_on_reissue');
+    }
+
+    /**
      * Default card size in mm, landscape (legacy "Template Setup"); CR80 unless the organization set one.
      *
      * @return array{width: float, height: float}

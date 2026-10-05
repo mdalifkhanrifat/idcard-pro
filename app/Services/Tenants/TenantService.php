@@ -91,7 +91,7 @@ class TenantService
             $data['logo_path'] = $logo->store("tenants/{$tenant->public_id}/branding", 'public');
         }
         // Card settings live in the settings JSON next to other organization preferences.
-        foreach (['card_number_format', 'default_card_size'] as $key) {
+        foreach (['card_number_format', 'default_card_size', 'card_number_on_reissue'] as $key) {
             if (array_key_exists($key, $data)) {
                 $value = $key === 'default_card_size' ? array_map(floatval(...), $data[$key]) : $data[$key];
                 $data['settings'] = [...($data['settings'] ?? $tenant->settings ?? []), $key => $value];

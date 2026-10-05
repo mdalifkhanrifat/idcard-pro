@@ -29,6 +29,8 @@ return [
         'fonts' => ['view', 'create', 'delete'],
         // Image library (logos, backgrounds) linked from templates; templates.view may also list it
         'images' => ['view', 'create', 'update', 'delete'],
+        // Issued cards: issue a new card, update its RF number or notes, revoke it
+        'cards' => ['view', 'issue', 'update', 'revoke'],
     ],
 
     'default_roles' => [
@@ -42,9 +44,11 @@ return [
             'templates.view', 'templates.create', 'templates.update', 'templates.delete',
             'fonts.view', 'fonts.create', 'fonts.delete',
             'images.view', 'images.create', 'images.update', 'images.delete',
+            'cards.view', 'cards.issue', 'cards.update', 'cards.revoke',
         ],
-        'Operator' => ['users.view', 'master_data.view', 'cardholders.view', 'cardholders.create', 'cardholders.update', 'templates.view'],
-        'Viewer' => ['users.view', 'audit.view', 'master_data.view', 'cardholders.view'],
+        // Legacy operators printed cards, so they issue them too
+        'Operator' => ['users.view', 'master_data.view', 'cardholders.view', 'cardholders.create', 'cardholders.update', 'templates.view', 'cards.view', 'cards.issue'],
+        'Viewer' => ['users.view', 'audit.view', 'master_data.view', 'cardholders.view', 'cards.view'],
     ],
 
 ];

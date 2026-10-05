@@ -31,6 +31,7 @@ class TenantResource extends JsonResource
             'logo_url' => $this->logo_path ? url('storage/'.$this->logo_path) : null,
             'card_number_format' => $this->settings['card_number_format'] ?? CardNumberFormat::DEFAULT,
             'default_card_size' => $this->resource->defaultCardSize(),
+            'card_number_on_reissue' => $this->resource->cardNumberOnReissue(),
             'status' => $this->status,
             'users_count' => $this->whenCounted('users'),
             'created_at' => $this->created_at,

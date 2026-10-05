@@ -270,6 +270,16 @@ class Cardholder extends Model
     }
 
     /**
+     * Issued cards, newest first (the cardholder's own and their family members').
+     *
+     * @return HasMany<Card, $this>
+     */
+    public function cards(): HasMany
+    {
+        return $this->hasMany(Card::class)->latest('id');
+    }
+
+    /**
      * @return HasMany<FamilyMember, $this>
      */
     public function familyMembers(): HasMany
