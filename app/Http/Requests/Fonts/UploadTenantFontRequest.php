@@ -31,4 +31,12 @@ class UploadTenantFontRequest extends FormRequest
             'licence_confirmed' => ['accepted'],
         ];
     }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return ['licence_confirmed.accepted' => __('fonts.licence_required')];
+    }
 }

@@ -86,7 +86,7 @@ it('takes a given family, weight and style and recognizes OpenType and WOFF', fu
     $upload(['file' => fontFile(), 'family' => 'Nikosh', 'weight' => 700, 'style' => 'italic'])->assertJsonValidationErrors('family');
     $upload(['file' => fontFile(), 'family' => 'inter'])->assertJsonValidationErrors('family');
     $this->post('/api/v1/fonts', ['file' => fontFile(), 'weight' => 450], ['Accept' => 'application/json'])
-        ->assertJsonValidationErrors(['licence_confirmed', 'weight']);
+        ->assertJsonValidationErrors(['licence_confirmed' => __('fonts.licence_required'), 'weight']);
 
     expect(TenantFont::query()->pluck('family')->sort()->values()->all())->toBe(['Nikosh', 'Woff Lipi']);
 });

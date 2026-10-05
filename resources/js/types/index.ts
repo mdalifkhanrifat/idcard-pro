@@ -241,6 +241,21 @@ export interface CardholderImport {
     created_at: string;
 }
 
+/** A licensed font file uploaded by the organization (one weight and style of a family). */
+export interface TenantFont {
+    id: string;
+    family: string;
+    weight: number;
+    style: 'normal' | 'italic';
+    format: 'truetype' | 'opentype' | 'woff' | 'woff2';
+    original_name: string;
+    /** Bytes. */
+    size: number;
+    /** Signed link, stable for a day so the browser caches the file. */
+    url: string;
+    created_at: string;
+}
+
 export interface Signatory {
     id: string;
     name: string;
