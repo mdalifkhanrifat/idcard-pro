@@ -62,6 +62,9 @@ const ui = useUiStore();
 const isText = computed(() => props.item.type === 'field' || props.item.type === 'text');
 const hasImage = computed(() => props.catalog.types[props.item.type]?.image === true);
 const isBarcode = computed(() => props.item.type === 'barcode');
+/** Families uploaded by the organization; a legacy name like SolaimanLipi then no longer depends on the computer. */
+const tenantFamilies = computed(() => [...new Set(props.catalog.tenant_fonts.map((font) => font.family))]);
+const systemFonts = computed(() => props.catalog.system_fonts.filter((font) => !tenantFamilies.value.includes(font)));
 /** Narrowest bar (mm) with the sample value, so a too-small barcode is noticed before printing; 0 = cannot encode. */
 const barcodeModule = computed(() => {
     if (!isBarcode.value) {
@@ -394,11 +397,14 @@ function removeImage(): void {
                             <span class="text-xs font-medium text-muted">{{ t('designer.font') }}</span>
                             <select :value="item.style.font_family ?? ''" :class="inputClass" data-setting="font_family" @change="setStyle('font_family', ($event.target as HTMLSelectElement).value)">
                                 <option value="">{{ t('designer.defaultFont') }}</option>
+                                <optgroup v-if="tenantFamilies.length" :label="t('designer.tenantFonts')">
+                                    <option v-for="font in tenantFamilies" :key="font" :value="font" :style="{ fontFamily: font }">{{ font }}</option>
+                                </optgroup>
                                 <optgroup :label="t('designer.bundledFonts')">
                                     <option v-for="font in catalog.fonts" :key="font" :value="font" :style="{ fontFamily: font }">{{ font }}</option>
                                 </optgroup>
                                 <optgroup :label="t('designer.systemFonts')">
-                                    <option v-for="font in catalog.system_fonts" :key="font" :value="font">{{ font }}</option>
+                                    <option v-for="font in systemFonts" :key="font" :value="font">{{ font }}</option>
                                 </optgroup>
                             </select>
                         </label>
@@ -421,7 +427,7 @@ function removeImage(): void {
                             {{ t(`designer.textFlags.${flag}`) }}
                         </button>
                     </div>
-                    <p v-if="item.style.font_family && catalog.system_fonts.includes(item.style.font_family)" class="text-xs text-warning" data-font-warning>
+                    <p v-if="item.style.font_family && systemFonts.includes(item.style.font_family)" class="text-xs text-warning" data-font-warning>
                         {{ t(item.style.font_family === 'SutonnyMJ' ? 'designer.ansiFontHint' : 'designer.systemFontHint') }}
                     </p>
 

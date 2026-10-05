@@ -16,9 +16,10 @@ import { sampleValue } from './designer/sample';
 import { useDesigner, type DesignerItem } from './designer/useDesigner';
 import { useConfirm } from '@/composables/useConfirm';
 import { toApiError } from '@/lib/http';
+import { loadTenantFonts } from '@/lib/tenantFonts';
 import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
-import type { CardSide, DesignElementType } from '@/types';
+import type { CardSide, DesignElement, DesignElementType } from '@/types';
 
 const { t, te } = useI18n();
 const route = useRoute();
@@ -66,6 +67,9 @@ const sides = computed<CardSide[]>(() => (template.value?.is_double_sided || ite
 onMounted(async () => {
     await designer.load(String(route.params.id));
     requestAnimationFrame(fitZoom);
+    if (catalog.value?.tenant_fonts.length) {
+        loadTenantFonts(catalog.value.tenant_fonts);
+    }
 });
 
 function add(type: DesignElementType, preset?: string): void {
@@ -102,15 +106,33 @@ async function applyLayout(file: LayoutFile): Promise<void> {
     try {
         const sides = template.value.is_double_sided ? file.elements : file.elements.filter((element) => element.side === 'front');
         const { elements, scaled, turned } = await importLayout({ ...file, elements: sides }, template.value.id, size.value);
+        const missingFonts = dropUnknownFonts(elements);
         designer.replaceAll(elements);
         designer.showSide('front');
         startersOpen.value = false;
         ui.notify(t(turned ? 'designer.importedTurned' : scaled ? 'designer.importedScaled' : 'designer.imported'));
+        if (missingFonts.length) {
+            ui.notify(t('designer.importedMissingFonts', { fonts: missingFonts.join(', ') }), 'error');
+        }
     } catch (error) {
         ui.notify(toApiError(error).message, 'error');
     } finally {
         transferring.value = false;
     }
+}
+
+/** A layout from another organization may use fonts uploaded there; those fall back to the default font. */
+function dropUnknownFonts(elements: DesignElement[]): string[] {
+    const known = new Set([...(catalog.value?.fonts ?? []), ...(catalog.value?.system_fonts ?? []), ...(catalog.value?.tenant_fonts ?? []).map((font) => font.family)]);
+    const missing = new Set<string>();
+    for (const element of elements) {
+        if (element.style.font_family && !known.has(element.style.font_family)) {
+            missing.add(element.style.font_family);
+            delete element.style.font_family;
+        }
+    }
+
+    return [...missing];
 }
 
 async function importFile(event: Event): Promise<void> {

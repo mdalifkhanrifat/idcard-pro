@@ -371,5 +371,7 @@ export interface DesignerCatalog {
     /** Render only where installed on the computer. */
     system_fonts: string[];
     barcode_formats: NonNullable<DesignElementStyle['barcode_format']>[];
+    /** Licensed fonts uploaded by the organization, one entry per file. */
+    tenant_fonts: { family: string; weight: number; style: string; url: string }[];
     size_mm: { width: number; height: number };
 }

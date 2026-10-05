@@ -18,15 +18,14 @@ export async function loadTenantFonts(fonts: FontFile[]): Promise<FontFile[]> {
             const key = `${font.family}|${font.weight}|${font.style}`;
             if (!loaded.has(key)) {
                 const face = new FontFace(font.family, `url('${font.url}')`, { weight: String(font.weight), style: font.style });
+                // Added before loading, so document.fonts reports "loadingdone" and auto-fit text is measured again
+                document.fonts.add(face);
                 loaded.set(
                     key,
                     face.load().then(
+                        () => true,
                         () => {
-                            document.fonts.add(face);
-
-                            return true;
-                        },
-                        () => {
+                            document.fonts.delete(face);
                             loaded.delete(key);
 
                             return false;

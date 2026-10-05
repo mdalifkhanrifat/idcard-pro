@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onMounted, ref, useTemplateRef, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { ImageIcon, PenLine, QrCode, UserRound } from 'lucide-vue-next';
 import { QUIET_ZONE_MODULES, encodeBarcode } from './barcode';
@@ -75,11 +75,19 @@ async function refit(): Promise<void> {
 }
 
 watch(() => [props.value, props.element.content, props.element.label, props.element.width, props.element.height, props.scale, JSON.stringify(props.element.style)], refit);
+function refitAfterFonts(): void {
+    if (props.element.style.auto_fit) {
+        refit();
+    }
+}
+
 onMounted(() => {
     refit();
-    // Measurements change once web fonts finish loading.
+    // Measurements change once web fonts finish loading, including organization fonts added later.
     document.fonts?.ready.then(refit);
+    document.fonts?.addEventListener('loadingdone', refitAfterFonts);
 });
+onBeforeUnmount(() => document.fonts?.removeEventListener('loadingdone', refitAfterFonts));
 const labelStyle = computed(() => ({ color: props.element.style.label_color ?? props.element.style.color ?? '#111111' }));
 const fit = computed(() => (imageFit(props.element) === 'cover' ? 'object-cover' : 'object-contain'));
 /** Bars stretch to the box; the value shows under them in the element's font when asked. */

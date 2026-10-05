@@ -15,6 +15,7 @@ import CardThumbnail from './designer/CardThumbnail.vue';
 import { useConfirm } from '@/composables/useConfirm';
 import { useMasterDataOptions } from '@/composables/useMasterDataOptions';
 import { http, toApiError } from '@/lib/http';
+import { loadTenantFonts } from '@/lib/tenantFonts';
 import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
 import type { CardTemplate } from '@/types';
@@ -48,6 +49,8 @@ watchDebounced(() => ({ ...filters }), load, { debounce: 300, deep: true });
 onMounted(() => {
     load();
     lookups.load(['card_type']);
+    // Thumbnails draw text in the organization's own fonts too
+    http.get('/fonts').then(({ data }) => loadTenantFonts(data.data), () => undefined);
 });
 
 /** Card outline scaled to fit a 120px box, keeping the real proportions. */
