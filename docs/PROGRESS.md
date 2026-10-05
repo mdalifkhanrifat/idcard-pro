@@ -1,8 +1,29 @@
 # IDCard Pro: কাজের অগ্রগতি ও হ্যান্ডঅফ
 
 > নতুন চ্যাট বা নতুন ডেভেলপার এই ফাইল থেকে শুরু করবেন। পুরো পরিকল্পনা আছে [ROADMAP.md](ROADMAP.md)-এ।
-> সর্বশেষ আপডেট: ৫ অক্টোবর ২০২৬। **Phase 1 আর Phase 2 সম্পন্ন।** Phase 3 চলছে: ৩.১ Signatories, ৩.২ কার্ড নম্বর, ৩.৩ টেমপ্লেট, ৩.৪ টেমপ্লেট ডিজাইনার (ক–ছ: বারকোড, প্রতিষ্ঠানের ফন্ট, ছবির লাইব্রেরি, ছায়া, হেলানো, গ্রুপসহ) সম্পন্ন।
-> **এখান থেকে শুরু:** §৮ → **৩.৬ প্রিন্ট আর ইতিহাস, ধাপ ১** (৩.৫ কার্ড ইস্যু সম্পূর্ণ: কার্ডের টেবিল, ইস্যু, snapshot, বাতিল/মোছা আটকানো, তালিকা, কার্ডধারীর "কার্ড" ট্যাব, "কার্ড ইস্যু" পেজ, পরিবারের সদস্যের নিজের ছবি ও সই)। শেষ commit: `git log --oneline -1`।
+> সর্বশেষ আপডেট: ৫ অক্টোবর ২০২৬ (দিনের শেষে)। **Phase 1 আর Phase 2 সম্পন্ন।** Phase 3 চলছে: ৩.১ Signatories, ৩.২ কার্ড নম্বর, ৩.৩ টেমপ্লেট, ৩.৪ টেমপ্লেট ডিজাইনার, ৩.৫ কার্ড ইস্যু (পরিবারের সদস্যের নিজের ছবি ও সইসহ) সম্পন্ন; ৩.৬ প্রিন্টের ধাপ ১ (প্রিন্টের লগ, ব্যাকএন্ড) সম্পন্ন।
+> **এখান থেকে শুরু:** নিচের "সর্বশেষ সেশন" পড়ুন → §৮ → **৩.৬ ধাপ ২: প্রিন্টের পাতা আর "প্রিন্ট" বোতাম (UI)**। শেষ commit: `git log --oneline -1`।
+
+### সর্বশেষ সেশন (৫ অক্টোবর ২০২৬, সন্ধ্যা) — পরের দিন এখান থেকে বুঝে নিন
+
+**আজ কী হলো (commit ক্রমে):**
+1. `e543af9` — পরিবারের সদস্যের নিজের ছবি ও সই (ব্যাকএন্ড): `cardholder_files.family_member_id`; পরিবারের কার্ডে শুধু সদস্যের ছবি/সই (`CardDataResolver::holderImages()`), না থাকলে ফাঁকা।
+2. `38bf956` — একই কাজের UI: সদস্যের ফর্মে ছবি/সই, তালিকায় ছোট ছবি, ইস্যু ডায়ালগে "ছবি নেই" সতর্কতা (`cards.ts` → `missingImages()`), আপলোডের সাধারণ helper `uploadHolderImages()`।
+3. `80e7f70` — docs: ৩.৫ সম্পূর্ণ, পুরনো প্রিন্ট দেখে ৩.৬-এর পরিকল্পনা।
+4. `992beb4` — ৩.৬ ধাপ ১: প্রিন্টের লগ (`card_prints`), কার্ডে `print_count`/`last_printed_at`, পারমিশন `cards.print`, একক আর ব্যাচ প্রিন্টের API, রোল পেজে কার্ডের পারমিশনের লেবেল।
+
+**আজকের সিদ্ধান্ত (ইউজার/নকশা):**
+- পরিবারের কার্ডে **কখনো কার্ডধারীর ছবি/সই নয়** — সদস্যের নিজেরটা, না থাকলে টেমপ্লেটের বিকল্প ছবি বা ফাঁকা (পুরনো সিস্টেমে কার্ডধারীর ছবি ছাপা হতো; ইউজার বদলাতে বলেছেন)।
+- কোন ফাইলের ধরন সদস্যের জন্য চলবে তা config-এ (`config/cardholder_files.php` → `family`)।
+- **ইস্যু আর প্রিন্ট আলাদা**: একই কার্ড বারবার ছাপা যায়, প্রতিবার লগ, নতুন নম্বর/কার্ড নয়। **শুধু সক্রিয় আর মেয়াদ থাকা কার্ড ছাপা যায়** (বাতিল/বদলে যাওয়া/মেয়াদোত্তীর্ণ → 422, নতুন ইস্যু করতে বলে)। ব্যাচে একটাও না চললে কিছুই লগ হয় না।
+- `print_count` = মোট ছাপা কপি (০ = পুরনো "PENDING")।
+- প্রিন্টের পদ্ধতি config-এ (`config/cards.php` → `print.methods`: browser, pdf), কপি সর্বোচ্চ ১০, ব্যাচে সর্বোচ্চ ২০০।
+
+**পুরনো সিস্টেমের যে ফাঁক পাওয়া গেছে (এখনো বাকি):** কার্ডধারীর তালিকায় "Status: PENDING / PRINTED" কলাম — ৩.৬ ধাপ ৩-এ (`cards.print_count` দিয়ে)।
+
+**dev ডাটাবেসের অবস্থা:** migration সব চালানো, `app:sync-permissions` চালানো (৪০টা পারমিশন)। acme-এর আগে থেকে থাকা Administrator/Operator রোলে `cards.print` নিজে থেকে বসেনি (ইচ্ছাকৃত, §৬) — Owner দিয়ে লগইন করলে সব আছে; অন্য রোলে দরকার হলে Roles পেজে টিক দিন। আজকের ব্রাউজার-যাচাইয়ে কোনো কার্ড ইস্যু করা হয়নি; অস্থায়ী QA টেমপ্লেট/সদস্য মুছে ফেলা হয়েছে।
+
+**মান:** ১৯৫টা টেস্ট পাস, Larastan/Pint/vue-tsc পরিষ্কার, `npm run build` চলে।
 
 ---
 
@@ -25,7 +46,7 @@
 | 2.5 | শিক্ষা ও প্রশিক্ষণ কোর্স (এক টেবিলে), কাস্টম ফিল্ড (সেটআপ পেজ, প্রিসেট, ফর্ম ট্যাব, ফিল্টার) | `QualificationService`, `app/Services/CustomFields`, `config/custom_field_presets.php`, `pages/custom-fields` |
 | 2.6 | CSV/XLSX ইমপোর্ট: যাচাই আর প্রিভিউ, queue-তে ইমপোর্ট, ইতিহাস, টেমপ্লেট | `CardholderImportService`, `CardholderImportMapper`, `app/Jobs/ImportCardholders.php`, `app/Support/Spreadsheets`, `config/cardholder_import.php` |
 
-**মান:** ১৯০টা টেস্ট পাস, Larastan (level 5) আর Pint পরিষ্কার, TypeScript টাইপ-চেক পরিষ্কার। প্রতিটা পেজ headless Chrome-এ চালিয়ে যাচাই করা হয়েছে।
+**মান:** ১৯৫টা টেস্ট পাস, Larastan (level 5) আর Pint পরিষ্কার, TypeScript টাইপ-চেক পরিষ্কার। প্রতিটা পেজ headless Chrome-এ চালিয়ে যাচাই করা হয়েছে।
 
 **বর্তমান মডিউল আর তাদের service:**
 
@@ -48,6 +69,7 @@
 | ছবির লাইব্রেরি | `ImageLibrary\TenantImageService` (+ `ImageSanitizer`) | `TenantImageRepository`, `CardTemplateElementRepository::templatesUsingLibraryImage()/replaceLibraryImage()`, `CardTemplateRepository::incrementVersions()` |
 | কার্ডে ছাপার মান | `Cards\CardDataResolver` (প্রিভিউ, ইস্যু, `forCard()`; প্রিন্ট ৩.৬-এ) | `SignatoryRepository::activeFor()` |
 | কার্ড ইস্যু | `Cards\CardIssueService`, `Cards\CardService`, `Cards\CardNumberService`, `Cards\CardLayoutPresenter` | `CardRepository`, `CardSequenceRepository` (lockForUpdate) |
+| কার্ড প্রিন্টের লগ | `Cards\CardPrintService` (`printCard`, `printCards`, `history`, `printable`) | `CardPrintRepository`, `CardRepository::lockedByPublicIds()/addPrints()` |
 | ইমপোর্ট | `Cardholders\CardholderImportService`, `Cardholders\CardholderImportMapper` (+ `Support\Spreadsheets\TabularFileReader`) | `CardholderImportRepository` |
 
 ## ৩. চালানো
@@ -78,6 +100,8 @@ docker compose run --rm --no-deps vite npx vue-tsc --noEmit
 **দরকারি কমান্ড:**
 - `php artisan app:sync-permissions`: `config/permissions.php` থেকে পারমিশন সিঙ্ক করে। Owner রোল সবসময় সব পারমিশন পায়।
 - `php artisan app:sync-master-data`: বর্তমান প্রতিষ্ঠানগুলোতে নতুন ডিফল্ট master data যোগ করে। বারবার চালানো নিরাপদ।
+
+**API এক নজরে (কার্ড, ৩.৫–৩.৬):** `GET|POST /cardholders/{id}/cards`, `GET /cardholders/{id}/cards/next-number?template=&family_member=`, `GET /cards` (ফিল্টার §৮ ধাপ ৫), `GET /cards/summary`, `GET /cards/options`, `GET|PATCH /cards/{id}` (show-এ `meta.layout` + `meta.values`), `POST /cards/{id}/revoke`, `GET|POST /cards/{id}/prints` {method, copies, note}, `POST /cards/prints` {cards: [...], method, copies, note} (ব্যাচ)। ফাইল: `POST /cardholders/{id}/files` + ঐচ্ছিক `family_member`, `GET .../files?family_member=`।
 
 **API এক নজরে (Phase 3 পর্যন্ত):** `/api/v1/signatories`, `/api/v1/card-templates` (+ `/{id}/duplicate`, `/{id}/elements`, `/{id}/images`, `/{id}/preview`), `/api/v1/card-template-images/{template}/{image}` (signed), `/api/v1/fonts` (index/store/destroy) + `/api/v1/font-files/{font}` (signed), `/api/v1/library-images` (index/store/update/destroy, `/{id}/replace`) + `/api/v1/library-image-files/{image}` (signed)।
 
@@ -285,7 +309,7 @@ docker compose run --rm --no-deps vite npx vue-tsc --noEmit
      - ✅ (৮ক ব্যাকএন্ড, সম্পন্ন) `cardholder_files.family_member_id` (cascade; rollback-এ আগে FK, পরে index)। `config/cardholder_files.php`-এ প্রতি ধরনে `family` (photo, signature = true; document = false — দরকারে শুধু config বদলালেই চলবে)। "একটাই চালু ফাইল" হিসাব প্রতি জনে (`CardholderFileRepository::ownedBy`): কার্ডধারীর নিজের ফাইল = `family_member_id` null, তাই কার্ডধারীর ছবি/ফাইল তালিকায় সদস্যের ফাইল মেশে না। API: `POST /cardholders/{id}/files` + ঐচ্ছিক `family_member`, `GET .../files?family_member=` (অন্য কার্ডধারীর সদস্য বা document → 422); ফাইল জমা থাকে `.../cardholders/{C}/family/{M}/{collection}/`। `FamilyMember::photo()/signature()/files()`, `FamilyMemberResource`-এ `photo`/`signature` (`{id,url,width,height}`)। `CardDataResolver::holderImages()` — পরিবারের কার্ডে শুধু সদস্যের ছবি/সই (না থাকলে null → উপাদানের বিকল্প ছবি বা ফাঁকা); প্রিভিউ আর `CardIssueService` দুটোই এটা ব্যবহার করে। সদস্য মুছলে তাঁর জমা ফাইলও মোছে। ১৯০টা টেস্ট। মূল পরিকল্পনা ছিল: `cardholder_files`-এ nullable `family_member_id` (FK cascade); চালু ফাইল/`replaced_at` হিসাব (cardholder, collection, family_member_id) ধরে (`CardholderFileRepository::markReplaced`, `CardholderFileService::upload`); `Cardholder::photo()/signature()` শুধু `family_member_id` null; `FamilyMember::photo()/signature()`; `POST /cardholders/{id}/files`-এ ঐচ্ছিক `family_member`, তালিকায় ফিল্টার; `FamilyMemberResource`-এ `photo_url`/`signature_url`; `CardDataResolver::resolve()` — সদস্য থাকলে সদস্যের ছবি/সই (না থাকলে null); `CardIssueService` — পরিবারের কার্ডে `photo_file_id`/`signature_file_id` সদস্যের ফাইল; সদস্য মুছলে তাঁর ফাইল মোছে (কার্ড থাকলে মোছা এমনিতেই আটকায়); টেস্ট।
      - ✅ (৮খ UI, সম্পন্ন) `FamilyMemberDialog.vue`-তে ছবি আর সই (`CardholderImagePicker`; সেভের পর আপলোড), পরিবারের তালিকায় ছোট ছবি (কার্ডধারীর তালিকার মতো)। আপলোডের কোড এক জায়গায়: `cardholder.ts` → `uploadHolderImages(cardholderId, images, onError, familyMemberId?)` (কার্ডধারীর ফর্মও এটা ব্যবহার করে)। `cards.ts` → `missingImages(layout, values)`: দৃশ্যমান ছবির উপাদান (photo, ধারকের সই, সইকারীর সই — `CardValues.images`-এর যেকোনো key) যার ছাপার কিছু নেই; ইস্যু ডায়ালগে সতর্কতা (`data-missing-images`), পরিবারের কার্ডে আলাদা বার্তা। **৩.৬-এর ব্যাচ প্রিন্টেও এটা ব্যবহার করা যাবে।** ব্রাউজারে যাচাই (অস্থায়ী QA টেমপ্লেট আর সদস্য, পরে মোছা)। মূল পরিকল্পনা: `FamilyMemberDialog.vue`-তে ছবি আর সই (`CardholderImagePicker` আবার ব্যবহার), পরিবারের তালিকায় ছোট ছবি, ইস্যু ডায়ালগে সদস্যের ছবি না থাকলে সতর্কতা; ব্রাউজারে যাচাই।
      - ✅ (৮গ) PROGRESS আর ROADMAP হালনাগাদ; পুরনো প্রিন্ট দেখে ৩.৬-এর পরিকল্পনা (নিচে)।
-   - **ব্রাউজারে কার্ড যাচাইয়ের পর পরিষ্কার করা:** কার্ড মোছার API নেই (ইচ্ছাকৃত), তাই dev ডাটাবেসে পরীক্ষার কার্ড tinker দিয়ে মুছতে হয় — `cards.replaced_by_id` null → `card_assets` → `cards` → `card_sequences` (পরীক্ষার আগে যা ছিল তা রেখে) → `activity_log` (`log_name = cards`)। শুধু "QA designer check"/"QA family check" টেমপ্লেট আর ডেমো কার্ডধারী ব্যবহার করুন; ইউজারের টেমপ্লেটে কার্ড ইস্যু করলে সেগুলো আর মোছা যাবে না।
+   - **ব্রাউজারে কার্ড যাচাইয়ের পর পরিষ্কার করা:** কার্ড মোছার API নেই (ইচ্ছাকৃত), তাই dev ডাটাবেসে পরীক্ষার কার্ড tinker দিয়ে মুছতে হয় — `cards.replaced_by_id` null → `card_prints` → `card_assets` → `cards` → `card_sequences` (পরীক্ষার আগে যা ছিল তা রেখে) → `activity_log` (`log_name = cards`)। শুধু "QA designer check"/"QA family check" টেমপ্লেট আর ডেমো কার্ডধারী ব্যবহার করুন; ইউজারের টেমপ্লেটে কার্ড ইস্যু করলে সেগুলো আর মোছা যাবে না।
    - মূল পরিকল্পনা (পুরনো `card_information`): কারণ (new / promotion / lost / renewal), নোট, মেয়াদ, RF card no। প্রতিবার ইস্যুতে নতুন রেকর্ড, আগের কার্ড বাতিল। **যে ছবি, সই আর টেমপ্লেট সংস্করণ ব্যবহার হলো তার id রাখতে হবে।** পরিবারের সদস্যের কার্ডও এখানে।
    - **ছাপার নিয়ম যা ডিজাইনারে আছে, সেগুলো মানতে হবে:** লুকানো উপাদান বাদ, আসল ছবি না থাকলে উপাদানের বিকল্প ছবি, auto-fit, ঘোরানো। সবচেয়ে নিরাপদ: প্রিন্টেও `DesignerCanvas bare` + `DesignerElement` ব্যবহার করা।
    - **নকশা যেন পরে না বদলায়:** ইস্যুর সময় টেমপ্লেটের লেআউটের snapshot (elements JSON + version) কার্ডের সাথে রাখতে হবে, নইলে পরে টেমপ্লেট বদলালে পুরনো কার্ড আবার ছাপলে অন্যরকম আসবে। লোগো/ব্যাকগ্রাউন্ডের ফাইলও তখন মোছা যাবে না (এখন লেআউট থেকে বাদ পড়লে মুছে যায়)।
@@ -293,12 +317,18 @@ docker compose run --rm --no-deps vite npx vue-tsc --noEmit
    - ✅ পরিবারের সদস্যের নিজের ছবি ও সই রাখার ব্যবস্থা (ধাপ ৮)।
    - ✅ লাইব্রেরির ছবি আর ফন্ট ইস্যু হওয়া কার্ডে থাকলে মোছা যায় না (ধাপ ৪, `card_assets`)।
    - **বারকোড:** ইস্যুর সময় মান এনকোড হয় কিনা যাচাই (যেমন EAN-13-এ অক্ষর) — না হলে সতর্ক করা; প্রিন্টে লাল ভুল-বক্স ছাপা যাবে না (৩.৬)।
-6. **৩.৬ প্রিন্ট আর ইতিহাস** — ➡️ পরের কাজ (পরিকল্পনা ৫ অক্টোবর)। মান আসবে `CardDataResolver::forCard()` থেকে, আঁকা হবে `CardRender.vue` (`DesignerCanvas bare` + `styles.ts`) দিয়ে (mm ভিত্তিক, তাই প্রিন্টে `scale` = 96/25.4 বা PDF-এর DPI)। PDF বানাতে বাইরের কোনো সেবা নয়; ফন্ট `@fontsource` ফাইল থেকে।
+6. **৩.৬ প্রিন্ট আর ইতিহাস** — ➡️ চলছে (ধাপ ১ সম্পন্ন ৫ অক্টোবর)। মান আসবে `CardDataResolver::forCard()` থেকে, আঁকা হবে `CardRender.vue` (`DesignerCanvas bare` + `styles.ts`) দিয়ে (mm ভিত্তিক, তাই প্রিন্টে `scale` = 96/25.4 বা PDF-এর DPI)। PDF বানাতে বাইরের কোনো সেবা নয়; ফন্ট `@fontsource` ফাইল থেকে।
    - **পুরনো সিস্টেম দেখা হয়েছে:** কার্ডধারীর পাতায় "Card Print" ফর্ম (ধরন + নোট + ডকুমেন্ট) → "Print" চাপলে `card_print_history`-তে সারি **আর সাথে সাথে** `printArea` popup-এ কার্ড (সামনে+পেছনে) ছাপা — অর্থাৎ ইস্যু আর ছাপা একসাথে। পরিবারের কার্ড: সদস্যের পাশে "Print" (সামনে, ১০ সেকেন্ড পরে পেছনে, কোনো রেকর্ড নেই)। পাতায় শেষ ৫টা প্রিন্ট ইতিহাস। **কার্ডধারীর তালিকায় "Status" কলাম: PENDING (কখনো ছাপা হয়নি) / PRINTED** — নতুন সিস্টেমে এখনো নেই, ৩.৬-এ যোগ করতে হবে। একসাথে অনেক কার্ড ছাপার (ব্যাচ) ব্যবস্থা পুরনো সিস্টেমে ছিল না (তালিকার "Print" বোতাম শুধু টেবিল ছাপে)। রিপোর্ট "Card Print History" (তারিখ-পরিসর, ঘর ধরে খোঁজা) — ধাপ ৫-এর `/cards` তালিকা এর জায়গা নিয়েছে, ছাপার তারিখ দিয়ে ফিল্টার ৩.৬-এ।
    - **নতুন সিস্টেমে ইস্যু ≠ ছাপা:** একটা ইস্যু হওয়া কার্ড একাধিকবার ছাপা হতে পারে (প্রিন্টার আটকে গেলে, ব্যাচে), প্রতিবার আলাদা লগ; নতুন নম্বর বা নতুন কার্ড হয় না। শুধু সক্রিয় কার্ড ছাপা যায়।
    - পরিকল্পনা (ছোট ভাগে, প্রতিটা আলাদা commit):
-     - (ধাপ ১ ব্যাকএন্ড) `card_prints` টেবিল (card, printed_by, printed_at, method = browser/pdf — config থেকে বাড়ানো যায়, batch id, copies, note) + `cards.print_count`/`last_printed_at` (তালিকা আর ফিল্টারের জন্য); পারমিশন `cards.print` (Operator-ও); `CardPrintService::record()` (শুধু সক্রিয় কার্ড, ট্রানজ্যাকশন), `POST|GET /cards/{id}/prints`; টেস্ট।
-     - (ধাপ ২ UI) প্রিন্ট পাতা (আসল মাপে, `@page` = কার্ডের মাপ, সামনে-পেছনে আলাদা পাতা, `CardRender`), কার্ডের বিস্তারিত আর "কার্ড" ট্যাবে "প্রিন্ট" বোতাম, ইস্যু ডায়ালগে "ইস্যু করে প্রিন্ট" (পুরনো আচরণ), পরিবারের কার্ডেও একই; ছাপা নিশ্চিত হলে লগ।
+     - ✅ (ধাপ ১ ব্যাকএন্ড, commit `992beb4`) `card_prints` (public_id, card, `batch` ULID — একসাথে ছাপা কার্ডে একই, `method`, `copies`, `note`, `printed_by`, `printed_at`; নিজেই লগ, তাই activity log-এ আলাদা লেখা হয় না) + `cards.print_count` (মোট কপি) / `last_printed_at` (index `tenant_id, last_printed_at`)। `CardPrint` model + factory, `Data\Cards\PrintCardsData`, `PrintCardsRequest` (একই ক্লাস: route-এ `card` থাকলে একক, নইলে ব্যাচ `cards[]`), `CardPrintResource` (`card {id, number}`, `printed_by {id, name}`), `CardPrintController` (index/store/batch)। `CardPrintService::printCards()`: ট্রানজ্যাকশনে কার্ডগুলো `lockForUpdate` (দেওয়া ক্রমে, ডুপ্লিকেট বাদ), অজানা id → 422 `cards`, ছাপা যায় না এমন কার্ড থাকলে নম্বরসহ 422 আর কিছুই লগ হয় না, একাধিক কার্ড হলে batch id। `CardResource`-এ `print_count`, `last_printed_at`। পারমিশন `cards.print` (Administrator, Operator; Viewer শুধু ইতিহাস দেখে)। রোল পেজে "Issued cards" মডিউল আর Issue/Print/Revoke লেবেল (আগে কাঁচা key দেখাত)। ৫টা টেস্ট (`tests/Feature/Cards/CardPrintTest.php`)।
+     - ➡️ **(ধাপ ২ UI — পরের সেশনে এখান থেকে)** প্রিন্টের পাতা আর "প্রিন্ট" বোতাম। নকশা:
+       - নতুন রাউট, যেমন `/cards/print?ids=a,b` (একই পাতা একক আর ব্যাচ দুটোর জন্য; `meta.permission: 'cards.print'`, অ্যাপের মেনু/হেডার ছাড়া ফাঁকা লেআউট)। প্রতিটা কার্ডের জন্য `GET /cards/{id}` → `meta.layout` + `meta.values` → `CardRender` (`:sides`-এ একটা করে পাশ, যাতে প্রতিটা পাশ আলাদা পাতায়)। `CardRender`-এর নিচের "Front/Back" লেখা প্রিন্টে লুকাতে হবে (prop বা `print:hidden`)।
+       - আসল মাপ: `box` = লম্বা দিক mm × 96/25.4 px; CSS `@page { size: <width>mm <height>mm; margin: 0 }` (কার্ডের `layout.size_mm` থেকে, অনুভূমিক/খাড়া অনুযায়ী), প্রতি পাশের পরে `break-after: page`। ফন্ট আর ছবি লোড হওয়ার পর (`document.fonts.ready` + সব `img` `complete`) `window.print()`।
+       - ছাপার পরে ব্রাউজার জানায় না সত্যিই ছাপা হয়েছে কিনা, তাই `afterprint`-এর পর ছোট ডায়ালগ: "ঠিকমতো ছাপা হয়েছে?" → হ্যাঁ হলে `POST /cards/{id}/prints` (একটা হলে) বা `POST /cards/prints` (একাধিক) `method: 'browser'`; "আবার ছাপো" আর "বাতিল" (লগ নয়)।
+       - বোতাম (`auth.can('cards.print')` আর `printable` = সক্রিয় + মেয়াদ আছে): `CardDetailDialog.vue`, কার্ডধারীর "কার্ড" ট্যাবের বর্তমান কার্ড (`CardholderCards.vue`), `CardsPage.vue`-র সারি। `IssueCardDialog.vue`-তে "ইস্যু করে প্রিন্ট" (পুরনো আচরণ: ইস্যুর সাথে সাথেই ছাপা) — ইস্যুর পরে নতুন কার্ডের id দিয়ে প্রিন্টের পাতা খোলা। পরিবারের কার্ডেও একই।
+       - `missingImages()` দিয়ে প্রিন্টের আগে সতর্কতা দেখানো যায়।
+       - ব্রাউজারে যাচাই: headless Chrome-এ `window.print` stub করে পাতার মাপ/পাতা ভাঙা দেখা; পরীক্ষার কার্ড ইস্যু করলে পরে tinker দিয়ে মুছতে হবে (নিচের "পরিষ্কার করা" নোট, এখন `card_prints`-ও আগে মুছতে হবে)।
      - (ধাপ ৩) প্রিন্ট ইতিহাস কার্ডের বিস্তারিততে; **PENDING/PRINTED**: কার্ডধারীর তালিকায় কলাম + ফিল্টার (কার্ড নেই / ছাপা বাকি / ছাপা হয়েছে), `/cards`-এ "ছাপা বাকি" টাইল আর ছাপার তারিখের ফিল্টার।
      - (ধাপ ৪) ব্যাচ প্রিন্ট (নতুন): `/cards` তালিকা থেকে বাছাই করে একসাথে ছাপা — প্রতি কার্ডে এক পাতা (কার্ড প্রিন্টার) অথবা A4-এ কয়েকটা কার্ড কাটার দাগসহ; প্রতিটা কার্ডের লগ এক batch id-তে।
      - (ধাপ ৫) সার্ভারে PDF (CR80/A4): নতুন dependency লাগবে (যেমন container-এ headless Chrome বা PHP PDF লাইব্রেরি) — **শুরুর আগে ইউজারের অনুমতি নিতে হবে**; বাইরের কোনো সেবা নয়।
@@ -318,9 +348,10 @@ docker compose run --rm --no-deps vite npx vue-tsc --noEmit
 
 ```
 আমি /var/www/php74/idcard/idcard-pro প্রজেক্টে কাজ চালিয়ে যেতে চাই।
-প্রথমে docs/PROGRESS.md আর docs/ROADMAP.md পড়ো, তারপর উপরের "এখান থেকে শুরু" আর §৮-এর "৩.৬ প্রিন্ট আর ইতিহাস" দেখো।
-৩.৪ (ডিজাইনার) আর ৩.৫ (কার্ড ইস্যু, পরিবারের সদস্যের নিজের ছবি ও সইসহ) শেষ। এখন ৩.৬-এর ধাপ ১:
-প্রিন্টের লগ (card_prints), তারপর প্রিন্ট পাতা, PENDING/PRINTED, ব্যাচ প্রিন্ট; PDF-এর আগে dependency-র অনুমতি নেবে।
+প্রথমে docs/PROGRESS.md আর docs/ROADMAP.md পড়ো: উপরের "এখান থেকে শুরু" আর "সর্বশেষ সেশন",
+তারপর §৮-এর "৩.৬ প্রিন্ট আর ইতিহাস"। ৩.৫ (কার্ড ইস্যু, পরিবারের সদস্যের নিজের ছবি ও সইসহ) আর ৩.৬-এর
+ধাপ ১ (প্রিন্টের লগ, ব্যাকএন্ড) শেষ। এখন ৩.৬ ধাপ ২: প্রিন্টের পাতা আর "প্রিন্ট" বোতাম (নকশা §৮-এ লেখা),
+তারপর PENDING/PRINTED, ব্যাচ প্রিন্ট; সার্ভারে PDF-এর আগে নতুন dependency-র অনুমতি নেবে।
 পুরনো প্রজেক্ট (../idcard) ভালো করে ফলো করবে, আগের কোনো ফিচার বাদ দেবে না; প্রতিটা কাজে
 বাড়ানো যায়, নির্ভরযোগ্য আর যেকোনো HR সিস্টেমের সাথে যুক্ত করা যায় এমনভাবে করবে, আর নতুন কী যোগ করা যায় ভাববে।
 নিয়ম: ছোট ছোট ধাপে কাজ করবে, প্রতিটা ধাপের আগে ও পরে আমাকে বাংলায় জানাবে,
