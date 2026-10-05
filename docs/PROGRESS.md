@@ -1,7 +1,8 @@
 # IDCard Pro: কাজের অগ্রগতি ও হ্যান্ডঅফ
 
 > নতুন চ্যাট বা নতুন ডেভেলপার এই ফাইল থেকে শুরু করবেন। পুরো পরিকল্পনা আছে [ROADMAP.md](ROADMAP.md)-এ।
-> সর্বশেষ আপডেট: ৪ অক্টোবর ২০২৬। **Phase 1 আর Phase 2 সম্পন্ন।** Phase 3 চলছে: ৩.১ Signatories, ৩.২ কার্ড নম্বর, ৩.৩ টেমপ্লেট আর ৩.৪ টেমপ্লেট ডিজাইনার (ক–চ, পুরনো সিস্টেমের সব টেমপ্লেট-ফিচারসহ) সম্পন্ন। পরের কাজ: ৩.৫ কার্ড ইস্যু (আগে চাইলে §৮-এর "৩.৪ছ")।
+> সর্বশেষ আপডেট: ৫ অক্টোবর ২০২৬। **Phase 1 আর Phase 2 সম্পন্ন।** Phase 3 চলছে: ৩.১ Signatories, ৩.২ কার্ড নম্বর, ৩.৩ টেমপ্লেট, ৩.৪ টেমপ্লেট ডিজাইনার (ক–চ) আর ৩.৪ছ-এর বারকোড, প্রতিষ্ঠানের ফন্ট ও ছবির লাইব্রেরি সম্পন্ন।
+> **এখান থেকে শুরু:** §৮ → ৩.৪ছ-এর শেষ অংশ (ছায়া, যেকোনো কোণে ঘোরানো, স্থায়ী গ্রুপ), তারপর ৩.৫ কার্ড ইস্যু। শেষ commit: `git log --oneline -1`।
 
 ---
 
@@ -24,7 +25,7 @@
 | 2.5 | শিক্ষা ও প্রশিক্ষণ কোর্স (এক টেবিলে), কাস্টম ফিল্ড (সেটআপ পেজ, প্রিসেট, ফর্ম ট্যাব, ফিল্টার) | `QualificationService`, `app/Services/CustomFields`, `config/custom_field_presets.php`, `pages/custom-fields` |
 | 2.6 | CSV/XLSX ইমপোর্ট: যাচাই আর প্রিভিউ, queue-তে ইমপোর্ট, ইতিহাস, টেমপ্লেট | `CardholderImportService`, `CardholderImportMapper`, `app/Jobs/ImportCardholders.php`, `app/Support/Spreadsheets`, `config/cardholder_import.php` |
 
-**মান:** ১৫৪টা টেস্ট পাস (১৪৩ feature + ১১ unit), Larastan (level 5) আর Pint পরিষ্কার, TypeScript টাইপ-চেক পরিষ্কার। প্রতিটা পেজ headless Chrome-এ চালিয়ে যাচাই করা হয়েছে।
+**মান:** ১৬৫টা টেস্ট পাস, Larastan (level 5) আর Pint পরিষ্কার, TypeScript টাইপ-চেক পরিষ্কার। প্রতিটা পেজ headless Chrome-এ চালিয়ে যাচাই করা হয়েছে।
 
 **বর্তমান মডিউল আর তাদের service:**
 
@@ -43,6 +44,8 @@
 | শিক্ষা ও কোর্স | `Cardholders\QualificationService` | `QualificationRepository` |
 | কাস্টম ফিল্ড | `CustomFields\CustomFieldService` | `CustomFieldRepository` |
 | কার্ড টেমপ্লেট ও ডিজাইনার | `CardTemplates\CardTemplateService`, `CardTemplates\CardTemplateDesignService`, `CardTemplates\CardTemplateImageService` | `CardTemplateRepository`, `CardTemplateElementRepository` |
+| প্রতিষ্ঠানের ফন্ট | `Fonts\TenantFontService` (+ `Support\Media\FontInspector`) | `TenantFontRepository`, `CardTemplateElementRepository::templatesUsingFont()` |
+| ছবির লাইব্রেরি | `ImageLibrary\TenantImageService` (+ `ImageSanitizer`) | `TenantImageRepository`, `CardTemplateElementRepository::templatesUsingLibraryImage()/replaceLibraryImage()`, `CardTemplateRepository::incrementVersions()` |
 | কার্ডে ছাপার মান | `Cards\CardDataResolver` (প্রিভিউ এখন, প্রিন্ট ৩.৬-এ) | `SignatoryRepository::activeFor()` |
 | ইমপোর্ট | `Cardholders\CardholderImportService`, `Cardholders\CardholderImportMapper` (+ `Support\Spreadsheets\TabularFileReader`) | `CardholderImportRepository` |
 
@@ -75,7 +78,7 @@ docker compose run --rm --no-deps vite npx vue-tsc --noEmit
 - `php artisan app:sync-permissions`: `config/permissions.php` থেকে পারমিশন সিঙ্ক করে। Owner রোল সবসময় সব পারমিশন পায়।
 - `php artisan app:sync-master-data`: বর্তমান প্রতিষ্ঠানগুলোতে নতুন ডিফল্ট master data যোগ করে। বারবার চালানো নিরাপদ।
 
-**API এক নজরে (Phase 3 পর্যন্ত):** `/api/v1/signatories`, `/api/v1/card-templates` (+ `/{id}/duplicate`, `/{id}/elements`, `/{id}/images`, `/{id}/preview`), `/api/v1/card-template-images/{template}/{image}` (signed)।
+**API এক নজরে (Phase 3 পর্যন্ত):** `/api/v1/signatories`, `/api/v1/card-templates` (+ `/{id}/duplicate`, `/{id}/elements`, `/{id}/images`, `/{id}/preview`), `/api/v1/card-template-images/{template}/{image}` (signed), `/api/v1/fonts` (index/store/destroy) + `/api/v1/font-files/{font}` (signed), `/api/v1/library-images` (index/store/update/destroy, `/{id}/replace`) + `/api/v1/library-image-files/{image}` (signed)।
 
 **API এক নজরে (Phase 2):** `/api/v1/cardholders` (+ `/{id}/files`, `/{id}/family-members`, `/{id}/qualifications`), `/api/v1/custom-fields` (+ `/presets`), `/api/v1/cardholder-imports` (+ `/template`, `/{id}/start`), `/api/v1/cardholder-files/{id}` (signed link, লগইন লাগে না)।
 
@@ -114,6 +117,9 @@ docker compose run --rm --no-deps vite npx vue-tsc --noEmit
 ## ৫. কাজের নিয়ম
 
 - **ছোট ছোট ধাপে কাজ।** প্রতিটা ধাপের আগে "এখন করছি: …" বলা, শেষে কী হলো জানানো। একসাথে অনেক কিছু নয়।
+  - **একটা ছোট ধাপ (একটা ব্যাকএন্ড বা একটা পেজের বদল) → টেস্ট → commit → থেমে ইউজারকে জানানো**, ইউজার বললে তবেই পরের ধাপ (ইউজারের নির্দেশ, ৫ অক্টোবর)।
+  - আউটপুটে কোনো "এরর" এলে (যেমন যাচাই-স্ক্রিপ্টে 422) সাথে সাথে সহজ ভাষায় বলা: অ্যাপের বাগ, নাকি শুধু স্ক্রিপ্ট/টেস্টের ব্যাপার।
+- **বাড়ানো যায়, নির্ভরযোগ্য, আর যেকোনো HR ম্যানেজমেন্ট সিস্টেমের সাথে যুক্ত করা যায় এমন কাজ** (ইউজারের লক্ষ্য): সব ফিচার API-first (`/api/v1`, `public_id`, Resource দিয়ে স্থির আকার), কোনো প্রতিষ্ঠান-নির্দিষ্ট জিনিস কোডে বাঁধা নয় (config/master data/কাস্টম ফিল্ডে), বিজনেস নিয়ম service-এ (যাতে UI, ইমপোর্ট আর ভবিষ্যৎ HR-sync একই নিয়ম মানে), প্রতিটা বদল টেস্টসহ। HR সংযোগের পরিকল্পনা Phase 6 (webhooks, API token, কার্ডধারী sync) — নতুন কিছু বানানোর সময় সেটা যেন সহজে যোগ করা যায় খেয়াল রাখা।
 - **পুরনো সিস্টেমের কোনো ফিচার বাদ যাবে না।** নতুন ফিচার যোগ হবে।
 - **ভাষা:** ইউজারের সাথে যোগাযোগ বাংলায়। কোড আর কমেন্ট ইংরেজিতে।
 - **Git:**
@@ -258,16 +264,19 @@ docker compose run --rm --no-deps vite npx vue-tsc --noEmit
      - লেআউট ফাইল: export (JSON, `idcard-pro.card-layout` v1, লোগো/ব্যাকগ্রাউন্ড/বিকল্প ছবি data URL হিসেবে ভেতরে) আর import (ছবি নতুন করে আপলোড; মাপ আলাদা হলে এক অনুপাতে ছোট/বড় করে মাঝে বসানো, ফন্ট-বর্ডারও; ব্যাকগ্রাউন্ড পুরো কার্ড; এক পাশের টেমপ্লেটে পেছন বাদ; সেভ না করা পর্যন্ত Undo চলে)। `designer/transfer.ts`।
      - তিনটা তৈরি নকশা (হেডার ব্যান্ড, পাশের ফিতা, খাড়া কার্ড; আসল ডেটার ঘরসহ): `designer/starters.ts`, `StarterPicker.vue`।
      - "মাপে বসানো" জুম এখন জানালার উচ্চতাও দেখে (খাড়া কার্ড পর্দার বাইরে যেত)।
-   - ➡️ **৩.৪ছ — বাকি প্রস্তাব (পরের সেশনে, প্রতিটায় ইউজারের সিদ্ধান্ত লাগবে):**
-     - **বারকোড উপাদান** (Code128 ইত্যাদি)। নিজে লেখা হয়নি, কারণ প্যাটার্নে একটা ভুলও স্ক্যান নষ্ট করবে আর এখানে স্ক্যানারে পরীক্ষার উপায় নেই। পরীক্ষিত লাইব্রেরি দরকার (যেমন MIT লাইসেন্সের JsBarcode; dependency, ইউজারের অনুমতি লাগবে)।
-     - **প্রতিষ্ঠানের নিজের ফন্ট আপলোড** (লাইসেন্স করা SolaimanLipi/Nikosh ইত্যাদি): নতুন টেবিল, private disk, `@font-face` signed link, ফন্ট ফাইল যাচাই।
-     - **প্রতিষ্ঠানের ছবির লাইব্রেরি** (একই লোগো সব টেমপ্লেটে; এখন প্রতি টেমপ্লেটে আলাদা ফাইল, export/import দিয়ে সরানো যায়)।
-     - ছায়া, ঘোরানোর যেকোনো কোণ, একাধিক উপাদানকে স্থায়ী গ্রুপ।
+   - **৩.৪ছ** (ইউজার চারটাই বেছেছেন, ৫ অক্টোবর):
+     - ✅ **বারকোড উপাদান** (commit `cba1521`, `47692ff`): type `barcode` (`needs_field`), স্টাইল `barcode_format` (code128 ডিফল্ট, code39, ean13, ean8, upc, itf, codabar; config `barcode_formats`) আর `barcode_text` (নিচে মান)। এনকোড করে **JsBarcode** (MIT, ইউজার অনুমোদিত, কোনো network নেই) — `designer/barcode.ts` → `encodeBarcode()` বারের তালিকা দেয়, `DesignerElement` SVG `rect` আঁকে (বাক্সে টেনে বসে, দুই পাশে ১০ module quiet zone)। এনকোড না হলে লাল বক্স "দেখানো যায় না" (ভুল বারকোড কখনো নয়)। প্যানেলে নমুনা মানে সবচেয়ে সরু বারের মাপ, ০.২ mm-এর নিচে সতর্কতা। পুরনো `BarcodeTrait` (Code128, লেখা ছাড়া) ছিল কিন্তু কোথাও ডাকা হতো না।
+     - ✅ **প্রতিষ্ঠানের ফন্ট** (commit `c1fed92`, `19b4eac`, `a91e9a6`, `e1563e8`): `tenant_fonts` (family, weight 100–900, style normal/italic, format, private ফাইল; unique per face)। `FontInspector` ফাইলের বাইট দেখে TTF/OTF/WOFF/WOFF2 চেনে (`.ttc` বাতিল), table directory যাচাই করে, `name` টেবিল থেকে ফ্যামিলির নাম পড়ে (WOFF2 বাদে)। লাইসেন্স নিশ্চিত করা (`licence_confirmed`) বাধ্যতামূলক; বিল্ট-ইন/জেনেরিক নাম নেওয়া যায় না। টেমপ্লেটে ব্যবহৃত ফ্যামিলির শেষ ফাইল মোছা যায় না। লিংক signed, এক দিন স্থির (cache হয়)। পারমিশন `fonts.view|create|delete`; তালিকা `templates.view` থাকলেও পাওয়া যায় (কার্ড আঁকতে লাগে)। পেজ: সেটআপ → ফন্ট। ডিজাইনারে "প্রতিষ্ঠানের ফন্ট" দল, `lib/tenantFonts.ts` FontFace দিয়ে লোড করে (ডিজাইনার, থাম্বনেইল, Operator), লোডের পর auto-fit আবার মাপে। অন্য প্রতিষ্ঠানের লেআউট import-এ অজানা ফন্ট ডিফল্টে বদলায়।
+     - ✅ **ছবির লাইব্রেরি** (commit `1fa7382`, `a462bac`, `65380f2`, `5122151`; ইউজারের সিদ্ধান্ত: **যুক্ত থাকবে, কপি নয়**): `tenant_images` (ফাইল কখনো বদলায় না), উপাদানে `library_image_id` (FK restrict)। API-তে উপাদানের `library_image` = public id (`image`-এর সাথে একসাথে নয়)। ব্যবহৃত ছবি মোছা যায় না; "সব টেমপ্লেটে বদলাও" (`POST /library-images/{id}/replace {with}`, `images.update` + `templates.update`) সব উপাদান নতুন ছবিতে নেয় আর প্রতিটা টেমপ্লেটের `version++`। টেমপ্লেট কপি করলে লিংকও কপি হয়। পারমিশন `images.*`; তালিকা `templates.view`-এও। পেজ: সেটআপ → ছবির লাইব্রেরি (একসাথে কয়েকটা আপলোড, নাম বদল, ব্যবহার সংখ্যা)। ডিজাইনারে "Library" বোতাম → `LibraryPicker.vue` (সেখান থেকেই লাইব্রেরিতে আপলোড)। লেআউট export-এ `library_image` থাকে; একই প্রতিষ্ঠানে import করলে আবার যুক্ত হয়, অন্য জায়গায় ছবি আপলোড হয়।
+     - ➡️ **বাকি: ছায়া, যেকোনো কোণে ঘোরানো, একাধিক উপাদানকে স্থায়ী গ্রুপ।** এখানে থেকে শুরু। ছোট ভাগে করার প্রস্তাব: (ক) ছায়া — স্টাইল key `shadow_*` (config + request + `cleanStyle` + `styles.ts` + প্যানেল); (খ) যেকোনো কোণ — এখন `rotation` শুধু 0/90/180/270 আর বাক্স ঘোরে না; যেকোনো কোণে বাক্সের সীমা-যাচাই কীভাবে হবে আগে ইউজারকে জিজ্ঞেস করা; (গ) গ্রুপ — নতুন `group` key বা কলাম, ডিজাইনারে একসাথে বাছাই/টানা।
 5. **৩.৫ কার্ড ইস্যু** (পুরনো `card_information`): কারণ (new / promotion / lost / renewal), নোট, মেয়াদ, RF card no। প্রতিবার ইস্যুতে নতুন রেকর্ড, আগের কার্ড বাতিল। **যে ছবি, সই আর টেমপ্লেট সংস্করণ ব্যবহার হলো তার id রাখতে হবে।** পরিবারের সদস্যের কার্ডও এখানে।
    - **ছাপার নিয়ম যা ডিজাইনারে আছে, সেগুলো মানতে হবে:** লুকানো উপাদান বাদ, আসল ছবি না থাকলে উপাদানের বিকল্প ছবি, auto-fit, ঘোরানো। সবচেয়ে নিরাপদ: প্রিন্টেও `DesignerCanvas bare` + `DesignerElement` ব্যবহার করা।
    - **নকশা যেন পরে না বদলায়:** ইস্যুর সময় টেমপ্লেটের লেআউটের snapshot (elements JSON + version) কার্ডের সাথে রাখতে হবে, নইলে পরে টেমপ্লেট বদলালে পুরনো কার্ড আবার ছাপলে অন্যরকম আসবে। লোগো/ব্যাকগ্রাউন্ডের ফাইলও তখন মোছা যাবে না (এখন লেআউট থেকে বাদ পড়লে মুছে যায়)।
    - `card.*` ঘর (number, issue_date, expiry_date) `CardDataResolver`-এ যোগ করতে হবে; এখন প্রিভিউতে নমুনা দেখায়।
    - পরিবারের সদস্যের নিজের ছবি ও সই রাখার ব্যবস্থা (এখন নেই, তাই পরিবারের কার্ডে ছবি ফাঁকা)।
+   - **লাইব্রেরির ছবি:** snapshot-এ `library_image_id` থাকবে। "সব টেমপ্লেটে বদলাও"-এর পর পুরনো ছবি টেমপ্লেটে না থাকলেও ইস্যু হওয়া কার্ডে থাকতে পারে — তখন `TenantImageService::delete()`-এ ইস্যু করা কার্ডের snapshot-ও যাচাই করতে হবে।
+   - **ফন্ট:** snapshot-এ যে ফ্যামিলি আছে তার শেষ ফাইল মোছা আটকাতে `TenantFontService::delete()`-এ snapshot-ও দেখতে হবে।
+   - **বারকোড:** ইস্যুর সময় মান এনকোড হয় কিনা যাচাই (যেমন EAN-13-এ অক্ষর) — না হলে সতর্ক করা; প্রিন্টে লাল ভুল-বক্স ছাপা যাবে না (৩.৬)।
 6. **৩.৬ প্রিন্ট আর ইতিহাস** (পুরনো `card_print_history`): ব্রাউজার প্রিন্ট আর সার্ভারে PDF (CR80), ব্যাচ প্রিন্ট, প্রতিটা প্রিন্ট ইউজারের নামে লগ। মান আসবে `CardDataResolver` থেকে, আঁকা হবে `DesignerCanvas bare` + `styles.ts` দিয়ে (mm ভিত্তিক, তাই প্রিন্টে `scale` = 96/25.4 বা PDF-এর DPI)। PDF বানাতে বাইরের কোনো সেবা নয়; ফন্ট `@fontsource` ফাইল থেকে।
 7. **৩.৭ স্বাক্ষরিত QR আর পাবলিক ভেরিফিকেশন পেজ।**
 8. **৩.৮ ইমপোর্টে কার্ডের কলাম** (উপরে দেখুন) আর কার্ডধারী মোছার নিয়ম (কার্ড থাকলে মোছা যাবে না)।
@@ -290,5 +299,7 @@ docker compose run --rm --no-deps vite npx vue-tsc --noEmit
 Controller → Service → Repository কাঠামো মানবে, প্রতিটা পেজ ব্রাউজারে চালিয়ে যাচাই করবে,
 আর প্রতিটা ধাপ শেষে টেস্ট চালিয়ে আমার git পরিচয়ে (কোনো AI attribution ছাড়া) commit করবে।
 ```
+
+**ব্রাউজারে যাচাইয়ের নোট (৫ অক্টোবর):** স্ক্রিপ্ট আগের সেশনের scratchpad থেকে হারায়; নতুন করে লিখতে হয় (`cdp.mjs`: Chrome চালানো, লগইন, `b.api()` দিয়ে পেজ থেকে JSON কল, `DOM.setFileInputFiles` দিয়ে ফাইল আপলোড)। পরীক্ষার ফন্ট: `/usr/share/fonts/truetype/lohit-bengali/Lohit-Bengali.ttf` (OFL)। সাবধান: QA টেমপ্লেটে লেআউট **import** করলে পুরনো লোগো নতুন ফাইল হিসেবে আপলোড হয় আর পুরনো ফাইল মুছে যায়, তাই পরে আগের JSON দিয়ে ফেরানো যায় না (422) — বর্তমান লেআউট থেকে পরীক্ষার উপাদান বাদ দিয়ে ফেরাতে হয়। পরীক্ষায় বানানো ফন্ট/লাইব্রেরির ছবি শেষে মুছে ফেলতে হবে।
 
 **ব্রাউজারে যাচাইয়ের নোট:** headless Chrome (`google-chrome`) CDP দিয়ে চালানো হয় (Node 24-এর নিজস্ব WebSocket, কোনো প্যাকেজ নয়), স্ক্রিপ্ট সেশনের scratchpad-এ থাকে, git-এ নয়। ডেভেলপমেন্ট ডাটাবেসে স্ক্রিপ্ট শুধু "QA designer check" আর "QA family check" টেমপ্লেট বদলায়; ইউজারের নিজের টেমপ্লেট (Designer demo, TE, TEST…) কখনো রিসেট করা যাবে না। ক্যানভাসে উপাদান খুঁজতে `[data-content-key]` (ছাপার অংশ) আর `[data-key]` (সম্পাদনার বাক্স) ব্যবহার করুন।
