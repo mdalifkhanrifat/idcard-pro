@@ -4,6 +4,7 @@ namespace App\Repositories\Contracts;
 
 use App\Models\CardTemplate;
 use App\Models\CardTemplateElement;
+use App\Models\TenantImage;
 use Illuminate\Support\Collection;
 
 /**
@@ -32,4 +33,18 @@ interface CardTemplateElementRepositoryInterface extends RepositoryInterface
      * @return array<int, string>
      */
     public function templatesUsingFont(string $family): array;
+
+    /**
+     * Names of the templates with an element linked to the library image.
+     *
+     * @return array<int, string>
+     */
+    public function templatesUsingLibraryImage(TenantImage $image): array;
+
+    /**
+     * Link every element using one library image to another one.
+     *
+     * @return array<int, int> ids of the templates changed
+     */
+    public function replaceLibraryImage(TenantImage $from, TenantImage $to): array;
 }

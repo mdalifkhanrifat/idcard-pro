@@ -4,6 +4,7 @@ namespace App\Repositories\Eloquent;
 
 use App\Models\CardTemplate;
 use App\Models\CardTemplateElement;
+use App\Models\TenantImage;
 use App\Repositories\Contracts\CardTemplateElementRepositoryInterface;
 use Illuminate\Support\Collection;
 
@@ -42,5 +43,24 @@ class CardTemplateElementRepository extends EloquentRepository implements CardTe
             ->orderBy('card_templates.name')
             ->pluck('card_templates.name')
             ->all();
+    }
+
+    public function templatesUsingLibraryImage(TenantImage $image): array
+    {
+        return $this->query()
+            ->where('library_image_id', $image->id)
+            ->join('card_templates', 'card_templates.id', '=', 'card_template_elements.card_template_id')
+            ->distinct()
+            ->orderBy('card_templates.name')
+            ->pluck('card_templates.name')
+            ->all();
+    }
+
+    public function replaceLibraryImage(TenantImage $from, TenantImage $to): array
+    {
+        $templateIds = $this->query()->where('library_image_id', $from->id)->distinct()->pluck('card_template_id')->all();
+        $this->query()->where('library_image_id', $from->id)->update(['library_image_id' => $to->id]);
+
+        return $templateIds;
     }
 }

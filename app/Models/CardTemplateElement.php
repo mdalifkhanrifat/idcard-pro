@@ -32,11 +32,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * @property string $height
  * @property int $z_index
  * @property array<string, mixed>|null $style
+ * @property int|null $library_image_id image from the organization library instead of an own upload
  * @property-read CardTemplate $template
+ * @property-read TenantImage|null $libraryImage
  */
 #[Fillable([
     'card_template_id', 'side', 'type', 'field', 'label', 'content', 'qr_lines', 'image_disk', 'image_path',
-    'x', 'y', 'width', 'height', 'z_index', 'style',
+    'library_image_id', 'x', 'y', 'width', 'height', 'z_index', 'style',
 ])]
 class CardTemplateElement extends Model
 {
@@ -80,5 +82,13 @@ class CardTemplateElement extends Model
     public function template(): BelongsTo
     {
         return $this->belongsTo(CardTemplate::class, 'card_template_id');
+    }
+
+    /**
+     * @return BelongsTo<TenantImage, $this>
+     */
+    public function libraryImage(): BelongsTo
+    {
+        return $this->belongsTo(TenantImage::class, 'library_image_id');
     }
 }

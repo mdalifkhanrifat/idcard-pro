@@ -53,4 +53,11 @@ class CardTemplateRepository extends EloquentRepository implements CardTemplateR
     {
         return CardTemplate::query()->withoutGlobalScopes()->where('public_id', $publicId)->first();
     }
+
+    public function incrementVersions(array $ids): void
+    {
+        if ($ids !== []) {
+            $this->query()->whereKey($ids)->increment('version');
+        }
+    }
 }

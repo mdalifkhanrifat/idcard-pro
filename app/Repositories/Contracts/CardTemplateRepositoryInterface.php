@@ -23,4 +23,11 @@ interface CardTemplateRepositoryInterface extends RepositoryInterface
      * Lookup without the tenant scope, for signed image links (no session).
      */
     public function findAnyTenant(string $publicId): ?CardTemplate;
+
+    /**
+     * Raise the version of templates whose printed design changed outside the designer.
+     *
+     * @param  array<int, int>  $ids
+     */
+    public function incrementVersions(array $ids): void;
 }
