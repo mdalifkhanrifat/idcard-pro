@@ -5,9 +5,11 @@ namespace App\Services\Cardholders;
 use App\Exceptions\BusinessRuleException;
 use App\Models\Cardholder;
 use App\Models\CardholderFile;
+use App\Models\FamilyMember;
 use App\Models\User;
 use App\Repositories\Contracts\CardholderFileRepositoryInterface;
 use App\Repositories\Contracts\CardRepositoryInterface;
+use App\Repositories\Contracts\FamilyMemberRepositoryInterface;
 use App\Support\Media\ImageSanitizer;
 use App\Support\Media\UnreadableImageException;
 use Illuminate\Http\UploadedFile;
@@ -23,6 +25,7 @@ use Throwable;
 
 /**
  * Stores cardholder files (config/cardholder_files.php) on a private disk.
+ * Family members keep their own photo and signature here too (collections marked `family`).
  * Files are only reachable through short-lived signed links.
  */
 class CardholderFileService
@@ -31,39 +34,63 @@ class CardholderFileService
         private CardholderFileRepositoryInterface $files,
         private ImageSanitizer $images,
         private CardRepositoryInterface $cards,
+        private FamilyMemberRepositoryInterface $familyMembers,
     ) {}
 
     /**
+     * Files of the cardholder, or of one of their family members when given.
+     *
      * @return Collection<int, CardholderFile>
      */
-    public function list(Cardholder $cardholder, ?string $collection = null, bool $includeReplaced = false): Collection
+    public function list(Cardholder $cardholder, ?string $collection = null, bool $includeReplaced = false, ?FamilyMember $member = null): Collection
     {
-        return $this->files->listFor($cardholder, $collection, $includeReplaced);
+        return $this->files->listFor($cardholder, $collection, $includeReplaced, $member);
     }
 
     /**
-     * Store a file. In single-file collections the current file is archived, not deleted,
-     * so records that refer to it (e.g. issued cards) keep working.
+     * The family member a request refers to; it must belong to the cardholder.
      */
-    public function upload(Cardholder $cardholder, string $collection, UploadedFile $upload, ?string $title, User $actor): CardholderFile
+    public function familyMemberOf(Cardholder $cardholder, ?string $publicId): ?FamilyMember
+    {
+        if ($publicId === null) {
+            return null;
+        }
+        $member = $this->familyMembers->findByPublicId($publicId);
+        if ($member === null || $member->cardholder_id !== $cardholder->id) {
+            throw ValidationException::withMessages(['family_member' => __('cardholder_files.family_member_unknown')]);
+        }
+
+        return $member;
+    }
+
+    /**
+     * Store a file for the cardholder, or for one of their family members. In single-file collections
+     * the current file is archived, not deleted, so records that refer to it (e.g. issued cards) keep working.
+     */
+    public function upload(Cardholder $cardholder, string $collection, UploadedFile $upload, ?string $title, User $actor, ?FamilyMember $member = null): CardholderFile
     {
         $definition = config("cardholder_files.collections.{$collection}");
+        if ($member !== null && ! ($definition['family'] ?? false)) {
+            throw ValidationException::withMessages(['collection' => __('cardholder_files.not_for_family')]);
+        }
         [$contents, $mimeType, $extension, $width, $height] = $this->prepare($upload, $definition);
 
         $disk = (string) config('cardholder_files.disk');
-        $path = sprintf('tenants/%s/cardholders/%s/%s/%s.%s',
-            $cardholder->tenant->public_id, $cardholder->public_id, $collection, Str::lower((string) Str::ulid()), $extension);
+        $owner = $member === null ? '' : "family/{$member->public_id}/";
+        $path = sprintf('tenants/%s/cardholders/%s/%s%s/%s.%s',
+            $cardholder->tenant->public_id, $cardholder->public_id, $owner, $collection, Str::lower((string) Str::ulid()), $extension);
 
         Storage::disk($disk)->put($path, $contents);
 
         try {
-            return DB::transaction(function () use ($cardholder, $collection, $definition, $upload, $title, $actor, $disk, $path, $contents, $mimeType, $width, $height): CardholderFile {
+            return DB::transaction(function () use ($cardholder, $member, $collection, $definition, $upload, $title, $actor, $disk, $path, $contents, $mimeType, $width, $height): CardholderFile {
                 if ($definition['single']) {
-                    $this->files->markReplaced($cardholder, $collection);
+                    $this->files->markReplaced($cardholder, $collection, $member);
                 }
 
                 return $this->files->create([
                     'cardholder_id' => $cardholder->id,
+                    'family_member_id' => $member?->id,
                     'collection' => $collection,
                     'title' => $title,
                     'disk' => $disk,
@@ -75,7 +102,7 @@ class CardholderFileService
                     'height' => $height,
                     'checksum' => hash('sha256', $contents),
                     'uploaded_by' => $actor->id,
-                ])->load('uploader');
+                ])->load(['uploader', 'familyMember']);
             });
         } catch (Throwable $e) {
             Storage::disk($disk)->delete($path);
@@ -101,6 +128,16 @@ class CardholderFileService
     public function storedLocations(Cardholder $cardholder): Collection
     {
         return $this->files->locationsFor($cardholder);
+    }
+
+    /**
+     * Where a family member's own files are stored; read before the member is deleted.
+     *
+     * @return Collection<int, array{disk: string, path: string}>
+     */
+    public function storedLocationsOfMember(FamilyMember $member): Collection
+    {
+        return $this->files->locationsForMember($member);
     }
 
     /**

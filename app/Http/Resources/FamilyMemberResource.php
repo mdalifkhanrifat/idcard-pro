@@ -2,7 +2,9 @@
 
 namespace App\Http\Resources;
 
+use App\Models\CardholderFile;
 use App\Models\FamilyMember;
+use App\Services\Cardholders\CardholderFileService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -33,7 +35,22 @@ class FamilyMemberResource extends JsonResource
             'identification_mark' => $this->identification_mark,
             'card_no' => $this->card_no,
             'sort_order' => $this->sort_order,
+            'photo' => $this->whenLoaded('photo', fn () => $this->fileSummary($this->photo)),
+            'signature' => $this->whenLoaded('signature', fn () => $this->fileSummary($this->signature)),
             'updated_at' => $this->updated_at,
         ];
+    }
+
+    /**
+     * @return array{id: string, url: string, width: int|null, height: int|null}|null
+     */
+    private function fileSummary(?CardholderFile $file): ?array
+    {
+        return $file ? [
+            'id' => $file->public_id,
+            'url' => app(CardholderFileService::class)->temporaryUrl($file),
+            'width' => $file->width,
+            'height' => $file->height,
+        ] : null;
     }
 }

@@ -312,13 +312,15 @@ class Cardholder extends Model
     }
 
     /**
+     * The cardholder's own current file; family members' files are left out.
+     *
      * @return HasOne<CardholderFile, $this>
      */
     private function currentFile(string $collection): HasOne
     {
         return $this->hasOne(CardholderFile::class)->ofMany(
             ['id' => 'max'],
-            fn (Builder $query) => $query->where('collection', $collection)->whereNull('replaced_at'),
+            fn (Builder $query) => $query->where('collection', $collection)->whereNull('family_member_id')->whereNull('replaced_at'),
         );
     }
 

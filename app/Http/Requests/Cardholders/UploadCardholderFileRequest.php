@@ -7,6 +7,7 @@ use Illuminate\Validation\Rule;
 
 /**
  * Validates a file upload against its collection in config/cardholder_files.php.
+ * `family_member` (public id) stores the file for one of the cardholder's family members.
  */
 class UploadCardholderFileRequest extends FormRequest
 {
@@ -29,6 +30,7 @@ class UploadCardholderFileRequest extends FormRequest
                 ? ['required', 'file', 'mimes:'.implode(',', $definition['mimes']), 'max:'.$definition['max_kb']]
                 : ['required', 'file'],
             'title' => ['nullable', 'string', 'max:255'],
+            'family_member' => ['nullable', 'string', 'max:26'],
         ];
     }
 }

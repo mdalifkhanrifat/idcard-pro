@@ -20,6 +20,10 @@ class CardholderFileResource extends JsonResource
         return [
             'id' => $this->public_id,
             'collection' => $this->collection,
+            'family_member' => $this->whenLoaded('familyMember', fn () => $this->familyMember ? [
+                'id' => $this->familyMember->public_id,
+                'name' => $this->familyMember->name,
+            ] : null),
             'title' => $this->title,
             'original_name' => $this->original_name,
             'mime_type' => $this->mime_type,

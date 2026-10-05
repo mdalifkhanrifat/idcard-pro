@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\CardholderFile;
+use App\Models\FamilyMember;
+use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
@@ -146,4 +148,67 @@ it('removes stored files when the cardholder is deleted', function () {
 
     expect($paths)->toHaveCount(3)->and(CardholderFile::count())->toBe(0);
     $paths->each(fn (string $path) => Storage::disk(config('cardholder_files.disk'))->assertMissing($path));
+});
+
+it('keeps a family member\'s own photo and signature apart from the cardholder\'s', function () {
+    Sanctum::actingAs($this->owner);
+    [$spouse, $child] = app(TenantContext::class)->run($this->tenant, fn () => FamilyMember::factory()->count(2)->create(['tenant_id' => $this->tenant->id, 'cardholder_id' => $this->cardholder->id])->all());
+    $upload = fn (array $data) => $this->post($this->base, [...$data, 'file' => UploadedFile::fake()->image('p.jpg')], ['Accept' => 'application/json']);
+
+    $own = $upload(['collection' => 'photo'])->assertCreated()->assertJsonPath('data.family_member', null)->json('data.id');
+    $first = $upload(['collection' => 'photo', 'family_member' => $spouse->public_id])->json('data.id');
+    $second = $upload(['collection' => 'photo', 'family_member' => $spouse->public_id])
+        ->assertCreated()
+        ->assertJsonPath('data.family_member.id', $spouse->public_id)
+        ->json('data.id');
+    $upload(['collection' => 'signature', 'family_member' => $child->public_id])->assertCreated();
+
+    // One current photo per person: the spouse's new photo archives only the spouse's previous one
+    expect($this->cardholder->fresh()->photo->public_id)->toBe($own)
+        ->and($spouse->fresh()->photo->public_id)->toBe($second)
+        ->and($child->fresh()->photo)->toBeNull()
+        ->and($child->fresh()->signature)->not->toBeNull()
+        ->and(CardholderFile::where('public_id', $second)->value('path'))->toContain("/family/{$spouse->public_id}/photo/");
+
+    $this->getJson($this->base)->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $own);
+    $this->getJson("{$this->base}?family_member={$spouse->public_id}&include_replaced=1")
+        ->assertJsonCount(2, 'data')
+        ->assertJsonPath('data.0.id', $second)
+        ->assertJsonPath('data.1.id', $first);
+
+    $this->getJson("/api/v1/cardholders/{$this->cardholder->public_id}/family-members")
+        ->assertJsonPath('data.0.photo.id', $second)
+        ->assertJsonPath('data.0.signature', null)
+        ->assertJsonPath('data.1.signature.id', $child->fresh()->signature->public_id);
+});
+
+it('allows only photos and signatures for family members of the same cardholder', function () {
+    Sanctum::actingAs($this->owner);
+    $other = cardholder($this->tenant);
+    [$member, $stranger] = app(TenantContext::class)->run($this->tenant, fn () => [
+        FamilyMember::factory()->create(['tenant_id' => $this->tenant->id, 'cardholder_id' => $this->cardholder->id]),
+        FamilyMember::factory()->create(['tenant_id' => $this->tenant->id, 'cardholder_id' => $other->id]),
+    ]);
+
+    $this->post($this->base, ['collection' => 'document', 'family_member' => $member->public_id, 'file' => pdfUpload()], ['Accept' => 'application/json'])
+        ->assertJsonValidationErrors('collection');
+    $this->post($this->base, ['collection' => 'photo', 'family_member' => $stranger->public_id, 'file' => UploadedFile::fake()->image('p.jpg')], ['Accept' => 'application/json'])
+        ->assertJsonValidationErrors('family_member');
+    $this->getJson("{$this->base}?family_member={$stranger->public_id}")->assertJsonValidationErrors('family_member');
+
+    expect(CardholderFile::count())->toBe(0);
+});
+
+it('removes a family member\'s stored files with the member', function () {
+    Sanctum::actingAs($this->owner);
+    $member = app(TenantContext::class)->run($this->tenant, fn () => FamilyMember::factory()->create(['tenant_id' => $this->tenant->id, 'cardholder_id' => $this->cardholder->id]));
+    $this->post($this->base, ['collection' => 'photo', 'file' => UploadedFile::fake()->image('own.jpg')], ['Accept' => 'application/json']);
+    $this->post($this->base, ['collection' => 'photo', 'family_member' => $member->public_id, 'file' => UploadedFile::fake()->image('m.jpg')], ['Accept' => 'application/json']);
+    $memberPath = $member->fresh()->photo->path;
+
+    $this->deleteJson("/api/v1/cardholders/{$this->cardholder->public_id}/family-members/{$member->public_id}")->assertNoContent();
+
+    Storage::disk(config('cardholder_files.disk'))->assertMissing($memberPath);
+    Storage::disk(config('cardholder_files.disk'))->assertExists($this->cardholder->fresh()->photo->path);
+    expect(CardholderFile::count())->toBe(1);
 });

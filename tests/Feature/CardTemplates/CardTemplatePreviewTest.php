@@ -68,9 +68,15 @@ it('links the current photo and signatures', function () {
     $this->get($images['photo'])->assertOk();
     $this->get($images['signatory_signature'])->assertOk();
 
-    // A family card shows the cardholder's photo, as the legacy system did.
+    // A family card prints the member's own photo and signature, never the cardholder's
     $member = app(TenantContext::class)->run($this->tenant, fn () => FamilyMember::factory()->create(['tenant_id' => $this->tenant->id, 'cardholder_id' => $person->id]));
-    expect($this->getJson("/api/v1/card-templates/{$this->template->public_id}/preview?cardholder={$person->public_id}&family_member={$member->public_id}")->json('data.images.photo'))->toBeString();
+    $familyUrl = "/api/v1/card-templates/{$this->template->public_id}/preview?cardholder={$person->public_id}&family_member={$member->public_id}";
+    expect($this->getJson($familyUrl)->json('data.images'))->toMatchArray(['photo' => null, 'cardholder_signature' => null]);
+
+    $upload("/api/v1/cardholders/{$person->public_id}/files", ['collection' => 'photo', 'family_member' => $member->public_id]);
+    $images = $this->getJson($familyUrl)->json('data.images');
+    expect($images['photo'])->toContain($member->fresh()->photo->public_id)
+        ->and($images['cardholder_signature'])->toBeNull();
 });
 
 it('resolves a family member of the chosen cardholder only', function () {

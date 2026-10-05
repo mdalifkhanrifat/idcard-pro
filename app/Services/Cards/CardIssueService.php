@@ -68,7 +68,7 @@ class CardIssueService
         return DB::transaction(function () use ($cardholder, $template, $member, $data, $issueDate, $expiryDate, $holderKey, $documentId, $actor): Card {
             $current = $this->cards->activeForHolder($holderKey, lock: true);
             $number = $this->number($cardholder, $member, $template, $issueDate);
-            $cardholder->loadMissing(['photo', 'signature']);
+            [$photo, $signature] = $this->cardData->holderImages($cardholder, $member);
             $signatory = $template->authority_type_id === null ? null : $this->signatories->activeFor($template->authority_type_id, $issueDate);
 
             // Free the keys first: the database allows one active card per holder and per number
@@ -93,8 +93,8 @@ class CardIssueService
                 'reason' => $data->reason,
                 'notes' => $data->notes,
                 'document_file_id' => $documentId,
-                'photo_file_id' => $cardholder->photo?->id,
-                'signature_file_id' => $cardholder->signature?->id,
+                'photo_file_id' => $photo?->id,
+                'signature_file_id' => $signature?->id,
                 'signatory_id' => $signatory?->id,
                 'issue_date' => $issueDate,
                 'expiry_date' => $expiryDate,

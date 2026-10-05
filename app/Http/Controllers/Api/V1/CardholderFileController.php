@@ -20,7 +20,8 @@ class CardholderFileController extends Controller
     public function __construct(private CardholderFileService $files) {}
 
     /**
-     * Current files; filter[collection] narrows to one collection, include_replaced=1 adds archived versions.
+     * Current files of the cardholder; `collection` narrows to one collection, `include_replaced=1` adds
+     * archived versions and `family_member` lists that family member's own files instead.
      */
     public function index(Request $request, Cardholder $cardholder): AnonymousResourceCollection
     {
@@ -29,10 +30,12 @@ class CardholderFileController extends Controller
         $input = $request->validate([
             'collection' => ['sometimes', 'string', Rule::in(array_keys(config('cardholder_files.collections')))],
             'include_replaced' => ['sometimes', 'boolean'],
+            'family_member' => ['sometimes', 'nullable', 'string', 'max:26'],
         ]);
+        $member = $this->files->familyMemberOf($cardholder, $input['family_member'] ?? null);
 
         return CardholderFileResource::collection(
-            $this->files->list($cardholder, $input['collection'] ?? null, (bool) ($input['include_replaced'] ?? false)),
+            $this->files->list($cardholder, $input['collection'] ?? null, (bool) ($input['include_replaced'] ?? false), $member),
         );
     }
 
@@ -44,6 +47,7 @@ class CardholderFileController extends Controller
             $request->file('file'),
             $request->validated('title'),
             $request->user(),
+            $this->files->familyMemberOf($cardholder, $request->validated('family_member')),
         );
 
         return (new CardholderFileResource($file))->response()->setStatusCode(201);

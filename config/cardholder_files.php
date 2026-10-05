@@ -14,6 +14,8 @@
 |               resized to max_dimension px)
 | - mimes:      allowed file extensions, checked against the real content
 | - max_kb:     maximum upload size in kilobytes
+| - family:     family members may keep their own file of this kind (their
+|               photo and signature print on family cards)
 |
 | Legacy mapping: photo = picture, signature = holder_sign,
 | document = pdf + files. Fingerprints are biometric data (Phase 4).
@@ -34,6 +36,7 @@ return [
             'mimes' => ['jpg', 'jpeg', 'png', 'webp'],
             'max_kb' => 5120,
             'max_dimension' => 1200,
+            'family' => true,
         ],
         'signature' => [
             'single' => true,
@@ -41,12 +44,14 @@ return [
             'mimes' => ['jpg', 'jpeg', 'png', 'webp'],
             'max_kb' => 2048,
             'max_dimension' => 1000,
+            'family' => true,
         ],
         'document' => [
             'single' => false,
             'image' => false,
             'mimes' => ['pdf', 'jpg', 'jpeg', 'png', 'webp'],
             'max_kb' => 10240,
+            'family' => false,
         ],
     ],
 

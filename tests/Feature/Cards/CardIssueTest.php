@@ -94,6 +94,29 @@ it('issues family cards from family templates only, with their own history', fun
         ->assertJsonValidationErrors('family_member');
 });
 
+it('prints the family member\'s own photo and signature on a family card', function () {
+    Sanctum::actingAs($this->owner);
+    $member = app(TenantContext::class)->run($this->tenant, fn () => FamilyMember::factory()->create(['tenant_id' => $this->tenant->id, 'cardholder_id' => $this->holder->id]));
+    $family = cardTemplate($this->tenant, ['code' => 'FAM', 'audience' => 'family_member']);
+    $files = "/api/v1/cardholders/{$this->holder->public_id}/files";
+    $upload = fn (array $data) => $this->post($files, [...$data, 'file' => UploadedFile::fake()->image('i.png', 300, 300)], ['Accept' => 'application/json'])->assertCreated()->json('data.id');
+    $upload(['collection' => 'photo']);
+    $upload(['collection' => 'signature']);
+    $issue = fn () => Card::where('public_id', $this->postJson($this->url, ['template' => $family->public_id, 'family_member' => $member->public_id, 'reason' => 'new'])->assertCreated()->json('data.id'))->firstOrFail();
+
+    // Without their own photo the card prints none, not the cardholder's
+    expect($issue()->only(['photo_file_id', 'signature_file_id']))->toBe(['photo_file_id' => null, 'signature_file_id' => null]);
+
+    $photo = $upload(['collection' => 'photo', 'family_member' => $member->public_id]);
+    $card = $issue();
+    expect($card->photo->public_id)->toBe($photo)
+        ->and($card->signature_file_id)->toBeNull();
+    $this->getJson("/api/v1/cards/{$card->public_id}")->assertJsonPath('meta.values.images.photo', fn (string $url) => str_contains($url, $photo));
+
+    // The printed photo stays protected
+    $this->deleteJson("{$files}/{$photo}")->assertUnprocessable();
+});
+
 it('checks reasons, notes, documents, dates and RF numbers', function () {
     Sanctum::actingAs($this->owner);
     $inactive = cardTemplate($this->tenant, ['is_active' => false]);

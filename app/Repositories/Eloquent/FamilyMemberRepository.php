@@ -21,7 +21,7 @@ class FamilyMemberRepository extends EloquentRepository implements FamilyMemberR
     public function listFor(Cardholder $cardholder): Collection
     {
         return $this->query()
-            ->with('bloodGroup')
+            ->with(['bloodGroup', 'photo', 'signature'])
             ->where('cardholder_id', $cardholder->id)
             ->orderBy('sort_order')
             ->orderBy('id')

@@ -4,6 +4,7 @@ namespace App\Services\Cards;
 
 use App\Models\Card;
 use App\Models\Cardholder;
+use App\Models\CardholderFile;
 use App\Models\CardTemplate;
 use App\Models\FamilyMember;
 use App\Models\MasterDataItem;
@@ -18,6 +19,7 @@ use Carbon\CarbonInterface;
  * The designer preview and printing (3.6) both use this, so a preview always matches the printed card.
  * Text is produced in the organization's language; empty values are left out. A missing photo or signature
  * is null here: the element's own image (uploaded in the designer) is then printed instead.
+ * Family cards use the family member's own photo and signature, never the cardholder's.
  */
 class CardDataResolver
 {
@@ -48,16 +50,30 @@ class CardDataResolver
     public function resolve(CardTemplate $template, Cardholder $cardholder, ?FamilyMember $member = null, ?CarbonInterface $on = null): array
     {
         $signatory = $template->authority_type_id === null ? null : $this->signatories->activeFor($template->authority_type_id, $on ?? now());
+        [$photo, $signature] = $this->holderImages($cardholder, $member);
 
         return [
             'fields' => $this->fields($template, $cardholder, $member, $on),
             'images' => [
-                // Family cards show the cardholder's photo, as in the legacy system (family members have none of their own).
-                'photo' => $cardholder->photo ? $this->files->temporaryUrl($cardholder->photo) : null,
-                'cardholder_signature' => $cardholder->signature ? $this->files->temporaryUrl($cardholder->signature) : null,
+                'photo' => $photo ? $this->files->temporaryUrl($photo) : null,
+                'cardholder_signature' => $signature ? $this->files->temporaryUrl($signature) : null,
                 'signatory_signature' => $signatory ? $this->signatoryService->signatureUrl($signatory) : null,
             ],
         ];
+    }
+
+    /**
+     * The current photo and signature printed for the card holder: the family member's own on a family card
+     * (null when they have none, so the cardholder's photo never appears on a relative's card).
+     *
+     * @return array{0: CardholderFile|null, 1: CardholderFile|null}
+     */
+    public function holderImages(Cardholder $cardholder, ?FamilyMember $member = null): array
+    {
+        $holder = $member ?? $cardholder;
+        $holder->loadMissing(['photo', 'signature']);
+
+        return [$holder->photo, $holder->signature];
     }
 
     /**
@@ -94,7 +110,7 @@ class CardDataResolver
     public function fields(CardTemplate $template, Cardholder $cardholder, ?FamilyMember $member = null, ?CarbonInterface $on = null): array
     {
         $locale = $cardholder->tenant->locale ?: app()->getLocale();
-        $cardholder->loadMissing([...Cardholder::lookupRelations(), 'photo', 'signature', 'tenant']);
+        $cardholder->loadMissing([...Cardholder::lookupRelations(), 'tenant']);
         $fields = [];
 
         foreach (self::TEXT_COLUMNS as $column) {

@@ -7,16 +7,20 @@ use App\Enums\Gender;
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\FamilyMemberFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 /**
- * A family member of a cardholder (may later receive a family card).
+ * A family member of a cardholder; may receive a family card printed with their own photo and signature.
  *
  * @property int $id
  * @property string $public_id
@@ -38,6 +42,9 @@ use Spatie\Activitylog\Support\LogOptions;
  * @property Carbon|null $updated_at
  * @property-read Cardholder $cardholder
  * @property-read MasterDataItem|null $bloodGroup
+ * @property-read CardholderFile|null $photo
+ * @property-read CardholderFile|null $signature
+ * @property-read Collection<int, CardholderFile> $files
  */
 #[Fillable([
     'cardholder_id', 'relation', 'name', 'name_local', 'gender', 'date_of_birth', 'phone', 'blood_group_id',
@@ -88,6 +95,41 @@ class FamilyMember extends Model
     public function bloodGroup(): BelongsTo
     {
         return $this->belongsTo(MasterDataItem::class, 'blood_group_id');
+    }
+
+    /**
+     * @return HasMany<CardholderFile, $this>
+     */
+    public function files(): HasMany
+    {
+        return $this->hasMany(CardholderFile::class);
+    }
+
+    /**
+     * @return HasOne<CardholderFile, $this>
+     */
+    public function photo(): HasOne
+    {
+        return $this->currentFile('photo');
+    }
+
+    /**
+     * @return HasOne<CardholderFile, $this>
+     */
+    public function signature(): HasOne
+    {
+        return $this->currentFile('signature');
+    }
+
+    /**
+     * @return HasOne<CardholderFile, $this>
+     */
+    private function currentFile(string $collection): HasOne
+    {
+        return $this->hasOne(CardholderFile::class)->ofMany(
+            ['id' => 'max'],
+            fn (Builder $query) => $query->where('collection', $collection)->whereNull('replaced_at'),
+        );
     }
 
     /**

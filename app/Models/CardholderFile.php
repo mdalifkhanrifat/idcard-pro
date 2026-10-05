@@ -16,11 +16,13 @@ use Spatie\Activitylog\Support\LogOptions;
 
 /**
  * A stored file of a cardholder: photo, signature or document (config/cardholder_files.php).
+ * Files with a family member belong to that member (their own photo and signature).
  *
  * @property int $id
  * @property string $public_id
  * @property int $tenant_id
  * @property int $cardholder_id
+ * @property int|null $family_member_id
  * @property string $collection
  * @property string|null $title
  * @property string $disk
@@ -36,10 +38,11 @@ use Spatie\Activitylog\Support\LogOptions;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Cardholder $cardholder
+ * @property-read FamilyMember|null $familyMember
  * @property-read User|null $uploader
  */
 #[Fillable([
-    'cardholder_id', 'collection', 'title', 'disk', 'path', 'original_name', 'mime_type',
+    'cardholder_id', 'family_member_id', 'collection', 'title', 'disk', 'path', 'original_name', 'mime_type',
     'size', 'width', 'height', 'checksum', 'uploaded_by', 'replaced_at',
 ])]
 class CardholderFile extends Model
@@ -82,6 +85,14 @@ class CardholderFile extends Model
     }
 
     /**
+     * @return BelongsTo<FamilyMember, $this>
+     */
+    public function familyMember(): BelongsTo
+    {
+        return $this->belongsTo(FamilyMember::class);
+    }
+
+    /**
      * @return BelongsTo<User, $this>
      */
     public function uploader(): BelongsTo
@@ -107,7 +118,7 @@ class CardholderFile extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['cardholder_id', 'collection', 'title', 'original_name', 'replaced_at'])
+            ->logOnly(['cardholder_id', 'family_member_id', 'collection', 'title', 'original_name', 'replaced_at'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->useLogName('cardholder_files');

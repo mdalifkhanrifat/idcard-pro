@@ -11,14 +11,18 @@ use App\Repositories\Contracts\MasterDataRepositoryInterface;
 use Illuminate\Support\Collection;
 
 /**
- * Family members recorded for a cardholder.
+ * Family members recorded for a cardholder. Their own photo and signature are cardholder files
+ * (CardholderFileService) and are removed with them.
  */
 class FamilyMemberService
 {
+    private const RELATIONS = ['bloodGroup', 'photo', 'signature'];
+
     public function __construct(
         private FamilyMemberRepositoryInterface $members,
         private MasterDataRepositoryInterface $masterData,
         private CardRepositoryInterface $cards,
+        private CardholderFileService $files,
     ) {}
 
     /**
@@ -40,7 +44,7 @@ class FamilyMemberService
             'sort_order' => $data['sort_order'] ?? $this->members->nextSortOrder($cardholder),
         ]);
 
-        return $member->load('bloodGroup');
+        return $member->load(self::RELATIONS);
     }
 
     /**
@@ -48,7 +52,7 @@ class FamilyMemberService
      */
     public function update(FamilyMember $member, array $data): FamilyMember
     {
-        return $this->members->update($member, $this->resolveBloodGroup($data))->load('bloodGroup');
+        return $this->members->update($member, $this->resolveBloodGroup($data))->load(self::RELATIONS);
     }
 
     public function delete(FamilyMember $member): void
@@ -56,7 +60,10 @@ class FamilyMemberService
         if ($this->cards->existsForFamilyMember($member->id)) {
             throw new BusinessRuleException(__('cards.in_use.family_member'));
         }
+        // The file records go with the member (foreign key cascade); the stored files are removed afterwards
+        $locations = $this->files->storedLocationsOfMember($member);
         $this->members->delete($member);
+        $this->files->deleteStored($locations);
     }
 
     /**
