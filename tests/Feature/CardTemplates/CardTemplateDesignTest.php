@@ -346,3 +346,20 @@ it('links library images, shares them with copies and counts a new image as a de
         designElement(['type' => 'logo', 'field' => null, 'library_image' => $logo->public_id, 'image' => $upload]),
     ]])->assertJsonValidationErrors(['elements.0.library_image', 'elements.1.image']);
 });
+
+it('saves shadows and counts them as a design change', function () {
+    Sanctum::actingAs($this->owner);
+    $this->putJson($this->url, ['elements' => [designElement()]])->assertOk();
+    $version = $this->template->fresh()->version;
+
+    $this->putJson($this->url, ['elements' => [designElement(['style' => ['shadow_color' => '#000000', 'shadow_x' => '0.5', 'shadow_y' => -0.5, 'shadow_blur' => 1, 'shadow_opacity' => '0.4']])]])
+        ->assertOk()
+        ->assertJsonPath('data.0.style.shadow_color', '#000000')
+        ->assertJsonPath('data.0.style.shadow_x', 0.5)
+        ->assertJsonPath('data.0.style.shadow_y', -0.5)
+        ->assertJsonPath('data.0.style.shadow_opacity', 0.4);
+    expect($this->template->fresh()->version)->toBe($version + 1);
+
+    $this->putJson($this->url, ['elements' => [designElement(['style' => ['shadow_color' => 'black', 'shadow_x' => 20, 'shadow_blur' => -1, 'shadow_opacity' => 0]])]])
+        ->assertJsonValidationErrors(['elements.0.style.shadow_color', 'elements.0.style.shadow_x', 'elements.0.style.shadow_blur', 'elements.0.style.shadow_opacity']);
+});

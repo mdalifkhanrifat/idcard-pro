@@ -48,6 +48,8 @@ return [
      */
     'style' => [
         'box' => ['background', 'gradient_to', 'gradient_direction', 'border_color', 'border_width', 'border_style', 'border_radius', 'opacity', 'rotation'],
+        // Shadow (on when shadow_color is set): text casts it from its letters, images from their shape, other boxes from the box
+        'shadow' => ['shadow_color', 'shadow_x', 'shadow_y', 'shadow_blur', 'shadow_opacity'],
         // Editing state: locked elements cannot be moved or changed; hidden ones are kept but not printed.
         'state' => ['locked', 'hidden'],
         'text' => [

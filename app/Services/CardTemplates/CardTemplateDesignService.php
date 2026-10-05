@@ -293,7 +293,7 @@ class CardTemplateDesignService
                 $style[$flag] = filter_var($style[$flag], FILTER_VALIDATE_BOOL);
             }
         }
-        foreach (['font_size', 'line_height', 'letter_spacing', 'padding', 'border_width', 'border_radius', 'opacity'] as $number) {
+        foreach (['font_size', 'line_height', 'letter_spacing', 'padding', 'border_width', 'border_radius', 'opacity', 'shadow_x', 'shadow_y', 'shadow_blur', 'shadow_opacity'] as $number) {
             if (isset($style[$number])) {
                 $style[$number] = (float) $style[$number];
             }

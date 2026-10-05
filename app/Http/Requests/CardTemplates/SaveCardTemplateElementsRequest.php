@@ -80,6 +80,12 @@ class SaveCardTemplateElementsRequest extends FormRequest
             'elements.*.style.hidden' => ['nullable', 'boolean'],
             'elements.*.style.border_radius' => ['nullable', 'numeric', 'between:0,100'],
             'elements.*.style.opacity' => ['nullable', 'numeric', 'between:0.05,1'],
+            'elements.*.style.shadow_color' => $colour,
+            // Offsets and blur in mm
+            'elements.*.style.shadow_x' => ['nullable', 'numeric', 'between:-10,10'],
+            'elements.*.style.shadow_y' => ['nullable', 'numeric', 'between:-10,10'],
+            'elements.*.style.shadow_blur' => ['nullable', 'numeric', 'between:0,10'],
+            'elements.*.style.shadow_opacity' => ['nullable', 'numeric', 'between:0.05,1'],
             'elements.*.style.fit' => ['nullable', Rule::in(['cover', 'contain'])],
             'elements.*.style.shape' => ['nullable', Rule::in(['rectangle', 'ellipse'])],
             'elements.*.style.barcode_format' => ['nullable', Rule::in((array) config('card_template_elements.barcode_formats'))],
