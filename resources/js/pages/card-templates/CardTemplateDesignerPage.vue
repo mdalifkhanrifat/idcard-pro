@@ -405,7 +405,8 @@ function itemTitle(item: DesignerItem): string {
                 </button>
             </aside>
 
-            <section ref="stage" class="relative order-first flex flex-col min-h-[24rem] overflow-auto rounded-xl border border-line bg-surface-2 p-6 lg:order-none">
+            <!-- Large screens: fixed height and sticky, so the card neither jumps when the settings panel changes height nor scrolls away -->
+            <section ref="stage" class="relative order-first flex min-h-[24rem] flex-col overflow-auto rounded-xl border border-line bg-surface-2 p-6 lg:sticky lg:top-4 lg:order-none lg:h-[calc(100vh-8rem)] lg:self-start">
                 <PreviewPicker
                     v-if="auth.can('cardholders.view')"
                     class="-mt-2 mb-4"
