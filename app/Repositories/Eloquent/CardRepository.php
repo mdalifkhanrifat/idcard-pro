@@ -162,6 +162,13 @@ class CardRepository extends EloquentRepository implements CardRepositoryInterfa
         return $this->query()->where('signatory_id', $signatoryId)->exists();
     }
 
+    public function byPublicIds(array $publicIds): Collection
+    {
+        $cards = $this->query()->whereIn('public_id', $publicIds)->with(['template', 'photo', 'signature', 'signatory'])->get()->keyBy('public_id');
+
+        return collect($publicIds)->map(fn (string $id) => $cards->get($id))->filter()->values();
+    }
+
     public function lockedByPublicIds(array $publicIds): Collection
     {
         $cards = $this->query()->whereIn('public_id', $publicIds)->orderBy('id')->lockForUpdate()->get()->keyBy('public_id');

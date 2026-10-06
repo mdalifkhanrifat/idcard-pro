@@ -18,6 +18,8 @@ interface TenantRepositoryInterface extends RepositoryInterface
 
     public function findBySlug(string $slug): ?Tenant;
 
+    public function findByPublicId(string $publicId): ?Tenant;
+
     /**
      * Run the callback for every tenant, loading them in chunks.
      *

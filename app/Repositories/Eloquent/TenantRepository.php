@@ -35,6 +35,11 @@ class TenantRepository extends EloquentRepository implements TenantRepositoryInt
         return $this->query()->where('slug', strtolower(trim($slug)))->first();
     }
 
+    public function findByPublicId(string $publicId): ?Tenant
+    {
+        return $this->query()->where('public_id', $publicId)->first();
+    }
+
     public function each(callable $callback): void
     {
         $this->query()->each($callback);

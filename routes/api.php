@@ -13,6 +13,7 @@ use App\Http\Controllers\Api\V1\CardholderController;
 use App\Http\Controllers\Api\V1\CardholderFileController;
 use App\Http\Controllers\Api\V1\CardholderImportController;
 use App\Http\Controllers\Api\V1\CardPrintController;
+use App\Http\Controllers\Api\V1\CardRenderController;
 use App\Http\Controllers\Api\V1\CardTemplateController;
 use App\Http\Controllers\Api\V1\CardTemplateElementController;
 use App\Http\Controllers\Api\V1\CustomFieldController;
@@ -55,6 +56,11 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::get('library-image-files/{image}', [TenantImageController::class, 'file'])
         ->middleware(['signed:relative', 'throttle:240,1'])
         ->name('library-image-files.show');
+
+    // Cards for the PDF engine's render page (signed link made by CardRenderService::link)
+    Route::get('card-render', [CardRenderController::class, 'show'])
+        ->middleware(['signed:relative', 'throttle:120,1'])
+        ->name('card-render');
 
     Route::middleware(['auth:sanctum', 'tenant'])->group(function () {
 

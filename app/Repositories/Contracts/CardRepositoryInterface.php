@@ -79,6 +79,14 @@ interface CardRepositoryInterface extends RepositoryInterface
     public function usesSignatory(int $signatoryId): bool;
 
     /**
+     * Cards by public id in the order given, with what drawing them needs. Unknown ids are left out.
+     *
+     * @param  array<int, string>  $publicIds
+     * @return Collection<int, Card>
+     */
+    public function byPublicIds(array $publicIds): Collection;
+
+    /**
      * Cards by public id, locked for a printing transaction, in the order given. Unknown ids are left out.
      *
      * @param  array<int, string>  $publicIds

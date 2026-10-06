@@ -18,6 +18,9 @@ return [
     // Address of this app as the engine sees it (inside the compose network, the nginx service)
     'app_url' => env('PDF_APP_URL', 'http://web'),
 
+    // Minutes a signed render link stays valid (made just before the engine opens it)
+    'link_minutes' => 5,
+
     'gotenberg' => [
         'url' => env('GOTENBERG_URL', 'http://gotenberg:3000'),
         'timeout' => (int) env('GOTENBERG_TIMEOUT', 60),
