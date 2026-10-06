@@ -520,6 +520,12 @@
                 "completed": "Completed",
                 "failed": "Failed"
             }
+        },
+        "card": {
+            "label": "Card",
+            "none": "No card",
+            "pending": "Not printed",
+            "printed": "Printed"
         }
     },
     "customFields": {

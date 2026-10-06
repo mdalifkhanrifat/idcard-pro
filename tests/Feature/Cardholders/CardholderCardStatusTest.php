@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\FamilyMember;
+use App\Models\Role;
+use App\Support\Permissions\PermissionRegistry;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -47,6 +49,14 @@ it('filters cardholders by their card: none, never printed or printed', function
         ->and($names('pending'))->toBe(['Not Printed'])
         ->and($names('printed'))->toBe(['Printed Twice']);
     $this->getJson('/api/v1/cardholders?filter[card]=lost')->assertJsonValidationErrors('filter.card');
+});
+
+it('shows cards only to people who may see them', function () {
+    app(TenantContext::class)->run($this->tenant, fn () => Role::findByName('Viewer', PermissionRegistry::GUARD)->revokePermissionTo('cards.view'));
+    Sanctum::actingAs(tenantUser($this->tenant, 'Viewer'));
+
+    $row = collect($this->getJson('/api/v1/cardholders')->assertOk()->json('data'))->firstWhere('full_name', 'Printed Twice');
+    expect($row)->not->toHaveKey('current_card');
 });
 
 it('loads the cards of the whole page at once', function () {

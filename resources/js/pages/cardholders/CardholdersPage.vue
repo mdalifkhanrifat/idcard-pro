@@ -16,7 +16,7 @@ import { useListQuery } from '@/composables/useListQuery';
 import { useMasterDataOptions } from '@/composables/useMasterDataOptions';
 import { useCustomFields } from '@/composables/useCustomFields';
 import { http, toApiError } from '@/lib/http';
-import { formatDate } from '@/lib/format';
+import { formatDate, formatDateTime } from '@/lib/format';
 import { statusTone } from './cardholder';
 import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
@@ -34,7 +34,7 @@ const customFilters = computed(() => customFields.fields.value.filter((field) =>
 
 const list = useListQuery<Cardholder>('/cardholders', {
     filters: {
-        search: '', status: '', employment_type: '', department: '', unit: '', rank: '', designation: '', branch: '', blood_group: '', joined_from: '', joined_to: '',
+        search: '', status: '', employment_type: '', department: '', unit: '', rank: '', designation: '', branch: '', blood_group: '', joined_from: '', joined_to: '', card: '',
     },
     sort: '-created_at',
 });
@@ -118,6 +118,14 @@ async function remove(cardholder: Cardholder): Promise<void> {
                 <UiInput v-model="filters.joined_from" type="date" :label="`${t('cardholders.joined')} · ${t('common.from')}`" />
                 <UiInput v-model="filters.joined_to" type="date" :label="`${t('cardholders.joined')} · ${t('common.to')}`" />
                 <UiSelect
+                    v-if="auth.can('cards.view')"
+                    v-model="filters.card"
+                    :label="t('cardholders.card.label')"
+                    :placeholder="t('common.all')"
+                    :options="(['none', 'pending', 'printed'] as const).map((value) => ({ value, label: t(`cardholders.card.${value}`) }))"
+                    data-filter-card
+                />
+                <UiSelect
                     v-for="field in customFilters"
                     :key="field.key"
                     v-model="filters[`custom.${field.key}`]"
@@ -173,6 +181,18 @@ async function remove(cardholder: Cardholder): Promise<void> {
                                 <div class="flex flex-wrap gap-1">
                                     <UiBadge :tone="statusTone(row.status)">{{ t(`cardholders.status.${row.status}`) }}</UiBadge>
                                     <UiBadge v-if="row.employment_type !== 'staff'">{{ t(`cardholders.employmentType.${row.employment_type}`) }}</UiBadge>
+                                </div>
+                                <!-- Own card, legacy "Status": PENDING (never printed) / PRINTED -->
+                                <div v-if="auth.can('cards.view')" class="mt-1.5 text-xs" data-card-state>
+                                    <span
+                                        v-if="row.current_card"
+                                        :class="row.current_card.print_count ? 'text-success' : 'text-warning'"
+                                        :title="row.current_card.last_printed_at ? formatDateTime(row.current_card.last_printed_at) : undefined"
+                                    >
+                                        {{ t(row.current_card.print_count ? 'cardholders.card.printed' : 'cardholders.card.pending') }}
+                                        <span class="block font-mono text-muted">{{ row.current_card.number }}</span>
+                                    </span>
+                                    <span v-else class="text-muted">{{ t('cardholders.card.none') }}</span>
                                 </div>
                             </td>
                             <td class="px-5 py-3">

@@ -64,8 +64,8 @@ class CardholderResource extends JsonResource
             'custom_fields' => (object) ($this->custom_fields ?? []),
             'status' => $this->status,
             'photo' => $this->whenLoaded('photo', fn () => $this->fileSummary($this->photo)),
-            // Own active card and whether it was printed (legacy list "Status": PENDING / PRINTED)
-            'current_card' => $this->whenLoaded('currentCard', fn () => $this->currentCard ? [
+            // Own active card and whether it was printed (legacy list "Status": PENDING / PRINTED); only for those who may see cards
+            'current_card' => $this->when($this->relationLoaded('currentCard') && (bool) $request->user()?->can('cards.view'), fn () => $this->currentCard ? [
                 'id' => $this->currentCard->public_id,
                 'number' => $this->currentCard->number,
                 'print_count' => $this->currentCard->print_count,

@@ -520,6 +520,12 @@
                 "completed": "সম্পন্ন",
                 "failed": "ব্যর্থ"
             }
+        },
+        "card": {
+            "label": "কার্ড",
+            "none": "কার্ড নেই",
+            "pending": "ছাপা বাকি",
+            "printed": "ছাপা হয়েছে"
         }
     },
     "customFields": {

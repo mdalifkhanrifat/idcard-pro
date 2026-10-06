@@ -146,6 +146,8 @@ export interface Cardholder {
     custom_fields: Record<string, string | number | boolean>;
     photo?: FileSummary | null;
     signature?: FileSummary | null;
+    /** Own active card (null: none); only with cards.view. Legacy list "Status": PENDING / PRINTED. */
+    current_card?: { id: string; number: string; print_count: number; last_printed_at: string | null } | null;
     created_by?: { id: string; name: string } | null;
     created_at: string;
     updated_at: string;
