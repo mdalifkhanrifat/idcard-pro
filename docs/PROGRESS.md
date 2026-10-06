@@ -1,19 +1,95 @@
 # IDCard Pro: কাজের অগ্রগতি ও হ্যান্ডঅফ
 
 > নতুন চ্যাট বা নতুন ডেভেলপার এই ফাইল থেকে শুরু করবেন। পুরো পরিকল্পনা আছে [ROADMAP.md](ROADMAP.md)-এ।
-> সর্বশেষ আপডেট: ৬ অক্টোবর ২০২৬। **Phase 1 আর Phase 2 সম্পন্ন।** Phase 3 চলছে: ৩.১ Signatories, ৩.২ কার্ড নম্বর, ৩.৩ টেমপ্লেট, ৩.৪ টেমপ্লেট ডিজাইনার, ৩.৫ কার্ড ইস্যু (পরিবারের সদস্যের নিজের ছবি ও সইসহ) সম্পন্ন; ৩.৬ প্রিন্টের ধাপ ১ (প্রিন্টের লগ, ব্যাকএন্ড) আর ধাপ ২ক (প্রিন্টের পাতা) সম্পন্ন।
-> **এখান থেকে শুরু:** নিচের "সর্বশেষ সেশন" পড়ুন → §৮ → **৩.৬ ধাপ ৩: প্রিন্টের ইতিহাস আর PENDING/PRINTED**, তারপর ৪ (ব্যাচ প্রিন্ট)। শেষ commit: `git log --oneline -1`।
+> সর্বশেষ আপডেট: ৬ অক্টোবর ২০২৬ (দিনের শেষে)। **Phase 1 আর Phase 2 সম্পন্ন।** Phase 3 চলছে: ৩.১–৩.৫ সম্পন্ন; **৩.৬ প্রিন্ট: ধাপ ১, ২ (ক, খ, গ), ৩ (ক, খ, গ), ৫ (ক–ঘ) সম্পন্ন** — বাকি ধাপ ৪ (ব্যাচ প্রিন্ট) আর ধাপ ৬ (বারকোড/QR যাচাই)।
+> **এখান থেকে শুরু (৭ অক্টোবর):** নিচের "সর্বশেষ সেশন" আর "কাল শুরুর কমান্ড" পড়ুন → §৮-এর "৩.৬" → **ধাপ ৪: ব্যাচ প্রিন্ট** (নকশা নিচে "পরের কাজ"-এ)। শেষ commit: `git log --oneline -1`।
 
-### সর্বশেষ সেশন (৬ অক্টোবর ২০২৬)
+### সর্বশেষ সেশন (৬ অক্টোবর ২০২৬) — কাল এখান থেকে বুঝে নিন
 
-- **বাগ ঠিক করা:** প্ল্যাটফর্ম অ্যাডমিন কোনো প্রতিষ্ঠান "Open" করে কাজ করার সময় রিলোড দিলে বা লিংক খুললে প্রতিষ্ঠানের তালিকায় ফিরে যেত (বাছাই করা প্রতিষ্ঠান শুধু মেমরিতে থাকত)। এখন `lib/http.ts`-এ localStorage-এ (`acting-tenant`) থাকে, লগআউট/"Exit"-এ মোছে; অন্য ইউজার লগইন করলে বা প্রতিষ্ঠান না থাকলে নিজে মুছে যায় (`stores/auth.ts`)। প্রতিষ্ঠান বাছাই না থাকলে guard `?redirect=` দিয়ে তালিকায় পাঠায়, "Open" চাপলে সেই পাতায় ফেরে। `useListQuery` এখন URL-এর শুধু নিজের key (`f_*`, `page`, `sort`) বদলায়, বাকি query রাখে।
-- **ইউজারের সিদ্ধান্ত:** "প্রিন্ট" বোতাম (২খ) পরে; আগে সার্ভারে PDF (ধাপ ৫), Gotenberg দিয়ে (অনুমোদিত)।
-- ধাপ ৫ক: Gotenberg কন্টেইনার আর `PdfRenderer`; ৫খ: PDF ইঞ্জিনের জন্য signed render লিংক, API আর render পাতা (বিস্তারিত §৮)। ৫গ: কার্ডের PDF API; ২খ: "প্রিন্ট" বোতাম তিন জায়গায়। ৫ঘ: প্রিন্টের পাতায় "PDF ডাউনলোড"; ২গ: "ইস্যু করে প্রিন্ট"। পরের কাজ ধাপ ৩।
-- ৩.৬ ধাপ ২ক: প্রিন্টের পাতা `/cards/print?ids=a,b` (`CardPrintPage.vue`), কার্ডের API-তে `printable`, `/cards/options`-এ `print` (methods, max_copies, max_batch)। বিস্তারিত §৮-এ।
-- ইউজার নিজে Juliet Adams-কে "Designer demo (copy)" টেমপ্লেটে DEMO/26000001 ইস্যু করেছেন (তাই QA/26000001 এখন "বদলে গেছে") — এটা ইউজারের কার্ড, মোছা যাবে না।
-- **dev ডাটাবেসে পরীক্ষার কার্ড রয়ে গেছে: "QA designer check" টেমপ্লেটের সব কার্ড** (QA/26000001 Juliet Adams; QA/26000002 Jaylon Kassulke Jr. — ২গ যাচাইয়ে একই নম্বরে আরও ৩ বার ইস্যু, আগেরগুলো "replaced"; QA/26000003 Abagail DuBuque, বাতিল) আর তাদের `card_prints`, `card_sequences`, `activity_log` (`log_name = cards`, id > 279)। মোছার কমান্ড এই সেশনে অনুমতি-ব্যবস্থা আটকে দিয়েছে; ইউজার চাইলে নিচের "পরিষ্কার করা" নোট অনুযায়ী মুছবেন (আগে `card_sequences` খালি ছিল)।
-- বিল্ড: হোস্টে `npm run build` চলে না (`node_modules` কন্টেইনারের alpine/musl-এর জন্য ইনস্টল করা) — সবসময় `docker compose run --rm --no-deps vite npm run build`।
-- ব্রাউজার-যাচাইয়ের helper নতুন করে লেখা (`cdp.mjs`, এই সেশনের scratchpad-এ): `b.login()`, `b.api()`, `b.pdf()` (`Page.printToPDF`, `preferCSSPageSize`) — PDF-এর পাতা `pdftoppm` দিয়ে ছবি করে দেখা যায়।
+**আজ কী হলো (commit ক্রমে):**
+
+| commit | কী |
+|---|---|
+| `b3271ee` | ২ক: প্রিন্টের পাতা `/cards/print?ids=a,b` — আসল মাপে কার্ড, প্রতি পাশ এক পাতা, কপি, পাশ বাছাই, বাদ পড়া কার্ড ও "ছবি নেই" সতর্কতা, ছাপার পরে "ঠিকমতো হয়েছে?" → লগ; API-তে `printable` |
+| `cb3b1ae` | বাগ: প্ল্যাটফর্ম অ্যাডমিন রিলোড/লিংকে প্রতিষ্ঠান হারাত — এখন localStorage `acting-tenant`, "Open"-এর পরে `?redirect=`-এ ফেরে; `useListQuery` অন্য query রাখে |
+| `0b68f2e` | ৫ক: Gotenberg কন্টেইনার (ইন্টারনেট ছাড়া internal network) + `PdfRenderer` |
+| `d9d115d`, `902e36e` | ৫খ: PDF ইঞ্জিনের জন্য signed render লিংক/API আর `/render/cards` পাতা; কার্ড আঁকা এক জায়গায় (`CardSheets.vue`) |
+| `8ce2fa0` | ৫গ: `GET /cards/{id}/pdf`, `POST /cards/pdf` (HRM-ও API token দিয়ে PDF নিতে পারে) |
+| `2a28835` | ২খ: "প্রিন্ট" বোতাম — কার্ডের বিস্তারিত, কার্ডধারীর Cards ট্যাব (বর্তমান কার্ড + ইতিহাস), Card issuance তালিকা |
+| `d96c2db` | ৫ঘ: প্রিন্টের পাতায় "PDF ডাউনলোড" + "প্রিন্ট হিসেবে লিখে রাখো" |
+| `1735cff` | ২গ: ইস্যু ডায়ালগে "Issue and print" (popup আটকালে একই ট্যাবে) |
+| `59c00a7` | ৩ক: ছাপা বাকি/ছাপা হয়েছে আর ছাপার তারিখের ফিল্টার (প্রতিষ্ঠানের timezone), `summary.pending`, কার্ডধারীর `current_card` + `filter[card]` |
+| `19a07ff` | ৩খ: কার্ডের বিস্তারিততে প্রিন্টের ইতিহাস; Card issuance-এ "এখনো ছাপা হয়নি" টাইল, ফিল্টার, "N বার ছাপা" |
+| `062f733` | ৩গ: কার্ডধারীর তালিকায় পুরনো "Status" PENDING/PRINTED (Status ঘরের দ্বিতীয় লাইনে) + ফিল্টার |
+
+**আজকের সিদ্ধান্ত:**
+- সার্ভারের PDF = **Gotenberg** (ইউজার অনুমোদিত)। কারণ: Chromium আমাদের প্রিন্টের পাতাই খোলে, তাই PDF = স্ক্রিন (বাংলা, নিজের ফন্ট, ঘোরানো লেখা)। dompdf/mPDF-এ বাংলা ভাঙে আর নকশা দুবার লিখতে হতো। নতুন PHP/npm প্যাকেজ নেই।
+- PDF ডাউনলোড নিজে "ছাপা" হিসেবে লগ হয় না; `record` দিলে হয় (`method: pdf`)।
+- পুরনো "Status" PENDING/PRINTED = কার্ডধারীর **নিজের সক্রিয় কার্ড** কখনো ছাপা হয়েছে কিনা (পরিবারের কার্ড আর বাতিল কার্ড ধরা হয় না)।
+- "ছাপার তারিখ" ফিল্টারের দিন = **প্রতিষ্ঠানের timezone** (অ্যাপ UTC-তে চলে; ঢাকায় রাত ১টার ছাপা সেই দিনেই)।
+
+**কোথায় কী দেখবেন (UI):**
+- লগইন: সুপার অ্যাডমিন `platform@idcard.local` (Organization ফাঁকা) → Acme "Open"; অথবা Owner `owner@acme.test` / প্রতিষ্ঠান `acme`। পাসওয়ার্ড দুটোরই `Demo@Pass2026!`।
+- **Card issuance** (`/cards`): টাইল (সক্রিয়, মেয়াদোত্তীর্ণ, ৩০ দিনে শেষ, বাতিল, এখনো ছাপা হয়নি), ফিল্টার (ছাপা, ছাপার তারিখ…), সারির 🖨 আইকন, সারিতে ক্লিক → বিস্তারিত + প্রিন্টের ইতিহাস + Print।
+- **Cardholders** → কারো পাতা → **Cards** ট্যাব: Issue card / Issue and print, বর্তমান কার্ডে Print, ইতিহাসে 🖨।
+- প্রিন্টের পাতা: পাশ, কপি, **প্রিন্ট** (ব্রাউজার; "Save as PDF"-ও), **PDF ডাউনলোড** (সার্ভার, ফোনেও চলে)।
+
+**dev ডাটাবেসের অবস্থা (জরুরি):**
+- ইউজারের নিজের কার্ড: **DEMO/26000001** (Juliet Adams, "Designer demo (copy)", সক্রিয়, ছাপা হয়নি) — **কখনো মুছবেন না, এতে লগ লিখবেন না।**
+- পরীক্ষার কার্ড: **"QA designer check" টেমপ্লেটের সব কার্ড** (QA/26000001 Juliet — replaced, ৩ বার ছাপা; QA/26000002 Jaylon — একই নম্বরে ৪ বার ইস্যু (মোট ৬টা পরীক্ষার কার্ড), সর্বশেষটা সক্রিয়; QA/26000003 Abagail — বাতিল) আর তাদের `card_prints`, `card_assets`, `card_sequences`-এর `QA/26` সারি, `activity_log` (`log_name = cards`, id > 279 আর `subject` এই কার্ডগুলো)। এই সেশনে মোছার কমান্ড অনুমতি-ব্যবস্থা আটকে দিয়েছে; **ইউজার চাইলে নিচের কমান্ড নিজে চালাবেন** (অথবা পরের যাচাইয়ে এগুলো ব্যবহার করা যায়)।
+- পারমিশন: ডেমো Operator রোলে `cards.view`/`cards.print` নেই (ইচ্ছাকৃত; Roles পাতায় ইউজার ঠিক করবেন)।
+
+**ইউজারের কাছে খোলা প্রশ্ন:** (১) পরীক্ষার কার্ড মুছবেন কিনা; (২) ফোন থেকে দেখতে `.env`-এর `SANCTUM_STATEFUL_DOMAINS`-এ `192.168.10.129:8080` যোগ করা হবে কিনা (শুধু লোকাল সেটিং)।
+
+### কাল শুরুর কমান্ড
+
+```bash
+cd /var/www/php74/idcard/idcard-pro
+docker compose up -d                                         # app, web, mysql, redis, mailpit, queue, scheduler, gotenberg
+docker compose ps --format '{{.Service}} {{.State}}'         # সব "running" হওয়া উচিত
+docker compose exec app sh -c "curl -s http://gotenberg:3000/health"   # {"status":"up",...} = PDF ইঞ্জিন চালু
+git log --oneline -3                                         # শেষ commit মিলিয়ে নিন
+docker compose run --rm --no-deps vite npm run build         # ফ্রন্টএন্ড বিল্ড (হোস্টে npm run build চলে না)
+# খুলুন: http://localhost:8080  (Mailpit: http://localhost:8025)
+```
+
+**প্রতিটা ধাপের শেষে মান যাচাই:**
+```bash
+docker compose exec app php artisan test --compact                       # এখন ২১২টা টেস্ট
+docker compose exec app vendor/bin/phpstan analyse --memory-limit=1G
+docker compose exec app vendor/bin/pint --dirty --format agent
+docker compose run --rm --no-deps vite npx vue-tsc --noEmit
+```
+
+**ব্রাউজারে যাচাই (headless Chrome, git-এ নয়):** helper `idcard-pro/.claude/qa/cdp.mjs` (gitignored, তাই টিকে থাকে) — সেশনের scratchpad-এ কপি করে `SCRATCH=$PWD node script.mjs`। দেয়: `launch()`, `b.login(login, org, password)`, `b.goto()`, `b.waitFor()`, `b.eval(expr, userGesture)` (নতুন ট্যাব খোলা যাচাইয়ে `userGesture = true`), `b.api(method, path, body)`, `b.shot()`, `b.pdf()` (`Page.printToPDF`)। PDF-এর পাতা দেখতে `pdftoppm -r 100 -png file.pdf out`। ডাউনলোড যাচাই: `Page.setDownloadBehavior` + **নতুন খালি ফোল্ডার** (`rm` দিয়ে মোছা নিরাপত্তা-চেক আটকায়)। লগইন throttle-এর জন্য চালানোর মাঝে ~২০–৬০ সেকেন্ড বিরতি।
+
+**পরীক্ষার কার্ড মোছা (ইউজার নিজে চালাবেন; শুধু "QA designer check"-এর কার্ড, DEMO ছোঁয় না):**
+```bash
+docker compose exec app php artisan tinker --execute '
+$template = DB::table("card_templates")->where("public_id", "01m43pg1vy3g7g46j90jv5zjxm")->value("id");
+$ids = DB::table("cards")->where("card_template_id", $template)->pluck("id");
+DB::transaction(function () use ($ids) {
+    DB::table("cards")->whereIn("replaced_by_id", $ids)->update(["replaced_by_id" => null]);
+    DB::table("card_prints")->whereIn("card_id", $ids)->delete();
+    DB::table("card_assets")->whereIn("card_id", $ids)->delete();
+    DB::table("activity_log")->where("log_name", "cards")->where("subject_type", App\Models\Card::class)->whereIn("subject_id", $ids)->delete();
+    DB::table("cards")->whereIn("id", $ids)->delete();
+    DB::table("card_sequences")->where("key", "QA/26")->delete();
+});
+echo "deleted ", count($ids), " test cards\n";'
+```
+(আগে `DB::table("cards")->where("card_template_id", $template)->count()` দিয়ে সংখ্যা দেখে নিন; ইউজারের অন্য টেমপ্লেটের কার্ড থাকলে সেগুলো এই কমান্ডে পড়বে না। DEMO/26000001-এর `replaced_by_id` নেই, তাই অক্ষত থাকে।)
+
+### পরের কাজ (ক্রমে, প্রতিটা ছোট ধাপ → টেস্ট → commit → ইউজারকে জানানো)
+
+1. **৩.৬ ধাপ ৪: ব্যাচ প্রিন্ট (নতুন ফিচার, পুরনো সিস্টেমে ছিল না)**
+   - ৪ক (UI): `CardsPage.vue`-তে সারিতে checkbox (শুধু `printable` কার্ড), "সব বাছাই" (এই পাতার), বাছাই করা সংখ্যা; "বাছাই করা প্রিন্ট" → `openPrintPage(ids)` আর "PDF" → `downloadCardsPdf(ids, …)`; সীমা `printOptions.max_batch` (২০০)। ফিল্টার দিয়ে বাছাই সহজ (যেমন "এখনো ছাপা হয়নি" টাইল → সব বাছাই → প্রিন্ট)। লগ আগে থেকেই এক `batch` id-তে (`POST /cards/prints`)।
+   - ৪খ (নতুন বিকল্প): প্রিন্টের পাতায় "পাতার ধরন": কার্ড প্রিন্টার (প্রতি পাশ এক পাতা, এখনকার মতো) / **A4 শিট** (এক পাতায় কয়েকটা কার্ড, কাটার দাগসহ; সামনের শিটের পরে পেছনের শিট উল্টো ক্রমে, যাতে দুই পাশ মেলে)। `CardSheets.vue`-তে `layout` prop; সার্ভারের PDF-এও (`sides`-এর মতো `sheet` প্যারামিটার, `CardRenderService::link()` আর `CardPdfRequest`-এ)।
+   - ৪গ (ঐচ্ছিক): তালিকার ফিল্টার মেনে "ফিল্টারের সব কার্ড" (পাতার বাইরে) — সার্ভারে `ids`-এর বদলে filter দিয়ে; ২০০-র সীমা মেনে।
+2. **৩.৬ ধাপ ৬: বারকোড/QR যাচাই** — ইস্যু আর প্রিন্টের আগে মান এনকোড হয় কিনা (যেমন EAN-13-এ অক্ষর); `missingImages()`-এর মতো সতর্কতা, প্রিন্টে লাল ভুল-বক্স নয়।
+3. **৩.৭ স্বাক্ষরিত QR আর পাবলিক ভেরিফিকেশন পেজ।**
+4. **৩.৮ ইমপোর্টে কার্ডের কলাম** (পুরনো "last print date/time" → `card_prints`) আর কার্ডধারী মোছার নিয়ম (কার্ড থাকলে মোছা যাবে না)।
+5. ছোট বাকি কাজ: ডার্ক মোডে `text-brand` প্রায় অদৃশ্য (§৬); কার্ডের বিস্তারিত খোলা থাকলে অন্য ট্যাবে ছাপার পরে ইতিহাস নিজে হালনাগাদ হয় না (আবার খুললে আসে)।
 
 ### আগের সেশন (৫ অক্টোবর ২০২৬, সন্ধ্যা)
 
@@ -371,16 +447,16 @@ docker compose run --rm --no-deps vite npx vue-tsc --noEmit
 
 ```
 আমি /var/www/php74/idcard/idcard-pro প্রজেক্টে কাজ চালিয়ে যেতে চাই।
-প্রথমে docs/PROGRESS.md আর docs/ROADMAP.md পড়ো: উপরের "এখান থেকে শুরু" আর "সর্বশেষ সেশন",
-তারপর §৮-এর "৩.৬ প্রিন্ট আর ইতিহাস"। ৩.৫ (কার্ড ইস্যু, পরিবারের সদস্যের নিজের ছবি ও সইসহ) আর ৩.৬-এর
-ধাপ ১ (প্রিন্টের লগ, ব্যাকএন্ড) শেষ। এখন ৩.৬ ধাপ ২: প্রিন্টের পাতা আর "প্রিন্ট" বোতাম (নকশা §৮-এ লেখা),
-তারপর PENDING/PRINTED, ব্যাচ প্রিন্ট; সার্ভারে PDF-এর আগে নতুন dependency-র অনুমতি নেবে।
+প্রথমে docs/PROGRESS.md আর docs/ROADMAP.md পড়ো: উপরের "এখান থেকে শুরু", "সর্বশেষ সেশন",
+"কাল শুরুর কমান্ড" আর "পরের কাজ", তারপর §৮-এর "৩.৬ প্রিন্ট আর ইতিহাস"।
+৩.৬-এর ধাপ ১, ২, ৩ আর ৫ (Gotenberg দিয়ে সার্ভারের PDF) শেষ। এখন ৩.৬ ধাপ ৪: ব্যাচ প্রিন্ট
+(নকশা "পরের কাজ"-এ লেখা), তারপর ধাপ ৬ (বারকোড/QR যাচাই), ৩.৭, ৩.৮।
 পুরনো প্রজেক্ট (../idcard) ভালো করে ফলো করবে, আগের কোনো ফিচার বাদ দেবে না; প্রতিটা কাজে
 বাড়ানো যায়, নির্ভরযোগ্য আর যেকোনো HR সিস্টেমের সাথে যুক্ত করা যায় এমনভাবে করবে, আর নতুন কী যোগ করা যায় ভাববে।
 নিয়ম: ছোট ছোট ধাপে কাজ করবে, প্রতিটা ধাপের আগে ও পরে আমাকে বাংলায় জানাবে,
 Controller → Service → Repository কাঠামো মানবে, প্রতিটা পেজ ব্রাউজারে চালিয়ে যাচাই করবে,
 প্রতিটা ধাপ শেষে টেস্ট চালিয়ে আমার git পরিচয়ে (কোনো AI attribution ছাড়া) commit করবে,
-আর প্রতিটা ধাপের পর docs/PROGRESS.md হালনাগাদ রাখবে।
+আর প্রতিটা ধাপের পর docs/PROGRESS.md হালনাগাদ রাখবে। নতুন dependency-র আগে অনুমতি নেবে।
 ```
 
 **ব্রাউজারে যাচাইয়ের নোট (৫ অক্টোবর):** আগের সেশনের scratchpad সাধারণত `/tmp/claude-1000/-var-www-php74-idcard/<session>/scratchpad/`-এ থেকে যায় (`cdp.mjs` সেখান থেকে কপি করা যায়); ফাইল বাছাই সহজে করা যায় পেজের ভেতরে canvas → `DataTransfer` → `input.files` দিয়ে। কার্ড ইস্যু না করে যাচাই করলে পরিষ্কার করা সহজ (অস্থায়ী QA টেমপ্লেট/সদস্য API দিয়ে মোছা যায়)। স্ক্রিপ্ট হারালে নতুন করে লিখতে হয় (`cdp.mjs`: Chrome চালানো, লগইন, `b.api()` দিয়ে পেজ থেকে JSON কল, `DOM.setFileInputFiles` দিয়ে ফাইল আপলোড)। পরীক্ষার ফন্ট: `/usr/share/fonts/truetype/lohit-bengali/Lohit-Bengali.ttf` (OFL)। সাবধান: QA টেমপ্লেটে লেআউট **import** করলে পুরনো লোগো নতুন ফাইল হিসেবে আপলোড হয় আর পুরনো ফাইল মুছে যায়, তাই পরে আগের JSON দিয়ে ফেরানো যায় না (422) — বর্তমান লেআউট থেকে পরীক্ষার উপাদান বাদ দিয়ে ফেরাতে হয়। পরীক্ষায় বানানো ফন্ট/লাইব্রেরির ছবি শেষে মুছে ফেলতে হবে।
