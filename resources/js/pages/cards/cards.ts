@@ -10,7 +10,15 @@ export interface CardReasonOption {
     document: boolean;
 }
 
+/** Printing limits from config/cards.php → print. */
+export interface CardPrintOptions {
+    methods: string[];
+    max_copies: number;
+    max_batch: number;
+}
+
 const reasons = ref<CardReasonOption[]>([]);
+const printOptions = ref<CardPrintOptions>({ methods: ['browser'], max_copies: 10, max_batch: 200 });
 let loading: Promise<void> | null = null;
 
 /**
@@ -21,6 +29,7 @@ export function useCardReasons() {
     loading ??= http.get('/cards/options').then(
         ({ data }) => {
             reasons.value = data.data.reasons;
+            printOptions.value = data.data.print;
         },
         () => {
             loading = null;
@@ -29,6 +38,7 @@ export function useCardReasons() {
 
     return {
         reasons,
+        printOptions,
         ready: loading,
         needs: (key: string): CardReasonOption => reasons.value.find((reason) => reason.key === key) ?? { key, note: false, document: false },
     };

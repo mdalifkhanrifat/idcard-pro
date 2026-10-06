@@ -47,6 +47,11 @@ class CardController extends Controller
                 ->map(fn (array $options, string $key) => ['key' => $key, 'note' => ! empty($options['note']), 'document' => ! empty($options['document'])])
                 ->values(),
             'statuses' => config('cards.statuses'),
+            'print' => [
+                'methods' => config('cards.print.methods'),
+                'max_copies' => (int) config('cards.print.max_copies'),
+                'max_batch' => (int) config('cards.print.max_batch'),
+            ],
         ]]);
     }
 

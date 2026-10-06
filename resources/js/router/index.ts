@@ -55,6 +55,8 @@ const routes: RouteRecordRaw[] = [
             { path: 'platform/tenants', name: 'platform.tenants', component: () => import('@/pages/platform/TenantsPage.vue'), meta: { platform: true, title: 'nav.tenants' } },
         ],
     },
+    // Printing: the cards alone at their real size, without the app's menu and header
+    { path: '/cards/print', name: 'cards.print', component: () => import('@/pages/cards/CardPrintPage.vue'), meta: { permission: 'cards.print', title: 'cards.print.title' } },
     { path: '/:pathMatch(.*)*', redirect: '/' },
 ];
 

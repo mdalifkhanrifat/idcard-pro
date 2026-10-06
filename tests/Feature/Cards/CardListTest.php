@@ -71,5 +71,6 @@ it('offers the reasons and statuses from the configuration', function () {
         ->assertOk()
         ->assertJsonPath('data.reasons.0', ['key' => 'new', 'note' => false, 'document' => false])
         ->assertJsonPath('data.reasons.3', ['key' => 'lost', 'note' => true, 'document' => true])
-        ->assertJsonPath('data.statuses', ['active', 'replaced', 'revoked']);
+        ->assertJsonPath('data.statuses', ['active', 'replaced', 'revoked'])
+        ->assertJsonPath('data.print', ['methods' => ['browser', 'pdf'], 'max_copies' => 10, 'max_batch' => 200]);
 });

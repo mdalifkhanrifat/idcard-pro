@@ -309,6 +309,11 @@ export interface IssuedCard {
     status_changed_at: string | null;
     status_note: string | null;
     template_version: number;
+    /** Total copies printed; 0 = never printed (legacy "PENDING"). */
+    print_count: number;
+    last_printed_at: string | null;
+    /** Active and not expired: the server's rule for printing. */
+    printable: boolean;
     template?: { id: string; name: string; code: string };
     family_member?: { id: string; name: string; relation: string } | null;
     cardholder?: { id: string; full_name: string; employee_no: string | null; department?: string | null };

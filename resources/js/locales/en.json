@@ -1067,6 +1067,34 @@
         "familyCards": "Family members",
         "familyOf": "Family of {name}",
         "listEmpty": "No cards match.",
-        "listEmptyHint": "Change the filters, or issue a card from a cardholder’s page."
+        "listEmptyHint": "Change the filters, or issue a card from a cardholder’s page.",
+        "print": {
+            "title": "Print cards",
+            "counts": "{cards} card(s), {pages} page(s)",
+            "print": "Print",
+            "copies": "Copies",
+            "sides": "Sides",
+            "sideOptions": {
+                "both": "Front and back",
+                "front": "Front only",
+                "back": "Back only"
+            },
+            "none": "No cards chosen to print.",
+            "notFound": "Card not found.",
+            "tooMany": "Too many cards: at most {max} can be printed together.",
+            "notPrintable": "{status}, cannot be printed. Issue a new card instead.",
+            "skipped": "{count} card(s) left out",
+            "missingTitle": "Some cards have no image to print",
+            "confirmTitle": "Did the cards print correctly?",
+            "confirmHint": "The browser cannot tell whether printing worked. Confirm to record this print in the card history.",
+            "backPending": "The front sides are printed. Turn the cards over in the printer, then print the back sides; the print is recorded after that.",
+            "note": "Note (optional)",
+            "notPrinted": "Not printed",
+            "again": "Print again",
+            "printBacks": "Print back sides",
+            "confirm": "Yes, record the print",
+            "logged": "Print recorded for {count} card(s).",
+            "loggedTotal": "Recorded: {count} card print(s)."
+        }
     }
 }

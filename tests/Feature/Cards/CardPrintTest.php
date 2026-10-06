@@ -55,6 +55,11 @@ it('prints only active cards that have not expired', function () {
     $this->postJson("/api/v1/cards/{$revoked['id']}/revoke", ['note' => 'Left'])->assertOk();
     $expired = ($this->issue)(['issue_date' => '2020-01-01', 'expiry_date' => '2021-01-01']);
 
+    // Clients read the same rule from the card itself
+    expect($this->getJson("/api/v1/cards/{$revoked['id']}")->json('data.printable'))->toBeFalse()
+        ->and($this->getJson("/api/v1/cards/{$expired['id']}")->json('data.printable'))->toBeFalse()
+        ->and(($this->issue)()['printable'])->toBeTrue();
+
     $this->postJson("/api/v1/cards/{$revoked['id']}/prints")->assertUnprocessable()->assertJsonPath('message', fn (string $m) => str_contains($m, $revoked['number']));
     $this->postJson("/api/v1/cards/{$expired['id']}/prints")->assertUnprocessable();
 

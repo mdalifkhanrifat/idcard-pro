@@ -7,7 +7,7 @@ const icons = { success: CheckCircle2, error: XCircle, info: Info };
 </script>
 
 <template>
-    <div class="pointer-events-none fixed right-4 bottom-4 z-[60] flex w-full max-w-sm flex-col gap-2" aria-live="polite">
+    <div class="pointer-events-none fixed right-4 bottom-4 print:hidden z-[60] flex w-full max-w-sm flex-col gap-2" aria-live="polite">
         <TransitionGroup
             enter-from-class="translate-y-2 opacity-0"
             enter-active-class="transition duration-200"
