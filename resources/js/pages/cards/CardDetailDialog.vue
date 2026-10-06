@@ -7,6 +7,7 @@ import UiButton from '@/components/ui/UiButton.vue';
 import UiDialog from '@/components/ui/UiDialog.vue';
 import UiInput from '@/components/ui/UiInput.vue';
 import UiTextarea from '@/components/ui/UiTextarea.vue';
+import CardPrintButton from './CardPrintButton.vue';
 import CardRender from './CardRender.vue';
 import { displayStatus, statusTone } from './cards';
 import { http, toApiError } from '@/lib/http';
@@ -156,6 +157,7 @@ async function revoke(): Promise<void> {
                 </form>
 
                 <div v-else class="flex flex-wrap gap-2 border-t border-line pt-3">
+                    <CardPrintButton :card="card" />
                     <UiButton v-if="auth.can('cards.update')" variant="secondary" size="sm" data-edit-card @click="startEdit"><Pencil class="size-4" />{{ t('common.edit') }}</UiButton>
                     <UiButton v-if="auth.can('cards.revoke') && card.status === 'active'" variant="secondary" size="sm" class="text-danger" data-revoke @click="mode = 'revoke'">
                         <Ban class="size-4" />{{ t('cards.revoke') }}

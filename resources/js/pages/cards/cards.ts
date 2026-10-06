@@ -1,5 +1,6 @@
 import { ref } from 'vue';
 import { http } from '@/lib/http';
+import { router } from '@/router';
 import type { CardLayout, CardSide, CardValues, IssuedCard } from '@/types';
 
 export interface CardReasonOption {
@@ -42,6 +43,11 @@ export function useCardReasons() {
         ready: loading,
         needs: (key: string): CardReasonOption => reasons.value.find((reason) => reason.key === key) ?? { key, note: false, document: false },
     };
+}
+
+/** Opens the print page for these cards in a new tab, so the page the user is on stays as it is. */
+export function openPrintPage(cardIds: string[]): void {
+    window.open(router.resolve({ name: 'cards.print', query: { ids: cardIds.join(',') } }).href, '_blank');
 }
 
 /** Status shown to people: an active card past its expiry shows as expired. */

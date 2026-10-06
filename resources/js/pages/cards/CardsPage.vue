@@ -11,6 +11,7 @@ import UiPagination from '@/components/ui/UiPagination.vue';
 import UiSelect from '@/components/ui/UiSelect.vue';
 import UiSortHeader from '@/components/ui/UiSortHeader.vue';
 import CardDetailDialog from './CardDetailDialog.vue';
+import CardPrintButton from './CardPrintButton.vue';
 import { displayStatus, statusTone, useCardReasons } from './cards';
 import { useListQuery } from '@/composables/useListQuery';
 import { useMasterDataOptions } from '@/composables/useMasterDataOptions';
@@ -168,6 +169,7 @@ function changed(): void {
                             <th class="px-5 py-3"><UiSortHeader field="issue_date" :sort="sort" :label="t('cards.issueDate')" @toggle="list.toggleSort" /></th>
                             <th class="px-5 py-3"><UiSortHeader field="expiry_date" :sort="sort" :label="t('cards.expiryDate')" @toggle="list.toggleSort" /></th>
                             <th class="px-5 py-3">{{ t('common.status') }}</th>
+                            <th class="px-3 py-3"><span class="sr-only">{{ t('common.actions') }}</span></th>
                         </tr>
                     </thead>
                     <tbody :class="loading && 'opacity-50'">
@@ -187,6 +189,7 @@ function changed(): void {
                             <td class="px-5 py-3 whitespace-nowrap text-muted">{{ formatDate(card.issue_date) }}</td>
                             <td class="px-5 py-3 whitespace-nowrap text-muted">{{ card.expiry_date ? formatDate(card.expiry_date) : t('cards.noExpiry') }}</td>
                             <td class="px-5 py-3"><UiBadge :tone="statusTone(displayStatus(card))">{{ t(`cards.statuses.${displayStatus(card)}`) }}</UiBadge></td>
+                            <td class="px-3 py-2 text-right"><CardPrintButton :card="card" compact /></td>
                         </tr>
                     </tbody>
                 </table>

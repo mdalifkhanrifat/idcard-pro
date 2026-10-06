@@ -1094,7 +1094,8 @@
             "printBacks": "Print back sides",
             "confirm": "Yes, record the print",
             "logged": "Print recorded for {count} card(s).",
-            "loggedTotal": "Recorded: {count} card print(s)."
+            "loggedTotal": "Recorded: {count} card print(s).",
+            "open": "Print card {number}"
         }
     }
 }
