@@ -2,12 +2,13 @@
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, watchEffect } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { AlertTriangle, CheckCircle2, Loader2, Printer, X } from 'lucide-vue-next';
+import { AlertTriangle, CheckCircle2, FileDown, Loader2, Printer, X } from 'lucide-vue-next';
 import UiButton from '@/components/ui/UiButton.vue';
+import UiCheckbox from '@/components/ui/UiCheckbox.vue';
 import UiDialog from '@/components/ui/UiDialog.vue';
 import UiTextarea from '@/components/ui/UiTextarea.vue';
 import CardSheets from './CardSheets.vue';
-import { displayStatus, missingImages, sheetSides, useCardReasons, type CardImageKey, type PrintSides, type SheetCard } from './cards';
+import { displayStatus, downloadCardsPdf, missingImages, sheetSides, useCardReasons, type CardImageKey, type PrintSides, type SheetCard } from './cards';
 import { http, toApiError } from '@/lib/http';
 import { useUiStore } from '@/stores/ui';
 import type { CardLayout, CardValues, IssuedCard } from '@/types';
@@ -45,6 +46,8 @@ const note = ref('');
 const noteError = ref<string[]>([]);
 const logging = ref(false);
 const logged = ref(0);
+const downloading = ref(false);
+const recordPdf = ref(false);
 const sheetsRef = ref<InstanceType<typeof CardSheets> | null>(null);
 
 const ids = computed(() => [...new Set(String(route.query.ids ?? '').split(',').map((id) => id.trim()).filter(Boolean))]);
@@ -147,6 +150,25 @@ async function logPrint(): Promise<void> {
     }
 }
 
+/** The same cards as a PDF made on the server: no print dialog, so it also works on phones. */
+async function downloadPdf(): Promise<void> {
+    downloading.value = true;
+    const cardIds = printable.value.map((entry) => entry.id);
+    try {
+        await downloadCardsPdf(cardIds, { sides: sides.value, record: recordPdf.value });
+        if (recordPdf.value) {
+            logged.value += cardIds.length;
+            ui.notify(t('cards.print.pdfRecorded', { count: cardIds.length }));
+        } else {
+            ui.notify(t('cards.print.pdfDone'));
+        }
+    } catch (error) {
+        ui.notify((error as Error).message, 'error');
+    } finally {
+        downloading.value = false;
+    }
+}
+
 function close(): void {
     if (window.opener) {
         window.close();
@@ -191,6 +213,12 @@ onBeforeUnmount(() => {
                 <UiButton :disabled="!printable.length || !assetsReady" :loading="loading || (!!printable.length && !assetsReady)" data-print-now @click="print">
                     <Printer class="size-4" /> {{ t('cards.print.print') }}
                 </UiButton>
+                <template v-if="printOptions.pdf">
+                    <UiButton variant="secondary" :disabled="!printable.length || loading" :loading="downloading" data-print-pdf @click="downloadPdf">
+                        <FileDown class="size-4" /> {{ t('cards.print.pdf') }}
+                    </UiButton>
+                    <UiCheckbox v-model="recordPdf" :label="t('cards.print.pdfRecord')" data-print-pdf-record />
+                </template>
                 <UiButton variant="secondary" data-print-close @click="close"><X class="size-4" /> {{ t('common.close') }}</UiButton>
             </div>
 

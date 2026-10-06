@@ -16,10 +16,12 @@ export interface CardPrintOptions {
     methods: string[];
     max_copies: number;
     max_batch: number;
+    /** Server PDFs are switched on (config/pdf.php). */
+    pdf: boolean;
 }
 
 const reasons = ref<CardReasonOption[]>([]);
-const printOptions = ref<CardPrintOptions>({ methods: ['browser'], max_copies: 10, max_batch: 200 });
+const printOptions = ref<CardPrintOptions>({ methods: ['browser'], max_copies: 10, max_batch: 200, pdf: false });
 let loading: Promise<void> | null = null;
 
 /**
@@ -48,6 +50,42 @@ export function useCardReasons() {
 /** Opens the print page for these cards in a new tab, so the page the user is on stays as it is. */
 export function openPrintPage(cardIds: string[]): void {
     window.open(router.resolve({ name: 'cards.print', query: { ids: cardIds.join(',') } }).href, '_blank');
+}
+
+/**
+ * Downloads a PDF of these cards made on the server (same drawing as printing). `record` also logs it as
+ * a print (method "pdf"); a download alone is not counted as a printed card.
+ */
+export async function downloadCardsPdf(cardIds: string[], options: { sides: PrintSides; record: boolean }): Promise<void> {
+    try {
+        const response =
+            cardIds.length === 1
+                ? await http.get<Blob>(`/cards/${cardIds[0]}/pdf`, { params: { sides: options.sides, record: options.record ? 1 : 0 }, responseType: 'blob' })
+                : await http.post<Blob>('/cards/pdf', { cards: cardIds, ...options }, { responseType: 'blob' });
+        const filename = /filename="([^"]+)"/.exec(String(response.headers['content-disposition'] ?? ''))?.[1] ?? 'cards.pdf';
+        const url = URL.createObjectURL(response.data);
+        Object.assign(document.createElement('a'), { href: url, download: filename }).click();
+        setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    } catch (error) {
+        throw await readBlobError(error);
+    }
+}
+
+/** A failed blob request carries its JSON error as a Blob; read it so the message can be shown. */
+async function readBlobError(error: unknown): Promise<Error> {
+    const data = (error as { response?: { data?: unknown } }).response?.data;
+    if (data instanceof Blob) {
+        try {
+            const body = JSON.parse(await data.text()) as { message?: string };
+            if (body.message) {
+                return new Error(body.message);
+            }
+        } catch {
+            // Not JSON: fall through to the generic message
+        }
+    }
+
+    return error instanceof Error ? error : new Error(String(error));
 }
 
 /** Status shown to people: an active card past its expiry shows as expired. */

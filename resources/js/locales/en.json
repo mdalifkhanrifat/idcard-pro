@@ -1095,7 +1095,11 @@
             "confirm": "Yes, record the print",
             "logged": "Print recorded for {count} card(s).",
             "loggedTotal": "Recorded: {count} card print(s).",
-            "open": "Print card {number}"
+            "open": "Print card {number}",
+            "pdf": "Download PDF",
+            "pdfRecord": "Record as printed",
+            "pdfDone": "PDF downloaded.",
+            "pdfRecorded": "PDF downloaded; print recorded for {count} card(s)."
         }
     }
 }

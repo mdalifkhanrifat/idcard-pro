@@ -51,6 +51,8 @@ class CardController extends Controller
                 'methods' => config('cards.print.methods'),
                 'max_copies' => (int) config('cards.print.max_copies'),
                 'max_batch' => (int) config('cards.print.max_batch'),
+                // Server PDFs are on (config/pdf.php); off, only the browser's own printing remains
+                'pdf' => filled(config('pdf.driver')),
             ],
         ]]);
     }
