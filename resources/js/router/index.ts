@@ -4,6 +4,8 @@ import { useAuthStore } from '@/stores/auth';
 declare module 'vue-router' {
     interface RouteMeta {
         guest?: boolean;
+        /** Open without signing in; the page proves access itself (e.g. a signed link). */
+        public?: boolean;
         permission?: string | string[];
         platform?: boolean;
         title?: string;
@@ -55,6 +57,8 @@ const routes: RouteRecordRaw[] = [
             { path: 'platform/tenants', name: 'platform.tenants', component: () => import('@/pages/platform/TenantsPage.vue'), meta: { platform: true, title: 'nav.tenants' } },
         ],
     },
+    // Server PDF engine's view of cards (signed link, no sign-in)
+    { path: '/render/cards', name: 'cards.render', component: () => import('@/pages/cards/CardRenderPage.vue'), meta: { public: true } },
     // Printing: the cards alone at their real size, without the app's menu and header
     { path: '/cards/print', name: 'cards.print', component: () => import('@/pages/cards/CardPrintPage.vue'), meta: { permission: 'cards.print', title: 'cards.print.title' } },
     { path: '/:pathMatch(.*)*', redirect: '/' },
@@ -67,6 +71,9 @@ export const router = createRouter({
 });
 
 router.beforeEach(async (to) => {
+    if (to.meta.public) {
+        return true;
+    }
     const auth = useAuthStore();
     if (!auth.loaded) {
         await auth.fetchSession();

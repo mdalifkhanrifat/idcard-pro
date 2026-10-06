@@ -21,6 +21,9 @@ class CardRenderService
     /** Which sides to draw: both, or one pass for printers without duplex. */
     public const SIDES = ['both', 'front', 'back'];
 
+    /** What the PDF engine waits for: the render page sets it when drawn (true) or failed (false). */
+    public const READY_EXPRESSION = 'window.cardsReady !== undefined';
+
     public function __construct(
         private CardRepositoryInterface $cards,
         private TenantRepositoryInterface $tenants,

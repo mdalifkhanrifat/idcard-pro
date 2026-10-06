@@ -1,6 +1,6 @@
 import { ref } from 'vue';
 import { http } from '@/lib/http';
-import type { CardLayout, CardValues, IssuedCard } from '@/types';
+import type { CardLayout, CardSide, CardValues, IssuedCard } from '@/types';
 
 export interface CardReasonOption {
     key: string;
@@ -54,6 +54,25 @@ export function statusTone(status: ReturnType<typeof displayStatus>): 'success' 
 }
 
 export type CardImageKey = keyof CardValues['images'];
+
+/** Sides printed in one pass: both, or front then back for printers without duplex. */
+export type PrintSides = 'both' | 'front' | 'back';
+
+/** An issued card ready to be laid out for printing. */
+export interface SheetCard {
+    id: string;
+    layout: CardLayout;
+    values: CardValues;
+}
+
+/** Pages a card takes in a pass; a single-sided card has no back to print in a "back only" pass. */
+export function sheetSides(layout: CardLayout, sides: PrintSides): CardSide[] {
+    if (!layout.is_double_sided) {
+        return sides === 'back' ? [] : ['front'];
+    }
+
+    return sides === 'both' ? ['front', 'back'] : [sides];
+}
 
 /**
  * Image elements of a card (photo, signatures) that have nothing to print for this holder, e.g. a family

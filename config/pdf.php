@@ -23,7 +23,8 @@ return [
 
     'gotenberg' => [
         'url' => env('GOTENBERG_URL', 'http://gotenberg:3000'),
-        'timeout' => (int) env('GOTENBERG_TIMEOUT', 60),
+        // A little longer than the container's own limit (--api-timeout=60s), so its error comes back
+        'timeout' => (int) env('GOTENBERG_TIMEOUT', 65),
     ],
 
 ];

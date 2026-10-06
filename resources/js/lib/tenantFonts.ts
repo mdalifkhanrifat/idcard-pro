@@ -45,6 +45,13 @@ export async function loadTenantFonts(fonts: FontFile[]): Promise<FontFile[]> {
 
 let requested: Promise<void> | null = null;
 
+/** Fonts handed over by the page itself (the PDF render page has no signed-in user to fetch the list). */
+export function provideTenantFonts(fonts: FontFile[]): Promise<void> {
+    requested = loadTenantFonts(fonts).then(() => undefined);
+
+    return requested;
+}
+
 /** Fetch the organization's font list and load the fonts, once per page (cards, thumbnails). */
 export function ensureTenantFonts(): Promise<void> {
     requested ??= http.get('/fonts').then(

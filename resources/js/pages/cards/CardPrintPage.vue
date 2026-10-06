@@ -6,16 +6,15 @@ import { AlertTriangle, CheckCircle2, Loader2, Printer, X } from 'lucide-vue-nex
 import UiButton from '@/components/ui/UiButton.vue';
 import UiDialog from '@/components/ui/UiDialog.vue';
 import UiTextarea from '@/components/ui/UiTextarea.vue';
-import CardRender from './CardRender.vue';
-import { displayStatus, missingImages, useCardReasons, type CardImageKey } from './cards';
+import CardSheets from './CardSheets.vue';
+import { displayStatus, missingImages, sheetSides, useCardReasons, type CardImageKey, type PrintSides, type SheetCard } from './cards';
 import { http, toApiError } from '@/lib/http';
-import { ensureTenantFonts } from '@/lib/tenantFonts';
 import { useUiStore } from '@/stores/ui';
-import type { CardLayout, CardSide, CardValues, IssuedCard } from '@/types';
+import type { CardLayout, CardValues, IssuedCard } from '@/types';
 
 /**
- * Prints issued cards at their real size: one page per card side, sized to the card (CSS @page), so a
- * card printer or a PDF printer gets exactly the card. Opened with ?ids=a,b for one card or a batch.
+ * Prints issued cards at their real size (laid out by CardSheets: one page per card side, sized to the
+ * card). Opened with ?ids=a,b for one card or a batch.
  * Browsers do not say whether printing worked, so the user confirms before the print is logged.
  */
 interface Entry {
@@ -28,10 +27,6 @@ interface Entry {
     missing: CardImageKey[];
 }
 
-type SideChoice = 'both' | 'front' | 'back';
-
-// CSS pixels per millimetre: the page is laid out in mm, so the card prints at its real size
-const PX_PER_MM = 96 / 25.4;
 const PARALLEL = 6;
 
 const route = useRoute();
@@ -44,13 +39,13 @@ const entries = ref<Entry[]>([]);
 const loading = ref(true);
 const assetsReady = ref(false);
 const copies = ref(1);
-const sides = ref<SideChoice>('both');
+const sides = ref<PrintSides>('both');
 const confirming = ref(false);
 const note = ref('');
 const noteError = ref<string[]>([]);
 const logging = ref(false);
 const logged = ref(0);
-const sheetsEl = ref<HTMLElement | null>(null);
+const sheetsRef = ref<InstanceType<typeof CardSheets> | null>(null);
 
 const ids = computed(() => [...new Set(String(route.query.ids ?? '').split(',').map((id) => id.trim()).filter(Boolean))]);
 const tooMany = computed(() => ids.value.length > printOptions.value.max_batch);
@@ -59,41 +54,8 @@ const skipped = computed(() => entries.value.filter((entry) => entry.problem));
 const withMissing = computed(() => printable.value.filter((entry) => entry.missing.length));
 const anyDoubleSided = computed(() => printable.value.some((entry) => entry.layout?.is_double_sided));
 
-/** Page sizes in the batch: each gets a named @page, so cards of different sizes print correctly together. */
-const pageNames = computed(() => {
-    const names = new Map<string, string>();
-    for (const entry of printable.value) {
-        const key = sizeKey(entry.layout!);
-        if (!names.has(key)) {
-            names.set(key, `card-${names.size}`);
-        }
-    }
-
-    return names;
-});
-
-const sheets = computed(() =>
-    Array.from({ length: copies.value }, (_, copy) =>
-        printable.value.flatMap((entry) =>
-            sidesOf(entry.layout!).map((side) => ({ key: `${copy}-${entry.id}-${side}`, entry, side, page: pageNames.value.get(sizeKey(entry.layout!))! })),
-        ),
-    ).flat(),
-);
-
-function sizeKey(layout: CardLayout): string {
-    return `${layout.size_mm.width}x${layout.size_mm.height}`;
-}
-
-function sidesOf(layout: CardLayout): CardSide[] {
-    if (!layout.is_double_sided) {
-        // A single-sided card has no back to print in a "back only" pass
-        return sides.value === 'back' ? [] : ['front'];
-    }
-
-    return sides.value === 'both' ? ['front', 'back'] : [sides.value];
-}
-
-const boxOf = (layout: CardLayout) => Math.max(layout.size_mm.width, layout.size_mm.height) * PX_PER_MM;
+const sheetCards = computed<SheetCard[]>(() => printable.value.map((entry) => ({ id: entry.id, layout: entry.layout!, values: entry.values! })));
+const pageCount = computed(() => copies.value * sheetCards.value.reduce((pages, card) => pages + sheetSides(card.layout, sides.value).length, 0));
 
 async function loadEntry(id: string): Promise<Entry> {
     try {
@@ -130,25 +92,11 @@ async function load(): Promise<void> {
     }
 }
 
-/** Fonts, photos and background images must be loaded, or the browser prints the card without them. */
 async function waitForAssets(): Promise<void> {
     assetsReady.value = false;
-    await ensureTenantFonts();
+    // The sheets are drawn on the next render after the cards load
     await nextTick();
-    const root = sheetsEl.value;
-    if (root) {
-        const urls = new Set<string>();
-        root.querySelectorAll('img').forEach((img) => img.currentSrc && urls.add(img.currentSrc));
-        root.querySelectorAll<HTMLElement>('[data-side]').forEach((side) => {
-            for (const match of getComputedStyle(side).backgroundImage.matchAll(/url\("?(.+?)"?\)/g)) {
-                urls.add(match[1]);
-            }
-        });
-        await Promise.all([...urls].map((url) => new Promise((done) => Object.assign(new Image(), { onload: done, onerror: done, src: url }))));
-    }
-    await document.fonts.ready;
-    // Auto-fit text measures itself again once fonts are in; give it two frames
-    await new Promise((done) => requestAnimationFrame(() => requestAnimationFrame(done)));
+    await sheetsRef.value?.waitForAssets();
     assetsReady.value = true;
 }
 
@@ -208,41 +156,27 @@ function close(): void {
     router.push({ name: 'cards' });
 }
 
-// One named @page per card size; the sheet uses it, and nothing else on the page prints
-const pageStyle = document.createElement('style');
-watchEffect(() => {
-    pageStyle.textContent = [...pageNames.value]
-        .map(([key, name]) => {
-            const [width, height] = key.split('x');
-
-            return `@page ${name} { size: ${width}mm ${height}mm; margin: 0; } [data-print-page="${name}"] { page: ${name}; }`;
-        })
-        .join('\n');
-});
-
 watchEffect(() => {
     copies.value = Math.min(Math.max(1, Math.round(Number(copies.value) || 1)), printOptions.value.max_copies);
 });
 
 onMounted(() => {
-    document.head.append(pageStyle);
     window.addEventListener('afterprint', onAfterPrint);
     load();
 });
 
 onBeforeUnmount(() => {
-    pageStyle.remove();
     window.removeEventListener('afterprint', onAfterPrint);
 });
 </script>
 
 <template>
-    <div class="min-h-full bg-surface-2" data-print-page-root>
+    <div class="min-h-full bg-surface-2 print:bg-transparent" data-print-page-root>
         <header class="sticky top-0 z-10 border-b border-line bg-surface print:hidden" data-print-toolbar>
             <div class="mx-auto flex max-w-5xl flex-wrap items-center gap-3 px-4 py-3">
                 <div class="mr-auto">
                     <h1 class="text-base font-semibold text-fg">{{ t('cards.print.title') }}</h1>
-                    <p class="text-xs text-muted" data-print-count>{{ t('cards.print.counts', { cards: printable.length, pages: sheets.length }) }}</p>
+                    <p class="text-xs text-muted" data-print-count>{{ t('cards.print.counts', { cards: printable.length, pages: pageCount }) }}</p>
                 </div>
                 <label v-if="anyDoubleSided" class="flex items-center gap-2 text-sm text-muted">
                     {{ t('cards.print.sides') }}
@@ -284,18 +218,7 @@ onBeforeUnmount(() => {
         </header>
 
         <div v-if="loading" class="flex justify-center py-16 print:hidden"><Loader2 class="size-6 animate-spin text-muted" /></div>
-        <main v-else ref="sheetsEl" class="print-sheets flex flex-col items-center gap-6 px-4 py-8" data-print-sheets>
-            <section
-                v-for="sheet in sheets"
-                :key="sheet.key"
-                class="print-sheet"
-                :data-print-page="sheet.page"
-                :data-card="sheet.entry.id"
-                :style="{ width: `${sheet.entry.layout!.size_mm.width}mm`, height: `${sheet.entry.layout!.size_mm.height}mm` }"
-            >
-                <CardRender :layout="sheet.entry.layout!" :values="sheet.entry.values!" :box="boxOf(sheet.entry.layout!)" :sides="[sheet.side]" />
-            </section>
-        </main>
+        <CardSheets v-else ref="sheetsRef" :cards="sheetCards" :sides="sides" :copies="copies" />
 
         <UiDialog v-model:open="confirming" :title="t('cards.print.confirmTitle')" :description="awaitingBacks ? t('cards.print.backPending') : t('cards.print.confirmHint')">
             <UiTextarea v-if="!awaitingBacks" v-model="note" :label="t('cards.print.note')" :error="noteError" :maxlength="255" :rows="2" />
@@ -308,39 +231,3 @@ onBeforeUnmount(() => {
         </UiDialog>
     </div>
 </template>
-
-<style>
-.print-sheet {
-    flex: none;
-    overflow: hidden;
-    -webkit-print-color-adjust: exact;
-    print-color-adjust: exact;
-}
-
-@media print {
-    html,
-    body {
-        margin: 0 !important;
-        background: #fff !important;
-    }
-
-    [data-print-page-root] {
-        background: none !important;
-    }
-
-    .print-sheets {
-        display: block !important;
-        padding: 0 !important;
-    }
-
-    .print-sheet:not(:last-child) {
-        break-after: page;
-    }
-
-    /* The card edge in the app (shadow, ring, rounded corners) is not part of the card */
-    .print-sheet [data-side] {
-        box-shadow: none !important;
-        border-radius: 0 !important;
-    }
-}
-</style>
