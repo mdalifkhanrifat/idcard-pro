@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref } from 'vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { ArrowRight, Building2, Plus } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
@@ -19,6 +19,7 @@ import type { Tenant } from '@/types';
 const { t } = useI18n();
 const auth = useAuthStore();
 const ui = useUiStore();
+const route = useRoute();
 const router = useRouter();
 
 const list = useListQuery<Tenant>('/platform/tenants', { filters: { name: '', status: '' } });
@@ -52,7 +53,8 @@ async function toggleStatus(tenant: Tenant): Promise<void> {
 
 async function enter(tenant: Tenant): Promise<void> {
     await auth.actAs(tenant.slug);
-    router.push('/');
+    const redirect = route.query.redirect;
+    router.push(typeof redirect === 'string' && redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : '/');
 }
 </script>
 

@@ -10,11 +10,38 @@ export const http = axios.create({
     headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
 });
 
-/** Organization a platform admin is currently acting in (sent as X-Tenant). */
-let actingTenant: string | null = null;
+const ACTING_TENANT_KEY = 'acting-tenant';
+
+/**
+ * Organization a platform admin is currently acting in (sent as X-Tenant). Kept in the browser so a
+ * reload or a page opened in a new tab (e.g. printing) stays in the same organization; the server
+ * accepts the header from platform admins only.
+ */
+let actingTenant: string | null = readActingTenant();
+
+function readActingTenant(): string | null {
+    try {
+        return localStorage.getItem(ACTING_TENANT_KEY);
+    } catch {
+        return null;
+    }
+}
 
 export function setActingTenant(slug: string | null): void {
     actingTenant = slug;
+    try {
+        if (slug) {
+            localStorage.setItem(ACTING_TENANT_KEY, slug);
+        } else {
+            localStorage.removeItem(ACTING_TENANT_KEY);
+        }
+    } catch {
+        // Storage blocked: acting still works until the page reloads
+    }
+}
+
+export function getActingTenant(): string | null {
+    return actingTenant;
 }
 
 http.interceptors.request.use((config) => {

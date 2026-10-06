@@ -6,6 +6,7 @@
 
 ### সর্বশেষ সেশন (৬ অক্টোবর ২০২৬)
 
+- **বাগ ঠিক করা:** প্ল্যাটফর্ম অ্যাডমিন কোনো প্রতিষ্ঠান "Open" করে কাজ করার সময় রিলোড দিলে বা লিংক খুললে প্রতিষ্ঠানের তালিকায় ফিরে যেত (বাছাই করা প্রতিষ্ঠান শুধু মেমরিতে থাকত)। এখন `lib/http.ts`-এ localStorage-এ (`acting-tenant`) থাকে, লগআউট/"Exit"-এ মোছে; অন্য ইউজার লগইন করলে বা প্রতিষ্ঠান না থাকলে নিজে মুছে যায় (`stores/auth.ts`)। প্রতিষ্ঠান বাছাই না থাকলে guard `?redirect=` দিয়ে তালিকায় পাঠায়, "Open" চাপলে সেই পাতায় ফেরে। `useListQuery` এখন URL-এর শুধু নিজের key (`f_*`, `page`, `sort`) বদলায়, বাকি query রাখে।
 - ৩.৬ ধাপ ২ক: প্রিন্টের পাতা `/cards/print?ids=a,b` (`CardPrintPage.vue`), কার্ডের API-তে `printable`, `/cards/options`-এ `print` (methods, max_copies, max_batch)। বিস্তারিত §৮-এ।
 - **dev ডাটাবেসে ৩টা পরীক্ষার কার্ড রয়ে গেছে** (QA/26000001–3, "QA designer check" টেমপ্লেট, ডেমো কার্ডধারী Juliet Adams, Jaylon Kassulke Jr., Abagail DuBuque; তৃতীয়টা বাতিল) আর তাদের `card_prints`, `card_sequences`, `activity_log` (`log_name = cards`, id > 279)। মোছার কমান্ড এই সেশনে অনুমতি-ব্যবস্থা আটকে দিয়েছে; ইউজার চাইলে নিচের "পরিষ্কার করা" নোট অনুযায়ী মুছবেন (আগে `card_sequences` খালি ছিল)।
 - বিল্ড: হোস্টে `npm run build` চলে না (`node_modules` কন্টেইনারের alpine/musl-এর জন্য ইনস্টল করা) — সবসময় `docker compose run --rm --no-deps vite npm run build`।
@@ -186,6 +187,7 @@ docker compose run --rm --no-deps vite npx vue-tsc --noEmit
 | ডার্ক মোডে গাঢ় ব্র্যান্ড রঙে `text-brand` লেখা প্রায় অদৃশ্য (যেমন বাঁ মেনুর চালু আইটেম) | ডিজাইনারে চালু অবস্থা `bg-brand text-brand-contrast` দিয়ে ঠিক করা। **পুরো অ্যাপে এখনো বাকি**: ডার্ক মোডে ব্র্যান্ড রঙ হালকা করা বা `text-brand`-এর বদল |
 | স্বয়ংক্রিয় ব্রাউজার যাচাইয়ে অল্প সময়ে বহুবার লগইন করলে লগইন আটকে যায় (`throttle:auth`) | প্রতিটা চালানোর মাঝে ~১ মিনিট বিরতি, অথবা এক স্ক্রিপ্টে একবার লগইন করে সব যাচাই |
 | Pest-এ `assertJsonPath('data.fields.custom\\.class')` কাজ করে না | ডটওয়ালা key-র জন্য `->json(...)` নিয়ে `toMatchArray` ব্যবহার করুন |
+| প্ল্যাটফর্ম অ্যাডমিন হিসেবে প্রতিষ্ঠানে কাজ করার সময় রিলোডে বা লিংকে প্রতিষ্ঠানের তালিকায় ফিরে যাওয়া | ঠিক করা (৬ অক্টোবর): বাছাই করা প্রতিষ্ঠান localStorage-এ (`acting-tenant`), তালিকা থেকে "Open" চাপলে `?redirect=`-এর পাতায় ফেরে। নিজে যাচাই করতে চাইলে Owner (`owner@acme.test`, প্রতিষ্ঠান `acme`) দিয়েও ঢোকা যায় |
 | Signed link এক হোস্টে বানানো, অন্য হোস্টে 403 | ফাইলের লিংক relative signed (`signed:relative`), তাই `localhost` আর `127.0.0.1` দুটোতেই চলে |
 
 ## ৭. Phase 2-এ নেওয়া সিদ্ধান্ত (পরের কাজের জন্য জরুরি)

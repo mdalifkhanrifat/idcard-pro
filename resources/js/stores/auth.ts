@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
-import { ensureCsrfCookie, http, setActingTenant } from '@/lib/http';
+import { ensureCsrfCookie, getActingTenant, http, setActingTenant } from '@/lib/http';
 import { applyBrand } from '@/lib/brand';
 import { setLocale } from '@/lib/i18n';
 import type { Session } from '@/types';
@@ -30,11 +30,22 @@ export const useAuthStore = defineStore('auth', () => {
         try {
             const { data } = await http.get<{ data: Session }>('/auth/me');
             session.value = data.data;
+            if (!data.data.user.is_platform_admin && getActingTenant()) {
+                // Left over from a platform admin who used this browser before
+                setActingTenant(null);
+            }
             applyBrand(data.data.tenant?.primary_color);
             if (data.data.user.locale) {
                 setLocale(data.data.user.locale);
             }
         } catch {
+            if (getActingTenant()) {
+                // The remembered organization is gone (e.g. deleted): continue on the platform
+                setActingTenant(null);
+                await fetchSession();
+
+                return;
+            }
             session.value = null;
         } finally {
             loaded.value = true;

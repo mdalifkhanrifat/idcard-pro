@@ -59,7 +59,10 @@ export function useListQuery<T>(endpoint: string | (() => string), defaults: { f
             loading.value = false;
         }
 
-        const query: Record<string, string> = {};
+        // Only the list's own keys change; others in the URL (e.g. a tab or a redirect) are kept
+        const query: Record<string, string | null | (string | null)[]> = Object.fromEntries(
+            Object.entries(route.query).filter(([key]) => !key.startsWith('f_') && key !== 'page' && key !== 'sort'),
+        );
         for (const [key, value] of Object.entries(filters)) {
             if (value) {
                 query[`f_${key}`] = value;

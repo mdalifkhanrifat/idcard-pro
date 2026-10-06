@@ -82,7 +82,8 @@ router.beforeEach(async (to) => {
         return { name: 'dashboard' };
     }
     if (auth.isPlatformAdmin && !auth.tenant && to.meta.permission) {
-        return { name: 'platform.tenants' };
+        // Choose an organization first, then continue to the page that was asked for
+        return { name: 'platform.tenants', query: { redirect: to.fullPath } };
     }
     if (to.meta.permission && !auth.can(to.meta.permission)) {
         return { name: 'dashboard' };
