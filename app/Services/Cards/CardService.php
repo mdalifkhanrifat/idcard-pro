@@ -28,7 +28,7 @@ class CardService
     }
 
     /**
-     * @return array{active: int, expired: int, expiring: int, revoked: int}
+     * @return array{active: int, expired: int, expiring: int, revoked: int, pending: int}
      */
     public function summary(int $expiringDays = 30): array
     {

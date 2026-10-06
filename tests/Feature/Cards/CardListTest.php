@@ -5,6 +5,7 @@ use App\Models\FamilyMember;
 use App\Models\Role;
 use App\Support\Permissions\PermissionRegistry;
 use App\Support\Tenancy\TenantContext;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 
@@ -49,8 +50,31 @@ it('finds expired and soon expiring active cards (legacy expired card report)', 
     $this->getJson('/api/v1/cards?filter[validity]=expiring&filter[expiring_days]=5')->assertJsonCount(0, 'data');
     $this->getJson('/api/v1/cards?filter[validity]=valid')->assertJsonCount(2, 'data');
 
-    $this->getJson('/api/v1/cards/summary')->assertOk()->assertJson(['data' => ['active' => 3, 'expired' => 1, 'expiring' => 1, 'revoked' => 0]]);
+    $this->getJson('/api/v1/cards/summary')->assertOk()->assertJson(['data' => ['active' => 3, 'expired' => 1, 'expiring' => 1, 'revoked' => 0, 'pending' => 2]]);
     $this->getJson('/api/v1/cards/summary?expiring_days=5')->assertJsonPath('data.expiring', 0);
+});
+
+it('finds cards never printed and cards printed on given days (legacy PENDING / PRINTED and print history report)', function () {
+    $this->tenant->update(['timezone' => 'Asia/Dhaka']);
+    // The signed-in user carries its organization: give it the updated one
+    $this->owner->setRelation('tenant', $this->tenant);
+    $janeCard = $this->getJson('/api/v1/cards?filter[search]=jane&filter[status]=active')->json('data.0');
+
+    // 1:00 on 7 October in Dhaka is still 6 October in UTC: it counts as printed on the 7th
+    $this->travelTo(CarbonImmutable::parse('2026-10-07 01:00', 'Asia/Dhaka'));
+    $this->postJson("/api/v1/cards/{$janeCard['id']}/prints")->assertCreated();
+    $this->travelBack();
+
+    $this->getJson('/api/v1/cards?filter[printed]=printed')->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $janeCard['id']);
+    $this->getJson('/api/v1/cards?filter[printed]=pending')->assertJsonCount(3, 'data');
+    $this->getJson('/api/v1/cards?filter[printed_from]=2026-10-07&filter[printed_to]=2026-10-07')->assertJsonCount(1, 'data');
+    $this->getJson('/api/v1/cards?filter[printed_from]=2026-10-06&filter[printed_to]=2026-10-06')->assertJsonCount(0, 'data');
+    $this->getJson('/api/v1/cards?filter[printed_from]=2026-10-08')->assertJsonCount(0, 'data');
+    $this->getJson('/api/v1/cards?sort=-last_printed_at')->assertJsonPath('data.0.id', $janeCard['id']);
+    $this->getJson('/api/v1/cards?filter[printed]=maybe')->assertJsonValidationErrors('filter.printed');
+
+    // Pending = valid cards never printed: John's expiring card (Jane's is printed, the family card expired)
+    $this->getJson('/api/v1/cards/summary')->assertJsonPath('data.pending', 1);
 });
 
 it('keeps the list per organization and needs cards.view', function () {

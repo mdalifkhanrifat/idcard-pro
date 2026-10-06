@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\CardholderStatus;
+use App\Enums\CardStatus;
 use App\Enums\EmploymentType;
 use App\Enums\Gender;
 use App\Enums\MaritalStatus;
@@ -277,6 +278,16 @@ class Cardholder extends Model
     public function cards(): HasMany
     {
         return $this->hasMany(Card::class)->latest('id');
+    }
+
+    /**
+     * The cardholder's own active card (family cards aside): legacy list "Status" PENDING / PRINTED.
+     *
+     * @return HasOne<Card, $this>
+     */
+    public function currentCard(): HasOne
+    {
+        return $this->hasOne(Card::class)->whereNull('family_member_id')->where('status', CardStatus::Active);
     }
 
     /**

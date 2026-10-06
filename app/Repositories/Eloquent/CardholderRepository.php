@@ -22,7 +22,7 @@ class CardholderRepository extends EloquentRepository implements CardholderRepos
     public function list(CardholderFilter $filter): LengthAwarePaginator
     {
         $query = $this->query()
-            ->with(['department', 'unit', 'rank', 'designation', 'bloodGroup', 'photo'])
+            ->with(['department', 'unit', 'rank', 'designation', 'bloodGroup', 'photo', 'currentCard:id,public_id,cardholder_id,number,print_count,last_printed_at'])
             ->when($filter->search, fn (Builder $q, string $search) => $q->where(fn (Builder $w) => $w
                 ->where('full_name', 'like', "%{$search}%")
                 ->orWhere('full_name_local', 'like', "%{$search}%")
@@ -34,7 +34,10 @@ class CardholderRepository extends EloquentRepository implements CardholderRepos
             ->when($filter->status, fn (Builder $q, string $status) => $q->where('status', $status))
             ->when($filter->employmentType, fn (Builder $q, string $type) => $q->where('employment_type', $type))
             ->when($filter->joinedFrom, fn (Builder $q, string $date) => $q->whereDate('joining_date', '>=', $date))
-            ->when($filter->joinedTo, fn (Builder $q, string $date) => $q->whereDate('joining_date', '<=', $date));
+            ->when($filter->joinedTo, fn (Builder $q, string $date) => $q->whereDate('joining_date', '<=', $date))
+            ->when($filter->card === 'none', fn (Builder $q) => $q->whereDoesntHave('currentCard'))
+            ->when($filter->card === 'pending', fn (Builder $q) => $q->whereHas('currentCard', fn (Builder $c) => $c->where('print_count', 0)))
+            ->when($filter->card === 'printed', fn (Builder $q) => $q->whereHas('currentCard', fn (Builder $c) => $c->where('print_count', '>', 0)));
 
         foreach ($filter->custom as $key => $value) {
             in_array($value, ['true', 'false'], true)

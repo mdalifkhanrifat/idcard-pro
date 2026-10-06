@@ -10,6 +10,11 @@ final readonly class CardholderFilter
     public const SORTS = ['full_name', 'employee_no', 'joining_date', 'created_at', 'updated_at'];
 
     /**
+     * The cardholder's own active card: none, pending (never printed, legacy "PENDING") or printed.
+     */
+    public const CARD_STATES = ['none', 'pending', 'printed'];
+
+    /**
      * Master data filters: filter key => cardholder column.
      */
     public const LOOKUP_FILTERS = [
@@ -33,6 +38,7 @@ final readonly class CardholderFilter
         public array $custom = [],
         public ?string $joinedFrom = null,
         public ?string $joinedTo = null,
+        public ?string $card = null,
         public string $sort = 'created_at',
         public bool $descending = true,
         public int $perPage = 15,
@@ -65,6 +71,7 @@ final readonly class CardholderFilter
             ),
             joinedFrom: $filter['joined_from'] ?? null,
             joinedTo: $filter['joined_to'] ?? null,
+            card: $filter['card'] ?? null,
             sort: ltrim($sort, '-'),
             descending: str_starts_with($sort, '-'),
             perPage: (int) ($input['per_page'] ?? 15),

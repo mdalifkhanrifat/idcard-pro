@@ -21,9 +21,10 @@ interface CardRepositoryInterface extends RepositoryInterface
     public function list(CardFilter $filter): LengthAwarePaginator;
 
     /**
-     * Counts for the cards overview: active, expired (active past expiry) and expiring within the given days.
+     * Counts for the cards overview: active, expired (active past expiry), expiring within the given days,
+     * revoked, and pending (valid but never printed).
      *
-     * @return array{active: int, expired: int, expiring: int, revoked: int}
+     * @return array{active: int, expired: int, expiring: int, revoked: int, pending: int}
      */
     public function summary(int $expiringDays): array;
 

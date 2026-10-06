@@ -22,7 +22,7 @@ class ListCardsRequest extends FormRequest
     {
         $sorts = collect(CardFilter::SORTS)->flatMap(fn (string $s) => [$s, "-{$s}"])->all();
         $lookupKeys = array_keys(CardFilter::LOOKUP_FILTERS);
-        $allowed = implode(',', ['search', 'status', 'reason', 'template', 'holder', 'issued_from', 'issued_to', 'validity', 'expiring_days', ...$lookupKeys]);
+        $allowed = implode(',', ['search', 'status', 'reason', 'template', 'holder', 'issued_from', 'issued_to', 'validity', 'expiring_days', 'printed', 'printed_from', 'printed_to', ...$lookupKeys]);
 
         return [
             'filter' => ['sometimes', "array:{$allowed}"],
@@ -35,6 +35,9 @@ class ListCardsRequest extends FormRequest
             'filter.issued_to' => ['nullable', 'date_format:Y-m-d'],
             'filter.validity' => ['nullable', Rule::in(CardFilter::VALIDITY)],
             'filter.expiring_days' => ['nullable', 'integer', 'between:1,365'],
+            'filter.printed' => ['nullable', Rule::in(CardFilter::PRINTED)],
+            'filter.printed_from' => ['nullable', 'date_format:Y-m-d'],
+            'filter.printed_to' => ['nullable', 'date_format:Y-m-d'],
             ...collect($lookupKeys)->mapWithKeys(fn (string $key) => ["filter.{$key}" => ['nullable', 'string', 'size:26']])->all(),
             'sort' => ['sometimes', Rule::in($sorts)],
             'per_page' => ['sometimes', 'integer', 'between:1,100'],

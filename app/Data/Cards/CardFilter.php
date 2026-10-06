@@ -7,7 +7,12 @@ namespace App\Data\Cards;
  */
 final readonly class CardFilter
 {
-    public const SORTS = ['issue_date', 'expiry_date', 'number', 'created_at'];
+    public const SORTS = ['issue_date', 'expiry_date', 'number', 'created_at', 'last_printed_at'];
+
+    /**
+     * pending: never printed (legacy "PENDING"); printed: printed at least once (legacy "PRINTED").
+     */
+    public const PRINTED = ['pending', 'printed'];
 
     /**
      * expired: active cards past their expiry; expiring: active cards that expire within `expiringDays`;
@@ -34,6 +39,10 @@ final readonly class CardFilter
         public ?string $issuedTo = null,
         public ?string $validity = null,
         public int $expiringDays = 30,
+        public ?string $printed = null,
+        /** Printed between these dates (the organization's days), any time it was printed. */
+        public ?string $printedFrom = null,
+        public ?string $printedTo = null,
         public array $lookups = [],
         public string $sort = 'created_at',
         public bool $descending = true,
@@ -65,6 +74,9 @@ final readonly class CardFilter
             issuedTo: $filter['issued_to'] ?? null,
             validity: $filter['validity'] ?? null,
             expiringDays: (int) ($filter['expiring_days'] ?? 30),
+            printed: $filter['printed'] ?? null,
+            printedFrom: $filter['printed_from'] ?? null,
+            printedTo: $filter['printed_to'] ?? null,
             lookups: $lookups,
             sort: ltrim($sort, '-'),
             descending: str_starts_with($sort, '-'),
