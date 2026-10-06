@@ -2,7 +2,7 @@
 import { computed, reactive, ref, useTemplateRef, watch } from 'vue';
 import { watchDebounced } from '@vueuse/core';
 import { useI18n } from 'vue-i18n';
-import { FileUp, Loader2, TriangleAlert } from 'lucide-vue-next';
+import { FileUp, Loader2, Printer, TriangleAlert } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiDialog from '@/components/ui/UiDialog.vue';
@@ -10,9 +10,10 @@ import UiInput from '@/components/ui/UiInput.vue';
 import UiSelect from '@/components/ui/UiSelect.vue';
 import UiTextarea from '@/components/ui/UiTextarea.vue';
 import CardRender from './CardRender.vue';
-import { missingImages, useCardReasons } from './cards';
+import { missingImages, printPageHref, useCardReasons } from './cards';
 import { http, toApiError } from '@/lib/http';
 import { formatBytes } from '@/lib/format';
+import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
 import type { CardLayout, CardTemplate, CardValues, Cardholder, FamilyMember } from '@/types';
 
@@ -24,6 +25,7 @@ const props = defineProps<{ cardholder: Pick<Cardholder, 'id' | 'full_name'>; /*
 const open = defineModel<boolean>('open', { default: false });
 const emit = defineEmits<{ issued: [cardId: string] }>();
 const { t, te } = useI18n();
+const auth = useAuthStore();
 const ui = useUiStore();
 const cardReasons = useCardReasons();
 /** Reasons added on the server without a translation show their key. */
@@ -139,7 +141,14 @@ function pickDocument(event: Event): void {
     document.value = (event.target as HTMLInputElement).files?.[0] ?? null;
 }
 
-async function submit(): Promise<void> {
+/**
+ * Issue the card; "Issue and print" (legacy: the card printed as soon as it was issued) then opens the
+ * print page. Its tab is opened on the click itself, so popup blockers allow it, and closed if the
+ * issue fails; where new tabs are blocked anyway, the print page opens in this tab.
+ */
+async function submit(event: SubmitEvent): Promise<void> {
+    const andPrint = (event.submitter as HTMLElement | null)?.dataset.issuePrint !== undefined;
+    const printTab = andPrint ? window.open('', '_blank') : null;
     busy.value = true;
     errors.value = {};
     const body = new FormData();
@@ -161,7 +170,14 @@ async function submit(): Promise<void> {
         ui.notify(t('cards.issued', { number: data.data.number }));
         open.value = false;
         emit('issued', data.data.id);
+        if (printTab) {
+            printTab.location.href = printPageHref([data.data.id]);
+        } else if (andPrint) {
+            // New tabs blocked in this browser: print in this tab instead
+            window.location.assign(printPageHref([data.data.id]));
+        }
     } catch (error) {
+        printTab?.close();
         const apiError = toApiError(error);
         errors.value = apiError.errors;
         if (!Object.keys(apiError.errors).length) {
@@ -235,7 +251,11 @@ async function submit(): Promise<void> {
         </form>
         <template #footer>
             <UiButton variant="secondary" @click="open = false">{{ t('common.cancel') }}</UiButton>
-            <UiButton type="submit" form="issue-card-form" :loading="busy" :disabled="!form.template" data-issue-submit>{{ t('cards.issue') }}</UiButton>
+            <!-- First in the page so Enter issues without printing; shown last -->
+            <UiButton type="submit" form="issue-card-form" class="order-last" :loading="busy" :disabled="!form.template" data-issue-submit>{{ t('cards.issue') }}</UiButton>
+            <UiButton v-if="auth.can('cards.print')" type="submit" form="issue-card-form" variant="secondary" :loading="busy" :disabled="!form.template" data-issue-print>
+                <Printer class="size-4" />{{ t('cards.issueAndPrint') }}
+            </UiButton>
         </template>
     </UiDialog>
 </template>

@@ -988,6 +988,7 @@
         "tab": "Cards",
         "tabHint": "Every card issued to this person and their family. A new card replaces the holder’s current one.",
         "issue": "Issue card",
+        "issueAndPrint": "Issue and print",
         "issueTitle": "Issue a card",
         "issued": "Card {number} issued.",
         "card": "Card",

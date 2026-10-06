@@ -47,9 +47,14 @@ export function useCardReasons() {
     };
 }
 
+/** Address of the print page for these cards. */
+export function printPageHref(cardIds: string[]): string {
+    return router.resolve({ name: 'cards.print', query: { ids: cardIds.join(',') } }).href;
+}
+
 /** Opens the print page for these cards in a new tab, so the page the user is on stays as it is. */
 export function openPrintPage(cardIds: string[]): void {
-    window.open(router.resolve({ name: 'cards.print', query: { ids: cardIds.join(',') } }).href, '_blank');
+    window.open(printPageHref(cardIds), '_blank');
 }
 
 /**
