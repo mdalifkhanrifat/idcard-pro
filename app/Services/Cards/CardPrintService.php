@@ -51,14 +51,7 @@ class CardPrintService
         $cardIds = array_values(array_unique($cardIds));
 
         return DB::transaction(function () use ($cardIds, $data, $actor): Collection {
-            $cards = $this->cards->lockedByPublicIds($cardIds);
-            if ($cards->count() !== count($cardIds)) {
-                throw ValidationException::withMessages(['cards' => __('cards.print.unknown')]);
-            }
-            $blocked = $cards->reject(fn (Card $card) => $this->printable($card));
-            if ($blocked->isNotEmpty()) {
-                throw new BusinessRuleException(__('cards.print.not_printable', ['numbers' => $blocked->pluck('number')->implode(', ')]));
-            }
+            $cards = $this->assertPrintable($this->cards->lockedByPublicIds($cardIds), $cardIds);
 
             $batch = $cards->count() > 1 ? Str::lower((string) Str::ulid()) : null;
             $now = now();
@@ -75,6 +68,40 @@ class CardPrintService
 
             return $prints;
         });
+    }
+
+    /**
+     * The cards, in the order given, when every one exists and may be printed (e.g. before making a PDF).
+     *
+     * @param  array<int, string>  $cardIds  public ids
+     * @return Collection<int, Card>
+     *
+     * @throws ValidationException An unknown card
+     * @throws BusinessRuleException A card that may not be printed, named by number
+     */
+    public function printableCards(array $cardIds): Collection
+    {
+        $cardIds = array_values(array_unique($cardIds));
+
+        return $this->assertPrintable($this->cards->byPublicIds($cardIds), $cardIds);
+    }
+
+    /**
+     * @param  Collection<int, Card>  $cards
+     * @param  array<int, string>  $cardIds
+     * @return Collection<int, Card>
+     */
+    private function assertPrintable(Collection $cards, array $cardIds): Collection
+    {
+        if ($cards->count() !== count($cardIds)) {
+            throw ValidationException::withMessages(['cards' => __('cards.print.unknown')]);
+        }
+        $blocked = $cards->reject(fn (Card $card) => $this->printable($card));
+        if ($blocked->isNotEmpty()) {
+            throw new BusinessRuleException(__('cards.print.not_printable', ['numbers' => $blocked->pluck('number')->implode(', ')]));
+        }
+
+        return $cards;
     }
 
     /**

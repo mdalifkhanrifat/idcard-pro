@@ -44,6 +44,7 @@ return [
     'print' => [
         'unknown' => 'One or more cards could not be found.',
         'not_printable' => 'Only active, unexpired cards can be printed: :numbers. Issue a new card instead.',
+        'pdf_unavailable' => 'The PDF could not be made right now. Try again, or print from the browser.',
     ],
 
     'lifecycle' => [

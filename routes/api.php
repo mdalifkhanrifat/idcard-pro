@@ -12,6 +12,7 @@ use App\Http\Controllers\Api\V1\CardController;
 use App\Http\Controllers\Api\V1\CardholderController;
 use App\Http\Controllers\Api\V1\CardholderFileController;
 use App\Http\Controllers\Api\V1\CardholderImportController;
+use App\Http\Controllers\Api\V1\CardPdfController;
 use App\Http\Controllers\Api\V1\CardPrintController;
 use App\Http\Controllers\Api\V1\CardRenderController;
 use App\Http\Controllers\Api\V1\CardTemplateController;
@@ -134,11 +135,14 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('cards/summary', [CardController::class, 'summary'])->name('cards.summary');
             Route::get('cards/options', [CardController::class, 'options'])->name('cards.options');
             Route::post('cards/prints', [CardPrintController::class, 'batch'])->name('cards.prints.batch');
+            // PDFs are drawn by the PDF engine: heavier than other calls, so limited separately
+            Route::post('cards/pdf', [CardPdfController::class, 'batch'])->middleware('throttle:20,1')->name('cards.pdf.batch');
             Route::get('cards/{card}', [CardController::class, 'show'])->name('cards.show');
             Route::patch('cards/{card}', [CardController::class, 'update'])->name('cards.update');
             Route::post('cards/{card}/revoke', [CardController::class, 'revoke'])->name('cards.revoke');
             Route::get('cards/{card}/prints', [CardPrintController::class, 'index'])->name('cards.prints.index');
             Route::post('cards/{card}/prints', [CardPrintController::class, 'store'])->name('cards.prints.store');
+            Route::get('cards/{card}/pdf', [CardPdfController::class, 'show'])->middleware('throttle:60,1')->name('cards.pdf.show');
             Route::apiResource('cardholders.qualifications', QualificationController::class)->except('show')->scoped(['cardholder' => 'public_id', 'qualification' => 'public_id']);
         });
 
