@@ -16,7 +16,7 @@ import { displayStatus, statusTone, useCardReasons } from './cards';
 import { useListQuery } from '@/composables/useListQuery';
 import { useMasterDataOptions } from '@/composables/useMasterDataOptions';
 import { http } from '@/lib/http';
-import { formatDate } from '@/lib/format';
+import { formatDate, formatDateTime } from '@/lib/format';
 import type { CardTemplate, IssuedCard } from '@/types';
 
 /**
@@ -31,12 +31,12 @@ const cardReasons = useCardReasons();
 const EXPIRING_DAYS = 30;
 
 const list = useListQuery<IssuedCard>('/cards', {
-    filters: { search: '', status: '', validity: '', expiring_days: '', reason: '', template: '', holder: '', department: '', unit: '', issued_from: '', issued_to: '' },
+    filters: { search: '', status: '', validity: '', expiring_days: '', reason: '', template: '', holder: '', department: '', unit: '', issued_from: '', issued_to: '', printed: '', printed_from: '', printed_to: '' },
     sort: '-created_at',
 });
 const { filters, rows, meta, loading, sort, page } = list;
 
-const summary = ref<{ active: number; expired: number; expiring: number; revoked: number } | null>(null);
+const summary = ref<{ active: number; expired: number; expiring: number; revoked: number; pending: number } | null>(null);
 const templates = ref<CardTemplate[]>([]);
 const showFilters = ref(false);
 const activeFilterCount = computed(() => Object.entries(filters).filter(([key, value]) => key !== 'search' && key !== 'expiring_days' && value !== '').length);
@@ -49,14 +49,18 @@ const TILES = [
     // Brand colours can be too dark in dark mode, so the neutral text colour is used here
     { key: 'expiring', tone: 'text-fg', apply: { status: '', validity: 'expiring', expiring_days: String(EXPIRING_DAYS) } },
     { key: 'revoked', tone: 'text-danger', apply: { status: 'revoked', validity: '' } },
+    // Valid cards never printed (legacy "PENDING")
+    { key: 'pending', tone: 'text-fg', apply: { status: '', validity: 'valid', printed: 'pending' } },
 ] as const;
-const tileActive = (tile: (typeof TILES)[number]) => Object.entries(tile.apply).every(([key, value]) => filters[key] === value || (key === 'expiring_days' && value === ''));
+const TILE_KEYS = ['status', 'validity', 'expiring_days', 'printed'] as const;
+const tileActive = (tile: (typeof TILES)[number]) =>
+    TILE_KEYS.every((key) => (filters[key] ?? '') === ((tile.apply as Record<string, string>)[key] ?? '') || (key === 'expiring_days' && tile.key !== 'expiring'));
 
 function applyTile(tile: (typeof TILES)[number]): void {
     const on = tileActive(tile);
-    filters.status = '';
-    filters.validity = '';
-    filters.expiring_days = '';
+    for (const key of TILE_KEYS) {
+        filters[key] = '';
+    }
     if (!on) {
         Object.assign(filters, tile.apply);
     }
@@ -99,7 +103,7 @@ function changed(): void {
         <UiPageHeader :title="t('cards.pageTitle')" :subtitle="t('cards.pageSubtitle')" />
 
         <!-- Counts -->
-        <div class="mb-4 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div class="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             <button
                 v-for="tile in TILES"
                 :key="tile.key"
@@ -155,6 +159,9 @@ function changed(): void {
                 />
                 <UiInput v-model="filters.issued_from" type="date" :label="`${t('cards.issueDate')} · ${t('common.from')}`" />
                 <UiInput v-model="filters.issued_to" type="date" :label="`${t('cards.issueDate')} · ${t('common.to')}`" />
+                <UiSelect v-model="filters.printed" :label="t('cards.printedFilter')" :placeholder="t('common.all')" :options="(['pending', 'printed'] as const).map((value) => ({ value, label: t(`cards.printedOptions.${value}`) }))" data-filter-printed />
+                <UiInput v-model="filters.printed_from" type="date" :label="`${t('cards.printedOn')} · ${t('common.from')}`" />
+                <UiInput v-model="filters.printed_to" type="date" :label="`${t('cards.printedOn')} · ${t('common.to')}`" />
             </div>
 
             <!-- Table -->
@@ -188,7 +195,12 @@ function changed(): void {
                             <td class="px-5 py-3 text-muted">{{ reasonLabel(card.reason) }}</td>
                             <td class="px-5 py-3 whitespace-nowrap text-muted">{{ formatDate(card.issue_date) }}</td>
                             <td class="px-5 py-3 whitespace-nowrap text-muted">{{ card.expiry_date ? formatDate(card.expiry_date) : t('cards.noExpiry') }}</td>
-                            <td class="px-5 py-3"><UiBadge :tone="statusTone(displayStatus(card))">{{ t(`cards.statuses.${displayStatus(card)}`) }}</UiBadge></td>
+                            <td class="px-5 py-3">
+                                <UiBadge :tone="statusTone(displayStatus(card))">{{ t(`cards.statuses.${displayStatus(card)}`) }}</UiBadge>
+                                <p class="mt-1 text-xs whitespace-nowrap" :class="card.printable && !card.print_count ? 'text-warning' : 'text-muted'" :title="card.last_printed_at ? formatDateTime(card.last_printed_at) : undefined" data-print-state>
+                                    {{ card.print_count ? t('cards.printedTimes', { count: card.print_count }) : t('cards.notPrinted') }}
+                                </p>
+                            </td>
                             <td class="px-3 py-2 text-right"><CardPrintButton :card="card" compact /></td>
                         </tr>
                     </tbody>

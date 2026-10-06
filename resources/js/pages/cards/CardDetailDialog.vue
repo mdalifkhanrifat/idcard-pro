@@ -14,7 +14,7 @@ import { http, toApiError } from '@/lib/http';
 import { formatDate, formatDateTime } from '@/lib/format';
 import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
-import type { CardLayout, CardValues, IssuedCard } from '@/types';
+import type { CardLayout, CardPrintLog, CardValues, IssuedCard } from '@/types';
 
 /**
  * One issued card: the card as it prints (front and back), its record, and changing its RF number,
@@ -30,6 +30,7 @@ const ui = useUiStore();
 const card = ref<IssuedCard | null>(null);
 const print = ref<{ layout: CardLayout; values: CardValues } | null>(null);
 const loading = ref(false);
+const prints = ref<CardPrintLog[]>([]);
 const mode = ref<'view' | 'edit' | 'revoke'>('view');
 const edit = reactive({ rf_card_no: '', notes: '', expiry_date: '' });
 const revokeNote = ref('');
@@ -38,6 +39,7 @@ const busy = ref(false);
 
 const status = computed(() => (card.value ? displayStatus(card.value) : 'active'));
 const reasonLabel = (key: string) => (te(`cards.reasons.${key}`) ? t(`cards.reasons.${key}`) : key);
+const methodLabel = (key: string) => (te(`cards.printMethods.${key}`) ? t(`cards.printMethods.${key}`) : key);
 
 async function load(): Promise<void> {
     if (!props.cardId) {
@@ -45,9 +47,10 @@ async function load(): Promise<void> {
     }
     loading.value = true;
     try {
-        const { data } = await http.get(`/cards/${props.cardId}`);
-        card.value = data.data;
-        print.value = data.meta;
+        const [shown, history] = await Promise.all([http.get(`/cards/${props.cardId}`), http.get(`/cards/${props.cardId}/prints`)]);
+        card.value = shown.data.data;
+        print.value = shown.data.meta;
+        prints.value = history.data.data;
     } finally {
         loading.value = false;
     }
@@ -58,6 +61,7 @@ watch(open, (value) => {
         mode.value = 'view';
         card.value = null;
         print.value = null;
+        prints.value = [];
         load();
     }
 });
@@ -131,6 +135,24 @@ async function revoke(): Promise<void> {
                     <div v-if="card.status === 'revoked'" class="rounded-md bg-danger/10 p-2 text-danger">{{ t('cards.revokedNote', { note: card.status_note, date: formatDateTime(card.status_changed_at) }) }}</div>
                 </dl>
                 <p v-if="card.notes" class="rounded-md bg-surface-2 p-2 whitespace-pre-line text-fg">{{ card.notes }}</p>
+
+                <!-- Every printing of this card (legacy print history) -->
+                <section class="space-y-2" data-print-history>
+                    <h4 class="flex items-center justify-between font-medium text-fg">
+                        {{ t('cards.printHistory') }}
+                        <span class="text-xs font-normal text-muted">{{ card.print_count ? t('cards.printedTimes', { count: card.print_count }) : t('cards.notPrinted') }}</span>
+                    </h4>
+                    <ul v-if="prints.length" class="max-h-48 space-y-2 overflow-y-auto">
+                        <li v-for="log in prints" :key="log.id" class="rounded-md bg-surface-2 p-2 text-xs" data-print-log>
+                            <div class="flex flex-wrap justify-between gap-x-2 text-fg">
+                                <span>{{ formatDateTime(log.printed_at) }}</span>
+                                <span>{{ methodLabel(log.method) }} · {{ t('cards.copiesCount', { count: log.copies }) }}</span>
+                            </div>
+                            <div class="text-muted">{{ log.printed_by?.name ?? '—' }}<span v-if="log.batch"> · {{ t('cards.printedInBatch') }}</span></div>
+                            <p v-if="log.note" class="mt-1 whitespace-pre-line text-fg">{{ log.note }}</p>
+                        </li>
+                    </ul>
+                </section>
                 <a v-if="card.document" :href="card.document.url" target="_blank" rel="noopener" class="inline-flex items-center gap-1.5 text-fg underline-offset-2 hover:underline">
                     <FileText class="size-4" />{{ card.document.name }}
                 </a>

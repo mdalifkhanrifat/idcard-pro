@@ -323,6 +323,20 @@ export interface IssuedCard {
     created_at: string;
 }
 
+/** One printing of an issued card (card_prints). */
+export interface CardPrintLog {
+    id: string;
+    card?: { id: string; number: string };
+    /** Same id for cards printed together. */
+    batch: string | null;
+    /** Key of config/cards.php → print.methods. */
+    method: string;
+    copies: number;
+    note: string | null;
+    printed_by?: { id: string; name: string } | null;
+    printed_at: string;
+}
+
 /** The design a card was issued with, in the designer's element shape. */
 export interface CardLayout {
     size_mm: { width: number; height: number };

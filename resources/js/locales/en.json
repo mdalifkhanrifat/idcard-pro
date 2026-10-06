@@ -1056,7 +1056,8 @@
             "active": "Active cards",
             "expired": "Expired (still active)",
             "expiring": "Expiring within {days} days",
-            "revoked": "Revoked"
+            "revoked": "Revoked",
+            "pending": "Not printed yet"
         },
         "validityFilter": "Validity",
         "validityOptions": {
@@ -1101,6 +1102,21 @@
             "pdfRecord": "Record as printed",
             "pdfDone": "PDF downloaded.",
             "pdfRecorded": "PDF downloaded; print recorded for {count} card(s)."
-        }
+        },
+        "printHistory": "Print history",
+        "printedTimes": "Printed {count}×",
+        "notPrinted": "Not printed yet",
+        "copiesCount": "{count} copy | {count} copies",
+        "printedInBatch": "printed together with other cards",
+        "printMethods": {
+            "browser": "Browser",
+            "pdf": "PDF"
+        },
+        "printedFilter": "Printing",
+        "printedOptions": {
+            "pending": "Not printed yet",
+            "printed": "Printed"
+        },
+        "printedOn": "Printed on"
     }
 }

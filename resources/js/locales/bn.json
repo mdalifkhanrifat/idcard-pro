@@ -1056,7 +1056,8 @@
             "active": "সক্রিয় কার্ড",
             "expired": "মেয়াদোত্তীর্ণ (এখনো সক্রিয়)",
             "expiring": "{days} দিনের মধ্যে মেয়াদ শেষ",
-            "revoked": "বাতিল"
+            "revoked": "বাতিল",
+            "pending": "এখনো ছাপা হয়নি"
         },
         "validityFilter": "মেয়াদ",
         "validityOptions": {
@@ -1101,6 +1102,21 @@
             "pdfRecord": "প্রিন্ট হিসেবে লিখে রাখো",
             "pdfDone": "PDF ডাউনলোড হয়েছে।",
             "pdfRecorded": "PDF ডাউনলোড হয়েছে; {count}টা কার্ডের প্রিন্ট লেখা হয়েছে।"
-        }
+        },
+        "printHistory": "প্রিন্টের ইতিহাস",
+        "printedTimes": "{count} বার ছাপা",
+        "notPrinted": "এখনো ছাপা হয়নি",
+        "copiesCount": "{count} কপি",
+        "printedInBatch": "অন্য কার্ডের সাথে একসাথে",
+        "printMethods": {
+            "browser": "ব্রাউজার",
+            "pdf": "PDF"
+        },
+        "printedFilter": "ছাপা",
+        "printedOptions": {
+            "pending": "এখনো ছাপা হয়নি",
+            "printed": "ছাপা হয়েছে"
+        },
+        "printedOn": "ছাপার তারিখ"
     }
 }
