@@ -7,6 +7,8 @@
 ### সর্বশেষ সেশন (৬ অক্টোবর ২০২৬)
 
 - **বাগ ঠিক করা:** প্ল্যাটফর্ম অ্যাডমিন কোনো প্রতিষ্ঠান "Open" করে কাজ করার সময় রিলোড দিলে বা লিংক খুললে প্রতিষ্ঠানের তালিকায় ফিরে যেত (বাছাই করা প্রতিষ্ঠান শুধু মেমরিতে থাকত)। এখন `lib/http.ts`-এ localStorage-এ (`acting-tenant`) থাকে, লগআউট/"Exit"-এ মোছে; অন্য ইউজার লগইন করলে বা প্রতিষ্ঠান না থাকলে নিজে মুছে যায় (`stores/auth.ts`)। প্রতিষ্ঠান বাছাই না থাকলে guard `?redirect=` দিয়ে তালিকায় পাঠায়, "Open" চাপলে সেই পাতায় ফেরে। `useListQuery` এখন URL-এর শুধু নিজের key (`f_*`, `page`, `sort`) বদলায়, বাকি query রাখে।
+- **ইউজারের সিদ্ধান্ত:** "প্রিন্ট" বোতাম (২খ) পরে; আগে সার্ভারে PDF (ধাপ ৫), Gotenberg দিয়ে (অনুমোদিত)।
+- ধাপ ৫ক: Gotenberg কন্টেইনার আর `PdfRenderer` (বিস্তারিত §৮)।
 - ৩.৬ ধাপ ২ক: প্রিন্টের পাতা `/cards/print?ids=a,b` (`CardPrintPage.vue`), কার্ডের API-তে `printable`, `/cards/options`-এ `print` (methods, max_copies, max_batch)। বিস্তারিত §৮-এ।
 - **dev ডাটাবেসে ৩টা পরীক্ষার কার্ড রয়ে গেছে** (QA/26000001–3, "QA designer check" টেমপ্লেট, ডেমো কার্ডধারী Juliet Adams, Jaylon Kassulke Jr., Abagail DuBuque; তৃতীয়টা বাতিল) আর তাদের `card_prints`, `card_sequences`, `activity_log` (`log_name = cards`, id > 279)। মোছার কমান্ড এই সেশনে অনুমতি-ব্যবস্থা আটকে দিয়েছে; ইউজার চাইলে নিচের "পরিষ্কার করা" নোট অনুযায়ী মুছবেন (আগে `card_sequences` খালি ছিল)।
 - বিল্ড: হোস্টে `npm run build` চলে না (`node_modules` কন্টেইনারের alpine/musl-এর জন্য ইনস্টল করা) — সবসময় `docker compose run --rm --no-deps vite npm run build`।
@@ -54,7 +56,7 @@
 | 2.5 | শিক্ষা ও প্রশিক্ষণ কোর্স (এক টেবিলে), কাস্টম ফিল্ড (সেটআপ পেজ, প্রিসেট, ফর্ম ট্যাব, ফিল্টার) | `QualificationService`, `app/Services/CustomFields`, `config/custom_field_presets.php`, `pages/custom-fields` |
 | 2.6 | CSV/XLSX ইমপোর্ট: যাচাই আর প্রিভিউ, queue-তে ইমপোর্ট, ইতিহাস, টেমপ্লেট | `CardholderImportService`, `CardholderImportMapper`, `app/Jobs/ImportCardholders.php`, `app/Support/Spreadsheets`, `config/cardholder_import.php` |
 
-**মান:** ১৯৫টা টেস্ট পাস, Larastan (level 5) আর Pint পরিষ্কার, TypeScript টাইপ-চেক পরিষ্কার। প্রতিটা পেজ headless Chrome-এ চালিয়ে যাচাই করা হয়েছে।
+**মান:** ১৯৮টা টেস্ট পাস, Larastan (level 5) আর Pint পরিষ্কার, TypeScript টাইপ-চেক পরিষ্কার। প্রতিটা পেজ headless Chrome-এ চালিয়ে যাচাই করা হয়েছে।
 
 **বর্তমান মডিউল আর তাদের service:**
 
@@ -84,7 +86,7 @@
 
 ```bash
 cd idcard-pro
-docker compose up -d                                   # app, web, mysql, redis, mailpit, queue, scheduler
+docker compose up -d                                   # app, web, mysql, redis, mailpit, queue, scheduler, gotenberg (PDF)
 docker compose exec app php artisan migrate --seed     # প্রথমবার (বা migrate:fresh --seed)
 docker compose exec app php artisan storage:link       # প্রথমবার: প্রতিষ্ঠানের লোগো দেখানোর জন্য
 docker compose run --rm --no-deps vite npm run build   # ফ্রন্টএন্ড বিল্ড
@@ -343,7 +345,11 @@ docker compose run --rm --no-deps vite npx vue-tsc --noEmit
        - ব্রাউজারে যাচাই: headless Chrome-এ `window.print` stub করে পাতার মাপ/পাতা ভাঙা দেখা; পরীক্ষার কার্ড ইস্যু করলে পরে tinker দিয়ে মুছতে হবে (নিচের "পরিষ্কার করা" নোট, এখন `card_prints`-ও আগে মুছতে হবে)।
      - (ধাপ ৩) প্রিন্ট ইতিহাস কার্ডের বিস্তারিততে; **PENDING/PRINTED**: কার্ডধারীর তালিকায় কলাম + ফিল্টার (কার্ড নেই / ছাপা বাকি / ছাপা হয়েছে), `/cards`-এ "ছাপা বাকি" টাইল আর ছাপার তারিখের ফিল্টার।
      - (ধাপ ৪) ব্যাচ প্রিন্ট (নতুন): `/cards` তালিকা থেকে বাছাই করে একসাথে ছাপা — প্রতি কার্ডে এক পাতা (কার্ড প্রিন্টার) অথবা A4-এ কয়েকটা কার্ড কাটার দাগসহ; প্রতিটা কার্ডের লগ এক batch id-তে।
-     - (ধাপ ৫) সার্ভারে PDF (CR80/A4): নতুন dependency লাগবে (যেমন container-এ headless Chrome বা PHP PDF লাইব্রেরি) — **শুরুর আগে ইউজারের অনুমতি নিতে হবে**; বাইরের কোনো সেবা নয়।
+     - ➡️ (ধাপ ৫) সার্ভারে PDF — ইউজার Gotenberg অনুমোদন করেছেন (৬ অক্টোবর)। কেন: Chromium প্রিন্টের পাতাটাই খোলে, তাই PDF = স্ক্রিন (বাংলা যুক্তাক্ষর, নিজের ফন্ট, ঘোরানো লেখা); dompdf/mPDF-এ নকশা PHP-তে আবার আঁকতে হতো আর বাংলা ভাঙত; jsPDF+html2canvas ঝাপসা। নতুন PHP/npm প্যাকেজ নেই (Laravel HTTP client)।
+       - ✅ (৫ক) compose-এ `gotenberg` (`gotenberg/gotenberg:8`, ~2.5 GB): শুধু internal network `pdf`-এ (ইন্টারনেটের রাস্তাই নেই; `app`/`queue`/`scheduler`/`web`-ও এই network-এ), Chromium allow-list `^http://web(/|$)`, পাবলিক IP নিষেধ, webhook/download-from/LibreOffice বন্ধ, কোনো port বাইরে খোলা নয়। যাচাই: Chromium নিজে Google-এ যেতে চেয়েছিল — allow-list আটকেছে, আর কন্টেইনার থেকে ইন্টারনেট পৌঁছায় না। কোড: `app/Support/Pdf` — `PdfRenderer` (interface, `renderUrl(url, PdfOptions)`), `GotenbergPdfRenderer` (`/forms/chromium/convert/url`, CSS page size, margin 0, `failOnConsoleExceptions`, `waitForExpression`), `DisabledPdfRenderer`, `PdfRenderException`; বাঁধা `AppServiceProvider`-এ `config/pdf.php` → `driver` (`PDF_DRIVER`, খালি = বন্ধ), `app_url` (Chromium-এর চোখে অ্যাপ: `http://web`)। টেস্ট `tests/Feature/Pdf/PdfRendererTest.php` (HTTP fake)।
+       - (৫খ) Chromium-এর জন্য কয়েক মিনিটের signed render লিংক (লগইন ছাড়া, নির্দিষ্ট প্রতিষ্ঠান আর কার্ড), কার্ডের layout/values/ফন্ট একসাথে দেয় এমন render API, আর `CardPrintPage`-এর render মোড (টুলবার নেই, আঁকা শেষে `window.cardsReady = true`)।
+       - (৫গ) `GET /api/v1/cards/{id}/pdf`, `POST /api/v1/cards/pdf` (ব্যাচ) — `cards.print` পারমিশন; ডাউনলোড নিজে "ছাপা" হিসেবে লগ হয় না (ইচ্ছা করলে `method: pdf` দিয়ে লগ)। HRM সিস্টেম API token দিয়ে সরাসরি PDF নিতে পারবে।
+       - (৫ঘ) প্রিন্টের পাতায় "PDF ডাউনলোড" বোতাম।
      - (ধাপ ৬) বারকোড/QR: ইস্যু আর প্রিন্টের আগে মান এনকোড হয় কিনা যাচাই, প্রিন্টে লাল ভুল-বক্স নয় (`missingImages()`-এর মতো সতর্কতা)।
    - পুরনো ইমপোর্টের "last print date/time" কলাম (৩.৮) `card_prints`-এ যাবে।
 7. **৩.৭ স্বাক্ষরিত QR আর পাবলিক ভেরিফিকেশন পেজ।**

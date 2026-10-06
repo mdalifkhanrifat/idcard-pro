@@ -16,6 +16,7 @@ x-php: &php
     redis: { condition: service_healthy }
   extra_hosts:
     - host.docker.internal:host-gateway
+  networks: [default, pdf]
   restart: unless-stopped
 
 services:
@@ -30,6 +31,7 @@ services:
       - .:/var/www/html:ro
       - ./docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
     depends_on: [app]
+    networks: [default, pdf]
     restart: unless-stopped
 
   queue:
@@ -79,11 +81,33 @@ services:
       retries: 10
     restart: unless-stopped
 
+  # Server-side PDFs (config/pdf.php): Chromium that may only open this app (the web service), no
+  # public internet, no webhooks or downloads, and no port published outside the compose network.
+  gotenberg:
+    image: gotenberg/gotenberg:8
+    command:
+      - gotenberg
+      - --chromium-allow-list=^http://web(/|$$)
+      - --chromium-deny-public-ips
+      - --webhook-disable
+      - --api-disable-download-from
+      - --libreoffice-disable-routes
+      - --api-timeout=60s
+      - --log-level=warn
+    # Only on the internal network: no route to the internet at all
+    networks: [pdf]
+    restart: unless-stopped
+
   mailpit:
     image: axllent/mailpit:latest
     ports:
       - "${MAILPIT_UI_PORT:-8025}:8025"
     restart: unless-stopped
+
+networks:
+  # Internal only (no internet): the PDF engine, the app that calls it and the web server it opens
+  pdf:
+    internal: true
 
 volumes:
   mysql-data:

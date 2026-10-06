@@ -3,6 +3,9 @@
 namespace App\Providers;
 
 use App\Models\User;
+use App\Support\Pdf\DisabledPdfRenderer;
+use App\Support\Pdf\GotenbergPdfRenderer;
+use App\Support\Pdf\PdfRenderer;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
@@ -20,6 +23,11 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->scoped(TenantContext::class);
+
+        $this->app->bind(PdfRenderer::class, fn () => match (config('pdf.driver')) {
+            'gotenberg' => new GotenbergPdfRenderer((string) config('pdf.gotenberg.url'), (int) config('pdf.gotenberg.timeout')),
+            default => new DisabledPdfRenderer,
+        });
     }
 
     /**
