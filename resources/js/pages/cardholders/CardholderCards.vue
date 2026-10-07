@@ -82,7 +82,8 @@ function show(id: string): void {
         <!-- History -->
         <section class="rounded-xl border border-line bg-surface">
             <h3 class="border-b border-line px-5 py-3 font-semibold text-fg">{{ t('cards.history') }}</h3>
-            <div v-if="cards.length" class="overflow-x-auto">
+            <!-- relative: the hidden (sr-only) header label is absolutely positioned; without it, it escapes the scroll box and widens the page on phones -->
+            <div v-if="cards.length" class="relative overflow-x-auto">
                 <table class="w-full text-sm">
                     <thead class="text-left text-xs font-medium tracking-wide whitespace-nowrap text-muted uppercase">
                         <tr class="border-b border-line">

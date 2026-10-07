@@ -234,7 +234,8 @@ onBeforeUnmount(() => window.removeEventListener('focus', onFocus));
             </div>
 
             <!-- Table -->
-            <div v-if="rows.length" class="overflow-x-auto">
+            <!-- relative: the hidden (sr-only) header label is absolutely positioned; without it, it escapes the scroll box and widens the page on phones -->
+            <div v-if="rows.length" class="relative overflow-x-auto">
                 <table class="w-full text-sm">
                     <thead class="text-left text-xs font-medium tracking-wide whitespace-nowrap text-muted uppercase">
                         <tr class="border-b border-line">
