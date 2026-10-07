@@ -34,7 +34,7 @@ class CardPdfService
         $ids = $cards->pluck('public_id')->all();
 
         try {
-            $content = $this->renderer->renderUrl($this->render->link($ids, $data->sides), new PdfOptions(waitForExpression: CardRenderService::READY_EXPRESSION));
+            $content = $this->renderer->renderUrl($this->render->link($ids, $data->sides, $data->sheet), new PdfOptions(waitForExpression: CardRenderService::READY_EXPRESSION));
         } catch (PdfRenderException $exception) {
             report($exception);
 

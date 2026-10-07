@@ -17,6 +17,6 @@ class CardRenderController extends Controller
     {
         $cards = array_values(array_filter(explode(',', (string) $request->query('cards'))));
 
-        return response()->json(['data' => $render->data((string) $request->query('tenant'), $cards, (string) $request->query('sides', 'both'))]);
+        return response()->json(['data' => $render->data((string) $request->query('tenant'), $cards, (string) $request->query('sides', 'both'), (string) $request->query('sheet', CardRenderService::SHEET_CARD))]);
     }
 }

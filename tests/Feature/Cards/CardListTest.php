@@ -96,7 +96,15 @@ it('offers the reasons and statuses from the configuration', function () {
         ->assertJsonPath('data.reasons.0', ['key' => 'new', 'note' => false, 'document' => false])
         ->assertJsonPath('data.reasons.3', ['key' => 'lost', 'note' => true, 'document' => true])
         ->assertJsonPath('data.statuses', ['active', 'replaced', 'revoked'])
-        ->assertJsonPath('data.print', ['methods' => ['browser', 'pdf'], 'max_copies' => 10, 'max_batch' => 200, 'pdf' => true]);
+        ->assertJsonPath('data.print.methods', ['browser', 'pdf'])
+        ->assertJsonPath('data.print.max_copies', 10)
+        ->assertJsonPath('data.print.max_batch', 200)
+        ->assertJsonPath('data.print.pdf', true)
+        ->assertJsonPath('data.print.sheets.0', ['key' => 'a4', 'width_mm' => 210, 'height_mm' => 297]);
+
+    // A new paper only needs configuration
+    config(['cards.print.sheets.a3' => ['width' => 297, 'height' => 420]]);
+    $this->getJson('/api/v1/cards/options')->assertJsonPath('data.print.sheets.2', ['key' => 'a3', 'width_mm' => 297, 'height_mm' => 420]);
 
     config(['pdf.driver' => null]);
     $this->getJson('/api/v1/cards/options')->assertJsonPath('data.print.pdf', false);

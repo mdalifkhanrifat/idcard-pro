@@ -44,6 +44,14 @@ return [
         'max_copies' => 10,
         // Cards printed together in one batch
         'max_batch' => 200,
+        /*
+         * Paper for printing several cards on one sheet with crop marks (portrait, in mm), besides one card
+         * per page ("card", for card printers). A new paper size only needs a new entry here.
+         */
+        'sheets' => [
+            'a4' => ['width' => 210, 'height' => 297],
+            'letter' => ['width' => 215.9, 'height' => 279.4],
+        ],
     ],
 
     // active: the holder's current card; replaced: a newer card was issued; revoked: cancelled (e.g. reported lost)

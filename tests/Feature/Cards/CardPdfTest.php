@@ -48,6 +48,21 @@ it('downloads a card as a PDF drawn from its render page, without logging a prin
         ->and(CardPrint::count())->toBe(0);
 });
 
+it('lays the cards out on a paper sheet when asked, and only on known papers', function () {
+    [$a, $b] = [($this->issue)(), ($this->issue)()];
+
+    $this->postJson('/api/v1/cards/pdf', ['cards' => [$a['id'], $b['id']], 'sheet' => 'letter'])->assertOk();
+    $this->get("/api/v1/cards/{$a['id']}/pdf")->assertOk();
+
+    parse_str((string) parse_url($this->engine->urls[0], PHP_URL_QUERY), $batch);
+    parse_str((string) parse_url($this->engine->urls[1], PHP_URL_QUERY), $single);
+    expect($batch['sheet'])->toBe('letter')
+        ->and($single['sheet'])->toBe('card');
+
+    $this->postJson('/api/v1/cards/pdf', ['cards' => [$a['id']], 'sheet' => 'a0'])->assertJsonValidationErrors('sheet');
+    expect($this->engine->urls)->toHaveCount(2);
+});
+
 it('logs the PDF as a print when asked', function () {
     $card = ($this->issue)();
 

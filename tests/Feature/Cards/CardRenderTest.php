@@ -11,7 +11,7 @@ beforeEach(function () {
     $this->template = cardTemplate($this->tenant, ['code' => 'EMP']);
     $this->issue = fn () => $this->postJson('/api/v1/cardholders/'.cardholder($this->tenant)->public_id.'/cards', ['template' => $this->template->public_id, 'reason' => 'new'])->json('data');
     Sanctum::actingAs($this->owner);
-    $this->link = fn (array $ids, string $sides = 'both') => app(TenantContext::class)->run($this->tenant, fn () => app(CardRenderService::class)->link($ids, $sides));
+    $this->link = fn (array $ids, string $sides = 'both', string $sheet = 'card') => app(TenantContext::class)->run($this->tenant, fn () => app(CardRenderService::class)->link($ids, $sides, $sheet));
     // The render page forwards its own query to the API
     $this->apiPath = fn (string $link) => '/api/v1/card-render?'.parse_url($link, PHP_URL_QUERY);
 });
@@ -28,7 +28,16 @@ it('gives the render page the cards to draw through a signed link, without a sig
         ->and($data['cards'][0])->toHaveKeys(['id', 'printable', 'layout.size_mm', 'layout.elements', 'values.fields', 'values.images'])
         ->and($data['cards'][0]['values']['fields']['card.number'])->toBe($b['number'])
         ->and($data['fonts'])->toBeArray()
-        ->and($data['sides'])->toBe('front');
+        ->and($data['sides'])->toBe('front')
+        ->and($data['sheet'])->toBeNull();
+});
+
+it('gives the paper size when several cards go on one sheet', function () {
+    $card = ($this->issue)();
+
+    $data = $this->getJson(($this->apiPath)(($this->link)([$card['id']], 'both', 'a4')))->assertOk()->json('data');
+
+    expect($data['sheet'])->toEqual(['key' => 'a4', 'width_mm' => 210, 'height_mm' => 297]);
 });
 
 it('refuses a changed or expired link', function () {
@@ -37,6 +46,7 @@ it('refuses a changed or expired link', function () {
 
     $this->getJson(str_replace($a['id'], $b['id'], $path))->assertForbidden();
     $this->getJson(str_replace('sides=both', 'sides=back', $path))->assertForbidden();
+    $this->getJson(str_replace('sheet=card', 'sheet=a4', $path))->assertForbidden();
 
     $this->travel(config('pdf.link_minutes') + 1)->minutes();
     $this->getJson($path)->assertForbidden();

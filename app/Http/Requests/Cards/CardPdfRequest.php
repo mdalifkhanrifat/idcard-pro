@@ -8,7 +8,8 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 /**
- * PDF of one card (route {card}) or of a batch (`cards`): sides, and whether to log it as printed.
+ * PDF of one card (route {card}) or of a batch (`cards`): sides, page layout (one card per page or a paper
+ * sheet with crop marks), and whether to log it as printed.
  */
 class CardPdfRequest extends FormRequest
 {
@@ -28,6 +29,7 @@ class CardPdfRequest extends FormRequest
             'cards' => $batch ? ['required', 'array', 'min:1', 'max:'.(int) config('cards.print.max_batch')] : ['prohibited'],
             'cards.*' => ['string', 'size:26'],
             'sides' => ['sometimes', 'string', Rule::in(CardRenderService::SIDES)],
+            'sheet' => ['sometimes', 'string', Rule::in(CardRenderService::sheetKeys())],
             'record' => ['sometimes', 'boolean'],
             'note' => ['nullable', 'string', 'max:255'],
         ];

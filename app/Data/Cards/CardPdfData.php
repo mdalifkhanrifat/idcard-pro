@@ -3,7 +3,8 @@
 namespace App\Data\Cards;
 
 /**
- * A PDF of issued cards: which sides, and whether making it counts as printing them (method "pdf").
+ * A PDF of issued cards: which sides, the page layout ("card" = one card per page, or a paper key from
+ * config cards.print.sheets), and whether making it counts as printing them (method "pdf").
  */
 final readonly class CardPdfData
 {
@@ -11,6 +12,7 @@ final readonly class CardPdfData
         public string $sides = 'both',
         public bool $record = false,
         public ?string $note = null,
+        public string $sheet = 'card',
     ) {}
 
     /**
@@ -24,6 +26,7 @@ final readonly class CardPdfData
             sides: $input['sides'] ?? 'both',
             record: (bool) ($input['record'] ?? false),
             note: $note === '' ? null : $note,
+            sheet: $input['sheet'] ?? 'card',
         );
     }
 }

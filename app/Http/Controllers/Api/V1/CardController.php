@@ -12,6 +12,7 @@ use App\Models\Cardholder;
 use App\Services\Cards\CardDataResolver;
 use App\Services\Cards\CardIssueService;
 use App\Services\Cards\CardLayoutPresenter;
+use App\Services\Cards\CardRenderService;
 use App\Services\Cards\CardService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -51,6 +52,8 @@ class CardController extends Controller
                 'methods' => config('cards.print.methods'),
                 'max_copies' => (int) config('cards.print.max_copies'),
                 'max_batch' => (int) config('cards.print.max_batch'),
+                // Papers for several cards per sheet with crop marks, besides one card per page
+                'sheets' => CardRenderService::sheets(),
                 // Server PDFs are on (config/pdf.php); off, only the browser's own printing remains
                 'pdf' => filled(config('pdf.driver')),
             ],

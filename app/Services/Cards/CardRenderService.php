@@ -24,6 +24,41 @@ class CardRenderService
     /** What the PDF engine waits for: the render page sets it when drawn (true) or failed (false). */
     public const READY_EXPRESSION = 'window.cardsReady !== undefined';
 
+    /** One card per page, sized to the card (card printers); the other sheets are papers from config. */
+    public const SHEET_CARD = 'card';
+
+    /**
+     * Every page layout a print or PDF may use.
+     *
+     * @return array<int, string>
+     */
+    public static function sheetKeys(): array
+    {
+        return [self::SHEET_CARD, ...array_keys((array) config('cards.print.sheets'))];
+    }
+
+    /**
+     * Paper size of a sheet (config cards.print.sheets); null for one card per page or an unknown key.
+     *
+     * @return array{key: string, width_mm: float, height_mm: float}|null
+     */
+    public static function sheetSize(string $sheet): ?array
+    {
+        $size = ((array) config('cards.print.sheets'))[$sheet] ?? null;
+
+        return is_array($size) ? ['key' => $sheet, 'width_mm' => (float) $size['width'], 'height_mm' => (float) $size['height']] : null;
+    }
+
+    /**
+     * The papers cards can be laid out on, for print options.
+     *
+     * @return array<int, array{key: string, width_mm: float, height_mm: float}>
+     */
+    public static function sheets(): array
+    {
+        return array_values(array_filter(array_map(self::sheetSize(...), array_keys((array) config('cards.print.sheets')))));
+    }
+
     public function __construct(
         private CardRepositoryInterface $cards,
         private TenantRepositoryInterface $tenants,
@@ -40,12 +75,12 @@ class CardRenderService
      *
      * @param  array<int, string>  $cardPublicIds
      */
-    public function link(array $cardPublicIds, string $sides = 'both'): string
+    public function link(array $cardPublicIds, string $sides = 'both', string $sheet = self::SHEET_CARD): string
     {
         $signed = URL::temporarySignedRoute(
             'api.v1.card-render',
             now()->addMinutes((int) config('pdf.link_minutes')),
-            ['tenant' => $this->tenantContext->get()?->public_id, 'cards' => implode(',', $cardPublicIds), 'sides' => $sides],
+            ['tenant' => $this->tenantContext->get()?->public_id, 'cards' => implode(',', $cardPublicIds), 'sides' => $sides, 'sheet' => $sheet],
             absolute: false,
         );
 
@@ -54,12 +89,12 @@ class CardRenderService
 
     /**
      * What the render page draws: each card (in the order given) with its layout and values, the
-     * organization's fonts, and the sides.
+     * organization's fonts, the sides, and the paper (null = one card per page).
      *
      * @param  array<int, string>  $cardPublicIds
-     * @return array{cards: array<int, array<string, mixed>>, fonts: mixed, sides: string}
+     * @return array{cards: array<int, array<string, mixed>>, fonts: mixed, sides: string, sheet: array{key: string, width_mm: float, height_mm: float}|null}
      */
-    public function data(string $tenantPublicId, array $cardPublicIds, string $sides): array
+    public function data(string $tenantPublicId, array $cardPublicIds, string $sides, string $sheet = self::SHEET_CARD): array
     {
         $tenant = $this->tenants->findByPublicId($tenantPublicId);
         if ($tenant === null || ! $tenant->isActive()) {
@@ -76,6 +111,7 @@ class CardRenderService
             ])->all(),
             'fonts' => TenantFontResource::collection($this->fonts->list())->resolve(),
             'sides' => in_array($sides, self::SIDES, true) ? $sides : 'both',
+            'sheet' => self::sheetSize($sheet),
         ]);
     }
 }
