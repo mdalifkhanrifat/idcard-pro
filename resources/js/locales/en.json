@@ -1109,6 +1109,15 @@
             "pdfDone": "PDF downloaded.",
             "pdfRecorded": "PDF downloaded; print recorded for {count} card(s)."
         },
+        "batch": {
+            "selected": "{count} card(s) selected",
+            "print": "Print selected",
+            "pdf": "PDF of selected",
+            "clear": "Clear selection",
+            "selectPage": "Select all printable cards on this page",
+            "selectCard": "Select card {number}",
+            "notPrintable": "Only active, unexpired cards can be printed"
+        },
         "printHistory": "Print history",
         "printedTimes": "Printed {count}×",
         "notPrinted": "Not printed yet",

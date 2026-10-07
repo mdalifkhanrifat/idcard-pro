@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { RotateCcw, Search, SlidersHorizontal } from 'lucide-vue-next';
+import { FileDown, Printer, RotateCcw, Search, SlidersHorizontal, X } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiEmpty from '@/components/ui/UiEmpty.vue';
@@ -12,11 +12,13 @@ import UiSelect from '@/components/ui/UiSelect.vue';
 import UiSortHeader from '@/components/ui/UiSortHeader.vue';
 import CardDetailDialog from './CardDetailDialog.vue';
 import CardPrintButton from './CardPrintButton.vue';
-import { displayStatus, statusTone, useCardReasons } from './cards';
+import { displayStatus, downloadCardsPdf, openPrintPage, statusTone, useCardReasons } from './cards';
 import { useListQuery } from '@/composables/useListQuery';
 import { useMasterDataOptions } from '@/composables/useMasterDataOptions';
 import { http } from '@/lib/http';
 import { formatDate, formatDateTime } from '@/lib/format';
+import { useAuthStore } from '@/stores/auth';
+import { useUiStore } from '@/stores/ui';
 import type { CardTemplate, IssuedCard } from '@/types';
 
 /**
@@ -96,6 +98,60 @@ function changed(): void {
     list.load();
     loadSummary();
 }
+
+/**
+ * Batch printing: printable cards picked from the list, kept across pages and filters so cards can be
+ * gathered from several pages (e.g. the "not printed yet" tile → select all → print). In picking order.
+ */
+const auth = useAuthStore();
+const ui = useUiStore();
+const canPrint = computed(() => auth.can('cards.print'));
+const selected = ref<string[]>([]);
+const printableRows = computed(() => rows.value.filter((card) => card.printable));
+const pageSelected = computed(() => printableRows.value.filter((card) => selected.value.includes(card.id)).length);
+const tooManySelected = computed(() => selected.value.length > cardReasons.printOptions.value.max_batch);
+const downloading = ref(false);
+/** The print page was opened in another tab: refresh counts when the user comes back. */
+let printTabOpen = false;
+
+function toggleCard(card: IssuedCard): void {
+    selected.value = selected.value.includes(card.id) ? selected.value.filter((id) => id !== card.id) : [...selected.value, card.id];
+}
+
+function togglePage(): void {
+    const pageIds = printableRows.value.map((card) => card.id);
+    selected.value =
+        pageSelected.value === pageIds.length
+            ? selected.value.filter((id) => !pageIds.includes(id))
+            : [...selected.value, ...pageIds.filter((id) => !selected.value.includes(id))];
+}
+
+function printSelected(): void {
+    openPrintPage(selected.value);
+    printTabOpen = true;
+}
+
+async function downloadSelected(): Promise<void> {
+    downloading.value = true;
+    try {
+        await downloadCardsPdf(selected.value, { sides: 'both', record: false });
+        ui.notify(t('cards.print.pdfDone'));
+    } catch (error) {
+        ui.notify((error as Error).message, 'error');
+    } finally {
+        downloading.value = false;
+    }
+}
+
+function onFocus(): void {
+    if (printTabOpen) {
+        printTabOpen = false;
+        changed();
+    }
+}
+
+onMounted(() => window.addEventListener('focus', onFocus));
+onBeforeUnmount(() => window.removeEventListener('focus', onFocus));
 </script>
 
 <template>
@@ -164,11 +220,37 @@ function changed(): void {
                 <UiInput v-model="filters.printed_to" type="date" :label="`${t('cards.printedOn')} · ${t('common.to')}`" />
             </div>
 
+            <!-- Batch printing -->
+            <div v-if="canPrint && selected.length" class="flex flex-wrap items-center gap-3 border-b border-line bg-surface-2/50 px-4 py-3" data-selection-bar>
+                <span class="text-sm font-medium text-fg" data-selected-count>{{ t('cards.batch.selected', { count: n(selected.length) }) }}</span>
+                <span v-if="tooManySelected" class="text-sm text-danger" data-selection-too-many>{{ t('cards.print.tooMany', { max: n(cardReasons.printOptions.value.max_batch) }) }}</span>
+                <div class="ml-auto flex flex-wrap gap-2">
+                    <UiButton size="sm" :disabled="tooManySelected" data-print-selected @click="printSelected"><Printer class="size-4" />{{ t('cards.batch.print') }}</UiButton>
+                    <UiButton v-if="cardReasons.printOptions.value.pdf" variant="secondary" size="sm" :disabled="tooManySelected" :loading="downloading" data-pdf-selected @click="downloadSelected">
+                        <FileDown class="size-4" />{{ t('cards.batch.pdf') }}
+                    </UiButton>
+                    <UiButton variant="ghost" size="sm" data-clear-selection @click="selected = []"><X class="size-4" />{{ t('cards.batch.clear') }}</UiButton>
+                </div>
+            </div>
+
             <!-- Table -->
             <div v-if="rows.length" class="overflow-x-auto">
                 <table class="w-full text-sm">
                     <thead class="text-left text-xs font-medium tracking-wide whitespace-nowrap text-muted uppercase">
                         <tr class="border-b border-line">
+                            <th v-if="canPrint" class="w-px py-3 pr-1 pl-5">
+                                <input
+                                    type="checkbox"
+                                    class="size-4 accent-[var(--brand)] disabled:opacity-40"
+                                    :checked="printableRows.length > 0 && pageSelected === printableRows.length"
+                                    :indeterminate="pageSelected > 0 && pageSelected < printableRows.length"
+                                    :disabled="!printableRows.length"
+                                    :aria-label="t('cards.batch.selectPage')"
+                                    :title="t('cards.batch.selectPage')"
+                                    data-select-page
+                                    @change="togglePage"
+                                />
+                            </th>
                             <th class="px-5 py-3"><UiSortHeader field="number" :sort="sort" :label="t('cards.number')" @toggle="list.toggleSort" /></th>
                             <th class="px-5 py-3">{{ t('cards.holder') }}</th>
                             <th class="px-5 py-3">{{ t('cards.template') }}</th>
@@ -180,7 +262,26 @@ function changed(): void {
                         </tr>
                     </thead>
                     <tbody :class="loading && 'opacity-50'">
-                        <tr v-for="card in rows" :key="card.id" class="cursor-pointer border-b border-line last:border-0 hover:bg-surface-2" data-card-row @click="show(card)">
+                        <tr
+                            v-for="card in rows"
+                            :key="card.id"
+                            class="cursor-pointer border-b border-line last:border-0 hover:bg-surface-2"
+                            :class="selected.includes(card.id) && 'bg-surface-2'"
+                            data-card-row
+                            @click="show(card)"
+                        >
+                            <td v-if="canPrint" class="py-3 pr-1 pl-5" @click.stop>
+                                <input
+                                    type="checkbox"
+                                    class="size-4 accent-[var(--brand)] disabled:opacity-40"
+                                    :checked="selected.includes(card.id)"
+                                    :disabled="!card.printable"
+                                    :aria-label="t('cards.batch.selectCard', { number: card.number })"
+                                    :title="card.printable ? t('cards.batch.selectCard', { number: card.number }) : t('cards.batch.notPrintable')"
+                                    data-select-card
+                                    @change="toggleCard(card)"
+                                />
+                            </td>
                             <td class="px-5 py-3 font-mono whitespace-nowrap text-fg">{{ card.number }}</td>
                             <td class="px-5 py-3">
                                 <RouterLink :to="{ path: `/cardholders/${card.cardholder?.id}`, query: { tab: 'cards' } }" class="font-medium text-fg hover:underline" @click.stop>
