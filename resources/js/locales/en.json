@@ -1087,6 +1087,14 @@
                 "front": "Front only",
                 "back": "Back only"
             },
+            "sheet": "Pages",
+            "sheetCard": "One card per page (card printer)",
+            "sheetPaper": "{paper} sheet with crop marks",
+            "sheetHint": "In the print dialog keep the scale at 100% (\"Actual size\"), not \"Fit to page\". For both sides on one sheet, print two-sided with \"Flip on long edge\".",
+            "papers": {
+                "a4": "A4",
+                "letter": "US Letter"
+            },
             "none": "No cards chosen to print.",
             "notFound": "Card not found.",
             "tooMany": "Too many cards: at most {max} can be printed together.",

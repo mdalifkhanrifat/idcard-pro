@@ -11,17 +11,28 @@ export interface CardReasonOption {
     document: boolean;
 }
 
+/** A paper several cards are laid out on, with crop marks (config/cards.php → print.sheets; portrait, mm). */
+export interface PrintSheetSize {
+    key: string;
+    width_mm: number;
+    height_mm: number;
+}
+
+/** Page layout of a print: "card" = one card side per page (card printers), or a paper key. */
+export const SHEET_CARD = 'card';
+
 /** Printing limits from config/cards.php → print. */
 export interface CardPrintOptions {
     methods: string[];
     max_copies: number;
     max_batch: number;
+    sheets: PrintSheetSize[];
     /** Server PDFs are switched on (config/pdf.php). */
     pdf: boolean;
 }
 
 const reasons = ref<CardReasonOption[]>([]);
-const printOptions = ref<CardPrintOptions>({ methods: ['browser'], max_copies: 10, max_batch: 200, pdf: false });
+const printOptions = ref<CardPrintOptions>({ methods: ['browser'], max_copies: 10, max_batch: 200, sheets: [], pdf: false });
 let loading: Promise<void> | null = null;
 
 /**
@@ -61,11 +72,11 @@ export function openPrintPage(cardIds: string[]): void {
  * Downloads a PDF of these cards made on the server (same drawing as printing). `record` also logs it as
  * a print (method "pdf"); a download alone is not counted as a printed card.
  */
-export async function downloadCardsPdf(cardIds: string[], options: { sides: PrintSides; record: boolean }): Promise<void> {
+export async function downloadCardsPdf(cardIds: string[], options: { sides: PrintSides; record: boolean; sheet?: string }): Promise<void> {
     try {
         const response =
             cardIds.length === 1
-                ? await http.get<Blob>(`/cards/${cardIds[0]}/pdf`, { params: { sides: options.sides, record: options.record ? 1 : 0 }, responseType: 'blob' })
+                ? await http.get<Blob>(`/cards/${cardIds[0]}/pdf`, { params: { sides: options.sides, sheet: options.sheet, record: options.record ? 1 : 0 }, responseType: 'blob' })
                 : await http.post<Blob>('/cards/pdf', { cards: cardIds, ...options }, { responseType: 'blob' });
         const filename = /filename="([^"]+)"/.exec(String(response.headers['content-disposition'] ?? ''))?.[1] ?? 'cards.pdf';
         const url = URL.createObjectURL(response.data);
@@ -121,6 +132,84 @@ export function sheetSides(layout: CardLayout, sides: PrintSides): CardSide[] {
     }
 
     return sides === 'both' ? ['front', 'back'] : [sides];
+}
+
+/** On a paper sheet: margin around the cards and gap between them (mm); crop marks sit in the gaps. */
+export const SHEET_MARGIN_MM = 10;
+export const SHEET_GAP_MM = 6;
+
+/** A card side placed on a page, at mm from the page's top left. */
+export interface PlacedCard {
+    key: string;
+    card: SheetCard;
+    side: CardSide;
+    x: number;
+    y: number;
+}
+
+/** One printed page: its size (mm) and the card sides on it. `marks` = draw crop marks around the cards. */
+export interface PrintPage {
+    key: string;
+    width: number;
+    height: number;
+    items: PlacedCard[];
+    marks: boolean;
+}
+
+/**
+ * Pages of a print. Without a sheet, each card side is its own page at the card's size (card printers).
+ * On a sheet, cards of the same size share pages in a grid centred across the paper; each front page is
+ * followed by its back page with the columns mirrored, so the sides meet when the paper is turned over
+ * its long edge (duplex), and a "back only" pass fits a re-fed front stack. Cards without a back leave
+ * their place empty, and back pages are kept even when empty, so fronts and backs never shift.
+ */
+export function printPages(cards: SheetCard[], sides: PrintSides, copies: number, sheet: PrintSheetSize | null): PrintPage[] {
+    const all = Array.from({ length: copies }, (_, copy) => cards.map((card) => ({ card, copy }))).flat();
+
+    if (!sheet) {
+        return all.flatMap(({ card, copy }) =>
+            sheetSides(card.layout, sides).map((side) => {
+                const key = `${copy}-${card.id}-${side}`;
+
+                return { key, width: card.layout.size_mm.width, height: card.layout.size_mm.height, items: [{ key, card, side, x: 0, y: 0 }], marks: false };
+            }),
+        );
+    }
+
+    const withBacks = cards.some((card) => card.layout.is_double_sided);
+    const passes: CardSide[] = sides === 'both' ? (withBacks ? ['front', 'back'] : ['front']) : sides === 'back' && !withBacks ? [] : [sides];
+
+    // Same-size cards together, in the order their size first appears
+    const groups = new Map<string, typeof all>();
+    for (const entry of all) {
+        const size = `${entry.card.layout.size_mm.width}x${entry.card.layout.size_mm.height}`;
+        groups.set(size, [...(groups.get(size) ?? []), entry]);
+    }
+
+    const pages: PrintPage[] = [];
+    for (const [size, entries] of groups) {
+        const { width, height } = entries[0].card.layout.size_mm;
+        const columns = Math.max(1, Math.floor((sheet.width_mm - 2 * SHEET_MARGIN_MM + SHEET_GAP_MM) / (width + SHEET_GAP_MM)));
+        const rows = Math.max(1, Math.floor((sheet.height_mm - 2 * SHEET_MARGIN_MM + SHEET_GAP_MM) / (height + SHEET_GAP_MM)));
+        const left = (sheet.width_mm - (columns * width + (columns - 1) * SHEET_GAP_MM)) / 2;
+
+        for (let start = 0, number = 0; start < entries.length; start += columns * rows, number++) {
+            const chunk = entries.slice(start, start + columns * rows);
+            for (const side of passes) {
+                const items = chunk.flatMap(({ card, copy }, index) => {
+                    if (side === 'back' && !card.layout.is_double_sided) {
+                        return [];
+                    }
+                    const column = side === 'back' ? columns - 1 - (index % columns) : index % columns;
+
+                    return [{ key: `${copy}-${card.id}-${side}`, card, side, x: left + column * (width + SHEET_GAP_MM), y: SHEET_MARGIN_MM + Math.floor(index / columns) * (height + SHEET_GAP_MM) }];
+                });
+                pages.push({ key: `${size}-${number}-${side}`, width: sheet.width_mm, height: sheet.height_mm, items, marks: side === 'front' });
+            }
+        }
+    }
+
+    return pages;
 }
 
 /**

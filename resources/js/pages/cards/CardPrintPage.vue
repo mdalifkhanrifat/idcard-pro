@@ -8,14 +8,14 @@ import UiCheckbox from '@/components/ui/UiCheckbox.vue';
 import UiDialog from '@/components/ui/UiDialog.vue';
 import UiTextarea from '@/components/ui/UiTextarea.vue';
 import CardSheets from './CardSheets.vue';
-import { displayStatus, downloadCardsPdf, missingImages, sheetSides, useCardReasons, type CardImageKey, type PrintSides, type SheetCard } from './cards';
+import { displayStatus, downloadCardsPdf, missingImages, printPages, SHEET_CARD, useCardReasons, type CardImageKey, type PrintSides, type SheetCard } from './cards';
 import { http, toApiError } from '@/lib/http';
 import { useUiStore } from '@/stores/ui';
 import type { CardLayout, CardValues, IssuedCard } from '@/types';
 
 /**
  * Prints issued cards at their real size (laid out by CardSheets: one page per card side, sized to the
- * card). Opened with ?ids=a,b for one card or a batch.
+ * card, or several cards on a paper sheet with crop marks). Opened with ?ids=a,b for one card or a batch.
  * Browsers do not say whether printing worked, so the user confirms before the print is logged.
  */
 interface Entry {
@@ -29,10 +29,12 @@ interface Entry {
 }
 
 const PARALLEL = 6;
+/** The page layout last used on this device (printers stay where they are). */
+const SHEET_STORAGE_KEY = 'card-print-sheet';
 
 const route = useRoute();
 const router = useRouter();
-const { t } = useI18n();
+const { t, te } = useI18n();
 const ui = useUiStore();
 const { printOptions, ready: optionsReady } = useCardReasons();
 
@@ -41,6 +43,7 @@ const loading = ref(true);
 const assetsReady = ref(false);
 const copies = ref(1);
 const sides = ref<PrintSides>('both');
+const sheetKey = ref(readSheet());
 const confirming = ref(false);
 const note = ref('');
 const noteError = ref<string[]>([]);
@@ -58,7 +61,27 @@ const withMissing = computed(() => printable.value.filter((entry) => entry.missi
 const anyDoubleSided = computed(() => printable.value.some((entry) => entry.layout?.is_double_sided));
 
 const sheetCards = computed<SheetCard[]>(() => printable.value.map((entry) => ({ id: entry.id, layout: entry.layout!, values: entry.values! })));
-const pageCount = computed(() => copies.value * sheetCards.value.reduce((pages, card) => pages + sheetSides(card.layout, sides.value).length, 0));
+/** The chosen paper; null = one card side per page (also when a remembered paper no longer exists). */
+const sheet = computed(() => printOptions.value.sheets.find((size) => size.key === sheetKey.value) ?? null);
+const pageCount = computed(() => printPages(sheetCards.value, sides.value, copies.value, sheet.value).length);
+const paperLabel = (key: string) => (te(`cards.print.papers.${key}`) ? t(`cards.print.papers.${key}`) : key.toUpperCase());
+
+function readSheet(): string {
+    try {
+        return localStorage.getItem(SHEET_STORAGE_KEY) ?? SHEET_CARD;
+    } catch {
+        return SHEET_CARD;
+    }
+}
+
+async function changeSheet(): Promise<void> {
+    try {
+        localStorage.setItem(SHEET_STORAGE_KEY, sheetKey.value);
+    } catch {
+        // Not remembered (e.g. private window); the choice still applies now
+    }
+    await waitForAssets();
+}
 
 async function loadEntry(id: string): Promise<Entry> {
     try {
@@ -155,7 +178,7 @@ async function downloadPdf(): Promise<void> {
     downloading.value = true;
     const cardIds = printable.value.map((entry) => entry.id);
     try {
-        await downloadCardsPdf(cardIds, { sides: sides.value, record: recordPdf.value });
+        await downloadCardsPdf(cardIds, { sides: sides.value, record: recordPdf.value, sheet: sheet.value?.key ?? SHEET_CARD });
         if (recordPdf.value) {
             logged.value += cardIds.length;
             ui.notify(t('cards.print.pdfRecorded', { count: cardIds.length }));
@@ -206,6 +229,13 @@ onBeforeUnmount(() => {
                         <option v-for="choice in ['both', 'front', 'back']" :key="choice" :value="choice">{{ t(`cards.print.sideOptions.${choice}`) }}</option>
                     </select>
                 </label>
+                <label v-if="printOptions.sheets.length" class="flex items-center gap-2 text-sm text-muted">
+                    {{ t('cards.print.sheet') }}
+                    <select v-model="sheetKey" class="h-9 rounded-lg border border-line bg-surface px-2 text-sm text-fg" data-print-sheet @change="changeSheet">
+                        <option :value="SHEET_CARD">{{ t('cards.print.sheetCard') }}</option>
+                        <option v-for="size in printOptions.sheets" :key="size.key" :value="size.key">{{ t('cards.print.sheetPaper', { paper: paperLabel(size.key) }) }}</option>
+                    </select>
+                </label>
                 <label class="flex items-center gap-2 text-sm text-muted">
                     {{ t('cards.print.copies') }}
                     <input v-model.number="copies" type="number" min="1" :max="printOptions.max_copies" class="h-9 w-16 rounded-lg border border-line bg-surface px-2 text-sm text-fg" data-print-copies />
@@ -225,6 +255,7 @@ onBeforeUnmount(() => {
             <div v-if="!loading" class="mx-auto max-w-5xl space-y-2 px-4 pb-3 text-sm">
                 <p v-if="!ids.length" class="text-muted">{{ t('cards.print.none') }}</p>
                 <p v-else-if="tooMany" class="text-danger" data-print-too-many>{{ t('cards.print.tooMany', { max: printOptions.max_batch }) }}</p>
+                <p v-if="sheet && printable.length" class="text-xs text-muted" data-print-sheet-hint>{{ t('cards.print.sheetHint') }}</p>
                 <div v-if="skipped.length" class="rounded-lg border border-danger/40 bg-danger/10 p-3 text-fg" data-print-skipped>
                     <p class="font-medium">{{ t('cards.print.skipped', { count: skipped.length }) }}</p>
                     <ul class="mt-1 list-disc pl-5 text-xs text-muted">
@@ -246,7 +277,7 @@ onBeforeUnmount(() => {
         </header>
 
         <div v-if="loading" class="flex justify-center py-16 print:hidden"><Loader2 class="size-6 animate-spin text-muted" /></div>
-        <CardSheets v-else ref="sheetsRef" :cards="sheetCards" :sides="sides" :copies="copies" />
+        <CardSheets v-else ref="sheetsRef" :cards="sheetCards" :sides="sides" :copies="copies" :sheet="sheet" />
 
         <UiDialog v-model:open="confirming" :title="t('cards.print.confirmTitle')" :description="awaitingBacks ? t('cards.print.backPending') : t('cards.print.confirmHint')">
             <UiTextarea v-if="!awaitingBacks" v-model="note" :label="t('cards.print.note')" :error="noteError" :maxlength="255" :rows="2" />

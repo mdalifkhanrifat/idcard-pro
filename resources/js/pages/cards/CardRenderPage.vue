@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
 import CardSheets from './CardSheets.vue';
-import type { PrintSides, SheetCard } from './cards';
+import type { PrintSheetSize, PrintSides, SheetCard } from './cards';
 import { http } from '@/lib/http';
 import { provideTenantFonts, type FontFile } from '@/lib/tenantFonts';
 
@@ -20,13 +20,15 @@ declare global {
 
 const cards = ref<SheetCard[]>([]);
 const sides = ref<PrintSides>('both');
+const sheet = ref<PrintSheetSize | null>(null);
 const sheets = ref<InstanceType<typeof CardSheets> | null>(null);
 
 async function render(): Promise<void> {
     // The signature covers the exact query, so it is forwarded as received
-    const { data } = await http.get<{ data: { cards: (SheetCard & { printable: boolean })[]; fonts: FontFile[]; sides: PrintSides } }>(`/card-render${window.location.search}`);
+    const { data } = await http.get<{ data: { cards: (SheetCard & { printable: boolean })[]; fonts: FontFile[]; sides: PrintSides; sheet: PrintSheetSize | null } }>(`/card-render${window.location.search}`);
     await provideTenantFonts(data.data.fonts);
     sides.value = data.data.sides;
+    sheet.value = data.data.sheet;
     cards.value = data.data.cards.filter((card) => card.printable);
     if (!cards.value.length) {
         throw new Error('No printable cards to render.');
@@ -49,5 +51,5 @@ onMounted(async () => {
 </script>
 
 <template>
-    <CardSheets ref="sheets" :cards="cards" :sides="sides" class="print:p-0" />
+    <CardSheets ref="sheets" :cards="cards" :sides="sides" :sheet="sheet" class="print:p-0" />
 </template>
