@@ -1197,5 +1197,46 @@
             "printed": "Printed"
         },
         "printedOn": "Printed on"
+    },
+    "verify": {
+        "title": "Card verification",
+        "checking": "Checking the card…",
+        "status": {
+            "valid": {
+                "title": "Valid card",
+                "hint": "This card is active and has not expired."
+            },
+            "expired": {
+                "title": "Expired card",
+                "hint": "This card is past its expiry date and no longer valid."
+            },
+            "revoked": {
+                "title": "Revoked card",
+                "hint": "This card was cancelled and is not valid."
+            },
+            "replaced": {
+                "title": "Card replaced",
+                "hint": "A newer card was issued; this one is no longer valid."
+            }
+        },
+        "since": "Since {date}",
+        "reason": "Reason",
+        "familyOf": "Family of",
+        "checkedAt": "Checked {time}",
+        "problems": {
+            "not_found": {
+                "title": "Card not found",
+                "hint": "No card was found for this code, or the organization does not verify its cards here. Check that the whole code was scanned."
+            },
+            "too_many": {
+                "title": "Too many checks",
+                "hint": "Please wait a minute and try again."
+            },
+            "failed": {
+                "title": "Could not check the card",
+                "hint": "Please check your connection and try again."
+            }
+        },
+        "footer": "Only details the organization chose to share are shown."
     }
 }

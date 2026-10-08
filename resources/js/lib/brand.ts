@@ -47,12 +47,24 @@ function readableOn(color: Rgb, surfaces: string[], towards: Rgb): string {
  * text and outlines on the light and dark surfaces (`text-brand-ink`, `border-brand-ink`).
  */
 export function applyBrand(hex: string | null | undefined): void {
+    const style = document.documentElement.style;
+    for (const [name, value] of Object.entries(brandTokens(hex))) {
+        style.setProperty(name, value);
+    }
+}
+
+/**
+ * The brand design tokens for a colour, e.g. as inline style on an element marked `data-brand-scope`
+ * to show another organization's colours in one part of a page (the public card verification page).
+ */
+export function brandTokens(hex: string | null | undefined): Record<string, string> {
     const color = hex && /^#[0-9a-f]{6}$/i.test(hex) ? hex : '#0f62fe';
     const rgb = toRgb(color);
-    const style = document.documentElement.style;
 
-    style.setProperty('--brand', color);
-    style.setProperty('--brand-contrast', contrast(rgb, [17, 24, 39]) > contrast(rgb, [255, 255, 255]) ? '#111827' : '#ffffff');
-    style.setProperty('--brand-ink-light', readableOn(rgb, LIGHT_SURFACES, [0, 0, 0]));
-    style.setProperty('--brand-ink-dark', readableOn(rgb, DARK_SURFACES, [255, 255, 255]));
+    return {
+        '--brand': color,
+        '--brand-contrast': contrast(rgb, [17, 24, 39]) > contrast(rgb, [255, 255, 255]) ? '#111827' : '#ffffff',
+        '--brand-ink-light': readableOn(rgb, LIGHT_SURFACES, [0, 0, 0]),
+        '--brand-ink-dark': readableOn(rgb, DARK_SURFACES, [255, 255, 255]),
+    };
 }

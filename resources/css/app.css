@@ -40,6 +40,16 @@
     --warning: #fdb022;
 }
 
+/* Another organization's colours in part of a page (inline brand tokens, see brandTokens()) */
+[data-brand-scope] {
+    --brand-ink: var(--brand-ink-light);
+    --ring: color-mix(in oklab, var(--brand-ink) 35%, transparent);
+}
+
+.dark [data-brand-scope] {
+    --brand-ink: var(--brand-ink-dark);
+}
+
 @theme inline {
     --font-sans: 'Inter', 'Noto Sans Bengali', ui-sans-serif, system-ui, sans-serif;
     --color-brand: var(--brand);

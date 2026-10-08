@@ -57,6 +57,8 @@ const routes: RouteRecordRaw[] = [
             { path: 'platform/tenants', name: 'platform.tenants', component: () => import('@/pages/platform/TenantsPage.vue'), meta: { platform: true, title: 'nav.tenants' } },
         ],
     },
+    // Public card verification from a card's QR code (no sign-in; what it shows is the organization's choice)
+    { path: '/v/:code', name: 'cards.verify', component: () => import('@/pages/verify/CardVerifyPage.vue'), meta: { public: true, title: 'verify.title' } },
     // Server PDF engine's view of cards (signed link, no sign-in)
     { path: '/render/cards', name: 'cards.render', component: () => import('@/pages/cards/CardRenderPage.vue'), meta: { public: true } },
     // Printing: the cards alone at their real size, without the app's menu and header
