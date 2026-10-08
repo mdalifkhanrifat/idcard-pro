@@ -69,6 +69,23 @@ export function openPrintPage(cardIds: string[]): void {
 }
 
 /**
+ * Every printable card the card list's filter finds, in the list's order (server: GET /cards/printable):
+ * at most `limit` ids, `total` printable cards in all.
+ */
+export async function findPrintableCards(listParams: Record<string, string>): Promise<{ ids: string[]; total: number; limit: number }> {
+    const { data } = await http.get<{ data: string[]; meta: { total: number; limit: number } }>('/cards/printable', { params: listParams });
+
+    return { ids: data.data, ...data.meta };
+}
+
+/** Adds cards to a selection in order, without doubles and without going past `max` cards. */
+export function addToSelection(selected: string[], ids: string[], max: number): string[] {
+    const fresh = ids.filter((id) => !selected.includes(id));
+
+    return [...selected, ...fresh.slice(0, Math.max(0, max - selected.length))];
+}
+
+/**
  * Downloads a PDF of these cards made on the server (same drawing as printing). `record` also logs it as
  * a print (method "pdf"); a download alone is not counted as a printed card.
  */

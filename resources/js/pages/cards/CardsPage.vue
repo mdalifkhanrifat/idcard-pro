@@ -12,10 +12,10 @@ import UiSelect from '@/components/ui/UiSelect.vue';
 import UiSortHeader from '@/components/ui/UiSortHeader.vue';
 import CardDetailDialog from './CardDetailDialog.vue';
 import CardPrintButton from './CardPrintButton.vue';
-import { displayStatus, downloadCardsPdf, openPrintPage, statusTone, useCardReasons } from './cards';
+import { addToSelection, displayStatus, downloadCardsPdf, findPrintableCards, openPrintPage, statusTone, useCardReasons } from './cards';
 import { useListQuery } from '@/composables/useListQuery';
 import { useMasterDataOptions } from '@/composables/useMasterDataOptions';
-import { http } from '@/lib/http';
+import { http, toApiError } from '@/lib/http';
 import { formatDate, formatDateTime } from '@/lib/format';
 import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
@@ -126,6 +126,35 @@ function togglePage(): void {
             : [...selected.value, ...pageIds.filter((id) => !selected.value.includes(id))];
 }
 
+/**
+ * "Select all matching": with this page selected and more pages left, every printable card the filter
+ * finds (on all pages), up to one batch. Remembered for these filters so the link does not come back.
+ */
+const listKey = computed(() => JSON.stringify(list.queryParams()));
+const selectingAll = ref(false);
+const matched = ref<{ key: string; ids: string[]; total: number } | null>(null);
+const matchedSelected = computed(() => {
+    const found = matched.value;
+
+    return found !== null && found.key === listKey.value && found.ids.every((id) => selected.value.includes(id)) ? found : null;
+});
+const offerSelectAll = computed(() => printableRows.value.length > 0 && pageSelected.value === printableRows.value.length && meta.value.total > rows.value.length);
+
+async function selectAllMatching(): Promise<void> {
+    selectingAll.value = true;
+    try {
+        const key = listKey.value;
+        const found = await findPrintableCards(list.queryParams());
+        selected.value = addToSelection(selected.value, found.ids, found.limit);
+        const ids = found.ids.filter((id) => selected.value.includes(id));
+        matched.value = { key, ids, total: found.total };
+    } catch (error) {
+        ui.notify(toApiError(error).message, 'error');
+    } finally {
+        selectingAll.value = false;
+    }
+}
+
 function printSelected(): void {
     openPrintPage(selected.value);
     printTabOpen = true;
@@ -224,6 +253,23 @@ onBeforeUnmount(() => window.removeEventListener('focus', onFocus));
             <div v-if="canPrint && selected.length" class="flex flex-wrap items-center gap-3 border-b border-line bg-surface-2/50 px-4 py-3" data-selection-bar>
                 <span class="text-sm font-medium text-fg" data-selected-count>{{ t('cards.batch.selected', { count: n(selected.length) }) }}</span>
                 <span v-if="tooManySelected" class="text-sm text-danger" data-selection-too-many>{{ t('cards.print.tooMany', { max: n(cardReasons.printOptions.value.max_batch) }) }}</span>
+                <span v-if="matchedSelected" class="text-sm text-muted" data-all-matching-selected>
+                    {{
+                        matchedSelected.ids.length < matchedSelected.total
+                            ? t('cards.batch.matchingLimited', { count: n(matchedSelected.ids.length), total: n(matchedSelected.total), max: n(cardReasons.printOptions.value.max_batch) })
+                            : t('cards.batch.matchingSelected', { count: n(matchedSelected.total) })
+                    }}
+                </span>
+                <button
+                    v-else-if="offerSelectAll"
+                    type="button"
+                    class="text-sm font-medium text-fg underline underline-offset-2 hover:no-underline disabled:opacity-50"
+                    :disabled="selectingAll"
+                    data-select-all-matching
+                    @click="selectAllMatching"
+                >
+                    {{ t('cards.batch.selectMatching') }}
+                </button>
                 <div class="ml-auto flex flex-wrap gap-2">
                     <UiButton size="sm" :disabled="tooManySelected" data-print-selected @click="printSelected"><Printer class="size-4" />{{ t('cards.batch.print') }}</UiButton>
                     <UiButton v-if="cardReasons.printOptions.value.pdf" variant="secondary" size="sm" :disabled="tooManySelected" :loading="downloading" data-pdf-selected @click="downloadSelected">

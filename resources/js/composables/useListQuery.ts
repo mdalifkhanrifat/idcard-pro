@@ -36,9 +36,9 @@ export function useListQuery<T>(endpoint: string | (() => string), defaults: { f
     const meta = ref<PageMeta>({ current_page: 1, last_page: 1, total: 0, from: null, to: null });
     const loading = ref(false);
 
-    async function load(): Promise<void> {
-        loading.value = true;
-        const params: Record<string, string | number> = { page: page.value, per_page: perPage.value };
+    /** The list's filters and sort as request parameters (no page), e.g. to act on every row the filter finds. */
+    function queryParams(): Record<string, string> {
+        const params: Record<string, string> = {};
         if (sort.value) {
             params.sort = sort.value;
         }
@@ -48,6 +48,13 @@ export function useListQuery<T>(endpoint: string | (() => string), defaults: { f
                 params[`filter[${key.split('.').join('][')}]`] = value;
             }
         }
+
+        return params;
+    }
+
+    async function load(): Promise<void> {
+        loading.value = true;
+        const params = { ...queryParams(), page: page.value, per_page: perPage.value };
 
         try {
             const { data } = await http.get(typeof endpoint === 'function' ? endpoint() : endpoint, { params });
@@ -108,5 +115,5 @@ export function useListQuery<T>(endpoint: string | (() => string), defaults: { f
     );
     watch([page, sort, perPage], load);
 
-    return { filters, sort, page, perPage, rows, meta, loading, load, resetFilters, addFilters, toggleSort };
+    return { filters, sort, page, perPage, rows, meta, loading, load, queryParams, resetFilters, addFilters, toggleSort };
 }

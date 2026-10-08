@@ -1124,7 +1124,10 @@
             "clear": "Clear selection",
             "selectPage": "Select all printable cards on this page",
             "selectCard": "Select card {number}",
-            "notPrintable": "Only active, unexpired cards can be printed"
+            "notPrintable": "Only active, unexpired cards can be printed",
+            "selectMatching": "Select all printable cards in this list (every page)",
+            "matchingSelected": "All {count} printable cards in this list are selected",
+            "matchingLimited": "{count} of {total} printable cards selected (at most {max} together): print these, then select again for the rest"
         },
         "printHistory": "Print history",
         "printedTimes": "Printed {count}×",
