@@ -92,7 +92,7 @@ async function remove(cardholder: Cardholder): Promise<void> {
                         v-model="filters.search"
                         type="search"
                         :placeholder="t('cardholders.searchPlaceholder')"
-                        class="h-10 w-full rounded-lg border border-line bg-surface pr-3 pl-9 text-sm focus:border-brand focus:ring-4 focus:ring-[var(--ring)] focus:outline-none"
+                        class="h-10 w-full rounded-lg border border-line bg-surface pr-3 pl-9 text-sm focus:border-brand-ink focus:ring-4 focus:ring-[var(--ring)] focus:outline-none"
                     />
                 </div>
                 <UiButton variant="secondary" @click="showFilters = !showFilters">
@@ -160,7 +160,7 @@ async function remove(cardholder: Cardholder): Promise<void> {
                                         <UserRound class="size-5" />
                                     </span>
                                     <span class="min-w-0">
-                                        <span class="block truncate font-medium text-fg hover:text-brand">{{ row.full_name }}</span>
+                                        <span class="block truncate font-medium text-fg hover:text-brand-ink">{{ row.full_name }}</span>
                                         <span class="block truncate text-xs text-muted">
                                             {{ row.full_name_local }}<template v-if="row.full_name_local && row.personal_phone"> · </template>{{ row.personal_phone }}
                                         </span>

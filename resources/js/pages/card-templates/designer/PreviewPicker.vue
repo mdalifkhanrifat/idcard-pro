@@ -110,7 +110,7 @@ watch(memberId, (value, old) => {
                     v-model="search"
                     type="search"
                     :placeholder="t('designer.findCardholder')"
-                    class="h-8 w-56 rounded-md border border-line bg-surface pr-2 pl-7 text-sm text-fg focus:border-brand focus:outline-none"
+                    class="h-8 w-56 rounded-md border border-line bg-surface pr-2 pl-7 text-sm text-fg focus:border-brand-ink focus:outline-none"
                     data-preview-search
                 />
             </span>

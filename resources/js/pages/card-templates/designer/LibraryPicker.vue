@@ -75,7 +75,7 @@ async function upload(event: Event): Promise<void> {
                         v-model="search"
                         type="search"
                         :placeholder="t('library.searchPlaceholder')"
-                        class="h-9 w-full rounded-lg border border-line bg-surface pr-3 pl-9 text-sm focus:border-brand focus:ring-4 focus:ring-[var(--ring)] focus:outline-none"
+                        class="h-9 w-full rounded-lg border border-line bg-surface pr-3 pl-9 text-sm focus:border-brand-ink focus:ring-4 focus:ring-[var(--ring)] focus:outline-none"
                     />
                 </div>
                 <UiButton v-if="auth.can('images.create')" variant="secondary" class="shrink-0 whitespace-nowrap" :loading="uploading" @click="fileInput?.click()"><Upload class="size-4" />{{ t('library.upload') }}</UiButton>

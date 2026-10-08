@@ -17,7 +17,7 @@ const { t } = useI18n();
             <button
                 type="button"
                 class="group block w-full overflow-hidden rounded-lg border text-left focus:ring-2 focus:ring-[var(--ring)] focus:outline-none"
-                :class="selectedId === image.id ? 'border-brand ring-2 ring-[var(--ring)]' : 'border-line hover:border-brand'"
+                :class="selectedId === image.id ? 'border-brand-ink ring-2 ring-[var(--ring)]' : 'border-line hover:border-brand-ink'"
                 :title="image.name"
                 @click="emit('pick', image)"
             >

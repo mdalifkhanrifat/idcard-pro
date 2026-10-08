@@ -20,7 +20,7 @@ const message = computed(() => (Array.isArray(props.error) ? props.error[0] : pr
             :required="required"
             :maxlength="maxlength"
             :aria-invalid="!!message"
-            class="w-full rounded-lg border bg-surface px-3 py-2 text-sm text-fg placeholder:text-muted/70 transition focus:border-brand focus:outline-none focus:ring-4 focus:ring-[var(--ring)]"
+            class="w-full rounded-lg border bg-surface px-3 py-2 text-sm text-fg placeholder:text-muted/70 transition focus:border-brand-ink focus:outline-none focus:ring-4 focus:ring-[var(--ring)]"
             :class="message ? 'border-danger' : 'border-line'"
         />
         <p v-if="message || hint" class="text-xs" :class="message ? 'text-danger' : 'text-muted'">{{ message || hint }}</p>

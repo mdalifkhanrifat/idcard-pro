@@ -127,7 +127,7 @@ async function remove(template: CardTemplate): Promise<void> {
                     v-model="filters.search"
                     type="search"
                     :placeholder="t('templates.searchPlaceholder')"
-                    class="h-10 w-full rounded-lg border border-line bg-surface pr-3 pl-9 text-sm focus:border-brand focus:ring-4 focus:ring-[var(--ring)] focus:outline-none"
+                    class="h-10 w-full rounded-lg border border-line bg-surface pr-3 pl-9 text-sm focus:border-brand-ink focus:ring-4 focus:ring-[var(--ring)] focus:outline-none"
                 />
             </div>
             <UiSelect v-model="filters.card_type" class="md:w-48" :placeholder="`${t('templates.cardType')}: ${t('common.all')}`" :options="lookups.options('card_type')" />
@@ -149,7 +149,7 @@ async function remove(template: CardTemplate): Promise<void> {
             <article v-for="item in templates" :key="item.id" class="flex gap-4 rounded-xl border border-line bg-surface p-4">
                 <div class="flex size-32 shrink-0 items-center justify-center rounded-lg bg-surface-2">
                     <CardThumbnail v-if="item.elements?.length" :template="item" :box="112" />
-                    <div v-else class="flex items-center justify-center rounded-md border-2 border-brand/40 bg-surface font-mono text-xs text-brand shadow-sm" :style="shape(item)">
+                    <div v-else class="flex items-center justify-center rounded-md border-2 border-brand-ink/40 bg-surface font-mono text-xs text-brand-ink shadow-sm" :style="shape(item)">
                         {{ item.code }}
                     </div>
                 </div>
@@ -166,7 +166,7 @@ async function remove(template: CardTemplate): Promise<void> {
                         <UiBadge v-if="item.authority_type" tone="brand">{{ item.authority_type.name }}</UiBadge>
                     </div>
                     <div class="mt-auto flex justify-end gap-1 pt-2">
-                        <RouterLink :to="{ name: 'card-templates.design', params: { id: item.id } }" class="mr-auto inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium text-brand hover:bg-brand/10">
+                        <RouterLink :to="{ name: 'card-templates.design', params: { id: item.id } }" class="mr-auto inline-flex items-center gap-1.5 rounded-md px-2 py-1.5 text-sm font-medium text-brand-ink hover:bg-brand/10">
                             <Palette class="size-4" />{{ t('designer.design') }}
                         </RouterLink>
                         <button v-if="auth.can('templates.create')" class="rounded-md p-2 text-muted hover:bg-surface-2 hover:text-fg" :title="t('templates.duplicate')" @click="openCopy(item)"><Copy class="size-4" /></button>

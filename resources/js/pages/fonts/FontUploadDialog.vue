@@ -92,7 +92,7 @@ async function submit(): Promise<void> {
             <div class="space-y-1.5">
                 <button
                     type="button"
-                    class="flex w-full items-center gap-3 rounded-lg border border-dashed border-line px-4 py-3 text-left hover:border-brand hover:bg-surface-2"
+                    class="flex w-full items-center gap-3 rounded-lg border border-dashed border-line px-4 py-3 text-left hover:border-brand-ink hover:bg-surface-2"
                     data-pick-font
                     @click="fileInput?.click()"
                 >

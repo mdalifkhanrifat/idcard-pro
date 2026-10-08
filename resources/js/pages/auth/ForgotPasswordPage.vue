@@ -47,5 +47,5 @@ async function submit(): Promise<void> {
         <UiInput v-model="form.email" type="email" :label="t('auth.email')" required autocomplete="email" :error="errors.email" />
         <UiButton type="submit" block :loading="busy">{{ t('auth.sendLink') }}</UiButton>
     </form>
-    <RouterLink :to="{ name: 'login' }" class="mt-6 inline-block text-sm font-medium text-brand hover:underline">{{ t('auth.back') }}</RouterLink>
+    <RouterLink :to="{ name: 'login' }" class="mt-6 inline-block text-sm font-medium text-brand-ink hover:underline">{{ t('auth.back') }}</RouterLink>
 </template>

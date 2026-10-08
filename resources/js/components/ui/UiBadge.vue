@@ -10,7 +10,7 @@ withDefaults(defineProps<{ tone?: 'neutral' | 'success' | 'danger' | 'warning' |
             'bg-success/12 text-success': tone === 'success',
             'bg-danger/12 text-danger': tone === 'danger',
             'bg-warning/12 text-warning': tone === 'warning',
-            'bg-brand/12 text-brand': tone === 'brand',
+            'bg-brand/12 text-brand-ink': tone === 'brand',
         }"
     >
         <slot />

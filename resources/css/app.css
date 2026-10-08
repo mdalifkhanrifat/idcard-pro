@@ -10,6 +10,10 @@
 :root {
     --brand: #0f62fe;
     --brand-contrast: #ffffff;
+    /* Brand colour for text and outlines, kept readable on the surfaces (set with --brand in lib/brand.ts) */
+    --brand-ink-light: #0f62fe;
+    --brand-ink-dark: #78a9ff;
+    --brand-ink: var(--brand-ink-light);
 
     --bg: #f6f7f9;
     --surface: #ffffff;
@@ -20,10 +24,11 @@
     --danger: #d92d20;
     --success: #079455;
     --warning: #dc6803;
-    --ring: color-mix(in oklab, var(--brand) 35%, transparent);
+    --ring: color-mix(in oklab, var(--brand-ink) 35%, transparent);
 }
 
 .dark {
+    --brand-ink: var(--brand-ink-dark);
     --bg: #0b0d12;
     --surface: #12151c;
     --surface-2: #1a1e27;
@@ -39,6 +44,7 @@
     --font-sans: 'Inter', 'Noto Sans Bengali', ui-sans-serif, system-ui, sans-serif;
     --color-brand: var(--brand);
     --color-brand-contrast: var(--brand-contrast);
+    --color-brand-ink: var(--brand-ink);
     --color-bg: var(--bg);
     --color-surface: var(--surface);
     --color-surface-2: var(--surface-2);

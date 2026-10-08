@@ -47,7 +47,7 @@ const inputType = computed(() => (props.type === 'password' && reveal.value ? 't
                 :autofocus="autofocus"
                 :aria-invalid="!!message"
                 :aria-describedby="message || hint ? `${id}-desc` : undefined"
-                class="h-10 w-full rounded-lg border bg-surface px-3 text-sm text-fg placeholder:text-muted/70 transition focus:border-brand focus:outline-none focus:ring-4 focus:ring-[var(--ring)] disabled:opacity-60"
+                class="h-10 w-full rounded-lg border bg-surface px-3 text-sm text-fg placeholder:text-muted/70 transition focus:border-brand-ink focus:outline-none focus:ring-4 focus:ring-[var(--ring)] disabled:opacity-60"
                 :class="[message ? 'border-danger' : 'border-line', type === 'password' && 'pr-10']"
             />
             <button

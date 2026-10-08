@@ -126,7 +126,7 @@ async function exitTenant(): Promise<void> {
                                 v-if="item.to"
                                 :to="item.to"
                                 class="flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm transition-colors"
-                                :class="isActive(item.to) ? 'bg-brand/10 font-medium text-brand' : 'text-muted hover:bg-surface-2 hover:text-fg'"
+                                :class="isActive(item.to) ? 'bg-brand/10 font-medium text-brand-ink' : 'text-muted hover:bg-surface-2 hover:text-fg'"
                                 @click="ui.sidebarOpen = false"
                             >
                                 <component :is="item.icon" class="size-4" />{{ item.label }}
@@ -154,7 +154,7 @@ async function exitTenant(): Promise<void> {
                 <LocaleThemeSwitch />
                 <DropdownMenuRoot>
                     <DropdownMenuTrigger class="flex items-center gap-2 rounded-lg py-1 pr-2 pl-1 hover:bg-surface-2">
-                        <span class="flex size-8 items-center justify-center rounded-full bg-brand/15 text-xs font-semibold text-brand">{{ initials }}</span>
+                        <span class="flex size-8 items-center justify-center rounded-full bg-brand/15 text-xs font-semibold text-brand-ink">{{ initials }}</span>
                         <span class="hidden text-left sm:block">
                             <span class="block text-sm leading-tight font-medium text-fg">{{ auth.user?.name }}</span>
                             <span class="block text-xs leading-tight text-muted">{{ auth.user?.roles?.join(', ') || (auth.isPlatformAdmin ? 'Platform' : '') }}</span>

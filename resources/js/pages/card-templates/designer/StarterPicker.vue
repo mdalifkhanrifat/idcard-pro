@@ -29,7 +29,7 @@ function valueOf(item: DesignerItem): string {
             <button
                 v-for="starter in STARTERS"
                 :key="starter.key"
-                class="flex flex-col items-center gap-2 rounded-xl border border-line p-3 hover:border-brand hover:bg-surface-2"
+                class="flex flex-col items-center gap-2 rounded-xl border border-line p-3 hover:border-brand-ink hover:bg-surface-2"
                 :data-starter="starter.key"
                 @click="emit('apply', starter.file)"
             >

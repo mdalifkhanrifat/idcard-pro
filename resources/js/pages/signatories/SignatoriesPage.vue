@@ -80,7 +80,7 @@ async function remove(signatory: Signatory): Promise<void> {
                         v-model="search"
                         type="search"
                         :placeholder="t('signatories.searchPlaceholder')"
-                        class="h-10 w-full rounded-lg border border-line bg-surface pr-3 pl-9 text-sm focus:border-brand focus:ring-4 focus:ring-[var(--ring)] focus:outline-none"
+                        class="h-10 w-full rounded-lg border border-line bg-surface pr-3 pl-9 text-sm focus:border-brand-ink focus:ring-4 focus:ring-[var(--ring)] focus:outline-none"
                     />
                 </div>
                 <UiSelect

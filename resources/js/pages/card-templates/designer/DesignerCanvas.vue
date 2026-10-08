@@ -94,7 +94,7 @@ function outline(item: DesignerItem): string {
         return 'outline-2 outline-solid outline-danger';
     }
 
-    return selectedSet.value.has(item.key) ? 'outline-2 outline-solid outline-brand' : 'outline-1 outline-dashed outline-slate-400/60';
+    return selectedSet.value.has(item.key) ? 'outline-2 outline-solid outline-brand-ink' : 'outline-1 outline-dashed outline-slate-400/60';
 }
 
 let drag: {

@@ -99,7 +99,7 @@ async function remove(item: MasterDataItem): Promise<void> {
                     :key="item.type"
                     :to="{ name: 'master-data', params: { type: item.type } }"
                     class="flex items-center justify-between gap-2 rounded-lg px-3 py-2 text-sm transition-colors"
-                    :class="item.type === currentType ? 'bg-brand/10 font-medium text-brand' : 'text-muted hover:bg-surface-2 hover:text-fg'"
+                    :class="item.type === currentType ? 'bg-brand/10 font-medium text-brand-ink' : 'text-muted hover:bg-surface-2 hover:text-fg'"
                 >
                     <span class="truncate">{{ t(`masterData.types.${item.type}`) }}</span>
                     <span class="rounded-full bg-surface-2 px-2 text-xs tabular-nums text-muted">{{ item.count }}</span>
@@ -115,7 +115,7 @@ async function remove(item: MasterDataItem): Promise<void> {
                             v-model="filters.search"
                             type="search"
                             :placeholder="t('masterData.searchPlaceholder')"
-                            class="h-10 w-full rounded-lg border border-line bg-surface pr-3 pl-9 text-sm focus:border-brand focus:ring-4 focus:ring-[var(--ring)] focus:outline-none"
+                            class="h-10 w-full rounded-lg border border-line bg-surface pr-3 pl-9 text-sm focus:border-brand-ink focus:ring-4 focus:ring-[var(--ring)] focus:outline-none"
                         />
                     </div>
                     <UiSelect

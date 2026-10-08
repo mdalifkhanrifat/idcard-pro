@@ -145,7 +145,7 @@ async function submit(): Promise<void> {
                     role="tab"
                     :aria-selected="activeTab === tab.key"
                     class="relative -mb-px flex items-center gap-2 border-b-2 px-3 py-3 text-sm whitespace-nowrap transition-colors"
-                    :class="activeTab === tab.key ? 'border-brand font-medium text-brand' : 'border-transparent text-muted hover:text-fg'"
+                    :class="activeTab === tab.key ? 'border-brand-ink font-medium text-brand-ink' : 'border-transparent text-muted hover:text-fg'"
                     @click="activeTab = tab.key"
                 >
                     {{ t(`cardholders.sections.${tab.key}`) }}

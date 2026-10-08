@@ -84,7 +84,7 @@ async function remove(font: TenantFont): Promise<void> {
                     v-model="sample"
                     type="text"
                     maxlength="120"
-                    class="h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm focus:border-brand focus:ring-4 focus:ring-[var(--ring)] focus:outline-none"
+                    class="h-10 w-full rounded-lg border border-line bg-surface px-3 text-sm focus:border-brand-ink focus:ring-4 focus:ring-[var(--ring)] focus:outline-none"
                     data-sample-text
                 />
             </label>

@@ -193,8 +193,8 @@ onBeforeUnmount(() => window.removeEventListener('focus', onFocus));
                 v-for="tile in TILES"
                 :key="tile.key"
                 type="button"
-                class="rounded-xl border bg-surface p-4 text-left transition hover:border-brand"
-                :class="tileActive(tile) ? 'border-brand ring-2 ring-[var(--ring)]' : 'border-line'"
+                class="rounded-xl border bg-surface p-4 text-left transition hover:border-brand-ink"
+                :class="tileActive(tile) ? 'border-brand-ink ring-2 ring-[var(--ring)]' : 'border-line'"
                 :aria-pressed="tileActive(tile)"
                 :data-tile="tile.key"
                 @click="applyTile(tile)"
@@ -213,7 +213,7 @@ onBeforeUnmount(() => window.removeEventListener('focus', onFocus));
                         v-model="filters.search"
                         type="search"
                         :placeholder="t('cards.searchPlaceholder')"
-                        class="h-10 w-full rounded-lg border border-line bg-surface pr-3 pl-9 text-sm focus:border-brand focus:ring-4 focus:ring-[var(--ring)] focus:outline-none"
+                        class="h-10 w-full rounded-lg border border-line bg-surface pr-3 pl-9 text-sm focus:border-brand-ink focus:ring-4 focus:ring-[var(--ring)] focus:outline-none"
                         data-card-search
                     />
                 </div>

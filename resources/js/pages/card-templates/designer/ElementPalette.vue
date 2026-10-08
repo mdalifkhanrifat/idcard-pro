@@ -32,7 +32,7 @@ const TYPES: { type: DesignElementType; preset?: string; icon: Component }[] = [
         <button
             v-for="item in TYPES"
             :key="item.preset ?? item.type"
-            class="flex flex-col items-center gap-1 rounded-lg border border-line px-1 py-2 text-center text-xs text-fg hover:border-brand hover:bg-surface-2"
+            class="flex flex-col items-center gap-1 rounded-lg border border-line px-1 py-2 text-center text-xs text-fg hover:border-brand-ink hover:bg-surface-2"
             :data-add="item.preset ?? item.type"
             :title="item.type === 'background' && hasBackground ? t('designer.backgroundExists') : undefined"
             @click="emit('add', item.type, item.preset)"

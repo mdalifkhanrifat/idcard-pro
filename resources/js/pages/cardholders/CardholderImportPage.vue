@@ -181,7 +181,7 @@ onBeforeUnmount(() => poll && clearTimeout(poll));
                         </div>
                         <div class="rounded-xl border border-line bg-surface p-4">
                             <p class="text-sm text-muted">{{ t('cardholders.import.updated') }}</p>
-                            <p class="mt-1 text-2xl font-semibold text-brand tabular-nums">{{ current.updated_count }}</p>
+                            <p class="mt-1 text-2xl font-semibold text-brand-ink tabular-nums">{{ current.updated_count }}</p>
                         </div>
                         <div class="rounded-xl border border-line bg-surface p-4">
                             <p class="text-sm text-muted">{{ t('cardholders.import.failed') }}</p>

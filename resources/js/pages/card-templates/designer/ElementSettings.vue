@@ -150,7 +150,7 @@ const TEXT_NUMBERS = [
 const fileInput = useTemplateRef<HTMLInputElement>('file');
 const uploading = ref(false);
 
-const inputClass = 'h-8 w-full rounded-md border border-line bg-surface px-2 text-sm text-fg focus:border-brand focus:ring-2 focus:ring-[var(--ring)] focus:outline-none';
+const inputClass = 'h-8 w-full rounded-md border border-line bg-surface px-2 text-sm text-fg focus:border-brand-ink focus:ring-2 focus:ring-[var(--ring)] focus:outline-none';
 
 /** Apply a typed position or size; the designer keeps it on the card, so show the value it settled on. */
 async function setGeometry(key: keyof Rect, event: Event): Promise<void> {
@@ -367,7 +367,7 @@ function pickLibraryImage(image: LibraryImage): void {
                     </template>
                     <input v-else v-model="line.text" type="text" maxlength="200" :placeholder="t('designer.qrText')" :class="inputClass" />
                 </div>
-                <button v-if="(item.qr_lines?.length ?? 0) < 20" class="inline-flex items-center gap-1 text-xs font-medium text-brand hover:underline" data-add-qr-line @click="addQrLine">
+                <button v-if="(item.qr_lines?.length ?? 0) < 20" class="inline-flex items-center gap-1 text-xs font-medium text-brand-ink hover:underline" data-add-qr-line @click="addQrLine">
                     <Plus class="size-3.5" />{{ t('designer.addQrLine') }}
                 </button>
                 <label class="block space-y-1">

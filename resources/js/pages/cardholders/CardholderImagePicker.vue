@@ -42,7 +42,7 @@ function choose(event: Event): void {
         <p class="text-sm font-medium text-fg">{{ label }}</p>
         <button
             type="button"
-            class="group relative flex w-full items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-line bg-surface-2/40 transition hover:border-brand"
+            class="group relative flex w-full items-center justify-center overflow-hidden rounded-xl border-2 border-dashed border-line bg-surface-2/40 transition hover:border-brand-ink"
             :class="aspect === 'wide' ? 'aspect-[5/2]' : 'aspect-[3/4] max-w-56'"
             @click="input?.click()"
         >
@@ -56,7 +56,7 @@ function choose(event: Event): void {
         </button>
         <input ref="input" type="file" accept="image/jpeg,image/png,image/webp" class="hidden" @change="choose" />
         <div class="flex items-center gap-2 text-xs">
-            <span v-if="file" class="text-brand">{{ t('cardholders.files.pending') }}</span>
+            <span v-if="file" class="text-brand-ink">{{ t('cardholders.files.pending') }}</span>
             <button v-if="file" type="button" class="inline-flex items-center gap-1 text-muted hover:text-fg" @click="file = null">
                 <RotateCcw class="size-3" />{{ t('common.reset') }}
             </button>

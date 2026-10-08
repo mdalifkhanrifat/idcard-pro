@@ -196,7 +196,7 @@ onMounted(load);
                 role="tab"
                 :aria-selected="tab === key"
                 class="-mb-px border-b-2 px-3 py-2.5 text-sm whitespace-nowrap"
-                :class="tab === key ? 'border-brand font-medium text-brand' : 'border-transparent text-muted hover:text-fg'"
+                :class="tab === key ? 'border-brand-ink font-medium text-brand-ink' : 'border-transparent text-muted hover:text-fg'"
                 @click="tab = key"
             >
                 {{ tabLabel(key) }}

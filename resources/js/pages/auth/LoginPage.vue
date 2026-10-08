@@ -80,7 +80,7 @@ async function submitChallenge(): Promise<void> {
             <div>
                 <UiInput v-model="form.password" type="password" :label="t('auth.password')" autocomplete="current-password" required :error="errors.password" />
                 <div class="mt-2 text-right">
-                    <RouterLink :to="{ name: 'forgot-password' }" class="text-sm font-medium text-brand hover:underline">{{ t('auth.forgot') }}</RouterLink>
+                    <RouterLink :to="{ name: 'forgot-password' }" class="text-sm font-medium text-brand-ink hover:underline">{{ t('auth.forgot') }}</RouterLink>
                 </div>
             </div>
             <UiCheckbox v-model="form.remember" :label="t('auth.remember')" />
@@ -89,7 +89,7 @@ async function submitChallenge(): Promise<void> {
     </div>
 
     <div v-else>
-        <div class="mb-6 flex size-12 items-center justify-center rounded-xl bg-brand/10 text-brand"><ShieldCheck class="size-6" /></div>
+        <div class="mb-6 flex size-12 items-center justify-center rounded-xl bg-brand/10 text-brand-ink"><ShieldCheck class="size-6" /></div>
         <h1 class="text-2xl font-semibold tracking-tight text-fg">{{ t('auth.twoFactorTitle') }}</h1>
         <p class="mt-2 text-sm text-muted">{{ challenge.useRecovery ? t('account.recoveryHint') : t('auth.twoFactorHint') }}</p>
         <form class="mt-8 space-y-5" @submit.prevent="submitChallenge">
@@ -106,7 +106,7 @@ async function submitChallenge(): Promise<void> {
             <UiInput v-else v-model="challenge.recovery_code" :label="t('auth.recoveryCode')" autocomplete="off" :error="errors.code" />
             <UiButton type="submit" block :loading="busy">{{ t('auth.verify') }}</UiButton>
             <div class="flex justify-between text-sm">
-                <button type="button" class="font-medium text-brand hover:underline" @click="challenge.useRecovery = !challenge.useRecovery">
+                <button type="button" class="font-medium text-brand-ink hover:underline" @click="challenge.useRecovery = !challenge.useRecovery">
                     {{ challenge.useRecovery ? t('auth.useCode') : t('auth.useRecovery') }}
                 </button>
                 <button type="button" class="text-muted hover:text-fg" @click="step = 'credentials'">{{ t('auth.back') }}</button>

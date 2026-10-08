@@ -110,8 +110,8 @@ async function submit(): Promise<void> {
             <UiInput v-model="form.width" type="number" step="any" :label="t('templates.width')" required :error="errors.width" />
             <UiInput v-model="form.height" type="number" step="any" :label="t('templates.height')" required :error="errors.height" />
             <div class="sm:col-span-2">
-                <button type="button" class="text-sm text-brand hover:underline" data-default-size @click="useSize(defaultSize)">{{ t('templates.useDefaultSize', { width: defaultSize.width, height: defaultSize.height }) }}</button>
-                <button type="button" class="text-sm text-brand hover:underline" @click="useSize(CR80)">{{ t('templates.useCr80') }}</button>
+                <button type="button" class="text-sm text-brand-ink hover:underline" data-default-size @click="useSize(defaultSize)">{{ t('templates.useDefaultSize', { width: defaultSize.width, height: defaultSize.height }) }}</button>
+                <button type="button" class="text-sm text-brand-ink hover:underline" @click="useSize(CR80)">{{ t('templates.useCr80') }}</button>
             </div>
             <UiSelect
                 v-model="form.authority_type_id"

@@ -218,7 +218,7 @@ async function submit(event: SubmitEvent): Promise<void> {
                 <UiInput v-model="form.expiry_date" type="date" :label="t('cards.expiryDate')" :hint="t('cards.expiryHint')" :error="errors.expiry_date" @input="expiryTouched = true" />
                 <UiTextarea v-model="form.notes" class="sm:col-span-2" :label="t('cards.notes')" :required="needs.note" :maxlength="1000" :rows="2" :error="errors.notes" data-field="notes" />
                 <div v-if="needs.document" class="space-y-1 sm:col-span-2">
-                    <button type="button" class="flex w-full items-center gap-3 rounded-lg border border-dashed border-line px-4 py-2.5 text-left hover:border-brand hover:bg-surface-2" @click="documentInput?.click()">
+                    <button type="button" class="flex w-full items-center gap-3 rounded-lg border border-dashed border-line px-4 py-2.5 text-left hover:border-brand-ink hover:bg-surface-2" @click="documentInput?.click()">
                         <FileUp class="size-5 shrink-0 text-muted" />
                         <span class="min-w-0">
                             <span class="block truncate text-sm font-medium text-fg">{{ document ? document.name : t('cards.document') }}</span>

@@ -14,7 +14,7 @@ const { t } = useI18n();
 <template>
     <select
         v-model="model"
-        class="h-8 w-full rounded-md border bg-surface px-2 text-sm text-fg focus:border-brand focus:ring-2 focus:ring-[var(--ring)] focus:outline-none"
+        class="h-8 w-full rounded-md border bg-surface px-2 text-sm text-fg focus:border-brand-ink focus:ring-2 focus:ring-[var(--ring)] focus:outline-none"
         :class="invalid ? 'border-danger' : 'border-line'"
     >
         <option :value="null" disabled>{{ t('designer.chooseField') }}</option>

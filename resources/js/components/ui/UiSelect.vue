@@ -23,7 +23,7 @@ const message = computed(() => (Array.isArray(props.error) ? props.error[0] : pr
             :id="id"
             v-model="model"
             :required="required"
-            class="h-10 w-full rounded-lg border bg-surface px-3 text-sm text-fg focus:border-brand focus:outline-none focus:ring-4 focus:ring-[var(--ring)]"
+            class="h-10 w-full rounded-lg border bg-surface px-3 text-sm text-fg focus:border-brand-ink focus:outline-none focus:ring-4 focus:ring-[var(--ring)]"
             :class="message ? 'border-danger' : 'border-line'"
         >
             <option v-if="placeholder !== undefined" value="">{{ placeholder }}</option>

@@ -89,7 +89,7 @@ const yesNo = computed(() => [
                         v-model="filters.search"
                         type="search"
                         :placeholder="t('users.searchPlaceholder')"
-                        class="h-10 w-full rounded-lg border border-line bg-surface pr-3 pl-9 text-sm focus:border-brand focus:ring-4 focus:ring-[var(--ring)] focus:outline-none"
+                        class="h-10 w-full rounded-lg border border-line bg-surface pr-3 pl-9 text-sm focus:border-brand-ink focus:ring-4 focus:ring-[var(--ring)] focus:outline-none"
                     />
                 </div>
                 <UiButton variant="secondary" @click="showFilters = !showFilters">
@@ -123,7 +123,7 @@ const yesNo = computed(() => [
                         <tr v-for="user in rows" :key="user.id" class="border-b border-line last:border-0 hover:bg-surface-2/60">
                             <td class="px-5 py-3">
                                 <div class="flex items-center gap-3">
-                                    <span class="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand/12 text-xs font-semibold text-brand">
+                                    <span class="flex size-9 shrink-0 items-center justify-center rounded-full bg-brand/12 text-xs font-semibold text-brand-ink">
                                         {{ user.name.split(' ').map((p) => p[0]).slice(0, 2).join('') }}
                                     </span>
                                     <div class="min-w-0">

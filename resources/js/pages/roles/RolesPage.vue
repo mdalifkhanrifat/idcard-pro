@@ -100,7 +100,7 @@ async function remove(role: Role): Promise<void> {
             <article v-for="role in roles" :key="role.id" class="flex flex-col rounded-xl border border-line bg-surface p-5">
                 <div class="flex items-start justify-between gap-3">
                     <div class="flex items-center gap-3">
-                        <span class="flex size-10 items-center justify-center rounded-lg bg-brand/10 text-brand"><ShieldCheck class="size-5" /></span>
+                        <span class="flex size-10 items-center justify-center rounded-lg bg-brand/10 text-brand-ink"><ShieldCheck class="size-5" /></span>
                         <div>
                             <h3 class="font-semibold text-fg">{{ role.name }}</h3>
                             <p class="text-xs text-muted">{{ t('roles.usersCount', { count: role.users_count ?? 0 }) }}</p>
@@ -134,7 +134,7 @@ async function remove(role: Role): Promise<void> {
                             <tbody>
                                 <tr v-for="(moduleAbilities, module) in registry" :key="module" class="border-t border-line">
                                     <td class="px-4 py-2.5">
-                                        <button type="button" class="font-medium text-fg hover:text-brand" @click="toggleModule(String(module))">{{ label('modules', String(module)) }}</button>
+                                        <button type="button" class="font-medium text-fg hover:text-brand-ink" @click="toggleModule(String(module))">{{ label('modules', String(module)) }}</button>
                                     </td>
                                     <td v-for="a in abilities" :key="a" class="px-3 py-2.5 text-center">
                                         <input

@@ -111,7 +111,7 @@ async function save(): Promise<void> {
                         </div>
                         <div class="space-y-1.5">
                             <span class="block text-sm font-medium text-fg">{{ t('settings.logo') }}</span>
-                            <label class="flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-dashed border-line px-3 text-sm text-muted hover:border-brand hover:text-fg">
+                            <label class="flex h-10 cursor-pointer items-center gap-2 rounded-lg border border-dashed border-line px-3 text-sm text-muted hover:border-brand-ink hover:text-fg">
                                 <Upload class="size-4" />{{ logo?.name ?? t('settings.logoHint') }}
                                 <input type="file" accept="image/png,image/jpeg,image/webp" class="sr-only" @change="pickLogo" />
                             </label>
@@ -152,7 +152,7 @@ async function save(): Promise<void> {
                         <UiInput v-model="cardSize.width" type="number" step="any" :label="t('settings.cardSize.width')" :error="errors['default_card_size.width']" />
                         <UiInput v-model="cardSize.height" type="number" step="any" :label="t('settings.cardSize.height')" :error="errors['default_card_size.height']" />
                         <div class="flex items-end pb-2">
-                            <button type="button" class="text-sm text-brand hover:underline" data-cr80 @click="Object.assign(cardSize, { width: 85.6, height: 54 })">{{ t('templates.useCr80') }}</button>
+                            <button type="button" class="text-sm text-brand-ink hover:underline" data-cr80 @click="Object.assign(cardSize, { width: 85.6, height: 54 })">{{ t('templates.useCr80') }}</button>
                         </div>
                     </fieldset>
                 </UiCard>

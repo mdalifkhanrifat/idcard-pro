@@ -22,7 +22,7 @@ const icons = { success: CheckCircle2, error: XCircle, info: Info };
                 <component
                     :is="icons[toast.type]"
                     class="mt-0.5 size-5 shrink-0"
-                    :class="{ 'text-success': toast.type === 'success', 'text-danger': toast.type === 'error', 'text-brand': toast.type === 'info' }"
+                    :class="{ 'text-success': toast.type === 'success', 'text-danger': toast.type === 'error', 'text-brand-ink': toast.type === 'info' }"
                 />
                 <p class="flex-1 text-sm text-fg">{{ toast.message }}</p>
                 <button class="text-muted hover:text-fg" aria-label="Dismiss" @click="ui.dismiss(toast.id)"><X class="size-4" /></button>
