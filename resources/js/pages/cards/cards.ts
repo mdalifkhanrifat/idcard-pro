@@ -3,7 +3,7 @@ import { http } from '@/lib/http';
 import { router } from '@/router';
 import { encodeBarcode, type BarcodeFormat } from '@/pages/card-templates/designer/barcode';
 import { DEFAULT_QR_ERROR_LEVEL, encodeQr, qrText, type QrErrorLevel } from '@/pages/card-templates/designer/qr';
-import type { CardLayout, CardSide, CardValues, IssuedCard } from '@/types';
+import type { CardLayout, CardSide, CardValues, IssuedCard, Tenant } from '@/types';
 
 export interface CardReasonOption {
     key: string;
@@ -330,4 +330,29 @@ export function qrProblems(layout: CardLayout, values: CardValues): QrProblem[] 
     }
 
     return [...problems.values()];
+}
+
+/** Label of a detail the public verification page shows (built-in card fields by name, photo and card type). */
+export function verificationFieldLabel(key: string, t: (key: string) => string, te: (key: string) => boolean): string {
+    if (te(`settings.verification.fieldNames.${key}`)) {
+        return t(`settings.verification.fieldNames.${key}`);
+    }
+
+    return te(`designer.fields.${key}`) ? t(`designer.fields.${key}`) : key;
+}
+
+/** A made-up card code, as long as a real one, for previews of the verification link. */
+export const SAMPLE_VERIFY_CODE = 'k3m9x2p7q4w8z1n5r6t0y3u8';
+
+/**
+ * The organization's verification link for a code (its own address or this application's page), as the
+ * server builds it (Tenant::verifyUrl); empty while verification is off, unless `evenIfOff`.
+ */
+export function verifyUrlFor(tenant: Tenant | null | undefined, code: string, evenIfOff = false): string {
+    const settings = tenant?.verification;
+    if (!settings || (!settings.enabled && !evenIfOff)) {
+        return '';
+    }
+
+    return (settings.link?.trim() || `${window.location.origin}/v/{code}`).replace('{code}', code);
 }

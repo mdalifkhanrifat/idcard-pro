@@ -10,7 +10,7 @@ import UiInput from '@/components/ui/UiInput.vue';
 import UiSelect from '@/components/ui/UiSelect.vue';
 import UiTextarea from '@/components/ui/UiTextarea.vue';
 import CardRender from './CardRender.vue';
-import { barcodeProblems, missingImages, qrProblems, printPageHref, useCardReasons } from './cards';
+import { SAMPLE_VERIFY_CODE, barcodeProblems, missingImages, qrProblems, verifyUrlFor, printPageHref, useCardReasons } from './cards';
 import CardBarcodeProblems from './CardBarcodeProblems.vue';
 import { http, toApiError } from '@/lib/http';
 import { formatBytes } from '@/lib/format';
@@ -128,7 +128,14 @@ watchDebounced(
                 },
                 values: {
                     ...values.data.data,
-                    fields: { ...values.data.data.fields, 'card.number': nextNumber.value?.number ?? '', 'card.issue_date': display(form.issue_date), 'card.expiry_date': display(form.expiry_date) },
+                    fields: {
+                        ...values.data.data.fields,
+                        'card.number': nextNumber.value?.number ?? '',
+                        'card.issue_date': display(form.issue_date),
+                        'card.expiry_date': display(form.expiry_date),
+                        // The card's own code is made at issue; a sample of the same length shows the real QR size
+                        'card.verify_url': verifyUrlFor(auth.tenant, SAMPLE_VERIFY_CODE),
+                    },
                 },
             };
         } catch {

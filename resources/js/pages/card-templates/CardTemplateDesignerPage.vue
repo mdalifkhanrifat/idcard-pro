@@ -17,6 +17,7 @@ import { useDesigner, type DesignerItem } from './designer/useDesigner';
 import { useConfirm } from '@/composables/useConfirm';
 import { http, toApiError } from '@/lib/http';
 import { loadTenantFonts } from '@/lib/tenantFonts';
+import { SAMPLE_VERIFY_CODE, verifyUrlFor } from '@/pages/cards/cards';
 import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
 import type { CardSide, DesignElement, DesignElementType, LibraryImage } from '@/types';
@@ -271,7 +272,8 @@ function fieldLabel(field: string | null): string {
 const preview = ref<PreviewData | null>(null);
 
 function valueOf(item: DesignerItem): string {
-    const sample = sampleValue(item.field, { 'organization.name': auth.tenant?.name ?? '' });
+    // The organization's own link address when it set one (shown even while verification is off, to size the QR code)
+    const sample = sampleValue(item.field, { 'organization.name': auth.tenant?.name ?? '', 'card.verify_url': verifyUrlFor(auth.tenant, SAMPLE_VERIFY_CODE, true) });
     if (!preview.value || !item.field) {
         return sample;
     }

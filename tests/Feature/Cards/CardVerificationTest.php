@@ -32,7 +32,7 @@ it('keeps verification off until the organization turns it on and chooses what t
         'show_revoke_reason' => false,
         'link' => null,
         'note' => null,
-    ]);
+    ])->assertJsonPath('data.verification_fields', config('cards.verification.fields'));
     $card = ($this->issue)();
     expect($this->getJson("/api/v1/cards/{$card['id']}")->json('meta.values.fields'))->not->toHaveKey('card.verify_url');
 

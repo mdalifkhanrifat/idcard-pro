@@ -33,6 +33,8 @@ class TenantResource extends JsonResource
             'default_card_size' => $this->resource->defaultCardSize(),
             'card_number_on_reissue' => $this->resource->cardNumberOnReissue(),
             'verification' => $this->resource->verificationSettings(),
+            // Details the public verification page may show (config), for the settings form
+            'verification_fields' => config('cards.verification.fields'),
             'status' => $this->status,
             'users_count' => $this->whenCounted('users'),
             'created_at' => $this->created_at,

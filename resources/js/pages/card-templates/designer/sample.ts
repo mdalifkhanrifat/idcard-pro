@@ -55,6 +55,8 @@ const SAMPLE_VALUES: Record<string, string> = {
     'card.number': 'EMP/26000123',
     'card.issue_date': '04/10/2026',
     'card.expiry_date': '03/10/2028',
+    // Same length as a real link of this application, so a QR code shows its real size
+    'card.verify_url': `${typeof window === 'undefined' ? '' : window.location.origin}/v/k3m9x2p7q4w8z1n5r6t0y3u8`,
     'signatory.name': 'A. Signatory',
     'signatory.designation': 'Director, HR',
 };

@@ -231,6 +231,29 @@
             "description": "Used for new card templates (landscape; vertical templates turn it). The legacy “Template Setup”.",
             "width": "Width (mm)",
             "height": "Height (mm)"
+        },
+        "verification": {
+            "title": "Card verification",
+            "description": "A public page that tells anyone holding a card, or scanning its QR code, whether the card is valid.",
+            "enabled": "Turn on card verification",
+            "enabledHint": "Off: nothing about your cards is public, and the verification link field stays empty on cards.",
+            "fields": "Details shown on the page",
+            "fieldsHint": "Taken from the card as it was issued; the status (valid, expired, revoked) is always current. National ID, phone, address and date of birth are never offered.",
+            "order": "Order on the page",
+            "up": "Move up",
+            "down": "Move down",
+            "revokeReason": "Show why a card was revoked",
+            "revokeReasonHint": "Otherwise the page only says “revoked”.",
+            "link": "Own link address (optional)",
+            "linkHint": "For example your HR portal: https://hr.example.com/id/{'{'}code{'}'}. {'{'}code{'}'} is replaced by each card's code. Empty: this application's page. Cards already printed keep the address they were printed with.",
+            "sample": "A card's link:",
+            "note": "Message on the page (optional)",
+            "notePlaceholder": "e.g. Found this card? Please call +880 …",
+            "qrHint": "To print the link, add the “Verification link” field to a QR code (or barcode, or text) in the card template designer.",
+            "fieldNames": {
+                "photo": "Photo",
+                "template": "Card type"
+            }
         }
     },
     "account": {
@@ -710,7 +733,8 @@
             "card": {
                 "number": "Card number",
                 "issue_date": "Issue date",
-                "expiry_date": "Expiry date"
+                "expiry_date": "Expiry date",
+                "verify_url": "Verification link"
             },
             "signatory": {
                 "name": "Signatory name",

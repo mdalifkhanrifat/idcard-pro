@@ -2,25 +2,44 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { watchDebounced } from '@vueuse/core';
 import { useI18n } from 'vue-i18n';
-import { BadgeCheck, Upload } from 'lucide-vue-next';
+import { ArrowDown, ArrowUp, BadgeCheck, Upload } from 'lucide-vue-next';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiCard from '@/components/ui/UiCard.vue';
+import UiCheckbox from '@/components/ui/UiCheckbox.vue';
 import UiInput from '@/components/ui/UiInput.vue';
 import UiPageHeader from '@/components/ui/UiPageHeader.vue';
 import UiSelect from '@/components/ui/UiSelect.vue';
+import UiTextarea from '@/components/ui/UiTextarea.vue';
 import { applyBrand } from '@/lib/brand';
 import { http, toApiError } from '@/lib/http';
 import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
-import type { Tenant } from '@/types';
+import { SAMPLE_VERIFY_CODE, verificationFieldLabel, verifyUrlFor } from '@/pages/cards/cards';
+import type { Tenant, TenantVerification } from '@/types';
 
-const { t } = useI18n();
+const { t, te } = useI18n();
 const auth = useAuthStore();
 const ui = useUiStore();
 
 const form = reactive({ name: '', legal_name: '', email: '', phone: '', country_code: '', timezone: 'UTC', locale: 'en', primary_color: '#0f62fe', card_number_format: '{CODE}/{YY}{SEQ:6}', card_number_on_reissue: 'keep' });
 /** Landscape default size of new card templates in mm (legacy Template Setup). */
 const cardSize = reactive({ width: 85.6 as number | string, height: 54 as number | string });
+/** Public card verification (3.7): on or off, what the page shows (in order), own link address and a note. */
+const verification = reactive<TenantVerification>({ enabled: false, fields: [], show_revoke_reason: false, link: null, note: null });
+const verificationFields = ref<string[]>([]);
+const sampleLink = computed(() => verifyUrlFor({ verification } as Tenant, SAMPLE_VERIFY_CODE, true));
+const fieldLabel = (key: string) => verificationFieldLabel(key, t, te);
+
+function toggleField(key: string, on: boolean): void {
+    verification.fields = on ? [...verification.fields, key] : verification.fields.filter((field) => field !== key);
+}
+
+function moveField(index: number, step: -1 | 1): void {
+    const fields = [...verification.fields];
+    [fields[index], fields[index + step]] = [fields[index + step], fields[index]];
+    verification.fields = fields;
+}
+
 const sampleCode = ref('EMP');
 const numberPreview = ref('');
 const previewError = ref('');
@@ -29,14 +48,17 @@ const logoPreview = ref<string | null>(null);
 const errors = ref<Record<string, string[]>>({});
 const busy = ref(false);
 const canEdit = computed(() => auth.can('settings.update'));
+const origin = window.location.origin;
 const timezones = Intl.supportedValuesOf('timeZone').map((z) => ({ value: z, label: z }));
 
 onMounted(async () => {
     const { data } = await http.get<{ data: Tenant }>('/settings');
-    Object.assign(form, {
-        ...data.data,
-        legal_name: data.data.legal_name ?? '', email: data.data.email ?? '', phone: data.data.phone ?? '', country_code: data.data.country_code ?? '',
-    });
+    // Only the form's own keys: the rest of the organization record is not sent back
+    for (const key of Object.keys(form) as (keyof typeof form)[]) {
+        form[key] = (data.data[key as keyof Tenant] as string | null | undefined) ?? '';
+    }
+    Object.assign(verification, data.data.verification ?? {});
+    verificationFields.value = data.data.verification_fields ?? [];
     logoPreview.value = data.data.logo_url;
     Object.assign(cardSize, data.data.default_card_size ?? {});
 });
@@ -72,6 +94,11 @@ async function save(): Promise<void> {
     Object.entries(form).forEach(([k, v]) => body.append(k, v ?? ''));
     body.append('default_card_size[width]', String(cardSize.width));
     body.append('default_card_size[height]', String(cardSize.height));
+    body.append('verification[enabled]', verification.enabled ? '1' : '0');
+    verification.fields.forEach((field) => body.append('verification[fields][]', field));
+    body.append('verification[show_revoke_reason]', verification.show_revoke_reason ? '1' : '0');
+    body.append('verification[link]', verification.link?.trim() ?? '');
+    body.append('verification[note]', verification.note?.trim() ?? '');
     if (logo.value) {
         body.append('logo', logo.value);
     }
@@ -154,6 +181,47 @@ async function save(): Promise<void> {
                         <div class="flex items-end pb-2">
                             <button type="button" class="text-sm text-brand-ink hover:underline" data-cr80 @click="Object.assign(cardSize, { width: 85.6, height: 54 })">{{ t('templates.useCr80') }}</button>
                         </div>
+                    </fieldset>
+                </UiCard>
+                <UiCard :title="t('settings.verification.title')" :description="t('settings.verification.description')" data-verification-settings>
+                    <fieldset :disabled="!canEdit" class="space-y-4">
+                        <UiCheckbox v-model="verification.enabled" :label="t('settings.verification.enabled')" :description="t('settings.verification.enabledHint')" data-setting="verification.enabled" />
+                        <template v-if="verification.enabled">
+                            <div class="space-y-2">
+                                <p class="text-sm font-medium text-fg">{{ t('settings.verification.fields') }}</p>
+                                <div class="grid gap-2 sm:grid-cols-3">
+                                    <UiCheckbox
+                                        v-for="key in verificationFields"
+                                        :key="key"
+                                        :model-value="verification.fields.includes(key)"
+                                        :label="fieldLabel(key)"
+                                        :data-verification-field="key"
+                                        @update:model-value="toggleField(key, !!$event)"
+                                    />
+                                </div>
+                                <p class="text-xs text-muted">{{ t('settings.verification.fieldsHint') }}</p>
+                                <p v-if="errors['verification.fields']" class="text-xs text-danger">{{ errors['verification.fields'][0] }}</p>
+                            </div>
+                            <div v-if="verification.fields.length > 1" class="space-y-1.5">
+                                <p class="text-sm font-medium text-fg">{{ t('settings.verification.order') }}</p>
+                                <ol class="divide-y divide-line rounded-lg border border-line text-sm" data-verification-order>
+                                    <li v-for="(key, index) in verification.fields" :key="key" class="flex items-center gap-2 px-3 py-1.5">
+                                        <span class="w-5 text-xs text-muted">{{ index + 1 }}</span>
+                                        <span class="flex-1 text-fg">{{ fieldLabel(key) }}</span>
+                                        <button type="button" class="rounded p-1 text-muted hover:bg-surface-2 hover:text-fg disabled:opacity-30" :disabled="index === 0" :aria-label="t('settings.verification.up')" @click="moveField(index, -1)"><ArrowUp class="size-4" /></button>
+                                        <button type="button" class="rounded p-1 text-muted hover:bg-surface-2 hover:text-fg disabled:opacity-30" :disabled="index === verification.fields.length - 1" :aria-label="t('settings.verification.down')" @click="moveField(index, 1)"><ArrowDown class="size-4" /></button>
+                                    </li>
+                                </ol>
+                            </div>
+                            <UiCheckbox v-model="verification.show_revoke_reason" :label="t('settings.verification.revokeReason')" :description="t('settings.verification.revokeReasonHint')" data-setting="verification.show_revoke_reason" />
+                            <div class="space-y-1.5">
+                                <UiInput v-model="verification.link" :label="t('settings.verification.link')" :placeholder="`${origin}/v/{code}`" :maxlength="200" :error="errors['verification.link']" data-setting="verification.link" />
+                                <p class="text-xs text-muted">{{ t('settings.verification.linkHint') }}</p>
+                                <p class="text-xs text-muted">{{ t('settings.verification.sample') }} <span class="break-all font-mono text-fg" data-verification-sample>{{ sampleLink }}</span></p>
+                            </div>
+                            <UiTextarea v-model="verification.note" :label="t('settings.verification.note')" :placeholder="t('settings.verification.notePlaceholder')" :maxlength="500" :rows="2" :error="errors['verification.note']" />
+                            <p class="rounded-lg bg-surface-2 p-3 text-xs text-muted">{{ t('settings.verification.qrHint') }}</p>
+                        </template>
                     </fieldset>
                 </UiCard>
             </div>

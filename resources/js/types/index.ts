@@ -17,9 +17,23 @@ export interface Tenant {
     card_number_on_reissue?: 'keep' | 'new';
     /** Landscape default for new templates, in mm. */
     default_card_size?: { width: number; height: number };
+    /** Public card verification (3.7), chosen by the organization. */
+    verification?: TenantVerification;
+    /** Details the verification page may show. */
+    verification_fields?: string[];
     status: 'active' | 'suspended';
     users_count?: number;
     created_at: string;
+}
+
+export interface TenantVerification {
+    enabled: boolean;
+    /** Details shown on the public page, in this order. */
+    fields: string[];
+    show_revoke_reason: boolean;
+    /** Own address with {code}; null = this application's page. */
+    link: string | null;
+    note: string | null;
 }
 
 export interface User {
