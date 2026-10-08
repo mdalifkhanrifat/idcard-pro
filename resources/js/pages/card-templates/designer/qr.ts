@@ -8,6 +8,9 @@ export type QrErrorLevel = (typeof QR_ERROR_LEVELS)[number];
 /** The legacy cards used the highest level, which also survives scratches on a worn card. */
 export const DEFAULT_QR_ERROR_LEVEL: QrErrorLevel = 'H';
 
+/** Most UTF-8 bytes the largest QR code (version 40) holds at each level; more text cannot be encoded. */
+export const QR_MAX_BYTES: Record<QrErrorLevel, number> = { L: 2953, M: 2331, Q: 1663, H: 1273 };
+
 /** Light margin around the code, in modules; the QR standard asks for four. */
 export const QR_QUIET_ZONE = 4;
 

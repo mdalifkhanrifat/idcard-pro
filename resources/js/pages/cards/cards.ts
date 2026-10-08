@@ -2,6 +2,7 @@ import { ref } from 'vue';
 import { http } from '@/lib/http';
 import { router } from '@/router';
 import { encodeBarcode, type BarcodeFormat } from '@/pages/card-templates/designer/barcode';
+import { DEFAULT_QR_ERROR_LEVEL, encodeQr, qrText, type QrErrorLevel } from '@/pages/card-templates/designer/qr';
 import type { CardLayout, CardSide, CardValues, IssuedCard } from '@/types';
 
 export interface CardReasonOption {
@@ -267,6 +268,34 @@ export function barcodeProblems(layout: CardLayout, values: CardValues): Barcode
         const value = values.fields[element.field] ?? '';
         if (value === '' || !encodeBarcode(value, format)) {
             problems.set(`${element.field}|${format}`, { field: element.field, format, value });
+        }
+    }
+
+    return [...problems.values()];
+}
+
+/** A QR code on a card that prints nothing: none of its lines has a value, or the text is too long. */
+export interface QrProblem {
+    reason: 'empty' | 'too_long';
+    level: QrErrorLevel;
+    /** UTF-8 size of the text (0 when empty). */
+    bytes: number;
+}
+
+/** QR codes of a card that would print empty (hidden elements are ignored), checked with the encoder that draws them. */
+export function qrProblems(layout: CardLayout, values: CardValues): QrProblem[] {
+    const problems = new Map<string, QrProblem>();
+    for (const element of layout.elements) {
+        if (element.type !== 'qr_code' || element.style.hidden) {
+            continue;
+        }
+        const level = element.style.qr_error_correction ?? DEFAULT_QR_ERROR_LEVEL;
+        const text = qrText(element.qr_lines, (field) => values.fields[field] ?? '');
+        if (text === '') {
+            problems.set(`empty|${level}`, { reason: 'empty', level, bytes: 0 });
+        } else if (!encodeQr(text, level)) {
+            const bytes = new TextEncoder().encode(text).length;
+            problems.set(`long|${level}|${bytes}`, { reason: 'too_long', level, bytes });
         }
     }
 

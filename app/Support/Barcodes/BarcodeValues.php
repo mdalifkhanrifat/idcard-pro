@@ -20,6 +20,24 @@ final class BarcodeValues
         'codabar' => '/^[A-D][0-9\-$:.+\/]+[A-D]$/',
     ];
 
+    /**
+     * Most UTF-8 bytes the largest QR code (version 40) holds per error correction level, as qrcode-generator
+     * (which draws QR codes in the browser) encodes the text.
+     *
+     * @var array<string, int>
+     */
+    public const QR_MAX_BYTES = ['L' => 2953, 'M' => 2331, 'Q' => 1663, 'H' => 1273];
+
+    public const DEFAULT_QR_LEVEL = 'H';
+
+    /**
+     * Whether text fits a QR code at this error correction level (unknown levels count as the default).
+     */
+    public static function fitsQr(string $text, string $level): bool
+    {
+        return $text !== '' && strlen($text) <= (self::QR_MAX_BYTES[$level] ?? self::QR_MAX_BYTES[self::DEFAULT_QR_LEVEL]);
+    }
+
     public static function encodable(string $value, string $format): bool
     {
         if ($value === '') {

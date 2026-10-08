@@ -69,9 +69,10 @@ it('shows cards to their organization only', function () {
     $this->getJson("/api/v1/cards/{$card['id']}")->assertNotFound();
 });
 
-it('warns about what will print blank: missing photos and barcodes that cannot be encoded', function () {
+it('warns about what will print blank: missing photos, barcodes that cannot be encoded and empty or too long QR codes', function () {
     $holder = cardholder($this->tenant, ['employee_no' => 'ACME-0031', 'national_id' => null]);
     app(TenantContext::class)->run($this->tenant, function () {
+        $qr = fn (array $lines, array $style) => ['side' => 'back', 'type' => 'qr_code', 'qr_lines' => $lines, 'x' => 5, 'y' => 5, 'width' => 20, 'height' => 20, 'z_index' => 1, 'style' => $style];
         $barcode = fn (string $field, array $style) => ['side' => 'front', 'type' => 'barcode', 'field' => $field, 'x' => 5, 'y' => 30, 'width' => 30, 'height' => 8, 'z_index' => 1, 'style' => $style];
         $this->template->elements()->createMany([
             ['side' => 'front', 'type' => 'photo', 'x' => 60, 'y' => 5, 'width' => 20, 'height' => 25, 'z_index' => 1, 'style' => []],
@@ -80,18 +81,27 @@ it('warns about what will print blank: missing photos and barcodes that cannot b
             $barcode('employee_no', ['barcode_format' => 'code128']),
             $barcode('national_id', ['barcode_format' => 'code39']),
             $barcode('employee_no', ['barcode_format' => 'ean8', 'hidden' => true]),
+            // QR codes: printable, nothing to encode, too long at H but fine at L, hidden
+            $qr([['field' => 'employee_no', 'label' => 'ID'], ['text' => 'কার্ড']], []),
+            $qr([['field' => 'national_id', 'label' => 'NID']], []),
+            $qr([['text' => str_repeat('x', 1270)], ['field' => 'employee_no', 'label' => 'ID']], []),
+            $qr([['text' => str_repeat('x', 1270)], ['field' => 'employee_no', 'label' => 'ID']], ['qr_error_correction' => 'L']),
+            $qr([], ['hidden' => true]),
         ]);
     });
     $expected = [
         ['type' => 'missing_image', 'image' => 'photo'],
         ['type' => 'barcode', 'field' => 'employee_no', 'format' => 'ean13', 'value' => 'ACME-0031', 'reason' => 'invalid'],
         ['type' => 'barcode', 'field' => 'national_id', 'format' => 'code39', 'value' => '', 'reason' => 'empty'],
+        ['type' => 'qr', 'reason' => 'empty', 'level' => 'H', 'bytes' => 0],
+        // 1270 x, a line break and "ID:ACME-0031"
+        ['type' => 'qr', 'reason' => 'too_long', 'level' => 'H', 'bytes' => 1283],
     ];
 
     // A system issuing through the API learns it at once; issuing is not blocked
-    $issued = $this->postJson("/api/v1/cardholders/{$holder->public_id}/cards", ['template' => $this->template->public_id, 'reason' => 'new'])
-        ->assertCreated()
-        ->assertJsonPath('meta.warnings', $expected);
+    // (in the layout's order, which keeps each side's elements together)
+    $issued = $this->postJson("/api/v1/cardholders/{$holder->public_id}/cards", ['template' => $this->template->public_id, 'reason' => 'new'])->assertCreated();
+    expect($issued->json('meta.warnings'))->toEqualCanonicalizing($expected);
 
-    $this->getJson("/api/v1/cards/{$issued->json('data.id')}")->assertOk()->assertJsonPath('meta.warnings', $expected);
+    expect($this->getJson("/api/v1/cards/{$issued->json('data.id')}")->assertOk()->json('meta.warnings'))->toEqualCanonicalizing($expected);
 });

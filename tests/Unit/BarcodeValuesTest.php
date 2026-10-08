@@ -33,3 +33,13 @@ it('accepts what the barcode format can encode, like the browser', function (str
     'codabar wrong start' => ['codabar', 'E1234A', false],
     'unknown format as code128' => ['qr', 'ACME-0031', true],
 ]);
+
+it('fits QR text up to the largest code at each error correction level', function () {
+    expect(BarcodeValues::fitsQr(str_repeat('x', 1273), 'H'))->toBeTrue()
+        ->and(BarcodeValues::fitsQr(str_repeat('x', 1274), 'H'))->toBeFalse()
+        ->and(BarcodeValues::fitsQr(str_repeat('x', 2953), 'L'))->toBeTrue()
+        ->and(BarcodeValues::fitsQr(str_repeat('x', 2954), 'L'))->toBeFalse()
+        // Bangla letters take three UTF-8 bytes each
+        ->and(BarcodeValues::fitsQr(str_repeat('ক', 425), 'H'))->toBeFalse()
+        ->and(BarcodeValues::fitsQr('', 'L'))->toBeFalse();
+});

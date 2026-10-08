@@ -10,7 +10,7 @@ import UiInput from '@/components/ui/UiInput.vue';
 import UiSelect from '@/components/ui/UiSelect.vue';
 import UiTextarea from '@/components/ui/UiTextarea.vue';
 import CardRender from './CardRender.vue';
-import { barcodeProblems, missingImages, printPageHref, useCardReasons } from './cards';
+import { barcodeProblems, missingImages, qrProblems, printPageHref, useCardReasons } from './cards';
 import CardBarcodeProblems from './CardBarcodeProblems.vue';
 import { http, toApiError } from '@/lib/http';
 import { formatBytes } from '@/lib/format';
@@ -45,6 +45,7 @@ const previewLoading = ref(false);
 /** Photo or signatures the card has a place for but nothing to print. */
 const missing = computed(() => (preview.value ? missingImages(preview.value.layout, preview.value.values) : []));
 const badBarcodes = computed(() => (preview.value ? barcodeProblems(preview.value.layout, preview.value.values) : []));
+const badQr = computed(() => (preview.value ? qrProblems(preview.value.layout, preview.value.values) : []));
 
 const today = () => new Date().toISOString().slice(0, 10);
 
@@ -248,11 +249,11 @@ async function submit(event: SubmitEvent): Promise<void> {
                         <p class="text-muted">{{ t(form.holder ? 'cards.missingImageFamily' : 'cards.missingImageHint') }}</p>
                     </div>
                 </div>
-                <div v-if="badBarcodes.length" class="flex gap-2 rounded-lg border border-warning/40 bg-warning/10 p-3 text-xs text-fg" role="status" data-barcode-problems>
+                <div v-if="badBarcodes.length || badQr.length" class="flex gap-2 rounded-lg border border-warning/40 bg-warning/10 p-3 text-xs text-fg" role="status" data-barcode-problems>
                     <TriangleAlert class="size-4 shrink-0 text-warning" />
                     <div class="space-y-1">
                         <p class="font-medium">{{ t('cards.barcode.title') }}</p>
-                        <div><CardBarcodeProblems :problems="badBarcodes" /></div>
+                        <div><CardBarcodeProblems :problems="badBarcodes" :qr="badQr" /></div>
                         <p class="text-muted">{{ t('cards.barcode.hint') }}</p>
                     </div>
                 </div>

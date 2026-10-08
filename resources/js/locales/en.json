@@ -1029,10 +1029,12 @@
         "preview": "Preview",
         "previewEmpty": "Choose a template to see the card.",
         "barcode": {
-            "title": "Barcodes that will print blank",
+            "title": "Barcodes and QR codes that will print blank",
             "empty": "{format} barcode ({field}): no value.",
             "invalid": "{format} barcode ({field}): “{value}” cannot be encoded.",
-            "hint": "The barcode's space stays blank on the card. Correct the value on the cardholder page, or choose another barcode type in the template.",
+            "qrEmpty": "QR code: nothing to encode (none of its lines has a value).",
+            "qrTooLong": "QR code: too much text ({bytes} bytes; at most {max} at error correction {level}).",
+            "hint": "Their space stays blank on the card. Correct the value on the cardholder page, or change the barcode type or QR lines in the template.",
             "accepts": {
                 "code128": "Code 128 takes Latin letters, digits and common symbols (no Bangla).",
                 "code39": "Code 39 takes capital A–Z, digits, space and - . $ / + %.",

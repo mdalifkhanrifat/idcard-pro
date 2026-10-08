@@ -8,7 +8,7 @@ import UiCheckbox from '@/components/ui/UiCheckbox.vue';
 import UiDialog from '@/components/ui/UiDialog.vue';
 import UiTextarea from '@/components/ui/UiTextarea.vue';
 import CardSheets from './CardSheets.vue';
-import { barcodeProblems, displayStatus, downloadCardsPdf, missingImages, printPages, SHEET_CARD, useCardReasons, type BarcodeProblem, type CardImageKey, type PrintSides, type SheetCard } from './cards';
+import { barcodeProblems, qrProblems, displayStatus, downloadCardsPdf, missingImages, printPages, SHEET_CARD, useCardReasons, type BarcodeProblem, type QrProblem, type CardImageKey, type PrintSides, type SheetCard } from './cards';
 import CardBarcodeProblems from './CardBarcodeProblems.vue';
 import { http, toApiError } from '@/lib/http';
 import { useUiStore } from '@/stores/ui';
@@ -27,8 +27,9 @@ interface Entry {
     /** Why the card is left out: not found, or not printable (revoked, replaced, expired). */
     problem: string | null;
     missing: CardImageKey[];
-    /** Barcodes that will print blank. */
+    /** Barcodes and QR codes that will print blank. */
     barcodes: BarcodeProblem[];
+    qr: QrProblem[];
 }
 
 const PARALLEL = 6;
@@ -61,7 +62,7 @@ const tooMany = computed(() => ids.value.length > printOptions.value.max_batch);
 const printable = computed(() => entries.value.filter((entry) => !entry.problem));
 const skipped = computed(() => entries.value.filter((entry) => entry.problem));
 const withMissing = computed(() => printable.value.filter((entry) => entry.missing.length));
-const withBarcodeProblems = computed(() => printable.value.filter((entry) => entry.barcodes.length));
+const withBarcodeProblems = computed(() => printable.value.filter((entry) => entry.barcodes.length || entry.qr.length));
 const anyDoubleSided = computed(() => printable.value.some((entry) => entry.layout?.is_double_sided));
 
 const sheetCards = computed<SheetCard[]>(() => printable.value.map((entry) => ({ id: entry.id, layout: entry.layout!, values: entry.values! })));
@@ -93,12 +94,12 @@ async function loadEntry(id: string): Promise<Entry> {
         const card: IssuedCard = data.data;
         const problem = card.printable ? null : t('cards.print.notPrintable', { status: t(`cards.statuses.${displayStatus(card)}`) });
 
-        return { id, card, layout: data.meta.layout, values: data.meta.values, problem, missing: missingImages(data.meta.layout, data.meta.values), barcodes: barcodeProblems(data.meta.layout, data.meta.values) };
+        return { id, card, layout: data.meta.layout, values: data.meta.values, problem, missing: missingImages(data.meta.layout, data.meta.values), barcodes: barcodeProblems(data.meta.layout, data.meta.values), qr: qrProblems(data.meta.layout, data.meta.values) };
     } catch (error) {
         const apiError = toApiError(error);
         const problem = apiError.status === 404 ? t('cards.print.notFound') : apiError.message;
 
-        return { id, card: null, layout: null, values: null, problem, missing: [], barcodes: [] };
+        return { id, card: null, layout: null, values: null, problem, missing: [], barcodes: [], qr: [] };
     }
 }
 
@@ -281,7 +282,7 @@ onBeforeUnmount(() => {
                     <ul class="mt-1 list-disc pl-5 text-xs text-muted">
                         <li v-for="entry in withBarcodeProblems" :key="entry.id">
                             {{ entry.card!.number }} ({{ entry.card!.family_member?.name ?? entry.card!.cardholder?.full_name }}):
-                            <CardBarcodeProblems :problems="entry.barcodes" />
+                            <CardBarcodeProblems :problems="entry.barcodes" :qr="entry.qr" />
                         </li>
                     </ul>
                     <p class="mt-1 text-xs text-muted">{{ t('cards.barcode.hint') }}</p>

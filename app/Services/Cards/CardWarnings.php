@@ -4,11 +4,12 @@ namespace App\Services\Cards;
 
 use App\Models\Card;
 use App\Support\Barcodes\BarcodeValues;
+use Illuminate\Support\Str;
 
 /**
  * What will print blank on a card, for people and connected systems (e.g. an HR system issuing cards through
- * the API) before it is printed: photos or signatures the holder does not have, and barcodes whose value is
- * missing or cannot be encoded in their format. The same checks as the issue and print pages; hidden elements
+ * the API) before it is printed: photos or signatures the holder does not have, barcodes whose value is
+ * missing or cannot be encoded in their format, and QR codes with nothing to encode or too much text. The same checks as the issue and print pages; hidden elements
  * are ignored. Warnings never block issuing or printing.
  */
 class CardWarnings
@@ -21,7 +22,7 @@ class CardWarnings
     public function __construct(private CardDataResolver $cardData) {}
 
     /**
-     * @return array<int, array<string, string>>
+     * @return array<int, array<string, string|int>>
      */
     public function forCard(Card $card): array
     {
@@ -31,7 +32,8 @@ class CardWarnings
     /**
      * @param  array<int, array<string, mixed>>  $elements  design elements (type, field, style)
      * @param  array{fields: array<string, string>, images: array<string, string|null>}  $values
-     * @return array<int, array<string, string>> `{type: missing_image, image}` or `{type: barcode, field, format, value, reason: empty|invalid}`
+     * @return array<int, array<string, string|int>> `{type: missing_image, image}`, `{type: barcode, field, format, value,
+     *                                               reason: empty|invalid}` or `{type: qr, reason: empty|too_long, level, bytes}`
      */
     public function check(array $elements, array $values): array
     {
@@ -53,8 +55,39 @@ class CardWarnings
                     $warnings["barcode|{$field}|{$format}"] = ['type' => 'barcode', 'field' => $field, 'format' => $format, 'value' => $value, 'reason' => $value === '' ? 'empty' : 'invalid'];
                 }
             }
+            if ($type === 'qr_code') {
+                $level = (string) ($style['qr_error_correction'] ?? BarcodeValues::DEFAULT_QR_LEVEL);
+                $text = $this->qrText((array) ($element['qr_lines'] ?? []), $values['fields']);
+                if (! BarcodeValues::fitsQr($text, $level)) {
+                    $bytes = strlen($text);
+                    $warnings["qr|{$level}|{$bytes}"] = ['type' => 'qr', 'reason' => $text === '' ? 'empty' : 'too_long', 'level' => $level, 'bytes' => $bytes];
+                }
+            }
         }
 
         return array_values($warnings);
+    }
+
+    /**
+     * The text a QR element encodes, as the browser builds it (designer/qr.ts qrText()): one line per entry,
+     * a field as "Label:value" or the value alone, fixed text as written; lines without a value are left out.
+     *
+     * @param  array<int, array<string, string>>  $lines
+     * @param  array<string, string>  $fields
+     */
+    private function qrText(array $lines, array $fields): string
+    {
+        $text = [];
+        foreach ($lines as $line) {
+            if (array_key_exists('text', $line)) {
+                $text[] = Str::trim((string) $line['text']);
+
+                continue;
+            }
+            $value = Str::trim((string) ($fields[$line['field'] ?? ''] ?? ''));
+            $text[] = $value === '' ? '' : (filled($line['label'] ?? null) ? "{$line['label']}:{$value}" : $value);
+        }
+
+        return implode("\n", array_filter($text, fn (string $line) => $line !== ''));
     }
 }
