@@ -36,7 +36,7 @@ class UpdateTenantSettingsRequest extends FormRequest
             'default_card_size.height' => ['required_with:default_card_size', 'numeric', 'between:10,500'],
             'card_number_on_reissue' => ['sometimes', Rule::in((array) config('cards.number_on_reissue'))],
             // Card verification (3.7): public page on or off, what it shows, own link address and a note
-            'verification' => ['sometimes', 'array:enabled,fields,show_revoke_reason,link,note'],
+            'verification' => ['sometimes', 'array:enabled,fields,show_revoke_reason,link,note,log_checks'],
             'verification.enabled' => ['required_with:verification', 'boolean'],
             // Missing = none (a form cannot send an empty list)
             'verification.fields' => ['sometimes', 'array'],
@@ -50,6 +50,7 @@ class UpdateTenantSettingsRequest extends FormRequest
                 }
             }],
             'verification.note' => ['nullable', 'string', 'max:500'],
+            'verification.log_checks' => ['sometimes', 'boolean'],
             'card_number_format' => ['sometimes', 'string', 'max:60', function (string $attribute, mixed $value, \Closure $fail): void {
                 if (is_string($value) && ($problem = CardNumberFormat::problem($value)) !== null) {
                     $fail($problem);

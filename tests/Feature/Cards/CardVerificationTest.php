@@ -2,6 +2,7 @@
 
 use App\Enums\TenantStatus;
 use App\Models\Card;
+use App\Models\CardVerification;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
@@ -32,6 +33,7 @@ it('keeps verification off until the organization turns it on and chooses what t
         'show_revoke_reason' => false,
         'link' => null,
         'note' => null,
+        'log_checks' => true,
     ])->assertJsonPath('data.verification_fields', config('cards.verification.fields'));
     $card = ($this->issue)();
     expect($this->getJson("/api/v1/cards/{$card['id']}")->json('meta.values.fields'))->not->toHaveKey('card.verify_url');
@@ -116,4 +118,40 @@ it('gives connected systems the verification link with the card', function () {
     $code = Card::query()->withoutGlobalScopes()->where('public_id', $card['id'])->value('verify_code');
     $this->getJson("/api/v1/cards/{$card['id']}")->assertJsonPath('data.verify_url', config('app.url')."/v/{$code}");
     $this->getJson('/api/v1/cards')->assertJsonPath('data.0.verify_url', config('app.url')."/v/{$code}");
+});
+
+it('logs each check for the organization, once per device and minute, without keeping addresses', function () {
+    $card = ($this->issue)();
+    $code = Card::query()->withoutGlobalScopes()->where('public_id', $card['id'])->value('verify_code');
+    ($this->settings)(['enabled' => true, 'fields' => ['full_name']])->assertOk();
+    $check = fn (string $ip) => $this->withServerVariables(['REMOTE_ADDR' => $ip])->getJson("/api/v1/verify/{$code}")->assertOk();
+
+    $check('203.0.113.7');
+    $check('203.0.113.7');
+    $check('198.51.100.20');
+    $this->travel(2)->minutes();
+    $check('203.0.113.7');
+    $this->postJson("/api/v1/cards/{$card['id']}/revoke", ['note' => 'Lost'])->assertOk();
+    $this->travel(2)->minutes();
+    $check('198.51.100.20');
+
+    $history = $this->getJson("/api/v1/cards/{$card['id']}/verifications")->assertOk()->assertJsonPath('meta.total', 4)->assertJsonPath('meta.devices', 2);
+    expect(array_column($history->json('data'), 'status'))->toBe(['revoked', 'valid', 'valid', 'valid'])
+        ->and($history->json('data.0.device'))->toHaveLength(6)
+        ->and($this->getJson("/api/v1/cards/{$card['id']}")->json('data.verify_count'))->toBe(4)
+        ->and(CardVerification::query()->withoutGlobalScopes()->pluck('device')->implode(','))->not->toContain('203.0.113');
+
+    // The organization may keep no log at all
+    ($this->settings)(['enabled' => true, 'fields' => ['full_name'], 'log_checks' => false])->assertOk()->assertJsonPath('data.verification.log_checks', false);
+    $this->travel(2)->minutes();
+    $check('192.0.2.1');
+    expect(CardVerification::query()->withoutGlobalScopes()->count())->toBe(4);
+
+    // Kept for the configured days, then pruned
+    $this->travel(config('cards.verification.log_days') + 1)->days();
+    $this->artisan('model:prune', ['--model' => [CardVerification::class]])->assertSuccessful();
+    expect(CardVerification::query()->withoutGlobalScopes()->count())->toBe(0);
+
+    Sanctum::actingAs(tenantUser($this->tenant, 'Viewer'));
+    $this->getJson("/api/v1/cards/{$card['id']}/verifications")->assertOk();
 });

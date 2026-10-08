@@ -107,6 +107,7 @@ class TenantService
                 'show_revoke_reason' => (bool) ($verification['show_revoke_reason'] ?? false),
                 'link' => filled($verification['link'] ?? null) ? trim((string) $verification['link']) : null,
                 'note' => filled($verification['note'] ?? null) ? trim((string) $verification['note']) : null,
+                'log_checks' => (bool) ($verification['log_checks'] ?? true),
             ]];
             unset($data['verification']);
         }

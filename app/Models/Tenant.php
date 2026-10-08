@@ -101,7 +101,7 @@ class Tenant extends Model
      * Card verification settings (3.7), with the configured defaults for anything not set and only the
      * details the public page may show.
      *
-     * @return array{enabled: bool, fields: array<int, string>, show_revoke_reason: bool, link: string|null, note: string|null}
+     * @return array{enabled: bool, fields: array<int, string>, show_revoke_reason: bool, link: string|null, note: string|null, log_checks: bool}
      */
     public function verificationSettings(): array
     {
@@ -116,6 +116,7 @@ class Tenant extends Model
             'show_revoke_reason' => (bool) ($saved['show_revoke_reason'] ?? $defaults['show_revoke_reason']),
             'link' => filled($saved['link'] ?? null) ? (string) $saved['link'] : null,
             'note' => filled($saved['note'] ?? null) ? (string) $saved['note'] : null,
+            'log_checks' => (bool) ($saved['log_checks'] ?? $defaults['log_checks']),
         ];
     }
 

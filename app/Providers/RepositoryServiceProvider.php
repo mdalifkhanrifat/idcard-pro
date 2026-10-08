@@ -11,6 +11,7 @@ use App\Repositories\Contracts\CardRepositoryInterface;
 use App\Repositories\Contracts\CardSequenceRepositoryInterface;
 use App\Repositories\Contracts\CardTemplateElementRepositoryInterface;
 use App\Repositories\Contracts\CardTemplateRepositoryInterface;
+use App\Repositories\Contracts\CardVerificationRepositoryInterface;
 use App\Repositories\Contracts\CustomFieldRepositoryInterface;
 use App\Repositories\Contracts\FamilyMemberRepositoryInterface;
 use App\Repositories\Contracts\LoginEventRepositoryInterface;
@@ -32,6 +33,7 @@ use App\Repositories\Eloquent\CardRepository;
 use App\Repositories\Eloquent\CardSequenceRepository;
 use App\Repositories\Eloquent\CardTemplateElementRepository;
 use App\Repositories\Eloquent\CardTemplateRepository;
+use App\Repositories\Eloquent\CardVerificationRepository;
 use App\Repositories\Eloquent\CustomFieldRepository;
 use App\Repositories\Eloquent\FamilyMemberRepository;
 use App\Repositories\Eloquent\LoginEventRepository;
@@ -67,6 +69,7 @@ class RepositoryServiceProvider extends ServiceProvider
         TenantFontRepositoryInterface::class => TenantFontRepository::class,
         CardRepositoryInterface::class => CardRepository::class,
         CardPrintRepositoryInterface::class => CardPrintRepository::class,
+        CardVerificationRepositoryInterface::class => CardVerificationRepository::class,
         TenantImageRepositoryInterface::class => TenantImageRepository::class,
         CardSequenceRepositoryInterface::class => CardSequenceRepository::class,
         CardTemplateRepositoryInterface::class => CardTemplateRepository::class,

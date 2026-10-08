@@ -4,7 +4,9 @@ namespace App\Services\Cards;
 
 use App\Enums\CardStatus;
 use App\Models\Card;
+use App\Models\Tenant;
 use App\Repositories\Contracts\CardRepositoryInterface;
+use App\Repositories\Contracts\CardVerificationRepositoryInterface;
 use App\Support\Tenancy\TenantContext;
 
 /**
@@ -12,6 +14,7 @@ use App\Support\Tenancy\TenantContext;
  * without signing in. Each organization decides whether this is on and which details the page shows
  * (tenants.settings.verification); details come from the card as issued, the status is live. An unknown
  * code, an organization with verification off and a suspended organization all look the same (null).
+ * Checks are logged for the organization (unless it turned that off), without keeping addresses.
  */
 class CardVerificationService
 {
@@ -19,12 +22,16 @@ class CardVerificationService
         private CardRepositoryInterface $cards,
         private CardDataResolver $cardData,
         private TenantContext $tenantContext,
+        private CardVerificationRepositoryInterface $checks,
     ) {}
 
     /**
      * @return array<string, mixed>|null
      */
-    public function verify(string $code): ?array
+    /**
+     * @param  string|null  $address  the checking device's IP address, only to tell devices apart in the log
+     */
+    public function verify(string $code, ?string $address = null): ?array
     {
         $code = strtolower($code);
         if (preg_match('/^[a-z0-9]{'.(int) config('cards.verification.code_length').'}$/', $code) !== 1) {
@@ -40,9 +47,12 @@ class CardVerificationService
             return null;
         }
 
-        return $this->tenantContext->run($tenant, function () use ($card, $tenant, $settings): array {
+        return $this->tenantContext->run($tenant, function () use ($card, $tenant, $settings, $address): array {
             $values = $this->cardData->forCard($card);
             $status = $this->status($card);
+            if ($settings['log_checks']) {
+                $this->log($card, $tenant, $status, $address);
+            }
             $details = [];
             foreach ($settings['fields'] as $key) {
                 $value = $key === 'template' ? $card->template->name : (string) ($values['fields'][$key] ?? '');
@@ -67,6 +77,36 @@ class CardVerificationService
                 'checked_at' => now()->toIso8601String(),
             ];
         });
+    }
+
+    /**
+     * The card's checks for its details: newest first, how many in all and from how many devices.
+     *
+     * @return array{checks: array<int, array{status: string, device: string, verified_at: string|null}>, total: int, devices: int}
+     */
+    public function history(Card $card): array
+    {
+        return [
+            'checks' => $this->checks->recentFor($card, (int) config('cards.verification.history_limit'))
+                ->map(fn ($check) => ['status' => $check->status, 'device' => substr($check->device, 0, 6), 'verified_at' => $check->verified_at->toIso8601String()])
+                ->all(),
+            'total' => $card->verify_count,
+            'devices' => $this->checks->devicesFor($card),
+        ];
+    }
+
+    /**
+     * Record a check, once per device within a short time (a refresh is not a new check).
+     */
+    private function log(Card $card, Tenant $tenant, string $status, ?string $address): void
+    {
+        $device = substr(hash_hmac('sha256', $tenant->id.'|'.($address ?? ''), (string) config('app.key')), 0, 16);
+        $now = now();
+        if ($this->checks->checkedSince($card, $device, $now->copy()->subSeconds((int) config('cards.verification.log_repeat_seconds')))) {
+            return;
+        }
+        $this->checks->create(['card_id' => $card->id, 'status' => $status, 'device' => $device, 'verified_at' => $now]);
+        $this->cards->addVerification($card, $now);
     }
 
     /**

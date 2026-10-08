@@ -82,7 +82,15 @@ return [
             'link' => null,
             // Text on the page, e.g. whom to contact when a card is found
             'note' => null,
+            // Keep a log of checks (card details show how often and when a card was checked)
+            'log_checks' => true,
         ],
+        // Days a check stays in the log (pruned daily)
+        'log_days' => 365,
+        // A device checking the same card again within this many seconds (e.g. a refresh) is not logged again
+        'log_repeat_seconds' => 60,
+        // Latest checks listed in a card's details
+        'history_limit' => 50,
         // Lookups per minute from one address
         'throttle' => 30,
     ],

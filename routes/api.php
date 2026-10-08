@@ -148,6 +148,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::patch('cards/{card}', [CardController::class, 'update'])->name('cards.update');
             Route::post('cards/{card}/revoke', [CardController::class, 'revoke'])->name('cards.revoke');
             Route::get('cards/{card}/prints', [CardPrintController::class, 'index'])->name('cards.prints.index');
+            Route::get('cards/{card}/verifications', [CardVerificationController::class, 'history'])->name('cards.verifications.index');
             Route::post('cards/{card}/prints', [CardPrintController::class, 'store'])->name('cards.prints.store');
             Route::get('cards/{card}/pdf', [CardPdfController::class, 'show'])->middleware('throttle:60,1')->name('cards.pdf.show');
             Route::apiResource('cardholders.qualifications', QualificationController::class)->except('show')->scoped(['cardholder' => 'public_id', 'qualification' => 'public_id']);

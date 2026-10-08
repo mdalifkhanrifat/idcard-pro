@@ -115,4 +115,9 @@ interface CardRepositoryInterface extends RepositoryInterface
      * @param  array<int, int>  $cardIds
      */
     public function addPrints(array $cardIds, int $copies, DateTimeInterface $printedAt): void;
+
+    /**
+     * Count one more public check of the card.
+     */
+    public function addVerification(Card $card, DateTimeInterface $verifiedAt): void;
 }

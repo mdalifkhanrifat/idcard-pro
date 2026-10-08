@@ -47,6 +47,8 @@ use Spatie\Activitylog\Support\LogOptions;
  * @property int|null $issued_by
  * @property int $print_count copies printed so far; 0 = not printed yet (legacy "PENDING")
  * @property Carbon|null $last_printed_at
+ * @property int $verify_count public checks so far (3.7)
+ * @property Carbon|null $last_verified_at
  * @property string|null $active_number_key
  * @property string|null $active_holder_key
  * @property Carbon|null $created_at
@@ -66,7 +68,7 @@ use Spatie\Activitylog\Support\LogOptions;
     'cardholder_id', 'family_member_id', 'card_template_id', 'template_version', 'layout', 'values', 'number', 'verify_code', 'rf_card_no',
     'reason', 'notes', 'document_file_id', 'photo_file_id', 'signature_file_id', 'signatory_id', 'issue_date',
     'expiry_date', 'status', 'status_changed_at', 'status_note', 'replaced_by_id', 'issued_by',
-    'active_number_key', 'active_holder_key', 'print_count', 'last_printed_at',
+    'active_number_key', 'active_holder_key', 'print_count', 'last_printed_at', 'verify_count', 'last_verified_at',
 ])]
 class Card extends Model
 {
@@ -134,6 +136,8 @@ class Card extends Model
             'status_changed_at' => 'datetime',
             'print_count' => 'integer',
             'last_printed_at' => 'datetime',
+            'verify_count' => 'integer',
+            'last_verified_at' => 'datetime',
         ];
     }
 

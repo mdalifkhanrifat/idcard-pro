@@ -232,4 +232,9 @@ class CardRepository extends EloquentRepository implements CardRepositoryInterfa
     {
         $this->query()->whereKey($cardIds)->increment('print_count', $copies, ['last_printed_at' => $printedAt]);
     }
+
+    public function addVerification(Card $card, DateTimeInterface $verifiedAt): void
+    {
+        Card::query()->withoutGlobalScopes()->whereKey($card->id)->increment('verify_count', 1, ['last_verified_at' => $verifiedAt]);
+    }
 }

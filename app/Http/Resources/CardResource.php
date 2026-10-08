@@ -34,6 +34,8 @@ class CardResource extends JsonResource
             'template_version' => $this->template_version,
             'print_count' => $this->print_count,
             'last_printed_at' => $this->last_printed_at,
+            'verify_count' => $this->verify_count,
+            'last_verified_at' => $this->last_verified_at,
             // Active and not expired: the one rule for every client (print buttons, HR systems)
             'printable' => app(CardPrintService::class)->printable($this->resource),
             // Public verification link (null while the organization has verification off)
