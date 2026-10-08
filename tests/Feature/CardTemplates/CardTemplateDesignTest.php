@@ -304,6 +304,20 @@ it('saves barcodes of a data field with their format and text option', function 
         ->assertJsonValidationErrors(['elements.0.style.barcode_format']);
 });
 
+it('saves the error correction and colour of a QR code', function () {
+    Sanctum::actingAs($this->owner);
+    $qr = fn (array $style) => designElement(['type' => 'qr_code', 'field' => null, 'label' => null, 'qr_lines' => [['field' => 'employee_no', 'label' => 'ID']], 'style' => $style]);
+
+    $this->putJson($this->url, ['elements' => [$qr(['qr_error_correction' => 'M', 'color' => '#05264a']), $qr([])]])
+        ->assertOk()
+        ->assertJsonPath('data.0.style.qr_error_correction', 'M')
+        ->assertJsonPath('data.0.style.color', '#05264a')
+        ->assertJsonMissingPath('data.1.style.qr_error_correction');
+    $this->getJson($this->url)->assertJsonPath('meta.catalog.qr_error_levels', ['L', 'M', 'Q', 'H']);
+
+    $this->putJson($this->url, ['elements' => [$qr(['qr_error_correction' => 'X'])]])->assertJsonValidationErrors(['elements.0.style.qr_error_correction']);
+});
+
 it('offers and accepts the organization own fonts', function () {
     Sanctum::actingAs($this->owner);
     app(TenantContext::class)->run($this->tenant, fn () => TenantFont::factory()->create(['tenant_id' => $this->tenant->id, 'family' => 'Licensed Lipi', 'weight' => 700]));

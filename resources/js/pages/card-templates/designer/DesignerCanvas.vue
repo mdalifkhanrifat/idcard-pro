@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import './cardFonts';
 import DesignerElement from './DesignerElement.vue';
+import { qrText } from './qr';
 import { normaliseAngle } from './geometry';
 import { sideCss } from './styles';
 import { MIN_SIZE, roundMm, type DesignerItem, type Rect } from './useDesigner';
@@ -63,6 +64,11 @@ const HANDLES: { handle: Handle; style: Record<string, string>; cursor: string }
     { handle: 'sw', style: { left: '0', top: '100%' }, cursor: 'nesw-resize' },
     { handle: 'w', style: { left: '0', top: '50%' }, cursor: 'ew-resize' },
 ];
+
+/** What an element shows: a QR code encodes its lines, each field filled the same way as a field element. */
+function contentOf(item: DesignerItem): string {
+    return item.type === 'qr_code' ? qrText(item.qr_lines, (field) => props.valueOf({ ...item, field })) : props.valueOf(item);
+}
 
 const background = computed(() => props.items.find((item) => item.type === 'background' && !(props.bare && item.style.hidden)) ?? null);
 const layers = computed(() => props.items.filter((item) => item.type !== 'background' && !(props.bare && item.style.hidden)));
@@ -387,7 +393,7 @@ onBeforeUnmount(() => {
         <!-- What prints: clipped to the card's rounded corners -->
         <div class="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]">
             <div v-for="item in layers" :key="item.key" class="absolute" :class="item.style.hidden && 'opacity-25'" :style="box(item)" :data-content-key="item.key">
-                <DesignerElement :element="item" :scale="scale" :value="valueOf(item)" :image-url="imageOf?.(item)" :bare="bare" />
+                <DesignerElement :element="item" :scale="scale" :value="contentOf(item)" :image-url="imageOf?.(item)" :bare="bare" />
             </div>
         </div>
         <div

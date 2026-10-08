@@ -31,6 +31,7 @@ import {
     X,
 } from 'lucide-vue-next';
 import { BARCODE_FORMAT_NAMES, MIN_MODULE_MM, QUIET_ZONE_MODULES, encodeBarcode } from './barcode';
+import { DEFAULT_QR_ERROR_LEVEL, MIN_QR_MODULE_MM, QR_QUIET_ZONE, encodeQr, qrText } from './qr';
 import ColorInput from './ColorInput.vue';
 import LibraryPicker from './LibraryPicker.vue';
 import FieldSelect from './FieldSelect.vue';
@@ -64,6 +65,7 @@ const ui = useUiStore();
 const isText = computed(() => props.item.type === 'field' || props.item.type === 'text');
 const hasImage = computed(() => props.catalog.types[props.item.type]?.image === true);
 const isBarcode = computed(() => props.item.type === 'barcode');
+const isQr = computed(() => props.item.type === 'qr_code');
 /** Families uploaded by the organization; a legacy name like SolaimanLipi then no longer depends on the computer. */
 const tenantFamilies = computed(() => [...new Set(props.catalog.tenant_fonts.map((font) => font.family))]);
 const systemFonts = computed(() => props.catalog.system_fonts.filter((font) => !tenantFamilies.value.includes(font)));
@@ -79,6 +81,18 @@ const barcodeModule = computed(() => {
     const sideways = props.item.style.rotation === 90 || props.item.style.rotation === 270;
 
     return Math.round(((sideways ? props.item.height : props.item.width) / (encoded.modules + QUIET_ZONE_MODULES * 2)) * 100) / 100;
+});
+/** Module (smallest square) of the QR code with the sample values, in mm; 0 = the text is too long. */
+const qrModule = computed(() => {
+    if (!isQr.value) {
+        return null;
+    }
+    const encoded = encodeQr(qrText(props.item.qr_lines, (field) => sampleValue(field)), props.item.style.qr_error_correction ?? DEFAULT_QR_ERROR_LEVEL);
+    if (!encoded) {
+        return (props.item.qr_lines ?? []).length ? 0 : null;
+    }
+
+    return Math.round((Math.min(props.item.width, props.item.height) / (encoded.size + QR_QUIET_ZONE * 2)) * 100) / 100;
 });
 const isImage = computed(() => ['logo', 'background', 'photo', 'signatory_signature', 'cardholder_signature'].includes(props.item.type));
 
@@ -356,6 +370,22 @@ function pickLibraryImage(image: LibraryImage): void {
                 <button v-if="(item.qr_lines?.length ?? 0) < 20" class="inline-flex items-center gap-1 text-xs font-medium text-brand hover:underline" data-add-qr-line @click="addQrLine">
                     <Plus class="size-3.5" />{{ t('designer.addQrLine') }}
                 </button>
+                <label class="block space-y-1">
+                    <span class="text-xs font-medium text-muted">{{ t('designer.qrErrorLevel') }}</span>
+                    <select
+                        :value="item.style.qr_error_correction ?? DEFAULT_QR_ERROR_LEVEL"
+                        :class="inputClass"
+                        data-setting="qr_error_correction"
+                        @change="setStyle('qr_error_correction', ($event.target as HTMLSelectElement).value === DEFAULT_QR_ERROR_LEVEL ? undefined : (($event.target as HTMLSelectElement).value as DesignElementStyle['qr_error_correction']))"
+                    >
+                        <option v-for="level in catalog.qr_error_levels" :key="level" :value="level">{{ t(`designer.qrErrorLevels.${level}`) }}</option>
+                    </select>
+                </label>
+                <p class="text-xs text-muted">{{ t('designer.qrErrorHint') }}</p>
+                <p v-if="qrModule === 0" class="text-xs text-warning" data-qr-warning>{{ t('designer.qrTooLong') }}</p>
+                <p v-else-if="qrModule !== null" class="text-xs" :class="qrModule < MIN_QR_MODULE_MM ? 'text-warning' : 'text-muted'" data-qr-module>
+                    {{ t(qrModule < MIN_QR_MODULE_MM ? 'designer.qrModuleSmall' : 'designer.qrModule', { mm: qrModule }) }}
+                </p>
                 <p class="text-xs text-muted">{{ t('designer.qrHint') }}</p>
             </div>
 
@@ -443,7 +473,7 @@ function pickLibraryImage(image: LibraryImage): void {
             </div>
 
             <!-- Text style -->
-            <div v-if="isText || isBarcode" class="space-y-3 border-t border-line pt-3">
+            <div v-if="isText || isBarcode || isQr" class="space-y-3 border-t border-line pt-3">
                 <!-- A barcode only has text when its value is shown under the bars -->
                 <template v-if="isText || item.style.barcode_text">
                     <div class="grid grid-cols-[1fr_5rem] gap-2">
@@ -528,7 +558,7 @@ function pickLibraryImage(image: LibraryImage): void {
                 </template>
 
                 <div class="grid grid-cols-2 gap-2">
-                    <ColorInput :model-value="item.style.color" :label="t(isBarcode ? 'designer.barcodeColour' : 'designer.colours.color')" placeholder="#111111" name="color" @update:model-value="setStyle('color', $event)" />
+                    <ColorInput :model-value="item.style.color" :label="t(isBarcode ? 'designer.barcodeColour' : isQr ? 'designer.qrColour' : 'designer.colours.color')" placeholder="#111111" name="color" @update:model-value="setStyle('color', $event)" />
                     <ColorInput v-if="isText" :model-value="item.style.label_color" :label="t('designer.colours.label_color')" placeholder="#111111" name="label_color" @update:model-value="setStyle('label_color', $event)" />
                 </div>
                 <div v-if="isText" class="grid grid-cols-3 gap-2">

@@ -744,6 +744,18 @@
         "qrLabel": "Label (optional)",
         "addQrLine": "Add line",
         "qrHint": "Each line is encoded on its own row, as “label:value”. A signed verification link is added when card verification is set up.",
+        "qrErrorLevel": "Error correction",
+        "qrErrorLevels": {
+            "L": "L · 7%",
+            "M": "M · 15%",
+            "Q": "Q · 25%",
+            "H": "H · 30% (legacy)"
+        },
+        "qrErrorHint": "Higher levels still scan when part of the code is scratched or covered, but make the squares smaller.",
+        "qrColour": "Code colour",
+        "qrModule": "Smallest square with the sample values: {mm} mm",
+        "qrModuleSmall": "Squares are very small ({mm} mm); make the element bigger, use fewer lines or a lower error correction so phones can read it.",
+        "qrTooLong": "Too much text for a QR code",
         "uploadImage": "Upload image",
         "replaceImage": "Replace",
         "removeImage": "Remove",

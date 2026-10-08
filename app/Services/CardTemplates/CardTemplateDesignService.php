@@ -103,6 +103,7 @@ class CardTemplateDesignService
                 ->values()
                 ->all(),
             'barcode_formats' => config('card_template_elements.barcode_formats'),
+            'qr_error_levels' => config('card_template_elements.qr_error_levels'),
             'size_mm' => $template->sizeInMm(),
         ];
     }

@@ -3,6 +3,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, wa
 import { useI18n } from 'vue-i18n';
 import { ImageIcon, PenLine, QrCode, UserRound } from 'lucide-vue-next';
 import { QUIET_ZONE_MODULES, encodeBarcode } from './barcode';
+import { DEFAULT_QR_ERROR_LEVEL, QR_QUIET_ZONE, encodeQr } from './qr';
 import { PT_TO_MM, boxCss, imageFit, rotationCss, textCss } from './styles';
 import type { DesignElement } from '@/types';
 
@@ -94,6 +95,8 @@ const labelStyle = computed(() => ({ color: props.element.style.label_color ?? p
 const fit = computed(() => (imageFit(props.element) === 'cover' ? 'object-cover' : 'object-contain'));
 /** Bars stretch to the box; the value shows under them in the element's font when asked. */
 const barcode = computed(() => (props.element.type === 'barcode' ? encodeBarcode(props.value, props.element.style.barcode_format) : null));
+/** QR code of the element's lines (the value); square, centred in the box with its quiet zone. */
+const qr = computed(() => (props.element.type === 'qr_code' ? encodeQr(props.value, props.element.style.qr_error_correction ?? DEFAULT_QR_ERROR_LEVEL) : null));
 const image = computed(() => (props.element.type === 'logo' ? props.element.image_url : (props.imageUrl ?? props.element.image_url)));
 </script>
 
@@ -127,6 +130,21 @@ const image = computed(() => (props.element.type === 'logo' ? props.element.imag
                 >
                     {{ t('designer.barcodeInvalid') }}
                 </div>
+            </div>
+
+            <div v-else-if="element.type === 'qr_code' && (qr || bare)" class="size-full" data-qr>
+                <svg v-if="qr" class="size-full" :viewBox="`${-QR_QUIET_ZONE} ${-QR_QUIET_ZONE} ${qr.size + QR_QUIET_ZONE * 2} ${qr.size + QR_QUIET_ZONE * 2}`" shape-rendering="crispEdges" aria-hidden="true">
+                    <path :d="qr.path" :fill="element.style.color ?? '#000000'" />
+                </svg>
+            </div>
+            <!-- Text too long for a QR code: say so in the designer, never print a wrong code -->
+            <div
+                v-else-if="element.type === 'qr_code' && value"
+                class="flex size-full items-center justify-center bg-danger/10 p-0.5 text-center leading-tight text-danger"
+                :style="{ fontSize: `${Math.max(7, scale * 1.8)}px`, fontFamily: 'sans-serif', fontWeight: 400, fontStyle: 'normal' }"
+                data-qr-invalid
+            >
+                {{ t('designer.qrTooLong') }}
             </div>
 
             <template v-else-if="element.type !== 'shape'">

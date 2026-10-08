@@ -16,7 +16,8 @@
 |   emp_sign                    => cardholder_signature
 |   An image uploaded on profile/sign/emp_sign was printed when the real one was missing;
 |   photo and signature elements keep that as an optional fallback image.
-|   qr_code (+ qrcode_info)     => qr_code (signed verification link in 3.7)
+|   qr_code (+ qrcode_info)     => qr_code: its lines ("Label:value" or fixed text) as a QR code;
+|                                  a signed verification link is added in 3.7
 |   db_field (+ relation_name)  => field (see "fields" below)
 |   general_section             => text
 |   (new) shape                 => coloured rectangle, ellipse or line; replaces empty
@@ -65,6 +66,8 @@ return [
         'shape' => ['shape'],
         // barcode_text: print the encoded value under the bars, in the element's font and colour
         'barcode' => ['barcode_format', 'barcode_text'],
+        // qr_error_correction: L, M, Q or H (default H, as on legacy cards); the code's colour is `color`
+        'qr' => ['qr_error_correction'],
     ],
 
     /*
@@ -72,6 +75,12 @@ return [
      * (letters in EAN, Bangla in Code128...) show as an error box instead of a wrong barcode.
      */
     'barcode_formats' => ['code128', 'code39', 'ean13', 'ean8', 'upc', 'itf', 'codabar'],
+
+    /*
+     * QR codes (drawn in the browser by qrcode-generator, as UTF-8): error correction levels, from the
+     * smallest code (L, 7% may be damaged) to the sturdiest (H, 30%).
+     */
+    'qr_error_levels' => ['L', 'M', 'Q', 'H'],
 
     'gradient_directions' => ['to bottom', 'to right', 'to bottom right', 'to top right'],
 
