@@ -72,6 +72,11 @@ it('keeps everything an issued card was made from', function () {
     $this->putJson("/api/v1/card-templates/{$this->template->public_id}/elements", ['elements' => []])->assertOk();
 
     $this->deleteJson("/api/v1/cardholders/{$this->holder->public_id}")->assertUnprocessable()->assertJsonPath('message', __('cards.in_use.cardholder'));
+    // The pages know beforehand, so they can turn the delete button off
+    $this->getJson("/api/v1/cardholders/{$this->holder->public_id}")->assertJsonPath('data.has_cards', true);
+    $other = cardholder($this->tenant, ['full_name' => 'Zed No Cards']);
+    $rows = collect($this->getJson('/api/v1/cardholders?per_page=100')->json('data'))->keyBy('id');
+    expect($rows[$this->holder->public_id]['has_cards'])->toBeTrue()->and($rows[$other->public_id]['has_cards'])->toBeFalse();
     $this->deleteJson("/api/v1/cardholders/{$this->holder->public_id}/family-members/{$member->public_id}")->assertJsonPath('message', __('cards.in_use.family_member'));
     $this->deleteJson("/api/v1/card-templates/{$this->template->public_id}")->assertJsonPath('message', __('cards.in_use.template'));
     $this->deleteJson("/api/v1/signatories/{$signatory->public_id}")->assertJsonPath('message', __('cards.in_use.signatory'));

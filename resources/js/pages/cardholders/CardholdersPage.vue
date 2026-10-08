@@ -213,7 +213,15 @@ async function remove(cardholder: Cardholder): Promise<void> {
                                     >
                                         <Pencil class="size-4" />
                                     </RouterLink>
-                                    <button v-if="auth.can('cardholders.delete')" class="rounded-md p-2 text-muted hover:bg-danger/10 hover:text-danger" :aria-label="t('common.delete')" @click="remove(row)">
+                                    <button
+                                        v-if="auth.can('cardholders.delete')"
+                                        class="rounded-md p-2 text-muted hover:bg-danger/10 hover:text-danger disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-muted"
+                                        :disabled="row.has_cards"
+                                        :aria-label="t('common.delete')"
+                                        :title="row.has_cards ? t('cardholders.hasCards') : t('common.delete')"
+                                        data-delete-cardholder
+                                        @click="remove(row)"
+                                    >
                                         <Trash2 class="size-4" />
                                     </button>
                                 </div>

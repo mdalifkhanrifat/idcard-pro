@@ -164,6 +164,8 @@ export interface Cardholder {
     signature?: FileSummary | null;
     /** Own active card (null: none); only with cards.view. Legacy list "Status": PENDING / PRINTED. */
     current_card?: { id: string; number: string; print_count: number; last_printed_at: string | null } | null;
+    /** Cards were issued to the person or their family: the record cannot be deleted (mark it inactive instead). */
+    has_cards?: boolean;
     created_by?: { id: string; name: string } | null;
     created_at: string;
     updated_at: string;

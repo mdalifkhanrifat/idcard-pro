@@ -183,7 +183,9 @@ onMounted(load);
             </div>
             <div class="flex gap-2 self-start">
                 <UiButton v-if="auth.can('cardholders.update')" variant="secondary" @click="router.push(`/cardholders/${cardholder.id}/edit`)"><Pencil class="size-4" />{{ t('common.edit') }}</UiButton>
-                <UiButton v-if="auth.can('cardholders.delete')" variant="ghost" @click="remove"><Trash2 class="size-4" />{{ t('common.delete') }}</UiButton>
+                <UiButton v-if="auth.can('cardholders.delete')" variant="ghost" :disabled="cardholder.has_cards" :title="cardholder.has_cards ? t('cardholders.hasCards') : undefined" data-delete-cardholder @click="remove">
+                    <Trash2 class="size-4" />{{ t('common.delete') }}
+                </UiButton>
             </div>
         </div>
 

@@ -328,6 +328,7 @@
         }
     },
     "cardholders": {
+        "hasCards": "Has issued cards, kept as records: mark the person inactive instead of deleting.",
         "title": "Cardholders",
         "subtitle": "People who can be issued ID cards.",
         "new": "New cardholder",

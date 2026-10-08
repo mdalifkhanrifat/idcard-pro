@@ -23,6 +23,8 @@ class CardholderRepository extends EloquentRepository implements CardholderRepos
     {
         $query = $this->query()
             ->with(['department', 'unit', 'rank', 'designation', 'bloodGroup', 'photo', 'currentCard:id,public_id,cardholder_id,number,print_count,last_printed_at'])
+            // Any card issued to the person or their family: such records cannot be deleted (has_cards)
+            ->withExists('cards')
             ->when($filter->search, fn (Builder $q, string $search) => $q->where(fn (Builder $w) => $w
                 ->where('full_name', 'like', "%{$search}%")
                 ->orWhere('full_name_local', 'like', "%{$search}%")
