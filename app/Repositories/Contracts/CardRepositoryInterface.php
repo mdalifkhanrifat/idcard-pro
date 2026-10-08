@@ -21,6 +21,14 @@ interface CardRepositoryInterface extends RepositoryInterface
     public function list(CardFilter $filter): LengthAwarePaginator;
 
     /**
+     * Public ids of the cards the list filter finds that may be printed (active, not expired), in the list's
+     * order and at most `$limit`, with how many such cards there are in all.
+     *
+     * @return array{ids: array<int, string>, total: int}
+     */
+    public function printablePublicIds(CardFilter $filter, int $limit): array;
+
+    /**
      * Counts for the cards overview: active, expired (active past expiry), expiring within the given days,
      * revoked, and pending (valid but never printed).
      *

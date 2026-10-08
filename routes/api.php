@@ -134,6 +134,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('cards', [CardController::class, 'list'])->name('cards.index');
             Route::get('cards/summary', [CardController::class, 'summary'])->name('cards.summary');
             Route::get('cards/options', [CardController::class, 'options'])->name('cards.options');
+            Route::get('cards/printable', [CardPrintController::class, 'printable'])->name('cards.printable');
             Route::post('cards/prints', [CardPrintController::class, 'batch'])->name('cards.prints.batch');
             // PDFs are drawn by the PDF engine: heavier than other calls, so limited separately
             Route::post('cards/pdf', [CardPdfController::class, 'batch'])->middleware('throttle:20,1')->name('cards.pdf.batch');

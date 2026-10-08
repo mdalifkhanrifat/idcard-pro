@@ -104,3 +104,26 @@ it('keeps print logs per organization and checks the permission', function () {
     $this->postJson('/api/v1/cards/prints', ['cards' => [$card['id']]])->assertJsonValidationErrors('cards');
     expect(CardPrint::withoutGlobalScopes()->count())->toBe(1);
 });
+
+it('finds every printable card the list filter matches, in the list order, up to one batch', function () {
+    [$first, $second] = [($this->issue)(), ($this->issue)()];
+    $revoked = ($this->issue)();
+    $this->postJson("/api/v1/cards/{$revoked['id']}/revoke", ['note' => 'Left'])->assertOk();
+    ($this->issue)(['issue_date' => '2020-01-01', 'expiry_date' => '2021-01-01']);
+    $this->postJson("/api/v1/cards/{$first['id']}/prints")->assertCreated();
+
+    // Revoked and expired cards are left out; the order is the list's
+    $this->getJson('/api/v1/cards/printable?sort=number')
+        ->assertOk()
+        ->assertExactJson(['data' => [$first['id'], $second['id']], 'meta' => ['total' => 2, 'limit' => config('cards.print.max_batch')]]);
+    $this->getJson('/api/v1/cards/printable?sort=-number')->assertJsonPath('data', [$second['id'], $first['id']]);
+    // The same filters as the list: the "not printed yet" tile, then select all
+    $this->getJson('/api/v1/cards/printable?filter[printed]=pending')->assertJsonPath('data', [$second['id']]);
+    $this->getJson('/api/v1/cards/printable?filter[printed]=maybe')->assertJsonValidationErrors('filter.printed');
+
+    config(['cards.print.max_batch' => 1]);
+    $this->getJson('/api/v1/cards/printable?sort=number')->assertJsonPath('data', [$first['id']])->assertJsonPath('meta.total', 2);
+
+    Sanctum::actingAs(tenantUser($this->tenant, 'Viewer'));
+    $this->getJson('/api/v1/cards/printable')->assertForbidden();
+});

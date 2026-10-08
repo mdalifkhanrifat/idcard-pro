@@ -29,9 +29,28 @@ class CardRepository extends EloquentRepository implements CardRepositoryInterfa
 
     public function list(CardFilter $filter): LengthAwarePaginator
     {
+        return $this->filtered($filter)
+            ->with(['template:id,public_id,name,code', 'familyMember:id,public_id,name,relation', 'cardholder:id,public_id,full_name,employee_no,department_id', 'cardholder.department', 'issuer:id,name'])
+            ->paginate(min($filter->perPage, 100))
+            ->withQueryString();
+    }
+
+    public function printablePublicIds(CardFilter $filter, int $limit): array
+    {
+        $query = $this->whereValid($this->filtered($filter));
+
+        return ['ids' => (clone $query)->limit($limit)->pluck('public_id')->all(), 'total' => $query->count()];
+    }
+
+    /**
+     * The list's criteria and order, shared by the list and everything that acts on "all cards it finds".
+     *
+     * @return Builder<Card>
+     */
+    private function filtered(CardFilter $filter): Builder
+    {
         $today = today()->toDateString();
         $query = $this->query()
-            ->with(['template:id,public_id,name,code', 'familyMember:id,public_id,name,relation', 'cardholder:id,public_id,full_name,employee_no,department_id', 'cardholder.department', 'issuer:id,name'])
             ->when($filter->search, fn (Builder $q, string $search) => $q->where(fn (Builder $w) => $w
                 ->where('number', 'like', "%{$search}%")
                 ->orWhere('rf_card_no', 'like', "%{$search}%")
@@ -50,8 +69,7 @@ class CardRepository extends EloquentRepository implements CardRepositoryInterfa
             ->when($filter->validity === 'expiring', fn (Builder $q) => $q->where('status', CardStatus::Active)
                 ->whereDate('expiry_date', '>=', $today)
                 ->whereDate('expiry_date', '<=', today()->addDays($filter->expiringDays)->toDateString()))
-            ->when($filter->validity === 'valid', fn (Builder $q) => $q->where('status', CardStatus::Active)
-                ->where(fn (Builder $w) => $w->whereNull('expiry_date')->orWhereDate('expiry_date', '>=', $today)))
+            ->when($filter->validity === 'valid', fn (Builder $q) => $this->whereValid($q))
             ->when($filter->printed === 'pending', fn (Builder $q) => $q->where('print_count', 0))
             ->when($filter->printed === 'printed', fn (Builder $q) => $q->where('print_count', '>', 0))
             ->when($filter->printedFrom || $filter->printedTo, fn (Builder $q) => $q->whereHas('prints', fn (Builder $p) => $p
@@ -64,9 +82,19 @@ class CardRepository extends EloquentRepository implements CardRepositoryInterfa
 
         return $query
             ->orderBy($filter->sort, $filter->descending ? 'desc' : 'asc')
-            ->orderBy('id', 'desc')
-            ->paginate(min($filter->perPage, 100))
-            ->withQueryString();
+            ->orderBy('id', 'desc');
+    }
+
+    /**
+     * Active cards not past their expiry: the cards that may be printed (CardPrintService::printable()).
+     *
+     * @param  Builder<Card>  $query
+     * @return Builder<Card>
+     */
+    private function whereValid(Builder $query): Builder
+    {
+        return $query->where('status', CardStatus::Active)
+            ->where(fn (Builder $w) => $w->whereNull('expiry_date')->orWhereDate('expiry_date', '>=', today()->toDateString()));
     }
 
     public function summary(int $expiringDays): array
@@ -80,7 +108,7 @@ class CardRepository extends EloquentRepository implements CardRepositoryInterfa
             'expiring' => $active()->whereDate('expiry_date', '>=', $today)->whereDate('expiry_date', '<=', today()->addDays($expiringDays)->toDateString())->count(),
             'revoked' => $this->query()->where('status', CardStatus::Revoked)->count(),
             // Valid cards never printed (legacy "PENDING")
-            'pending' => $active()->where('print_count', 0)->where(fn (Builder $w) => $w->whereNull('expiry_date')->orWhereDate('expiry_date', '>=', $today))->count(),
+            'pending' => $this->whereValid($this->query())->where('print_count', 0)->count(),
         ];
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Services\Cards;
 
+use App\Data\Cards\CardFilter;
 use App\Data\Cards\PrintCardsData;
 use App\Exceptions\BusinessRuleException;
 use App\Models\Card;
@@ -102,6 +103,19 @@ class CardPrintService
         }
 
         return $cards;
+    }
+
+    /**
+     * Every card the list filter finds that may be printed, in the list's order, for printing them together
+     * ("select all matching"); at most one batch, with how many there are in all.
+     *
+     * @return array{ids: array<int, string>, total: int, limit: int}
+     */
+    public function printableIds(CardFilter $filter): array
+    {
+        $limit = (int) config('cards.print.max_batch');
+
+        return [...$this->cards->printablePublicIds($filter, $limit), 'limit' => $limit];
     }
 
     /**

@@ -1,8 +1,12 @@
 # IDCard Pro: কাজের অগ্রগতি ও হ্যান্ডঅফ
 
 > নতুন চ্যাট বা নতুন ডেভেলপার এই ফাইল থেকে শুরু করবেন। পুরো পরিকল্পনা আছে [ROADMAP.md](ROADMAP.md)-এ।
-> সর্বশেষ আপডেট: ৬ অক্টোবর ২০২৬ (দিনের শেষে)। **Phase 1 আর Phase 2 সম্পন্ন।** Phase 3 চলছে: ৩.১–৩.৫ সম্পন্ন; **৩.৬ প্রিন্ট: ধাপ ১, ২ (ক, খ, গ), ৩ (ক, খ, গ), ৫ (ক–ঘ) সম্পন্ন; ধাপ ৪ক (তালিকা থেকে বাছাই করে প্রিন্ট) আর ৪খ (A4/Letter শিট, কাটার দাগ) সম্পন্ন ৭ অক্টোবর** — বাকি ৪গ (ঐচ্ছিক) আর ধাপ ৬ (বারকোড/QR যাচাই)।
+> সর্বশেষ আপডেট: ৬ অক্টোবর ২০২৬ (দিনের শেষে)। **Phase 1 আর Phase 2 সম্পন্ন।** Phase 3 চলছে: ৩.১–৩.৫ সম্পন্ন; **৩.৬ প্রিন্ট: ধাপ ১, ২ (ক, খ, গ), ৩ (ক, খ, গ), ৫ (ক–ঘ) সম্পন্ন; ধাপ ৪ক (তালিকা থেকে বাছাই করে প্রিন্ট) আর ৪খ (A4/Letter শিট, কাটার দাগ) সম্পন্ন ৭ অক্টোবর** ; **৪গ-১ (ফিল্টারের সব ছাপার-যোগ্য কার্ডের API) সম্পন্ন ৮ অক্টোবর** — বাকি ৪গ-২ (UI) আর ধাপ ৬ (বারকোড/QR যাচাই)।
 > **এখান থেকে শুরু:** নিচের "সর্বশেষ সেশন" আর "কাল শুরুর কমান্ড" পড়ুন → §৮-এর "৩.৬" → "পরের কাজ"-এর প্রথম বাকি ধাপ। শেষ commit: `git log --oneline -1`।
+
+### ৮ অক্টোবর ২০২৬
+
+- ✅ **৩.৬ ধাপ ৪গ-১ (ব্যাকএন্ড): "ফিল্টারের সব কার্ড"।** `GET /cards/printable?filter[...]&sort=` — `/cards` তালিকার **একই ফিল্টার আর একই ক্রমে** শুধু ছাপা যায় এমন কার্ডের public id, সর্বোচ্চ `max_batch` (২০০): `{data: [ids], meta: {total, limit}}` (`total` = মোট ছাপার-যোগ্য, সীমার বেশি হলেও)। `cards.print` পারমিশন লাগে, ফিল্টারের যাচাই `ListCardsRequest`। কোড: `CardPrintController::printable()` → `CardPrintService::printableIds()` → `CardRepository::printablePublicIds()`। তালিকা আর এই API যাতে কখনো আলাদা না হয়, `CardRepository::list()`-এর ফিল্টার আর ক্রম এখন `filtered()`-এ; "সক্রিয় আর মেয়াদ আছে" (= `CardPrintService::printable()`) এক জায়গায় `whereValid()` (তালিকার `validity=valid`, `summary.pending` আর এই API তিনটাই এটা ব্যবহার করে)। HR সিস্টেমও এক ডাকে "ছাপা বাকি সব কার্ড" নিয়ে `POST /cards/pdf`-এ দিতে পারে। টেস্ট `CardPrintTest` (বাতিল/মেয়াদোত্তীর্ণ বাদ, ক্রম, ফিল্টার, সীমা, Viewer 403); ২১৫টা টেস্ট।
 
 ### ৭ অক্টোবর ২০২৬
 
@@ -62,7 +66,7 @@ docker compose run --rm --no-deps vite npm run build         # ফ্রন্�
 
 **প্রতিটা ধাপের শেষে মান যাচাই:**
 ```bash
-docker compose exec app php artisan test --compact                       # এখন ২১২টা টেস্ট
+docker compose exec app php artisan test --compact                       # এখন ২১৫টা টেস্ট
 docker compose exec app vendor/bin/phpstan analyse --memory-limit=1G
 docker compose exec app vendor/bin/pint --dirty --format agent
 docker compose run --rm --no-deps vite npx vue-tsc --noEmit
@@ -92,7 +96,9 @@ echo "deleted ", count($ids), " test cards\n";'
 1. **৩.৬ ধাপ ৪: ব্যাচ প্রিন্ট (নতুন ফিচার, পুরনো সিস্টেমে ছিল না)**
    - ✅ ৪ক (UI, ৭ অক্টোবর — উপরে দেখুন): `CardsPage.vue`-তে সারিতে checkbox (শুধু `printable` কার্ড), "সব বাছাই" (এই পাতার), বাছাই করা সংখ্যা; "বাছাই করা প্রিন্ট" → `openPrintPage(ids)` আর "PDF" → `downloadCardsPdf(ids, …)`; সীমা `printOptions.max_batch` (২০০)। ফিল্টার দিয়ে বাছাই সহজ (যেমন "এখনো ছাপা হয়নি" টাইল → সব বাছাই → প্রিন্ট)। লগ আগে থেকেই এক `batch` id-তে (`POST /cards/prints`)।
    - ✅ ৪খ (নতুন বিকল্প; ৪খ-১ ব্যাকএন্ড, ৪খ-২ ফ্রন্টএন্ড, ৭ অক্টোবর — উপরে দেখুন): প্রিন্টের পাতায় "পাতার ধরন": কার্ড প্রিন্টার (প্রতি পাশ এক পাতা, এখনকার মতো) / **A4 শিট** (এক পাতায় কয়েকটা কার্ড, কাটার দাগসহ; সামনের শিটের পরে পেছনের শিট উল্টো ক্রমে, যাতে দুই পাশ মেলে)। `CardSheets.vue`-তে `layout` prop; সার্ভারের PDF-এও (`sides`-এর মতো `sheet` প্যারামিটার, `CardRenderService::link()` আর `CardPdfRequest`-এ)।
-   - ৪গ (ঐচ্ছিক): তালিকার ফিল্টার মেনে "ফিল্টারের সব কার্ড" (পাতার বাইরে) — সার্ভারে `ids`-এর বদলে filter দিয়ে; ২০০-র সীমা মেনে।
+   - ৪গ: তালিকার ফিল্টার মেনে "ফিল্টারের সব কার্ড" (পাতার বাইরে); ২০০-র সীমা মেনে।
+     - ✅ ৪গ-১ (ব্যাকএন্ড, ৮ অক্টোবর — উপরে দেখুন): `GET /cards/printable`।
+     - ৪গ-২ (UI): `CardsPage.vue`-তে পাতার সব বাছাই করলে বারে "ফিল্টারের সব N টা ছাপার-যোগ্য কার্ড বাছাই করুন" (Gmail-এর মতো) → এই API → বাছাইয়ে id যোগ (আগের বাছাই থাকে, মোট `max_batch` ছাড়ালে সতর্কতা আর "প্রথম ২০০টা নেওয়া হলো")।
 2. **৩.৬ ধাপ ৬: বারকোড/QR যাচাই** — ইস্যু আর প্রিন্টের আগে মান এনকোড হয় কিনা (যেমন EAN-13-এ অক্ষর); `missingImages()`-এর মতো সতর্কতা, প্রিন্টে লাল ভুল-বক্স নয়।
 3. **৩.৭ স্বাক্ষরিত QR আর পাবলিক ভেরিফিকেশন পেজ।**
 4. **৩.৮ ইমপোর্টে কার্ডের কলাম** (পুরনো "last print date/time" → `card_prints`) আর কার্ডধারী মোছার নিয়ম (কার্ড থাকলে মোছা যাবে না)।
@@ -140,7 +146,7 @@ echo "deleted ", count($ids), " test cards\n";'
 | 2.5 | শিক্ষা ও প্রশিক্ষণ কোর্স (এক টেবিলে), কাস্টম ফিল্ড (সেটআপ পেজ, প্রিসেট, ফর্ম ট্যাব, ফিল্টার) | `QualificationService`, `app/Services/CustomFields`, `config/custom_field_presets.php`, `pages/custom-fields` |
 | 2.6 | CSV/XLSX ইমপোর্ট: যাচাই আর প্রিভিউ, queue-তে ইমপোর্ট, ইতিহাস, টেমপ্লেট | `CardholderImportService`, `CardholderImportMapper`, `app/Jobs/ImportCardholders.php`, `app/Support/Spreadsheets`, `config/cardholder_import.php` |
 
-**মান:** ২১২টা টেস্ট পাস, Larastan (level 5) আর Pint পরিষ্কার, TypeScript টাইপ-চেক পরিষ্কার। প্রতিটা পেজ headless Chrome-এ চালিয়ে যাচাই করা হয়েছে।
+**মান:** ২১৫টা টেস্ট পাস, Larastan (level 5) আর Pint পরিষ্কার, TypeScript টাইপ-চেক পরিষ্কার। প্রতিটা পেজ headless Chrome-এ চালিয়ে যাচাই করা হয়েছে।
 
 **বর্তমান মডিউল আর তাদের service:**
 
@@ -432,7 +438,7 @@ docker compose run --rm --no-deps vite npx vue-tsc --noEmit
        - ✅ (৩ক ব্যাকএন্ড) `GET /cards`: `filter[printed]` = `pending` (কখনো ছাপা হয়নি) / `printed`, `filter[printed_from]`/`filter[printed_to]` (যেকোনো সময় ছাপা হয়েছে সেই দিনগুলোতে — **প্রতিষ্ঠানের timezone ধরে দিন**, `CardRepository::dayStart()`; পুরনো "Card Print History" রিপোর্টের জায়গা), `sort=last_printed_at`; `GET /cards/summary` → `pending` (সক্রিয়, মেয়াদ আছে, কখনো ছাপা হয়নি)। কার্ডধারী: `Cardholder::currentCard()` (নিজের সক্রিয় কার্ড, পরিবারের কার্ড বাদ), তালিকায় eager load → `CardholderResource.current_card` {id, number, print_count, last_printed_at} (null = কার্ড নেই); `filter[card]` = `none` / `pending` / `printed` (`CardholderFilter::CARD_STATES`)। টেস্ট: `CardListTest` (ঢাকার রাত ১টা = সেই দিন), `CardholderCardStatusTest` (বাতিল নিজের কার্ড + শুধু পরিবারের কার্ড = "কার্ড নেই"; সারি বাড়লেও query বাড়ে না)।
        - ✅ (৩খ UI) `CardDetailDialog.vue`: "প্রিন্টের ইতিহাস" (`data-print-history`; কার্ডের সাথে একসাথে `GET /cards/{id}/prints` — সময়, পদ্ধতি `cards.printMethods.*`, কপি, কে, ব্যাচে কিনা, নোট; শিরোনামে "N বার ছাপা"/"এখনো ছাপা হয়নি")। `CardsPage.vue`: পঞ্চম টাইল "এখনো ছাপা হয়নি" (`summary.pending`, চাপলে `validity=valid` + `printed=pending`; টাইলের key-গুলো `TILE_KEYS`-এ এক জায়গায়), ফিল্টারে "ছাপা" আর "ছাপার তারিখ থেকে/পর্যন্ত", অবস্থার ঘরে "N বার ছাপা" (শেষ ছাপার সময় tooltip) বা "এখনো ছাপা হয়নি" (শুধু ছাপা যায় এমন কার্ডে কমলা)। টাইপ `CardPrintLog`। ব্রাউজারে যাচাই (টাইল, আজকের ছাপা, ইতিহাস, bn/ডার্ক)।
        - ✅ (৩গ UI) `CardholdersPage.vue`: "Status" ঘরের দ্বিতীয় লাইনে নিজের কার্ডের অবস্থা (`data-card-state`: "কার্ড নেই" / "ছাপা বাকি" কমলা / "ছাপা হয়েছে" সবুজ + নম্বর, শেষ ছাপার সময় tooltip) — পুরনো সিস্টেমের "Status" কলামের মতো একই ঘরে (আলাদা কলামে ল্যাপটপে টেবিল চওড়া হয়ে যেত); ফিল্টার "কার্ড" (`filter[card]`)। শুধু `cards.view` থাকলে দেখায়, **সার্ভারও `current_card` শুধু তখনই পাঠায়** (টেস্টসহ)।
-     - ✅ (ধাপ ৪) ব্যাচ প্রিন্ট (নতুন; ৪ক তালিকায় বাছাই, ৪খ A4/Letter শিট — ৭ অক্টোবর; ৪গ ঐচ্ছিক বাকি): `/cards` তালিকা থেকে বাছাই করে একসাথে ছাপা — প্রতি কার্ডে এক পাতা (কার্ড প্রিন্টার) অথবা A4-এ কয়েকটা কার্ড কাটার দাগসহ; প্রতিটা কার্ডের লগ এক batch id-তে।
+     - ✅ (ধাপ ৪) ব্যাচ প্রিন্ট (নতুন; ৪ক তালিকায় বাছাই, ৪খ A4/Letter শিট — ৭ অক্টোবর; ৪গ-১ `GET /cards/printable` — ৮ অক্টোবর; ৪গ-২ UI বাকি): `/cards` তালিকা থেকে বাছাই করে একসাথে ছাপা — প্রতি কার্ডে এক পাতা (কার্ড প্রিন্টার) অথবা A4-এ কয়েকটা কার্ড কাটার দাগসহ; প্রতিটা কার্ডের লগ এক batch id-তে।
      - ➡️ (ধাপ ৫) সার্ভারে PDF — ইউজার Gotenberg অনুমোদন করেছেন (৬ অক্টোবর)। কেন: Chromium প্রিন্টের পাতাটাই খোলে, তাই PDF = স্ক্রিন (বাংলা যুক্তাক্ষর, নিজের ফন্ট, ঘোরানো লেখা); dompdf/mPDF-এ নকশা PHP-তে আবার আঁকতে হতো আর বাংলা ভাঙত; jsPDF+html2canvas ঝাপসা। নতুন PHP/npm প্যাকেজ নেই (Laravel HTTP client)।
        - ✅ (৫ক) compose-এ `gotenberg` (`gotenberg/gotenberg:8`, ~2.5 GB): শুধু internal network `pdf`-এ (ইন্টারনেটের রাস্তাই নেই; `app`/`queue`/`scheduler`/`web`-ও এই network-এ), Chromium allow-list `^http://web(/|$)`, পাবলিক IP নিষেধ, webhook/download-from/LibreOffice বন্ধ, কোনো port বাইরে খোলা নয়। যাচাই: Chromium নিজে Google-এ যেতে চেয়েছিল — allow-list আটকেছে, আর কন্টেইনার থেকে ইন্টারনেট পৌঁছায় না। কোড: `app/Support/Pdf` — `PdfRenderer` (interface, `renderUrl(url, PdfOptions)`), `GotenbergPdfRenderer` (`/forms/chromium/convert/url`, CSS page size, margin 0, `failOnConsoleExceptions`, `waitForExpression`), `DisabledPdfRenderer`, `PdfRenderException`; বাঁধা `AppServiceProvider`-এ `config/pdf.php` → `driver` (`PDF_DRIVER`, খালি = বন্ধ), `app_url` (Chromium-এর চোখে অ্যাপ: `http://web`)। টেস্ট `tests/Feature/Pdf/PdfRendererTest.php` (HTTP fake)।
        - ✅ (৫খ-১ ব্যাকএন্ড) `Cards\CardRenderService`: `link(ids, sides)` → `pdf.app_url` + `/render/cards?` + signed query (`tenant` = প্রতিষ্ঠানের public_id, `cards`, `sides` both/front/back, মেয়াদ `pdf.link_minutes` = ৫ মিনিট); `data(tenant, ids, sides)` → প্রতিটা কার্ড (দেওয়া ক্রমে, শুধু সেই প্রতিষ্ঠানের) `{id, number, printable, layout, values}` + প্রতিষ্ঠানের ফন্ট। রাউট `GET /api/v1/card-render` (`signed:relative`, লগইন নেই) — render পাতা নিজের query হুবহু এখানে পাঠায়। `TenantRepository::findByPublicId()`, `CardRepository::byPublicIds()`। টেস্ট `CardRenderTest` (বদলানো/মেয়াদোত্তীর্ণ লিংক 403, অন্য প্রতিষ্ঠানের কার্ড বাদ)।
