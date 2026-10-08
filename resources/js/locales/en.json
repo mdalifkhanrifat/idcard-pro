@@ -1016,6 +1016,21 @@
         "documentHint": "PDF or image (e.g. a police report for a lost card). Kept with the cardholder’s documents.",
         "preview": "Preview",
         "previewEmpty": "Choose a template to see the card.",
+        "barcode": {
+            "title": "Barcodes that will print blank",
+            "empty": "{format} barcode ({field}): no value.",
+            "invalid": "{format} barcode ({field}): “{value}” cannot be encoded.",
+            "hint": "The barcode's space stays blank on the card. Correct the value on the cardholder page, or choose another barcode type in the template.",
+            "accepts": {
+                "code128": "Code 128 takes Latin letters, digits and common symbols (no Bangla).",
+                "code39": "Code 39 takes capital A–Z, digits, space and - . $ / + %.",
+                "ean13": "EAN-13 takes 12 digits, or 13 with a correct check digit.",
+                "ean8": "EAN-8 takes 7 digits, or 8 with a correct check digit.",
+                "upc": "UPC-A takes 11 digits, or 12 with a correct check digit.",
+                "itf": "ITF takes digits only, an even number of them.",
+                "codabar": "Codabar takes digits and - $ : / . +, optionally between A–D start and stop letters."
+            }
+        },
         "missingImage": {
             "photo": "No photo",
             "cardholder_signature": "No holder signature",

@@ -18,6 +18,8 @@ const props = defineProps<{
     value: string;
     /** Real photo or signature when previewing a cardholder; without one the element's own (fallback) image shows. */
     imageUrl?: string | null;
+    /** The card as it prints: problems leave a blank space instead of an error box (they are warned about before printing). */
+    bare?: boolean;
 }>();
 
 const { t } = useI18n();
@@ -116,9 +118,9 @@ const image = computed(() => (props.element.type === 'logo' ? props.element.imag
                     </svg>
                     <div v-if="element.style.barcode_text" class="shrink-0 leading-tight whitespace-nowrap">{{ barcode.text }}</div>
                 </template>
-                <!-- A value the format cannot encode: never print a wrong barcode -->
+                <!-- A value the format cannot encode: never print a wrong barcode; in the designer, show why -->
                 <div
-                    v-else-if="value"
+                    v-else-if="value && !bare"
                     class="flex size-full items-center justify-center bg-danger/10 p-0.5 text-center leading-tight text-danger"
                     :style="{ fontSize: `${Math.max(7, scale * 1.8)}px`, fontFamily: 'sans-serif', fontWeight: 400, fontStyle: 'normal' }"
                     data-barcode-invalid

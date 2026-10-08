@@ -387,7 +387,7 @@ onBeforeUnmount(() => {
         <!-- What prints: clipped to the card's rounded corners -->
         <div class="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]">
             <div v-for="item in layers" :key="item.key" class="absolute" :class="item.style.hidden && 'opacity-25'" :style="box(item)" :data-content-key="item.key">
-                <DesignerElement :element="item" :scale="scale" :value="valueOf(item)" :image-url="imageOf?.(item)" />
+                <DesignerElement :element="item" :scale="scale" :value="valueOf(item)" :image-url="imageOf?.(item)" :bare="bare" />
             </div>
         </div>
         <div

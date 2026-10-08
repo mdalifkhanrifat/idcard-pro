@@ -1,6 +1,7 @@
 import { ref } from 'vue';
 import { http } from '@/lib/http';
 import { router } from '@/router';
+import { encodeBarcode, type BarcodeFormat } from '@/pages/card-templates/designer/barcode';
 import type { CardLayout, CardSide, CardValues, IssuedCard } from '@/types';
 
 export interface CardReasonOption {
@@ -241,4 +242,33 @@ export function missingImages(layout: CardLayout, values: CardValues): CardImage
         .map((element) => element.type as CardImageKey);
 
     return [...new Set(missing)];
+}
+
+/** A barcode on a card that prints nothing: the holder has no value for its field, or its format cannot encode the value. */
+export interface BarcodeProblem {
+    field: string;
+    format: BarcodeFormat;
+    /** The value that cannot be encoded; empty when there is none. */
+    value: string;
+}
+
+/**
+ * Barcodes of a card that would print empty (hidden elements are ignored), e.g. letters in an EAN-13 or an
+ * employee without an employee number. Checked with the same encoder that draws them, so a warning here
+ * always means a blank space on the printed card.
+ */
+export function barcodeProblems(layout: CardLayout, values: CardValues): BarcodeProblem[] {
+    const problems = new Map<string, BarcodeProblem>();
+    for (const element of layout.elements) {
+        if (element.type !== 'barcode' || element.style.hidden || !element.field) {
+            continue;
+        }
+        const format = element.style.barcode_format ?? 'code128';
+        const value = values.fields[element.field] ?? '';
+        if (value === '' || !encodeBarcode(value, format)) {
+            problems.set(`${element.field}|${format}`, { field: element.field, format, value });
+        }
+    }
+
+    return [...problems.values()];
 }
