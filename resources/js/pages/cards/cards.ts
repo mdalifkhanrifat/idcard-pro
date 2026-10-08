@@ -1,4 +1,4 @@
-import { ref } from 'vue';
+import { onScopeDispose, ref } from 'vue';
 import { http } from '@/lib/http';
 import { router } from '@/router';
 import { encodeBarcode, type BarcodeFormat } from '@/pages/card-templates/designer/barcode';
@@ -63,6 +63,36 @@ export function useCardReasons() {
 /** Address of the print page for these cards. */
 export function printPageHref(cardIds: string[]): string {
     return router.resolve({ name: 'cards.print', query: { ids: cardIds.join(',') } }).href;
+}
+
+/** Same-origin channel between this app's tabs (it never leaves the browser). */
+const PRINTS_CHANNEL = 'card-prints';
+
+/**
+ * Tells the app's other tabs that these cards were just recorded as printed, so lists, card details and the
+ * cardholder's cards open there refresh at once (the print page opens in its own tab).
+ */
+export function announcePrinted(cardIds: string[]): void {
+    if (typeof BroadcastChannel === 'undefined') {
+        return;
+    }
+    const channel = new BroadcastChannel(PRINTS_CHANNEL);
+    channel.postMessage({ cards: cardIds });
+    channel.close();
+}
+
+/** Calls back with the card ids whenever another tab records a printing; stops with the component. */
+export function useCardsPrinted(callback: (cardIds: string[]) => void): void {
+    if (typeof BroadcastChannel === 'undefined') {
+        return;
+    }
+    const channel = new BroadcastChannel(PRINTS_CHANNEL);
+    channel.onmessage = (event: MessageEvent<{ cards?: unknown }>) => {
+        if (Array.isArray(event.data?.cards)) {
+            callback(event.data.cards.map(String));
+        }
+    };
+    onScopeDispose(() => channel.close());
 }
 
 /** Opens the print page for these cards in a new tab, so the page the user is on stays as it is. */

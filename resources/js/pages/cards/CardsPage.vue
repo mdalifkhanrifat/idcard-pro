@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { FileDown, Printer, RotateCcw, Search, SlidersHorizontal, X } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
@@ -12,7 +12,7 @@ import UiSelect from '@/components/ui/UiSelect.vue';
 import UiSortHeader from '@/components/ui/UiSortHeader.vue';
 import CardDetailDialog from './CardDetailDialog.vue';
 import CardPrintButton from './CardPrintButton.vue';
-import { addToSelection, displayStatus, downloadCardsPdf, findPrintableCards, openPrintPage, statusTone, useCardReasons } from './cards';
+import { addToSelection, displayStatus, downloadCardsPdf, findPrintableCards, openPrintPage, statusTone, useCardReasons, useCardsPrinted } from './cards';
 import { useListQuery } from '@/composables/useListQuery';
 import { useMasterDataOptions } from '@/composables/useMasterDataOptions';
 import { http, toApiError } from '@/lib/http';
@@ -111,8 +111,6 @@ const printableRows = computed(() => rows.value.filter((card) => card.printable)
 const pageSelected = computed(() => printableRows.value.filter((card) => selected.value.includes(card.id)).length);
 const tooManySelected = computed(() => selected.value.length > cardReasons.printOptions.value.max_batch);
 const downloading = ref(false);
-/** The print page was opened in another tab: refresh counts when the user comes back. */
-let printTabOpen = false;
 
 function toggleCard(card: IssuedCard): void {
     selected.value = selected.value.includes(card.id) ? selected.value.filter((id) => id !== card.id) : [...selected.value, card.id];
@@ -157,7 +155,6 @@ async function selectAllMatching(): Promise<void> {
 
 function printSelected(): void {
     openPrintPage(selected.value);
-    printTabOpen = true;
 }
 
 async function downloadSelected(): Promise<void> {
@@ -172,15 +169,8 @@ async function downloadSelected(): Promise<void> {
     }
 }
 
-function onFocus(): void {
-    if (printTabOpen) {
-        printTabOpen = false;
-        changed();
-    }
-}
-
-onMounted(() => window.addEventListener('focus', onFocus));
-onBeforeUnmount(() => window.removeEventListener('focus', onFocus));
+// Printed in the print page's tab: print counts, the "not printed yet" tile and filters change
+useCardsPrinted(changed);
 </script>
 
 <template>

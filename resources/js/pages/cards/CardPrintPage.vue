@@ -8,7 +8,7 @@ import UiCheckbox from '@/components/ui/UiCheckbox.vue';
 import UiDialog from '@/components/ui/UiDialog.vue';
 import UiTextarea from '@/components/ui/UiTextarea.vue';
 import CardSheets from './CardSheets.vue';
-import { barcodeProblems, qrProblems, displayStatus, downloadCardsPdf, missingImages, printPages, SHEET_CARD, useCardReasons, type BarcodeProblem, type QrProblem, type CardImageKey, type PrintSides, type SheetCard } from './cards';
+import { announcePrinted, barcodeProblems, qrProblems, displayStatus, downloadCardsPdf, missingImages, printPages, SHEET_CARD, useCardReasons, type BarcodeProblem, type QrProblem, type CardImageKey, type PrintSides, type SheetCard } from './cards';
 import CardBarcodeProblems from './CardBarcodeProblems.vue';
 import { http, toApiError } from '@/lib/http';
 import { useUiStore } from '@/stores/ui';
@@ -164,6 +164,7 @@ async function logPrint(): Promise<void> {
     try {
         await (cardIds.length === 1 ? http.post(`/cards/${cardIds[0]}/prints`, body) : http.post('/cards/prints', { ...body, cards: cardIds }));
         logged.value += cardIds.length;
+        announcePrinted(cardIds);
         confirming.value = false;
         note.value = '';
         ui.notify(t('cards.print.logged', { count: cardIds.length }));
@@ -186,6 +187,7 @@ async function downloadPdf(): Promise<void> {
         await downloadCardsPdf(cardIds, { sides: sides.value, record: recordPdf.value, sheet: sheet.value?.key ?? SHEET_CARD });
         if (recordPdf.value) {
             logged.value += cardIds.length;
+            announcePrinted(cardIds);
             ui.notify(t('cards.print.pdfRecorded', { count: cardIds.length }));
         } else {
             ui.notify(t('cards.print.pdfDone'));

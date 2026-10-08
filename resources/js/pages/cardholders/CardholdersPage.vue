@@ -18,6 +18,7 @@ import { useCustomFields } from '@/composables/useCustomFields';
 import { http, toApiError } from '@/lib/http';
 import { formatDate, formatDateTime } from '@/lib/format';
 import { statusTone } from './cardholder';
+import { useCardsPrinted } from '@/pages/cards/cards';
 import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
 import type { Cardholder } from '@/types';
@@ -60,6 +61,13 @@ onMounted(async () => {
     await customFields.load();
     list.addFilters(customFilters.value.map((field) => `custom.${field.key}`));
     list.load();
+});
+
+// A card printed in the print page's tab moves its holder from "not printed" to "printed"
+useCardsPrinted((cardIds) => {
+    if (rows.value.some((row) => row.current_card && cardIds.includes(row.current_card.id))) {
+        list.load();
+    }
 });
 
 async function remove(cardholder: Cardholder): Promise<void> {

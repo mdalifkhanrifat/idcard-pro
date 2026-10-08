@@ -9,7 +9,7 @@ import CardDetailDialog from '@/pages/cards/CardDetailDialog.vue';
 import CardPrintButton from '@/pages/cards/CardPrintButton.vue';
 import CardRender from '@/pages/cards/CardRender.vue';
 import IssueCardDialog from '@/pages/cards/IssueCardDialog.vue';
-import { displayStatus, statusTone, useCardReasons } from '@/pages/cards/cards';
+import { displayStatus, statusTone, useCardReasons, useCardsPrinted } from '@/pages/cards/cards';
 import { http } from '@/lib/http';
 import { formatDate } from '@/lib/format';
 import { useAuthStore } from '@/stores/auth';
@@ -51,6 +51,12 @@ async function load(): Promise<void> {
 }
 
 onMounted(load);
+// Printed in another tab: the current card's print status and the history change
+useCardsPrinted((cardIds) => {
+    if (cards.value.some((card) => cardIds.includes(card.id))) {
+        load();
+    }
+});
 
 function show(id: string): void {
     detailId.value = id;

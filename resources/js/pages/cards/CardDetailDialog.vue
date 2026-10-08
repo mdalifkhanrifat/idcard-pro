@@ -9,7 +9,7 @@ import UiInput from '@/components/ui/UiInput.vue';
 import UiTextarea from '@/components/ui/UiTextarea.vue';
 import CardPrintButton from './CardPrintButton.vue';
 import CardRender from './CardRender.vue';
-import { displayStatus, statusTone } from './cards';
+import { displayStatus, statusTone, useCardsPrinted } from './cards';
 import { http, toApiError } from '@/lib/http';
 import { formatDate, formatDateTime } from '@/lib/format';
 import { useAuthStore } from '@/stores/auth';
@@ -41,11 +41,11 @@ const status = computed(() => (card.value ? displayStatus(card.value) : 'active'
 const reasonLabel = (key: string) => (te(`cards.reasons.${key}`) ? t(`cards.reasons.${key}`) : key);
 const methodLabel = (key: string) => (te(`cards.printMethods.${key}`) ? t(`cards.printMethods.${key}`) : key);
 
-async function load(): Promise<void> {
+async function load(quiet = false): Promise<void> {
     if (!props.cardId) {
         return;
     }
-    loading.value = true;
+    loading.value = !quiet;
     try {
         const [shown, history] = await Promise.all([http.get(`/cards/${props.cardId}`), http.get(`/cards/${props.cardId}/prints`)]);
         card.value = shown.data.data;
@@ -55,6 +55,14 @@ async function load(): Promise<void> {
         loading.value = false;
     }
 }
+
+// Printed in the print page's tab: show the new print count and history without closing the details
+// (the pages behind listen for themselves)
+useCardsPrinted((cardIds) => {
+    if (open.value && props.cardId && cardIds.includes(props.cardId)) {
+        load(true);
+    }
+});
 
 watch(open, (value) => {
     if (value) {
