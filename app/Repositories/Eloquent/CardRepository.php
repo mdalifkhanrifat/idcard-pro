@@ -209,6 +209,11 @@ class CardRepository extends EloquentRepository implements CardRepositoryInterfa
         return $this->query()->where('signatory_id', $signatoryId)->exists();
     }
 
+    public function findByVerifyCode(string $code): ?Card
+    {
+        return Card::query()->withoutGlobalScopes()->where('verify_code', $code)->with(['tenant', 'template'])->first();
+    }
+
     public function byPublicIds(array $publicIds): Collection
     {
         $cards = $this->query()->whereIn('public_id', $publicIds)->with(['template', 'photo', 'signature', 'signatory'])->get()->keyBy('public_id');

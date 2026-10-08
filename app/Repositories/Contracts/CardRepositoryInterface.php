@@ -88,6 +88,12 @@ interface CardRepositoryInterface extends RepositoryInterface
     public function usesSignatory(int $signatoryId): bool;
 
     /**
+     * The card with this verification code, in any organization (public verification has no signed-in
+     * organization), with its organization and template.
+     */
+    public function findByVerifyCode(string $code): ?Card;
+
+    /**
      * Cards by public id in the order given, with what drawing them needs. Unknown ids are left out.
      *
      * @param  array<int, string>  $publicIds

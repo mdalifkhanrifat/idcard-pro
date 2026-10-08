@@ -48,6 +48,7 @@ return [
     ],
 
     'verification' => [
+        'not_found' => 'No card was found for this code, or the organization does not verify its cards here.',
         'link_invalid' => 'The link must be a web address (http or https) containing {code} where the card\'s code goes.',
     ],
     'lifecycle' => [

@@ -17,6 +17,7 @@ use App\Http\Controllers\Api\V1\CardPrintController;
 use App\Http\Controllers\Api\V1\CardRenderController;
 use App\Http\Controllers\Api\V1\CardTemplateController;
 use App\Http\Controllers\Api\V1\CardTemplateElementController;
+use App\Http\Controllers\Api\V1\CardVerificationController;
 use App\Http\Controllers\Api\V1\CustomFieldController;
 use App\Http\Controllers\Api\V1\FamilyMemberController;
 use App\Http\Controllers\Api\V1\MasterDataController;
@@ -57,6 +58,11 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::get('library-image-files/{image}', [TenantImageController::class, 'file'])
         ->middleware(['signed:relative', 'throttle:240,1'])
         ->name('library-image-files.show');
+
+    // Public card verification (3.7): the code from the card's QR code, no sign-in
+    Route::get('verify/{code}', [CardVerificationController::class, 'show'])
+        ->middleware('throttle:'.(int) config('cards.verification.throttle').',1')
+        ->name('cards.verify');
 
     // Cards for the PDF engine's render page (signed link made by CardRenderService::link)
     Route::get('card-render', [CardRenderController::class, 'show'])

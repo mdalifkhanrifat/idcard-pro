@@ -111,7 +111,8 @@ class Tenant extends Model
 
         return [
             'enabled' => (bool) ($saved['enabled'] ?? $defaults['enabled']),
-            'fields' => array_values(array_intersect($allowed, (array) ($saved['fields'] ?? $defaults['fields']))),
+            // In the organization's order; details no longer offered are dropped
+            'fields' => array_values(array_intersect((array) ($saved['fields'] ?? $defaults['fields']), $allowed)),
             'show_revoke_reason' => (bool) ($saved['show_revoke_reason'] ?? $defaults['show_revoke_reason']),
             'link' => filled($saved['link'] ?? null) ? (string) $saved['link'] : null,
             'note' => filled($saved['note'] ?? null) ? (string) $saved['note'] : null,
