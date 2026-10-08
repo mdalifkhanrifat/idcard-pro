@@ -14,6 +14,7 @@ use App\Services\Cards\CardIssueService;
 use App\Services\Cards\CardLayoutPresenter;
 use App\Services\Cards\CardRenderService;
 use App\Services\Cards\CardService;
+use App\Services\Cards\CardWarnings;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -79,22 +80,28 @@ class CardController extends Controller
         return CardResource::collection($this->cards->history($cardholder));
     }
 
-    public function store(IssueCardRequest $request, Cardholder $cardholder): JsonResponse
+    /**
+     * Issue a card; `meta.warnings` lists what will print blank (see show()), so a connected system knows too.
+     */
+    public function store(IssueCardRequest $request, Cardholder $cardholder, CardWarnings $warnings): JsonResponse
     {
         $card = $this->cards->issue($cardholder, IssueCardData::fromArray($request->validated(), $request->file('document')), $request->user());
 
-        return (new CardResource($card))->response()->setStatusCode(201);
+        return (new CardResource($card))->additional(['meta' => ['warnings' => $warnings->forCard($card)]])->response()->setStatusCode(201);
     }
 
     /**
-     * One card with what it prints: `meta.layout` (design snapshot) and `meta.values` (text and images).
+     * One card with what it prints: `meta.layout` (design snapshot), `meta.values` (text and images) and
+     * `meta.warnings` (missing photos or signatures, barcodes that cannot be printed).
      */
-    public function show(Card $card, CardLayoutPresenter $layout, CardDataResolver $cardData): CardResource
+    public function show(Card $card, CardLayoutPresenter $layout, CardDataResolver $cardData, CardWarnings $warnings): CardResource
     {
         Gate::authorize('cards.view');
 
+        $values = $cardData->forCard($card);
+
         return (new CardResource($card->load(['template', 'familyMember', 'cardholder', 'issuer', 'replacedBy', 'document'])))
-            ->additional(['meta' => ['layout' => $layout->present($card), 'values' => $cardData->forCard($card)]]);
+            ->additional(['meta' => ['layout' => $layout->present($card), 'values' => $values, 'warnings' => $warnings->check($card->layout['elements'] ?? [], $values)]]);
     }
 
     /**

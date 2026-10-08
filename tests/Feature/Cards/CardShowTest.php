@@ -68,3 +68,30 @@ it('shows cards to their organization only', function () {
     Sanctum::actingAs($otherOwner);
     $this->getJson("/api/v1/cards/{$card['id']}")->assertNotFound();
 });
+
+it('warns about what will print blank: missing photos and barcodes that cannot be encoded', function () {
+    $holder = cardholder($this->tenant, ['employee_no' => 'ACME-0031', 'national_id' => null]);
+    app(TenantContext::class)->run($this->tenant, function () {
+        $barcode = fn (string $field, array $style) => ['side' => 'front', 'type' => 'barcode', 'field' => $field, 'x' => 5, 'y' => 30, 'width' => 30, 'height' => 8, 'z_index' => 1, 'style' => $style];
+        $this->template->elements()->createMany([
+            ['side' => 'front', 'type' => 'photo', 'x' => 60, 'y' => 5, 'width' => 20, 'height' => 25, 'z_index' => 1, 'style' => []],
+            $barcode('employee_no', ['barcode_format' => 'ean13']),
+            $barcode('employee_no', ['barcode_format' => 'ean13']),
+            $barcode('employee_no', ['barcode_format' => 'code128']),
+            $barcode('national_id', ['barcode_format' => 'code39']),
+            $barcode('employee_no', ['barcode_format' => 'ean8', 'hidden' => true]),
+        ]);
+    });
+    $expected = [
+        ['type' => 'missing_image', 'image' => 'photo'],
+        ['type' => 'barcode', 'field' => 'employee_no', 'format' => 'ean13', 'value' => 'ACME-0031', 'reason' => 'invalid'],
+        ['type' => 'barcode', 'field' => 'national_id', 'format' => 'code39', 'value' => '', 'reason' => 'empty'],
+    ];
+
+    // A system issuing through the API learns it at once; issuing is not blocked
+    $issued = $this->postJson("/api/v1/cardholders/{$holder->public_id}/cards", ['template' => $this->template->public_id, 'reason' => 'new'])
+        ->assertCreated()
+        ->assertJsonPath('meta.warnings', $expected);
+
+    $this->getJson("/api/v1/cards/{$issued->json('data.id')}")->assertOk()->assertJsonPath('meta.warnings', $expected);
+});
