@@ -1,7 +1,7 @@
 # IDCard Pro: কাজের অগ্রগতি ও হ্যান্ডঅফ
 
 > নতুন চ্যাট বা নতুন ডেভেলপার এই ফাইল থেকে শুরু করবেন। পুরো পরিকল্পনা আছে [ROADMAP.md](ROADMAP.md)-এ।
-> সর্বশেষ আপডেট: ৮ অক্টোবর ২০২৬। **Phase 1 আর Phase 2 সম্পন্ন।** Phase 3 চলছে: **৩.১–৩.৬ সম্পন্ন** (৩.৬ প্রিন্ট: একক/ব্যাচ প্রিন্ট, A4/Letter শিট, সার্ভারের PDF, প্রিন্টের ইতিহাস, PENDING/PRINTED, "তালিকার সব কার্ড বাছাই", বারকোড আর QR-এর সতর্কতা, কার্ডে আসল QR) — বাকি **৩.৭** (স্বাক্ষরিত QR আর পাবলিক ভেরিফিকেশন পেজ), তারপর ৩.৮।
+> সর্বশেষ আপডেট: ৮ অক্টোবর ২০২৬। **Phase 1 আর Phase 2 সম্পন্ন।** Phase 3 চলছে: **৩.১–৩.৬ সম্পন্ন** (৩.৬ প্রিন্ট: একক/ব্যাচ প্রিন্ট, A4/Letter শিট, সার্ভারের PDF, প্রিন্টের ইতিহাস, PENDING/PRINTED, "তালিকার সব কার্ড বাছাই", বারকোড আর QR-এর সতর্কতা, কার্ডে আসল QR) — **৩.৭ চলছে** (কার্ড যাচাই: ক — কোড আর সেটিং ✅ ৮ অক্টোবর; বাকি খ API, গ সেটিংয়ের পাতা, ঘ পাবলিক পাতা, ঙ যাচাইয়ের লগ), তারপর ৩.৮।
 > **এখান থেকে শুরু:** নিচের "৮ অক্টোবর ২০২৬" (আজকের সব বদল আর সিদ্ধান্ত) আর "কাল শুরুর কমান্ড" পড়ুন → §৮-এর "৩.৭" → "পরের কাজ"-এর প্রথম বাকি ধাপ। শেষ commit: `git log --oneline -1`।
 
 ### ৮ অক্টোবর ২০২৬
@@ -20,6 +20,7 @@
 - ✅ **নিরাপত্তা: npm audit-এর critical সতর্কতা** (আগে থেকেই ছিল): dev টুল `concurrently` → `shell-quote` 1.9.0 (GHSA-pqg4-j6r4-53mv, `quote()`-এ command injection)। `npm audit fix` → `concurrently` 10.0.6, `shell-quote` 1.12.0 (শুধু package-lock, package.json অপরিবর্তিত); এখন `npm audit` → 0 vulnerabilities, বিল্ড চলে।
 - ✅ **বাগ: ডার্ক মোডে ব্র্যান্ড রঙের লেখা প্রায় অদৃশ্য** (§৬-এ পুরনো জানা সমস্যা; হলুদের মতো হালকা রঙে লাইট মোডেও একই)। নতুন token `brand-ink` (`app.css`; `lib/brand.ts` → WCAG কন্ট্রাস্ট মেপে রং মেশায়) আর ৩৩টা ফাইলে ৫২ জায়গায় `text-brand`/`border-brand`/`outline-brand` → `*-brand-ink`; `--ring`-ও এখন ink থেকে; `--brand-contrast` এখন সত্যিকারের কন্ট্রাস্ট দেখে কালো/সাদা বাছে। মাপা (ব্রাউজারে প্রতিটা `.text-brand-ink` আর তার পটভূমি): Acme #280750 — ডার্কে ink #9483a8, কম-সে-কম ৫.২৮ (আগে প্রায় ১.৫), লাইটে ১৫.৮৪; হলুদ #ffd400 (শুধু প্রিভিউ, সেভ নয়) — লাইটে ink #806a00 = ৪.৯২, ডার্কে ১২.৭৬।
 - ✅ **বাগ: অন্য ট্যাবে ছাপার পরে কার্ডের তথ্য পুরনো থাকত** (কার্ডের বিস্তারিত, কার্ডধারীর Cards ট্যাব, কার্ডধারীর তালিকার "ছাপা বাকি/ছাপা হয়েছে")। `cards.ts` → `announcePrinted(ids)` (প্রিন্টের পাতা লগ লেখার পরে — ব্রাউজারের প্রিন্ট আর "PDF + লিখে রাখো") আর `useCardsPrinted(cb)` — **BroadcastChannel `card-prints`** (একই ব্রাউজারের এই অ্যাপের ট্যাবগুলোর মধ্যে; বাইরে কিছু যায় না)। শোনে: `CardDetailDialog` (শুধু নিজের কার্ড হলে, চুপচাপ আবার আনে, খোলা থাকে), `CardholderCards` (নিজের কোনো কার্ড হলে), `CardholdersPage` (তালিকার কারো বর্তমান কার্ড হলে), `CardsPage` (তালিকা + টাইল; আগের `focus`-কৌশলের জায়গায়, তাই ফেরার আগেই হালনাগাদ)। যাচাই (DB-তে কিছু লেখা নয়: লগের POST Chrome-এর ভেতরে নকল 201): বার্তায় চার জায়গাতেই আবার আনে, অন্য কার্ডের বার্তায় বিস্তারিত আনে না, প্রিন্টের পাতায় "লিখে রাখো" → বার্তা `{cards: [id]}`; আসল `print_count` ০-ই থাকে।
+- ✅ **৩.৭ক: কার্ড যাচাইয়ের কোড আর প্রতিষ্ঠানের সেটিং** (পুরনো সিস্টেমে যাচাই ছিল না — নতুন ফিচার)। ইউজারের সিদ্ধান্ত: **সব কিছু প্রতিষ্ঠানের নিজের সেটিং থেকে**। নকশা: প্রতি কার্ডে এলোমেলো `cards.verify_code` (২৪ অক্ষর a–z0–9 ≈ ১২৪ bit, unique; MySQL case ধরে না তাই শুধু ছোট হাতের; `Card::newVerifyCode()`, `creating`-এ নিজে বসে; migration আগের সব কার্ডে বসিয়েছে, DEMO-সহ — শুধু এই কলাম) — ইস্যুতে স্থির, তাই প্রতিটা reprint-এ একই লিংক। লিংক = `Tenant::verifyUrl(code)`: প্রতিষ্ঠানের নিজের ঠিকানা (`{code}`-সহ, যেমন HR পোর্টাল) বা `APP_URL` + `config cards.verification.path` (`/v/{code}`); যাচাই বন্ধ থাকলে null। নতুন ঘর **`card.verify_url`** (`CardDataResolver::forCard()`, ডিজাইনারের `card` তালিকায়) — QR-এর লাইনে দিলে লাইনের সাথে লিংক, একা দিলে শুধু লিংক; বারকোড/লেখাতেও চলে; বন্ধ থাকলে মান নেই (QR/বারকোডের সতর্কতা ধরে)। সেটিং `tenants.settings.verification` (`Tenant::verificationSettings()` — ডিফল্ট `config cards.verification.defaults`): `enabled` (**ডিফল্ট বন্ধ** — প্রতিষ্ঠান না চাইলে কিছু পাবলিক নয়), `fields` (পাতায় কী দেখাবে; শুধু `config cards.verification.fields`-এর তালিকা থেকে — NID, পাসপোর্ট, ফোন, ইমেইল, ঠিকানা, জন্মতারিখ ইচ্ছা করে নেই), `show_revoke_reason` (ডিফল্ট না), `link`, `note` (যেমন "পাওয়া গেলে যোগাযোগ…")। `POST /settings` → `verification` (`UpdateTenantSettingsRequest`; লিংক `{code}`-এর জায়গায় নমুনা বসিয়ে http/https URL যাচাই — `{}` URL-এ বৈধ নয়), `TenantService::updateSettings()`, `TenantResource.verification`। টেস্ট `CardVerificationTest` (কোড unique/স্থির, ডিফল্ট বন্ধ, চালু → লিংক, নিজের ঠিকানা, নিষিদ্ধ ঘর/ভুল লিংক 422)। ২৪৪টা টেস্ট।
 ### ৭ অক্টোবর ২০২৬
 
 - ✅ **৩.৬ ধাপ ৪ক** — `/cards` তালিকায় বাছাই করে প্রিন্ট (শুধু UI): প্রতি সারিতে checkbox (ছাপা যায় না এমন কার্ডে বন্ধ, tooltip-এ কারণ), হেডারে "এই পাতার সব" (আধা-বাছাই দেখায়), বাছাই **পাতা আর ফিল্টার বদলালেও থাকে** (কয়েক পাতা থেকে জমানো যায়, বাছাইয়ের ক্রমে ছাপা)। বার: "N টা বাছাই করা" · বাছাই করা প্রিন্ট (`openPrintPage`) · বাছাই করাদের PDF (`downloadCardsPdf`, দুই পাশ, লগ নয় — লগসহ PDF প্রিন্টের পাতায়) · বাছাই মুছুন; `max_batch`-এর বেশি হলে সতর্কতা আর বোতাম বন্ধ। প্রিন্টের ট্যাব খোলার পর এই ট্যাবে ফিরলে (`focus`) তালিকা আর টাইল নিজে হালনাগাদ। সব কিছু শুধু `cards.print` থাকলে। ভাষা `cards.batch.*`। ব্রাউজারে যাচাই (বাছাই = সার্ভারের `printable`, প্রিন্টের লিংক, PDF ১০০ KB, পাতা বদলে বাছাই থাকে, bn/ডার্ক/ফোন), কোনো লগ লেখা হয়নি।
@@ -78,7 +79,7 @@ docker compose run --rm --no-deps vite npm run build         # ফ্রন্�
 
 **প্রতিটা ধাপের শেষে মান যাচাই:**
 ```bash
-docker compose exec app php artisan test --compact                       # এখন ২৪১টা টেস্ট
+docker compose exec app php artisan test --compact                       # এখন ২৪৪টা টেস্ট
 docker compose exec app vendor/bin/phpstan analyse --memory-limit=1G
 docker compose exec app vendor/bin/pint --dirty --format agent
 docker compose run --rm --no-deps vite npx vue-tsc --noEmit
@@ -160,7 +161,7 @@ echo "deleted ", count($ids), " test cards\n";'
 | 2.5 | শিক্ষা ও প্রশিক্ষণ কোর্স (এক টেবিলে), কাস্টম ফিল্ড (সেটআপ পেজ, প্রিসেট, ফর্ম ট্যাব, ফিল্টার) | `QualificationService`, `app/Services/CustomFields`, `config/custom_field_presets.php`, `pages/custom-fields` |
 | 2.6 | CSV/XLSX ইমপোর্ট: যাচাই আর প্রিভিউ, queue-তে ইমপোর্ট, ইতিহাস, টেমপ্লেট | `CardholderImportService`, `CardholderImportMapper`, `app/Jobs/ImportCardholders.php`, `app/Support/Spreadsheets`, `config/cardholder_import.php` |
 
-**মান:** ২৪১টা টেস্ট পাস, Larastan (level 5) আর Pint পরিষ্কার, TypeScript টাইপ-চেক পরিষ্কার। প্রতিটা পেজ headless Chrome-এ চালিয়ে যাচাই করা হয়েছে।
+**মান:** ২৪৪টা টেস্ট পাস, Larastan (level 5) আর Pint পরিষ্কার, TypeScript টাইপ-চেক পরিষ্কার। প্রতিটা পেজ headless Chrome-এ চালিয়ে যাচাই করা হয়েছে।
 
 **বর্তমান মডিউল আর তাদের service:**
 

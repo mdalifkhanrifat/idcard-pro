@@ -54,6 +54,39 @@ return [
         ],
     ],
 
+    /*
+     * Card verification (3.7): every card carries a random code; its link (field card.verify_url, e.g. in a
+     * QR code) opens a public page showing whether the card is valid. Each organization turns it on and
+     * chooses what the page shows (tenants.settings.verification); off by default, so nothing is public
+     * until the organization decides.
+     */
+    'verification' => [
+        'code_length' => 24,
+        // Path of the public page in this application; an organization may use its own address instead
+        'path' => '/v/{code}',
+        /*
+         * Details the public page may show, from the card as issued. Sensitive details (national ID,
+         * passport, phone, email, addresses, date of birth) are deliberately not offered.
+         */
+        'fields' => [
+            'photo', 'full_name', 'full_name_local', 'family.name', 'family.relation', 'employee_no', 'rank',
+            'designation', 'department', 'unit', 'branch', 'blood_group', 'template', 'card.number',
+            'card.issue_date', 'card.expiry_date', 'signatory.name',
+        ],
+        'defaults' => [
+            'enabled' => false,
+            'fields' => ['photo', 'full_name', 'family.name', 'family.relation', 'designation', 'card.number', 'card.expiry_date'],
+            // A revoked card shows only "revoked" unless the organization allows the reason to be shown
+            'show_revoke_reason' => false,
+            // Own address with {code}, e.g. https://hr.example.com/id/{code}; empty = this application's page
+            'link' => null,
+            // Text on the page, e.g. whom to contact when a card is found
+            'note' => null,
+        ],
+        // Lookups per minute from one address
+        'throttle' => 30,
+    ],
+
     // active: the holder's current card; replaced: a newer card was issued; revoked: cancelled (e.g. reported lost)
     'statuses' => ['active', 'replaced', 'revoked'],
 

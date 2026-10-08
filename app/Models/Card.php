@@ -22,6 +22,7 @@ use Spatie\Activitylog\Support\LogOptions;
  *
  * @property int $id
  * @property string $public_id
+ * @property string|null $verify_code
  * @property int $tenant_id
  * @property int $cardholder_id
  * @property int|null $family_member_id set for family cards
@@ -62,7 +63,7 @@ use Spatie\Activitylog\Support\LogOptions;
  * @property-read Collection<int, CardPrint> $prints
  */
 #[Fillable([
-    'cardholder_id', 'family_member_id', 'card_template_id', 'template_version', 'layout', 'values', 'number', 'rf_card_no',
+    'cardholder_id', 'family_member_id', 'card_template_id', 'template_version', 'layout', 'values', 'number', 'verify_code', 'rf_card_no',
     'reason', 'notes', 'document_file_id', 'photo_file_id', 'signature_file_id', 'signatory_id', 'issue_date',
     'expiry_date', 'status', 'status_changed_at', 'status_note', 'replaced_by_id', 'issued_by',
     'active_number_key', 'active_holder_key', 'print_count', 'last_printed_at',
@@ -78,6 +79,32 @@ class Card extends Model
     protected $attributes = [
         'status' => 'active',
     ];
+
+    /**
+     * Characters of a verification code: lower case only, as lookups ignore case.
+     */
+    private const VERIFY_ALPHABET = 'abcdefghijklmnopqrstuvwxyz0123456789';
+
+    protected static function booted(): void
+    {
+        static::creating(function (Card $card): void {
+            $card->verify_code ??= self::newVerifyCode();
+        });
+    }
+
+    /**
+     * A random code for the card's verification link (about 124 bits, so it cannot be guessed).
+     */
+    public static function newVerifyCode(): string
+    {
+        $length = (int) config('cards.verification.code_length');
+        $code = '';
+        for ($i = 0; $i < $length; $i++) {
+            $code .= self::VERIFY_ALPHABET[random_int(0, strlen(self::VERIFY_ALPHABET) - 1)];
+        }
+
+        return $code;
+    }
 
     /**
      * @return array<int, string>

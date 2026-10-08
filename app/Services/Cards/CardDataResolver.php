@@ -84,12 +84,14 @@ class CardDataResolver
      */
     public function forCard(Card $card): array
     {
-        $card->loadMissing(['photo', 'signature', 'signatory']);
+        $card->loadMissing(['photo', 'signature', 'signatory', 'tenant']);
         $fields = [
             ...($card->values ?? []),
             'card.number' => $card->number,
             'card.issue_date' => $this->date($card->issue_date),
             'card.expiry_date' => $this->date($card->expiry_date),
+            // Empty (left out) while the organization has verification off
+            'card.verify_url' => (string) $card->tenant->verifyUrl($card->verify_code),
         ];
 
         return [

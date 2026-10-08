@@ -106,6 +106,7 @@ return [
             'card.number',      // card_id_number
             'card.issue_date',  // card_issue_date
             'card.expiry_date', // card_expair_date
+            'card.verify_url',  // (new) public verification link, when the organization turned verification on
             'signatory.name', 'signatory.designation',
             'organization.name',
         ],

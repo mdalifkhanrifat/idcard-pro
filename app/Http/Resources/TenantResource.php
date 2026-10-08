@@ -32,6 +32,7 @@ class TenantResource extends JsonResource
             'card_number_format' => $this->settings['card_number_format'] ?? CardNumberFormat::DEFAULT,
             'default_card_size' => $this->resource->defaultCardSize(),
             'card_number_on_reissue' => $this->resource->cardNumberOnReissue(),
+            'verification' => $this->resource->verificationSettings(),
             'status' => $this->status,
             'users_count' => $this->whenCounted('users'),
             'created_at' => $this->created_at,

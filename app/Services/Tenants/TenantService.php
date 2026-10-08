@@ -99,6 +99,18 @@ class TenantService
             }
         }
 
+        if (array_key_exists('verification', $data)) {
+            $verification = $data['verification'];
+            $data['settings'] = [...($data['settings'] ?? $tenant->settings ?? []), 'verification' => [
+                'enabled' => (bool) $verification['enabled'],
+                'fields' => array_values(array_unique((array) ($verification['fields'] ?? []))),
+                'show_revoke_reason' => (bool) ($verification['show_revoke_reason'] ?? false),
+                'link' => filled($verification['link'] ?? null) ? trim((string) $verification['link']) : null,
+                'note' => filled($verification['note'] ?? null) ? trim((string) $verification['note']) : null,
+            ]];
+            unset($data['verification']);
+        }
+
         return $this->tenants->update($tenant, $data)->refresh();
     }
 

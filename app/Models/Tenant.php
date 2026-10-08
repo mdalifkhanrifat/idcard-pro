@@ -98,6 +98,41 @@ class Tenant extends Model
     }
 
     /**
+     * Card verification settings (3.7), with the configured defaults for anything not set and only the
+     * details the public page may show.
+     *
+     * @return array{enabled: bool, fields: array<int, string>, show_revoke_reason: bool, link: string|null, note: string|null}
+     */
+    public function verificationSettings(): array
+    {
+        $defaults = (array) config('cards.verification.defaults');
+        $saved = (array) ($this->settings['verification'] ?? []);
+        $allowed = (array) config('cards.verification.fields');
+
+        return [
+            'enabled' => (bool) ($saved['enabled'] ?? $defaults['enabled']),
+            'fields' => array_values(array_intersect($allowed, (array) ($saved['fields'] ?? $defaults['fields']))),
+            'show_revoke_reason' => (bool) ($saved['show_revoke_reason'] ?? $defaults['show_revoke_reason']),
+            'link' => filled($saved['link'] ?? null) ? (string) $saved['link'] : null,
+            'note' => filled($saved['note'] ?? null) ? (string) $saved['note'] : null,
+        ];
+    }
+
+    /**
+     * The public verification link for a card code, or null while verification is off.
+     */
+    public function verifyUrl(?string $code): ?string
+    {
+        $settings = $this->verificationSettings();
+        if (! $settings['enabled'] || blank($code)) {
+            return null;
+        }
+        $format = $settings['link'] ?? rtrim((string) config('app.url'), '/').config('cards.verification.path');
+
+        return str_replace('{code}', $code, $format);
+    }
+
+    /**
      * Default card size in mm, landscape (legacy "Template Setup"); CR80 unless the organization set one.
      *
      * @return array{width: float, height: float}

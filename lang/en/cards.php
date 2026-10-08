@@ -47,6 +47,9 @@ return [
         'pdf_unavailable' => 'The PDF could not be made right now. Try again, or print from the browser.',
     ],
 
+    'verification' => [
+        'link_invalid' => 'The link must be a web address (http or https) containing {code} where the card\'s code goes.',
+    ],
     'lifecycle' => [
         'not_active' => 'Only an active card can be revoked.',
     ],
