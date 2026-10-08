@@ -34,6 +34,8 @@ export interface TenantVerification {
     /** Own address with {code}; null = this application's page. */
     link: string | null;
     note: string | null;
+    /** Keep a log of checks (shown in card details). */
+    log_checks: boolean;
 }
 
 export interface User {
@@ -328,6 +330,11 @@ export interface IssuedCard {
     /** Total copies printed; 0 = never printed (legacy "PENDING"). */
     print_count: number;
     last_printed_at: string | null;
+    /** Public checks on the verification page (3.7). */
+    verify_count: number;
+    last_verified_at: string | null;
+    /** Public verification link; null while the organization has verification off. */
+    verify_url: string | null;
     /** Active and not expired: the server's rule for printing. */
     printable: boolean;
     template?: { id: string; name: string; code: string };
@@ -340,6 +347,13 @@ export interface IssuedCard {
 }
 
 /** One printing of an issued card (card_prints). */
+/** One public check of a card: its status then, a short device id (never the address), when. */
+export interface CardVerificationLog {
+    status: 'valid' | 'expired' | 'revoked' | 'replaced';
+    device: string;
+    verified_at: string;
+}
+
 export interface CardPrintLog {
     id: string;
     card?: { id: string; number: string };

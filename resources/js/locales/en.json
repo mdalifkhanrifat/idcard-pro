@@ -249,6 +249,8 @@
             "sample": "A card's link:",
             "note": "Message on the page (optional)",
             "notePlaceholder": "e.g. Found this card? Please call +880 …",
+            "logChecks": "Keep a log of checks",
+            "logChecksHint": "Card details show how often and when a card was checked (no addresses are kept; kept for a year).",
             "qrHint": "To print the link, add the “Verification link” field to a QR code (or barcode, or text) in the card template designer.",
             "fieldNames": {
                 "photo": "Photo",
@@ -1052,6 +1054,17 @@
         "documentHint": "PDF or image (e.g. a police report for a lost card). Kept with the cardholder’s documents.",
         "preview": "Preview",
         "previewEmpty": "Choose a template to see the card.",
+        "verification": {
+            "title": "Verification checks",
+            "count": "{count} check(s) · {devices} device(s)",
+            "none": "Not checked yet",
+            "open": "Open the verification page",
+            "copy": "Copy the link",
+            "copied": "Link copied.",
+            "copyFailed": "Could not copy the link.",
+            "checkedWhileInvalid": "This card was checked after it stopped being valid. It may still be shown somewhere: ask the holder for it back.",
+            "deviceHint": "Short id of the checking device (its address is not kept)"
+        },
         "barcode": {
             "title": "Barcodes and QR codes that will print blank",
             "empty": "{format} barcode ({field}): no value.",

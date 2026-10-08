@@ -25,7 +25,7 @@ const form = reactive({ name: '', legal_name: '', email: '', phone: '', country_
 /** Landscape default size of new card templates in mm (legacy Template Setup). */
 const cardSize = reactive({ width: 85.6 as number | string, height: 54 as number | string });
 /** Public card verification (3.7): on or off, what the page shows (in order), own link address and a note. */
-const verification = reactive<TenantVerification>({ enabled: false, fields: [], show_revoke_reason: false, link: null, note: null });
+const verification = reactive<TenantVerification>({ enabled: false, fields: [], show_revoke_reason: false, link: null, note: null, log_checks: true });
 const verificationFields = ref<string[]>([]);
 const sampleLink = computed(() => verifyUrlFor({ verification } as Tenant, SAMPLE_VERIFY_CODE, true));
 const fieldLabel = (key: string) => verificationFieldLabel(key, t, te);
@@ -99,6 +99,7 @@ async function save(): Promise<void> {
     body.append('verification[show_revoke_reason]', verification.show_revoke_reason ? '1' : '0');
     body.append('verification[link]', verification.link?.trim() ?? '');
     body.append('verification[note]', verification.note?.trim() ?? '');
+    body.append('verification[log_checks]', verification.log_checks ? '1' : '0');
     if (logo.value) {
         body.append('logo', logo.value);
     }
@@ -219,6 +220,7 @@ async function save(): Promise<void> {
                                 <p class="text-xs text-muted">{{ t('settings.verification.linkHint') }}</p>
                                 <p class="text-xs text-muted">{{ t('settings.verification.sample') }} <span class="break-all font-mono text-fg" data-verification-sample>{{ sampleLink }}</span></p>
                             </div>
+                            <UiCheckbox v-model="verification.log_checks" :label="t('settings.verification.logChecks')" :description="t('settings.verification.logChecksHint')" data-setting="verification.log_checks" />
                             <UiTextarea v-model="verification.note" :label="t('settings.verification.note')" :placeholder="t('settings.verification.notePlaceholder')" :maxlength="500" :rows="2" :error="errors['verification.note']" />
                             <p class="rounded-lg bg-surface-2 p-3 text-xs text-muted">{{ t('settings.verification.qrHint') }}</p>
                         </template>

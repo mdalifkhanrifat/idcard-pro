@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Ban, FileText, Loader2, Pencil } from 'lucide-vue-next';
+import { Ban, Copy, ExternalLink, FileText, Loader2, Pencil, TriangleAlert } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiDialog from '@/components/ui/UiDialog.vue';
@@ -14,7 +14,7 @@ import { http, toApiError } from '@/lib/http';
 import { formatDate, formatDateTime } from '@/lib/format';
 import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
-import type { CardLayout, CardPrintLog, CardValues, IssuedCard } from '@/types';
+import type { CardLayout, CardPrintLog, CardValues, CardVerificationLog, IssuedCard } from '@/types';
 
 /**
  * One issued card: the card as it prints (front and back), its record, and changing its RF number,
@@ -31,6 +31,12 @@ const card = ref<IssuedCard | null>(null);
 const print = ref<{ layout: CardLayout; values: CardValues } | null>(null);
 const loading = ref(false);
 const prints = ref<CardPrintLog[]>([]);
+/** Public checks of the card (3.7): latest first, with totals. */
+const checks = ref<{ data: CardVerificationLog[]; meta: { total: number; devices: number } } | null>(null);
+/** Checked after it stopped being valid: the card may still be shown somewhere. */
+const checkedWhileInvalid = computed(() => (checks.value?.data ?? []).some((check) => check.status === 'revoked' || check.status === 'replaced'));
+const showChecks = computed(() => !!card.value && (!!card.value.verify_url || card.value.verify_count > 0));
+const CHECK_TONES = { valid: 'success', expired: 'warning', revoked: 'danger', replaced: 'danger' } as const;
 const mode = ref<'view' | 'edit' | 'revoke'>('view');
 const edit = reactive({ rf_card_no: '', notes: '', expiry_date: '' });
 const revokeNote = ref('');
@@ -47,10 +53,15 @@ async function load(quiet = false): Promise<void> {
     }
     loading.value = !quiet;
     try {
-        const [shown, history] = await Promise.all([http.get(`/cards/${props.cardId}`), http.get(`/cards/${props.cardId}/prints`)]);
+        const [shown, history, verified] = await Promise.all([
+            http.get(`/cards/${props.cardId}`),
+            http.get(`/cards/${props.cardId}/prints`),
+            http.get(`/cards/${props.cardId}/verifications`),
+        ]);
         card.value = shown.data.data;
         print.value = shown.data.meta;
         prints.value = history.data.data;
+        checks.value = verified.data;
     } finally {
         loading.value = false;
     }
@@ -70,9 +81,19 @@ watch(open, (value) => {
         card.value = null;
         print.value = null;
         prints.value = [];
+        checks.value = null;
         load();
     }
 });
+
+async function copyLink(): Promise<void> {
+    try {
+        await navigator.clipboard.writeText(card.value?.verify_url ?? '');
+        ui.notify(t('cards.verification.copied'));
+    } catch {
+        ui.notify(t('cards.verification.copyFailed'), 'error');
+    }
+}
 
 function startEdit(): void {
     Object.assign(edit, { rf_card_no: card.value?.rf_card_no ?? '', notes: card.value?.notes ?? '', expiry_date: card.value?.expiry_date ?? '' });
@@ -158,6 +179,31 @@ async function revoke(): Promise<void> {
                             </div>
                             <div class="text-muted">{{ log.printed_by?.name ?? '—' }}<span v-if="log.batch"> · {{ t('cards.printedInBatch') }}</span></div>
                             <p v-if="log.note" class="mt-1 whitespace-pre-line text-fg">{{ log.note }}</p>
+                        </li>
+                    </ul>
+                </section>
+                <!-- Public checks on the verification page (3.7) -->
+                <section v-if="showChecks" class="space-y-2" data-verify-history>
+                    <h4 class="flex items-center justify-between font-medium text-fg">
+                        {{ t('cards.verification.title') }}
+                        <span class="text-xs font-normal text-muted">{{ card.verify_count ? t('cards.verification.count', { count: card.verify_count, devices: checks?.meta.devices ?? 0 }) : t('cards.verification.none') }}</span>
+                    </h4>
+                    <div v-if="card.verify_url" class="flex items-center gap-1.5 text-xs">
+                        <a :href="card.verify_url" target="_blank" rel="noopener" class="inline-flex min-w-0 items-center gap-1 text-brand-ink hover:underline" data-verify-link>
+                            <ExternalLink class="size-3.5 shrink-0" /><span class="truncate">{{ t('cards.verification.open') }}</span>
+                        </a>
+                        <button type="button" class="rounded p-1 text-muted hover:bg-surface-2 hover:text-fg" :title="t('cards.verification.copy')" :aria-label="t('cards.verification.copy')" @click="copyLink"><Copy class="size-3.5" /></button>
+                    </div>
+                    <p v-if="checkedWhileInvalid" class="flex gap-1.5 rounded-md bg-danger/10 p-2 text-xs text-danger" data-verify-invalid-checks>
+                        <TriangleAlert class="size-4 shrink-0" />{{ t('cards.verification.checkedWhileInvalid') }}
+                    </p>
+                    <ul v-if="checks?.data.length" class="max-h-40 space-y-1 overflow-y-auto">
+                        <li v-for="(check, index) in checks.data" :key="index" class="flex items-center justify-between gap-2 rounded-md bg-surface-2 px-2 py-1 text-xs" data-verify-check>
+                            <span class="text-fg">{{ formatDateTime(check.verified_at) }}</span>
+                            <span class="flex items-center gap-2">
+                                <span class="font-mono text-muted" :title="t('cards.verification.deviceHint')">{{ check.device }}</span>
+                                <UiBadge :tone="CHECK_TONES[check.status]">{{ t(`verify.status.${check.status}.title`) }}</UiBadge>
+                            </span>
                         </li>
                     </ul>
                 </section>
