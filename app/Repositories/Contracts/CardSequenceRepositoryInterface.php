@@ -17,4 +17,10 @@ interface CardSequenceRepositoryInterface
      * The value the next increment will return, without changing anything.
      */
     public function peekNext(string $key): int;
+
+    /**
+     * Move the counter up to at least this value (never down), e.g. past an imported number.
+     * Must be called inside a database transaction.
+     */
+    public function advanceTo(string $key, int $value): void;
 }

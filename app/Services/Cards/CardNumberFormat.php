@@ -49,6 +49,42 @@ final readonly class CardNumberFormat
         return $this->fill($code, $date, $sequence);
     }
 
+    /**
+     * Read a number made with this format (e.g. an imported one): its sequence key and running number,
+     * or null when the number does not follow the format for this code.
+     *
+     * @return array{key: string, sequence: int}|null
+     */
+    public function parse(string $number, string $code): ?array
+    {
+        $regex = '';
+        $offset = 0;
+        preg_match_all(self::TOKEN, $this->pattern, $tokens, PREG_SET_ORDER | PREG_OFFSET_CAPTURE);
+        foreach ($tokens as $token) {
+            $regex .= preg_quote(substr($this->pattern, $offset, $token[0][1] - $offset), '/');
+            $regex .= match ($token[1][0]) {
+                'CODE' => preg_quote(strtoupper($code), '/'),
+                'YYYY' => '\d{4}',
+                'YY' => '\d{2}',
+                'MM' => '(?:0[1-9]|1[0-2])',
+                // At least the padded width; longer once the counter outgrew it
+                default => '(?<seq>\d{'.(int) $token[2][0].',18})',
+            };
+            $offset = $token[0][1] + strlen($token[0][0]);
+        }
+        $regex .= preg_quote(substr($this->pattern, $offset), '/');
+
+        if (! preg_match("/^{$regex}$/", $number, $match, PREG_OFFSET_CAPTURE) || ! isset($match['seq'])) {
+            return null;
+        }
+
+        // The number without its running part is the prefix it was counted under
+        return [
+            'key' => substr_replace($number, '', $match['seq'][1], strlen($match['seq'][0])),
+            'sequence' => (int) $match['seq'][0],
+        ];
+    }
+
     private function fill(string $code, CarbonInterface $date, ?int $sequence): string
     {
         return (string) preg_replace_callback(self::TOKEN, fn (array $m) => match (true) {

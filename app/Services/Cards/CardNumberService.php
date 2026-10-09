@@ -36,6 +36,19 @@ class CardNumberService
     }
 
     /**
+     * A number given from outside (e.g. an import) is kept as it is; when it follows the organization's
+     * format for this code, its counter moves past it so the sequence never hands it out again.
+     */
+    public function claim(string $number, string $code): void
+    {
+        $parsed = $this->format()->parse($number, $code);
+
+        if ($parsed !== null) {
+            DB::transaction(fn () => $this->sequences->advanceTo($parsed['key'], $parsed['sequence']));
+        }
+    }
+
+    /**
      * What the next number would look like, without reserving it.
      */
     public function preview(string $code, ?string $pattern = null, ?CarbonInterface $date = null): string

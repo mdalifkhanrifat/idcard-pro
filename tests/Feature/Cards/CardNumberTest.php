@@ -58,3 +58,18 @@ it('rejects invalid formats', function () {
         ->assertJsonValidationErrors('card_number_format');
     $this->getJson('/api/v1/settings/card-number-preview?format='.urlencode('{NAME}{SEQ:2}'))->assertJsonValidationErrors('format');
 });
+
+it('moves the counter past a number given from outside, never back', function () {
+    $date = CarbonImmutable::create(2026, 5, 1);
+    $claim = fn (string $number) => app(TenantContext::class)->run($this->tenant->fresh(), fn () => app(CardNumberService::class)->claim($number, 'EMP'));
+
+    $claim('EMP/26000041');
+    expect(nextNumber($this->tenant, 'EMP', $date))->toBe('EMP/26000042');
+
+    // Lower numbers, other years and numbers outside the format leave this counter alone
+    $claim('EMP/26000007');
+    $claim('EMP/25000500');
+    $claim('BAF-99999');
+    expect(nextNumber($this->tenant, 'EMP', $date))->toBe('EMP/26000043')
+        ->and(nextNumber($this->tenant, 'EMP', CarbonImmutable::create(2025, 5, 1)))->toBe('EMP/25000501');
+});
