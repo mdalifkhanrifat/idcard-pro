@@ -334,6 +334,7 @@
         "new": "New cardholder",
         "editTitle": "Edit cardholder",
         "searchPlaceholder": "Name, employee no, NID, phone or email",
+        "searchPlaceholderCards": "Name, employee no, card or RF no, NID, phone or email",
         "deleteConfirm": "Delete {name} and all their files?",
         "noPhoto": "No photo",
         "joined": "Joined",

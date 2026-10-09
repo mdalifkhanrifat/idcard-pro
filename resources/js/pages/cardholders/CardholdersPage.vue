@@ -99,7 +99,7 @@ async function remove(cardholder: Cardholder): Promise<void> {
                     <input
                         v-model="filters.search"
                         type="search"
-                        :placeholder="t('cardholders.searchPlaceholder')"
+                        :placeholder="t(auth.can('cards.view') ? 'cardholders.searchPlaceholderCards' : 'cardholders.searchPlaceholder')"
                         class="h-10 w-full rounded-lg border border-line bg-surface pr-3 pl-9 text-sm focus:border-brand-ink focus:ring-4 focus:ring-[var(--ring)] focus:outline-none"
                     />
                 </div>

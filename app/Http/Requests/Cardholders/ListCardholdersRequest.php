@@ -43,6 +43,6 @@ class ListCardholdersRequest extends FormRequest
 
     public function toFilter(): CardholderFilter
     {
-        return CardholderFilter::fromArray($this->validated());
+        return CardholderFilter::fromArray($this->validated(), searchCards: (bool) $this->user()?->can('cards.view'));
     }
 }

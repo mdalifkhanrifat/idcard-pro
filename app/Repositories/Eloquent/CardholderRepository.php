@@ -32,7 +32,11 @@ class CardholderRepository extends EloquentRepository implements CardholderRepos
                 ->orWhere('secondary_no', 'like', "%{$search}%")
                 ->orWhere('national_id', 'like', "%{$search}%")
                 ->orWhere('personal_phone', 'like', "%{$search}%")
-                ->orWhere('email', 'like', "%{$search}%")))
+                ->orWhere('email', 'like', "%{$search}%")
+                // Any card of the person or their family, current or earlier
+                ->when($filter->searchCards, fn (Builder $c) => $c->orWhereHas('cards', fn (Builder $card) => $card
+                    ->where('number', 'like', "%{$search}%")
+                    ->orWhere('rf_card_no', 'like', "%{$search}%")))))
             ->when($filter->status, fn (Builder $q, string $status) => $q->where('status', $status))
             ->when($filter->employmentType, fn (Builder $q, string $type) => $q->where('employment_type', $type))
             ->when($filter->joinedFrom, fn (Builder $q, string $date) => $q->whereDate('joining_date', '>=', $date))

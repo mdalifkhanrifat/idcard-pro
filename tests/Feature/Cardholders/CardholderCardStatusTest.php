@@ -59,6 +59,20 @@ it('shows cards only to people who may see them', function () {
     expect($row)->not->toHaveKey('current_card');
 });
 
+it('finds cardholders by card number or RF card number, for those who may see cards (legacy list search)', function () {
+    $this->patchJson("/api/v1/cards/{$this->printedCard['id']}", ['rf_card_no' => 'RF-7788'])->assertOk();
+    $names = fn (string $search) => collect($this->getJson('/api/v1/cardholders?filter[search]='.urlencode($search))->assertOk()->json('data'))->pluck('full_name')->all();
+
+    expect($names($this->printedCard['number']))->toBe(['Printed Twice'])
+        ->and($names('RF-7788'))->toBe(['Printed Twice'])
+        // A family member's card finds the cardholder
+        ->and($names('FAM/'))->toBe(['Family Only']);
+
+    app(TenantContext::class)->run($this->tenant, fn () => Role::findByName('Viewer', PermissionRegistry::GUARD)->revokePermissionTo('cards.view'));
+    Sanctum::actingAs(tenantUser($this->tenant, 'Viewer'));
+    expect($names('RF-7788'))->toBe([]);
+});
+
 it('loads the cards of the whole page at once', function () {
     $count = function () {
         DB::flushQueryLog();
