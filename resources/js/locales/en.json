@@ -545,6 +545,27 @@
                 "processing": "Importing",
                 "completed": "Completed",
                 "failed": "Failed"
+            },
+            "importCards": "Import their cards too",
+            "importCardsHint": "Card columns (card no, issue date, last print date and time, notes) become issued cards, e.g. from the previous system. A row without a card number gets a new one; without a last print date the card waits for printing.",
+            "cardTemplate": "Card template for these cards",
+            "cardsTitle": "Cards — {template}",
+            "cardsToImport": "{count} card will be imported | {count} cards will be imported",
+            "cardsImported": "{count} card imported | {count} cards imported",
+            "cardsSkipped": "{count} already there (skipped)",
+            "cardsHint": "A person's active card with the same number is kept as it is; a different number replaces it.",
+            "cardColumnsUnused": "The file has card columns ({columns}). To bring the cards too, check the file again with \"Import their cards too\".",
+            "cardColumnsNoRight": "The file has card columns ({columns}); importing cards needs the right to issue cards.",
+            "rowCard": "+ card",
+            "rowCardSkipped": "card already there",
+            "cardFields": {
+                "number": "Card no",
+                "issue_date": "Issue date",
+                "expiry_date": "Expiry date",
+                "rf_card_no": "RF card no",
+                "last_print_date": "Last print date",
+                "last_print_time": "Last print time",
+                "notes": "Card notes"
             }
         },
         "card": {

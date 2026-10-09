@@ -1,27 +1,34 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { ArrowLeft, CheckCircle2, Download, FileSpreadsheet, Loader2, Upload, XCircle } from 'lucide-vue-next';
+import { ArrowLeft, CheckCircle2, CreditCard, Download, FileSpreadsheet, Loader2, Upload, XCircle } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiCard from '@/components/ui/UiCard.vue';
 import UiCheckbox from '@/components/ui/UiCheckbox.vue';
 import UiPageHeader from '@/components/ui/UiPageHeader.vue';
+import UiSelect from '@/components/ui/UiSelect.vue';
 import { http, toApiError } from '@/lib/http';
 import { formatDateTime } from '@/lib/format';
+import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
-import type { CardholderImport, ImportStatus } from '@/types';
+import type { CardTemplate, CardholderImport, ImportStatus } from '@/types';
 
 /** Keep in sync with config/cardholder_import.php. */
 const LIMITS = { maxMb: 10, maxRows: 5000, maxErrors: 500 };
 
 const { t, te } = useI18n();
 const ui = useUiStore();
+const auth = useAuthStore();
 
 const file = ref<File | null>(null);
 const input = ref<HTMLInputElement | null>(null);
-const options = ref({ create_missing_lookups: false, update_existing: false });
+const options = ref({ create_missing_lookups: false, update_existing: false, import_cards: false, card_template: '' });
 const fileError = ref('');
+const templateError = ref('');
+/** Importing cards issues them, so it needs that right too. */
+const canImportCards = computed(() => auth.can('cards.issue'));
+const templates = ref<CardTemplate[]>([]);
 const busy = ref(false);
 const current = ref<CardholderImport | null>(null);
 const history = ref<CardholderImport[]>([]);
@@ -32,7 +39,21 @@ const invalidRows = computed(() => (current.value ? current.value.total_rows - c
 const previewColumns = computed(() => current.value?.summary?.columns ?? []);
 
 const tone = (status: ImportStatus) => ({ analyzed: 'brand', queued: 'neutral', processing: 'warning', completed: 'success', failed: 'danger' } as const)[status];
-const fieldLabel = (field: string, header: string) => (te(`cardholders.fields.${field}`) ? t(`cardholders.fields.${field}`) : header);
+const fieldLabel = (field: string, header: string) => {
+    const key = field.startsWith('card:') ? `cardholders.import.cardFields.${field.slice(5)}` : `cardholders.fields.${field}`;
+
+    return te(key) ? t(key) : header;
+};
+/** Card columns in the file that were not used because cards were not imported. */
+const unusedCardColumns = computed(() => (current.value?.summary && !current.value.summary.card_template ? (current.value.summary.card_columns ?? []) : []));
+
+async function loadTemplates(): Promise<void> {
+    if (!canImportCards.value || templates.value.length) {
+        return;
+    }
+    const { data } = await http.get('/card-templates', { params: { 'filter[is_active]': 1, per_page: 100 } });
+    templates.value = (data.data as CardTemplate[]).filter((template) => template.audience === 'cardholder');
+}
 
 async function loadHistory(): Promise<void> {
     history.value = (await http.get('/cardholder-imports')).data.data;
@@ -52,12 +73,18 @@ async function analyze(): Promise<void> {
     body.append('file', file.value);
     body.append('create_missing_lookups', options.value.create_missing_lookups ? '1' : '0');
     body.append('update_existing', options.value.update_existing ? '1' : '0');
+    if (options.value.import_cards) {
+        body.append('import_cards', '1');
+        body.append('card_template', options.value.card_template);
+    }
+    templateError.value = '';
     try {
         current.value = (await http.post('/cardholder-imports', body)).data.data;
         await loadHistory();
     } catch (error) {
         const apiError = toApiError(error);
-        fileError.value = apiError.errors.file?.[0] ?? apiError.message;
+        templateError.value = apiError.errors.card_template?.[0] ?? '';
+        fileError.value = apiError.errors.file?.[0] ?? (templateError.value ? '' : apiError.message);
     } finally {
         busy.value = false;
     }
@@ -121,6 +148,7 @@ async function open(item: CardholderImport): Promise<void> {
 }
 
 onMounted(loadHistory);
+watch(() => options.value.import_cards, (on) => on && loadTemplates().catch((error) => ui.notify(toApiError(error).message, 'error')));
 onBeforeUnmount(() => poll && clearTimeout(poll));
 </script>
 
@@ -150,7 +178,21 @@ onBeforeUnmount(() => poll && clearTimeout(poll));
                     </div>
                     <UiCheckbox v-model="options.create_missing_lookups" :label="t('cardholders.import.createMissing')" :description="t('cardholders.import.createMissingHint')" />
                     <UiCheckbox v-model="options.update_existing" :label="t('cardholders.import.updateExisting')" :description="t('cardholders.import.updateExistingHint')" />
-                    <UiButton type="submit" :loading="busy" :disabled="!file || !!fileError"><Upload class="size-4" />{{ busy ? t('cardholders.import.analyzing') : t('cardholders.import.analyze') }}</UiButton>
+                    <template v-if="canImportCards">
+                        <UiCheckbox v-model="options.import_cards" :label="t('cardholders.import.importCards')" :description="t('cardholders.import.importCardsHint')" data-import-cards />
+                        <div v-if="options.import_cards" class="max-w-md pl-7">
+                            <UiSelect
+                                v-model="options.card_template"
+                                :label="t('cardholders.import.cardTemplate')"
+                                required
+                                :placeholder="templates.length ? '—' : t('cards.noTemplates')"
+                                :options="templates.map((template) => ({ value: template.id, label: `${template.name} (${template.code})` }))"
+                                :error="templateError"
+                                data-field="card-template"
+                            />
+                        </div>
+                    </template>
+                    <UiButton type="submit" :loading="busy" :disabled="!file || !!fileError || (options.import_cards && !options.card_template)"><Upload class="size-4" />{{ busy ? t('cardholders.import.analyzing') : t('cardholders.import.analyze') }}</UiButton>
                 </form>
             </UiCard>
 
@@ -204,6 +246,20 @@ onBeforeUnmount(() => poll && clearTimeout(poll));
                     </template>
                 </div>
 
+                <!-- Cards brought in with the people (3.8) -->
+                <div v-if="current.summary?.card_template" class="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-xl border border-line bg-surface p-4 text-sm" data-import-card-summary>
+                    <span class="flex items-center gap-1.5 font-medium text-fg"><CreditCard class="size-4 text-muted" />{{ t('cardholders.import.cardsTitle', { template: `${current.summary.card_template.name} (${current.summary.card_template.code})` }) }}</span>
+                    <template v-if="current.summary.cards_result">
+                        <span class="text-success">{{ t('cardholders.import.cardsImported', { count: current.summary.cards_result.imported }) }}</span>
+                        <span class="text-muted">{{ t('cardholders.import.cardsSkipped', { count: current.summary.cards_result.skipped }) }}</span>
+                    </template>
+                    <template v-else-if="current.summary.cards">
+                        <span class="text-success">{{ t('cardholders.import.cardsToImport', { count: current.summary.cards.imported }) }}</span>
+                        <span class="text-muted">{{ t('cardholders.import.cardsSkipped', { count: current.summary.cards.skipped }) }}</span>
+                    </template>
+                    <span class="w-full text-xs text-muted">{{ t('cardholders.import.cardsHint') }}</span>
+                </div>
+
                 <!-- Mapping -->
                 <UiCard v-if="current.summary && current.status === 'analyzed'" :title="t('cardholders.import.columns')">
                     <div class="flex flex-wrap gap-1.5">
@@ -212,6 +268,9 @@ onBeforeUnmount(() => poll && clearTimeout(poll));
                     <template v-if="current.summary.ignored.length">
                         <p class="mt-4 mb-1.5 text-sm font-medium text-fg">{{ t('cardholders.import.ignored') }}</p>
                         <div class="flex flex-wrap gap-1.5"><UiBadge v-for="header in current.summary.ignored" :key="header">{{ header }}</UiBadge></div>
+                        <p v-if="unusedCardColumns.length" class="mt-2 text-xs text-muted" data-unused-card-columns>
+                            {{ t(canImportCards ? 'cardholders.import.cardColumnsUnused' : 'cardholders.import.cardColumnsNoRight', { columns: unusedCardColumns.join(', ') }) }}
+                        </p>
                     </template>
                     <template v-if="current.summary.lookups_to_create.length">
                         <p class="mt-4 mb-1.5 text-sm font-medium text-fg">{{ t('cardholders.import.willCreate') }}</p>
@@ -239,6 +298,8 @@ onBeforeUnmount(() => poll && clearTimeout(poll));
                                     <td class="px-4 py-2 text-muted tabular-nums">
                                         {{ row.row }}
                                         <UiBadge v-if="row.action === 'updated'" tone="brand">{{ t('cardholders.import.willUpdate') }}</UiBadge>
+                                        <UiBadge v-if="row.card === 'imported'" tone="success">{{ t('cardholders.import.rowCard') }}</UiBadge>
+                                        <UiBadge v-else-if="row.card === 'skipped'">{{ t('cardholders.import.rowCardSkipped') }}</UiBadge>
                                     </td>
                                     <td v-for="column in previewColumns" :key="column.field" class="px-4 py-2 whitespace-nowrap text-fg">{{ row.values[column.field] || '—' }}</td>
                                 </tr>
@@ -280,7 +341,10 @@ onBeforeUnmount(() => poll && clearTimeout(poll));
                             <span class="font-medium text-fg">{{ item.original_name }}</span>
                             <UiBadge :tone="tone(item.status)">{{ t(`cardholders.import.status.${item.status}`) }}</UiBadge>
                             <span class="text-muted">
-                                <template v-if="item.status === 'completed'">{{ t('cardholders.import.created') }} {{ item.created_count }} · {{ t('cardholders.import.updated') }} {{ item.updated_count }} · {{ t('cardholders.import.failed') }} {{ item.failed_count }}</template>
+                                <template v-if="item.status === 'completed'">
+                                    {{ t('cardholders.import.created') }} {{ item.created_count }} · {{ t('cardholders.import.updated') }} {{ item.updated_count }} · {{ t('cardholders.import.failed') }} {{ item.failed_count }}
+                                    <template v-if="item.summary?.cards_result"> · {{ t('cardholders.import.cardsImported', { count: item.summary.cards_result.imported }) }}</template>
+                                </template>
                                 <template v-else>{{ t('cardholders.import.valid') }} {{ item.valid_rows }} / {{ item.total_rows }}</template>
                             </span>
                             <span class="flex-1" />

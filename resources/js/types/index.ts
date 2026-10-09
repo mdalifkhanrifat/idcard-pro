@@ -243,16 +243,29 @@ export interface CustomField {
 
 export type ImportStatus = 'analyzed' | 'queued' | 'processing' | 'completed' | 'failed';
 
+export interface ImportCardCounts {
+    imported: number;
+    skipped: number;
+}
+
 export interface CardholderImport {
     id: string;
     original_name: string;
     status: ImportStatus;
-    options: { create_missing_lookups: boolean; update_existing: boolean };
+    options: { create_missing_lookups: boolean; update_existing: boolean; import_cards?: boolean; card_template?: string | null };
     summary: {
+        /** Field: a cardholder field, "custom:<key>" or "card:<field>". */
         columns: { header: string; field: string }[];
         ignored: string[];
-        preview: { row: number; action: 'created' | 'updated'; values: Record<string, string> }[];
+        preview: { row: number; action: 'created' | 'updated'; card?: 'imported' | 'skipped' | null; values: Record<string, string> }[];
         lookups_to_create: string[];
+        /** Headers of card columns found in the file (used only when cards are imported). */
+        card_columns?: string[];
+        /** Cards to import / skipped because the person already has them (analysis). */
+        cards?: ImportCardCounts;
+        card_template?: { id: string; name: string; code: string } | null;
+        /** Cards actually imported / skipped (after the run). */
+        cards_result?: ImportCardCounts;
     } | null;
     total_rows: number;
     valid_rows: number;
