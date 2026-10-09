@@ -8,7 +8,9 @@ class UploadCardholderImportRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return $this->user()->can('cardholders.import');
+        // Importing cards issues them, so it needs that right as well
+        return $this->user()->can('cardholders.import')
+            && (! $this->boolean('import_cards') || $this->user()->can('cards.issue'));
     }
 
     /**
@@ -21,6 +23,9 @@ class UploadCardholderImportRequest extends FormRequest
             'file' => ['required', 'file', 'max:'.config('cardholder_import.max_kb'), 'extensions:csv,xlsx', 'mimes:csv,txt,xlsx'],
             'create_missing_lookups' => ['sometimes', 'boolean'],
             'update_existing' => ['sometimes', 'boolean'],
+            'import_cards' => ['sometimes', 'boolean'],
+            // Public id; CardholderImportService checks it is an active template for cardholders
+            'card_template' => ['nullable', 'string', 'max:26', 'required_if_accepted:import_cards'],
         ];
     }
 }

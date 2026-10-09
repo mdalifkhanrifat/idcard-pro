@@ -21,7 +21,7 @@ use Illuminate\Support\Carbon;
  * @property string $disk
  * @property string|null $path
  * @property ImportStatus $status
- * @property array{create_missing_lookups: bool, update_existing: bool} $options
+ * @property array{create_missing_lookups: bool, update_existing: bool, import_cards?: bool, card_template?: string|null} $options
  * @property array<string, mixed>|null $summary
  * @property int $total_rows
  * @property int $valid_rows

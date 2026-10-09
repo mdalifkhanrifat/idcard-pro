@@ -12,7 +12,7 @@ use RuntimeException;
 final class RowFailed extends RuntimeException
 {
     /**
-     * @param  array{messages: array<int, string>, action: string, lookups: array<int, string>, preview: array<string, string>}  $outcome
+     * @param  array{messages: array<int, string>, action: string, card: 'imported'|'skipped'|null, lookups: array<int, string>, preview: array<string, string>}  $outcome
      */
     public function __construct(public readonly array $outcome)
     {
