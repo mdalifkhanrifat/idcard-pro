@@ -8,6 +8,7 @@ use App\Models\User;
 use App\Repositories\Contracts\RoleRepositoryInterface;
 use App\Repositories\Contracts\TenantRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
+use App\Services\Biometrics\BiometricSettings;
 use App\Services\MasterData\MasterDataService;
 use App\Support\Permissions\PermissionRegistry;
 use App\Support\Tenancy\TenantContext;
@@ -110,6 +111,12 @@ class TenantService
                 'log_checks' => (bool) ($verification['log_checks'] ?? true),
             ]];
             unset($data['verification']);
+        }
+
+        if (array_key_exists('biometrics', $data)) {
+            $current = (array) ($tenant->settings['biometrics'] ?? []);
+            $data['settings'] = [...($data['settings'] ?? $tenant->settings ?? []), 'biometrics' => BiometricSettings::normalize(BiometricSettings::merge($current, (array) $data['biometrics']))];
+            unset($data['biometrics']);
         }
 
         return $this->tenants->update($tenant, $data)->refresh();

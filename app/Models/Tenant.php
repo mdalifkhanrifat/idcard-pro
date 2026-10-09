@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\TenantStatus;
+use App\Services\Biometrics\BiometricSettings;
 use Database\Factories\TenantFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -118,6 +119,16 @@ class Tenant extends Model
             'note' => filled($saved['note'] ?? null) ? (string) $saved['note'] : null,
             'log_checks' => (bool) ($saved['log_checks'] ?? $defaults['log_checks']),
         ];
+    }
+
+    /**
+     * Biometric settings (Phase 4), complete with the configured defaults.
+     *
+     * @return array{enabled: bool, modalities: array<string, array{mode: string, count: int, positions: array<int, string>, substitutes: bool, min_quality: int, max_attempts: int, drivers: array<int, string>}>, family_members: bool, required_before: array<int, string>, print_on_card: bool}
+     */
+    public function biometricSettings(): array
+    {
+        return BiometricSettings::normalize((array) ($this->settings['biometrics'] ?? []));
     }
 
     /**

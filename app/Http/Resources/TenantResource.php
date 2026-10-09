@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Tenant;
+use App\Services\Biometrics\BiometricSettings;
 use App\Services\Cards\CardNumberFormat;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -35,6 +36,19 @@ class TenantResource extends JsonResource
             'verification' => $this->resource->verificationSettings(),
             // Details the public verification page may show (config), for the settings form
             'verification_fields' => config('cards.verification.fields'),
+            'biometrics' => $this->resource->biometricSettings(),
+            // What this installation can capture and with what, for the settings form and the stations
+            'biometric_options' => [
+                'modalities' => collect((array) config('biometrics.modalities'))->map(fn (array $modality, string $name): array => [
+                    'positions' => array_keys($modality['positions']),
+                    'printable' => (bool) $modality['printable'],
+                    'drivers' => BiometricSettings::driversFor($name),
+                ])->all(),
+                'drivers' => BiometricSettings::drivers(),
+                'modes' => config('biometrics.modes'),
+                'required_before' => config('biometrics.required_before'),
+                'unavailable_reasons' => config('biometrics.unavailable_reasons'),
+            ],
             'status' => $this->status,
             'users_count' => $this->whenCounted('users'),
             'created_at' => $this->created_at,
