@@ -14,4 +14,11 @@ interface ActivityRepositoryInterface
      * @return LengthAwarePaginator<int, Activity>
      */
     public function list(ActivityFilter $filter): LengthAwarePaginator;
+
+    /**
+     * Kinds of record (log names) the current tenant's users have changed, for the filter.
+     *
+     * @return array<int, string>
+     */
+    public function logNames(): array;
 }

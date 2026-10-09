@@ -13,13 +13,8 @@ class ActivityRepository implements ActivityRepositoryInterface
 {
     public function list(ActivityFilter $filter): LengthAwarePaginator
     {
-        // User::query() is tenant-scoped, so only changes made by this tenant's users are returned.
-        $tenantUsers = User::query()->select('id');
-
-        return Activity::query()
+        return $this->byTenantUsers()
             ->with('causer:id,name,email')
-            ->where('causer_type', (new User)->getMorphClass())
-            ->whereIn('causer_id', $tenantUsers)
             ->when($filter->logName, fn (Builder $q, string $v) => $q->where('log_name', $v))
             ->when($filter->event, fn (Builder $q, string $v) => $q->where('event', $v))
             ->when($filter->causerPublicId, fn (Builder $q, string $v) => $q->whereIn('causer_id', User::query()->where('public_id', $v)->select('id')))
@@ -28,5 +23,22 @@ class ActivityRepository implements ActivityRepositoryInterface
             ->orderByDesc('id')
             ->paginate(min($filter->perPage, 100))
             ->withQueryString();
+    }
+
+    public function logNames(): array
+    {
+        return $this->byTenantUsers()->whereNotNull('log_name')->distinct()->orderBy('log_name')->pluck('log_name')->all();
+    }
+
+    /**
+     * User::query() is tenant-scoped, so only changes made by this tenant's users are returned.
+     *
+     * @return Builder<Activity>
+     */
+    private function byTenantUsers(): Builder
+    {
+        return Activity::query()
+            ->where('causer_type', (new User)->getMorphClass())
+            ->whereIn('causer_id', User::query()->select('id'));
     }
 }

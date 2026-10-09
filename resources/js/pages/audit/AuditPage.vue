@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from 'reka-ui';
 import UiBadge from '@/components/ui/UiBadge.vue';
@@ -30,13 +30,18 @@ interface LoginRow {
     created_at: string;
 }
 
-const { t } = useI18n();
+const { t, te } = useI18n();
 const tab = ref('changes');
 
 const activities = useListQuery<ActivityRow>('/audit/activities', { filters: { log_name: '', event: '', date_from: '', date_to: '' }, perPage: 25 });
 const logins = useListQuery<LoginRow>('/audit/logins', { filters: { event: '', identifier: '', ip_address: '', date_from: '', date_to: '' }, perPage: 25 });
 
 onMounted(() => activities.load());
+
+/** Kinds of record with changes in this organization (from the API, so new modules appear by themselves). */
+const logNames = computed(() =>
+    ((activities.meta.value as { log_names?: string[] }).log_names ?? []).map((name) => ({ value: name, label: te(`audit.logs.${name}`) ? t(`audit.logs.${name}`) : name })),
+);
 watch(tab, (value) => (value === 'logins' ? logins.load() : activities.load()));
 
 const loginEvents = ['succeeded', 'failed', 'locked', 'blocked', 'two_factor_required', 'two_factor_failed', 'logged_out', 'password_reset'];
@@ -68,7 +73,7 @@ function browser(ua: string): string {
 
             <TabsContent value="changes" class="rounded-xl border border-line bg-surface">
                 <div class="grid gap-3 border-b border-line p-4 sm:grid-cols-4">
-                    <UiSelect v-model="activities.filters.log_name" :label="t('audit.what')" :placeholder="t('common.all')" :options="['user', 'tenant'].map((v) => ({ value: v, label: v }))" />
+                    <UiSelect v-model="activities.filters.log_name" :label="t('audit.what')" :placeholder="t('common.all')" :options="logNames" />
                     <UiSelect v-model="activities.filters.event" :label="t('audit.event')" :placeholder="t('common.all')" :options="['created', 'updated', 'deleted'].map((v) => ({ value: v, label: t(`audit.events.${v}`) }))" />
                     <UiInput v-model="activities.filters.date_from" type="date" :label="t('common.from')" />
                     <UiInput v-model="activities.filters.date_to" type="date" :label="t('common.to')" />

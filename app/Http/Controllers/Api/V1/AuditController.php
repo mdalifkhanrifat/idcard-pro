@@ -15,11 +15,13 @@ class AuditController extends Controller
     public function __construct(private AuditService $audit) {}
 
     /**
-     * Data change history. Filters: filter[log_name|event|causer|date_from|date_to].
+     * Data change history. Filters: filter[log_name|event|causer|date_from|date_to]; meta.log_names lists
+     * the kinds of record that have changes, so new modules appear in the filter by themselves.
      */
     public function activities(ListActivitiesRequest $request): AnonymousResourceCollection
     {
-        return ActivityResource::collection($this->audit->activities($request->toFilter()));
+        return ActivityResource::collection($this->audit->activities($request->toFilter()))
+            ->additional(['meta' => ['log_names' => $this->audit->logNames()]]);
     }
 
     /**

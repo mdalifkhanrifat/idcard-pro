@@ -33,6 +33,14 @@ class AuditService
     }
 
     /**
+     * @return array<int, string>
+     */
+    public function logNames(): array
+    {
+        return $this->activities->logNames();
+    }
+
+    /**
      * @return LengthAwarePaginator<int, LoginEvent>
      */
     public function logins(LoginEventFilter $filter): LengthAwarePaginator

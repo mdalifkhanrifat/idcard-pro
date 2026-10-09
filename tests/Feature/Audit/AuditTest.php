@@ -24,6 +24,18 @@ it('shows only changes made by users of the current organization', function () {
         ->assertJsonPath('data.0.causer.email', 'a@example.com');
 });
 
+it('lists in the filter every kind of record this organization changed, including new modules', function () {
+    Sanctum::actingAs($this->otherOwner);
+    $this->postJson('/api/v1/cardholders', ['full_name' => 'Beta Person'])->assertCreated();
+
+    Sanctum::actingAs($this->owner);
+    $this->putJson('/api/v1/auth/me', ['name' => 'Alpha Renamed'])->assertOk();
+    $this->getJson('/api/v1/audit/activities')->assertOk()->assertJsonPath('meta.log_names', ['user']);
+
+    $this->postJson('/api/v1/cardholders', ['full_name' => 'Alpha Person'])->assertCreated();
+    $this->getJson('/api/v1/audit/activities?filter[log_name]=user')->assertJsonCount(1, 'data')->assertJsonPath('meta.log_names', ['cardholders', 'user']);
+});
+
 it('filters the sign-in history of the current organization', function () {
     $request = Request::create('/', server: ['REMOTE_ADDR' => '10.0.0.7']);
     $audit = app(AuditService::class);
