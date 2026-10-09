@@ -16,7 +16,8 @@ it('keeps biometrics off until the organization turns it on, and lists what can 
         ->assertJsonPath('data.biometrics.print_on_card', false)
         ->assertJsonPath('data.biometrics.required_before', [])
         ->assertJsonPath('data.biometrics.modalities.fingerprint.positions', ['right_thumb', 'left_thumb'])
-        ->assertJsonPath('data.biometrics.modalities.face.mode', 'off');
+        ->assertJsonPath('data.biometrics.modalities.face.mode', 'off')
+        ->assertJsonPath('data.biometrics.modalities.iris.mode', 'off');
 
     expect($response->json('data.biometric_options.modalities.fingerprint.positions'))->toHaveCount(10)
         ->and($response->json('data.biometric_options.modalities.face.drivers'))->toBe(['upload', 'simulator', 'webcam', 'bridge'])
@@ -64,7 +65,7 @@ it('refuses positions, drivers and counts that cannot work', function () {
         ->assertJsonValidationErrors('biometrics.modalities.fingerprint.count');
     ($this->settings)(['enabled' => '1', 'modalities' => ['fingerprint' => [...$this->fingerprint, 'positions' => null, 'drivers' => null]]])
         ->assertJsonValidationErrors(['biometrics.modalities.fingerprint.positions', 'biometrics.modalities.fingerprint.drivers']);
-    ($this->settings)(['enabled' => '1', 'modalities' => ['iris' => ['mode' => 'required']], 'required_before' => ['lunch']])
+    ($this->settings)(['enabled' => '1', 'modalities' => ['palm' => ['mode' => 'required']], 'required_before' => ['lunch']])
         ->assertJsonValidationErrors(['biometrics.modalities', 'biometrics.required_before.0']);
     ($this->settings)(['enabled' => '1', 'modalities' => ['fingerprint' => [...$this->fingerprint, 'min_quality' => 101, 'max_attempts' => 0]]])
         ->assertJsonValidationErrors(['biometrics.modalities.fingerprint.min_quality', 'biometrics.modalities.fingerprint.max_attempts']);
@@ -72,6 +73,31 @@ it('refuses positions, drivers and counts that cannot work', function () {
     // With stand-ins allowed, more can be asked for than the preferred positions
     ($this->settings)(['enabled' => '1', 'modalities' => ['fingerprint' => [...$this->fingerprint, 'count' => 4]]])
         ->assertOk()->assertJsonPath('data.biometrics.modalities.fingerprint.count', 4);
+});
+
+it('takes iris capture from the settings like any other kind', function () {
+    ($this->settings)(['enabled' => '1', 'modalities' => ['fingerprint' => ['mode' => 'off'], 'iris' => ['mode' => 'required', 'count' => 1, 'positions' => ['left_iris'], 'drivers' => ['bridge']]]])
+        ->assertOk()
+        ->assertJsonPath('data.biometrics.modalities.iris', [
+            'mode' => 'required', 'count' => 1, 'positions' => ['left_iris'], 'substitutes' => false,
+            'min_quality' => 40, 'max_attempts' => 3, 'drivers' => ['bridge'],
+        ]);
+    ($this->settings)(['enabled' => '1', 'modalities' => ['iris' => ['mode' => 'required', 'positions' => ['left_iris'], 'drivers' => ['webcam']]]])
+        ->assertJsonValidationErrors('biometrics.modalities.iris.drivers.0');
+});
+
+it('offers a kind added to the registry without any code change', function () {
+    config([
+        'biometrics.modalities.palm' => ['positions' => ['right_palm' => 22, 'left_palm' => 24], 'image_formats' => ['png'], 'template_formats' => [], 'printable' => false],
+        'biometrics.drivers.bridge.modalities' => ['fingerprint', 'face', 'iris', 'palm'],
+    ]);
+
+    $this->getJson('/api/v1/settings')->assertOk()
+        ->assertJsonPath('data.biometrics.modalities.palm.mode', 'off')
+        ->assertJsonPath('data.biometric_options.modalities.palm.positions', ['right_palm', 'left_palm'])
+        ->assertJsonPath('data.biometric_options.modalities.palm.drivers', ['bridge']);
+    ($this->settings)(['enabled' => '1', 'modalities' => ['palm' => ['mode' => 'optional', 'count' => 2, 'positions' => ['right_palm', 'left_palm'], 'drivers' => ['bridge']]]])
+        ->assertOk()->assertJsonPath('data.biometrics.modalities.palm.mode', 'optional');
 });
 
 it('never offers the simulator in production', function () {

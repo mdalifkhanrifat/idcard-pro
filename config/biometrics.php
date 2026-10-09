@@ -5,7 +5,8 @@
 | Biometrics (Phase 4)
 |--------------------------------------------------------------------------
 |
-| Registry of what can be captured (modalities and their positions) and with
+| Registry of what can be captured (modalities: fingerprint, face, iris, and
+| their positions) and with
 | what (drivers). Each organization chooses in its own settings
 | (tenants.settings.biometrics) which modalities it uses, which positions and
 | how many, the quality it accepts and which drivers its stations may use.
@@ -44,6 +45,13 @@ return [
             'template_formats' => [],
             'printable' => false,
         ],
+        // ISO/IEC 19794-6 eye labels
+        'iris' => [
+            'positions' => ['right_iris' => 1, 'left_iris' => 2],
+            'image_formats' => ['png', 'jpeg'],
+            'template_formats' => [],
+            'printable' => false,
+        ],
     ],
 
     /*
@@ -56,14 +64,14 @@ return [
      * - testing:    produces made-up data; offered only while `simulator` below is on
      */
     'drivers' => [
-        'upload' => ['modalities' => ['fingerprint', 'face']],
-        'simulator' => ['modalities' => ['fingerprint', 'face'], 'testing' => true],
+        'upload' => ['modalities' => ['fingerprint', 'face', 'iris']],
+        'simulator' => ['modalities' => ['fingerprint', 'face', 'iris'], 'testing' => true],
         'webcam' => ['modalities' => ['face']],
         'secugen' => ['modalities' => ['fingerprint'], 'local_url' => 'https://localhost:8443'],
         'digitalpersona' => ['modalities' => ['fingerprint'], 'local_url' => 'https://127.0.0.1:52181'],
         'zkteco' => ['modalities' => ['fingerprint'], 'local_url' => 'http://127.0.0.1:47800'],
         // Our own small local agent (docs/BIOMETRIC_BRIDGE.md): wraps any vendor SDK
-        'bridge' => ['modalities' => ['fingerprint', 'face'], 'local_url' => 'http://127.0.0.1:47800'],
+        'bridge' => ['modalities' => ['fingerprint', 'face', 'iris'], 'local_url' => 'http://127.0.0.1:47800'],
     ],
 
     // The simulator makes up fingerprints and faces: never offered in production
@@ -102,6 +110,15 @@ return [
                 'min_quality' => 0,
                 'max_attempts' => 3,
                 'drivers' => ['webcam', 'upload', 'simulator'],
+            ],
+            'iris' => [
+                'mode' => 'off',
+                'count' => 2,
+                'positions' => ['right_iris', 'left_iris'],
+                'substitutes' => false,
+                'min_quality' => 40,
+                'max_attempts' => 3,
+                'drivers' => ['bridge', 'upload', 'simulator'],
             ],
         ],
         // Family members who get cards are captured too
