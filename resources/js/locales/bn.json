@@ -1203,7 +1203,8 @@
         "printedInBatch": "অন্য কার্ডের সাথে একসাথে",
         "printMethods": {
             "browser": "ব্রাউজার",
-            "pdf": "PDF"
+            "pdf": "PDF",
+            "import": "ইমপোর্ট (আগে ছাপা)"
         },
         "printedFilter": "ছাপা",
         "printedOptions": {

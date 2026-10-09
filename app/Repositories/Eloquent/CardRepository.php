@@ -157,6 +157,14 @@ class CardRepository extends EloquentRepository implements CardRepositoryInterfa
             ->exists();
     }
 
+    public function numberInUse(string $number, string $exceptHolderKey): bool
+    {
+        return $this->query()
+            ->where('active_number_key', $number)
+            ->where('active_holder_key', '!=', $exceptHolderKey)
+            ->exists();
+    }
+
     public function snapshotImagePaths(CardTemplate $template): array
     {
         // Cards of one template version share the same layout, so one snapshot per version is enough

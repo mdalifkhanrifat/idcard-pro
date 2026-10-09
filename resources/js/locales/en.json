@@ -1203,7 +1203,8 @@
         "printedInBatch": "printed together with other cards",
         "printMethods": {
             "browser": "Browser",
-            "pdf": "PDF"
+            "pdf": "PDF",
+            "import": "Imported (printed before)"
         },
         "printedFilter": "Printing",
         "printedOptions": {

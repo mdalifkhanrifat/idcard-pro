@@ -10,6 +10,7 @@ use App\Models\CardPrint;
 use App\Models\User;
 use App\Repositories\Contracts\CardPrintRepositoryInterface;
 use App\Repositories\Contracts\CardRepositoryInterface;
+use DateTimeInterface;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -69,6 +70,24 @@ class CardPrintService
 
             return $prints;
         });
+    }
+
+    /**
+     * Log a printing that happened outside this system (e.g. the last printing in an imported file),
+     * so the card counts as printed; one copy, by nobody here.
+     */
+    public function recordPast(Card $card, DateTimeInterface $printedAt, string $method): CardPrint
+    {
+        $print = $this->prints->create([
+            'card_id' => $card->id,
+            'method' => $method,
+            'copies' => 1,
+            'printed_by' => null,
+            'printed_at' => $printedAt,
+        ]);
+        $this->cards->addPrints([$card->id], 1, $printedAt);
+
+        return $print;
     }
 
     /**

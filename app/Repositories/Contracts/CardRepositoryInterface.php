@@ -59,6 +59,11 @@ interface CardRepositoryInterface extends RepositoryInterface
     public function rfCardInUse(string $rfCardNo, string $exceptHolderKey): bool;
 
     /**
+     * Whether another holder's active card carries this card number.
+     */
+    public function numberInUse(string $number, string $exceptHolderKey): bool;
+
+    /**
      * Template image files that issued cards of this template still print (one snapshot per template version).
      *
      * @return array<int, string>

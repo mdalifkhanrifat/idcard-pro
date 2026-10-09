@@ -32,6 +32,14 @@ return [
         'rf_in_use' => 'This RF card number is on another person’s active card.',
     ],
 
+    'import' => [
+        'template_unavailable' => 'Choose an active card template for cardholders.',
+        'number_in_use' => 'Card number :number is on another person’s active card.',
+        'printed_in_future' => 'The last print date and time is in the future.',
+        'printed_before_issue' => 'The last print date is before the card’s issue date.',
+        'newer_card' => 'This person already has a newer card (:number, issued :date); an older card cannot replace it.',
+    ],
+
     'reasons' => [
         'new' => 'New',
         'renewal' => 'Renewal',

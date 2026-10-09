@@ -20,7 +20,7 @@ use Illuminate\Support\Carbon;
  * @property int $tenant_id
  * @property int $card_id
  * @property string|null $batch shared by cards printed together
- * @property string $method key of config('cards.print.methods')
+ * @property string $method key of config('cards.print.methods'), or "import" (printed before the card came into this system)
  * @property int $copies
  * @property string|null $note
  * @property int|null $printed_by
@@ -35,6 +35,11 @@ class CardPrint extends Model
 {
     /** @use HasFactory<CardPrintFactory> */
     use BelongsToTenant, HasFactory, HasUlids;
+
+    /**
+     * Logged by an import for a printing that happened outside this system; not a way of printing here.
+     */
+    public const METHOD_IMPORT = 'import';
 
     /**
      * @return array<int, string>
