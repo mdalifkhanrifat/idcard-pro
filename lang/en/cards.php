@@ -30,6 +30,7 @@ return [
         'document_title' => 'Card issue proof (:reason)',
         'expiry_before_issue' => 'The expiry date cannot be before the issue date.',
         'rf_in_use' => 'This RF card number is on another person’s active card.',
+        'new_not_first' => '“New” is for the first card only. This person already had a card: choose why it is issued again (e.g. renewal, lost or damaged).',
     ],
 
     'import' => [

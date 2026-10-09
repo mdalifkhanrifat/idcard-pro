@@ -202,6 +202,11 @@ class CardRepository extends EloquentRepository implements CardRepositoryInterfa
         return $this->query()->where('family_member_id', $familyMemberId)->exists();
     }
 
+    public function existsForHolder(int $cardholderId, ?int $familyMemberId): bool
+    {
+        return $this->query()->where('cardholder_id', $cardholderId)->where('family_member_id', $familyMemberId)->exists();
+    }
+
     public function existsForTemplate(int $templateId): bool
     {
         return $this->query()->where('card_template_id', $templateId)->exists();

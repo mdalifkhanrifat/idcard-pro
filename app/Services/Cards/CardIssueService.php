@@ -57,6 +57,10 @@ class CardIssueService
     {
         [$template, $member] = $this->resolveTarget($cardholder, $data->templateId, $data->familyMemberId);
         $this->checkReason($data);
+        // Legacy: "New" is the first card only; later cards say why they are issued (renewal, lost, ...)
+        if ($data->reason === 'new' && $this->cards->existsForHolder($cardholder->id, $member?->id)) {
+            throw ValidationException::withMessages(['reason' => __('cards.issue.new_not_first')]);
+        }
         $issueDate = $data->issueDate ?? CarbonImmutable::today();
         $expiryDate = $this->expiryDate($template, $issueDate, $data->expiryDate);
         if ($expiryDate !== null && $expiryDate->lt($issueDate)) {

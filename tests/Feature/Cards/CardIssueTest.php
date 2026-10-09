@@ -61,8 +61,23 @@ it('keeps the number on reissue by default and replaces the previous card', func
 
     // Another template code: a number from that code's sequence
     $visitor = cardTemplate($this->tenant, ['code' => 'VIS']);
-    $this->postJson($this->url, ['template' => $visitor->public_id, 'reason' => 'new'])->assertJsonPath('data.number', "VIS/{$this->year}000001");
+    $this->postJson($this->url, ['template' => $visitor->public_id, 'reason' => 'renewal'])->assertJsonPath('data.number', "VIS/{$this->year}000001");
     expect(Card::query()->where('status', 'active')->count())->toBe(1);
+});
+
+it('allows the reason "new" for each holder\'s first card only (legacy)', function () {
+    Sanctum::actingAs($this->owner);
+    $member = app(TenantContext::class)->run($this->tenant, fn () => FamilyMember::factory()->create(['tenant_id' => $this->tenant->id, 'cardholder_id' => $this->holder->id]));
+    $family = cardTemplate($this->tenant, ['code' => 'FAM', 'audience' => 'family_member']);
+
+    $this->postJson($this->url, ['template' => $this->template->public_id, 'reason' => 'new'])->assertCreated();
+    $this->postJson($this->url, ['template' => $this->template->public_id, 'reason' => 'new'])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['reason' => __('cards.issue.new_not_first')]);
+    $this->postJson($this->url, ['template' => $this->template->public_id, 'reason' => 'renewal'])->assertCreated();
+
+    // A family member's first card is still new
+    $this->postJson($this->url, ['template' => $family->public_id, 'family_member' => $member->public_id, 'reason' => 'new'])->assertCreated();
 });
 
 it('gives a new number on every issue when the organization chooses so', function () {
@@ -102,10 +117,10 @@ it('prints the family member\'s own photo and signature on a family card', funct
     $upload = fn (array $data) => $this->post($files, [...$data, 'file' => UploadedFile::fake()->image('i.png', 300, 300)], ['Accept' => 'application/json'])->assertCreated()->json('data.id');
     $upload(['collection' => 'photo']);
     $upload(['collection' => 'signature']);
-    $issue = fn () => Card::where('public_id', $this->postJson($this->url, ['template' => $family->public_id, 'family_member' => $member->public_id, 'reason' => 'new'])->assertCreated()->json('data.id'))->firstOrFail();
+    $issue = fn (string $reason = 'renewal') => Card::where('public_id', $this->postJson($this->url, ['template' => $family->public_id, 'family_member' => $member->public_id, 'reason' => $reason])->assertCreated()->json('data.id'))->firstOrFail();
 
     // Without their own photo the card prints none, not the cardholder's
-    expect($issue()->only(['photo_file_id', 'signature_file_id']))->toBe(['photo_file_id' => null, 'signature_file_id' => null]);
+    expect($issue('new')->only(['photo_file_id', 'signature_file_id']))->toBe(['photo_file_id' => null, 'signature_file_id' => null]);
 
     $photo = $upload(['collection' => 'photo', 'family_member' => $member->public_id]);
     $card = $issue();

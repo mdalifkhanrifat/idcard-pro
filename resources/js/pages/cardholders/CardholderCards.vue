@@ -33,6 +33,8 @@ const detailId = ref<string | null>(null);
 
 const reasonLabel = (key: string) => (te(`cards.reasons.${key}`) ? t(`cards.reasons.${key}`) : key);
 /** The cardholder's own active card (family cards are listed below). */
+/** Who already had a card ('' = the cardholder): their next card is not "new". */
+const previousHolders = computed(() => [...new Set(cards.value.map((card) => card.family_member?.id ?? ''))]);
 const activeOwn = computed(() => cards.value.find((card) => card.status === 'active' && !card.family_member) ?? null);
 
 async function load(): Promise<void> {
@@ -123,7 +125,7 @@ function show(id: string): void {
             <UiEmpty v-else-if="!loading" :title="t('cards.empty')" :hint="auth.can('cards.issue') ? t('cards.emptyHint') : undefined" />
         </section>
 
-        <IssueCardDialog v-model:open="issueOpen" :cardholder="cardholder" @issued="load" />
+        <IssueCardDialog v-model:open="issueOpen" :cardholder="cardholder" :previous-holders="previousHolders" @issued="load" />
         <CardDetailDialog v-model:open="detailOpen" :card-id="detailId" @changed="load" />
     </div>
 </template>

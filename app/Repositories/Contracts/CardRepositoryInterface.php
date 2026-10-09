@@ -83,6 +83,11 @@ interface CardRepositoryInterface extends RepositoryInterface
 
     public function existsForFamilyMember(int $familyMemberId): bool;
 
+    /**
+     * Whether this holder (the cardholder: no family member) was ever issued a card.
+     */
+    public function existsForHolder(int $cardholderId, ?int $familyMemberId): bool;
+
     public function existsForTemplate(int $templateId): bool;
 
     /**

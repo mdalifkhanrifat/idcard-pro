@@ -22,7 +22,13 @@ import type { CardLayout, CardTemplate, CardValues, Cardholder, FamilyMember } f
  * Issue a card (legacy card form + "Reason For Print"): for the cardholder or a family member, from an
  * active template of the matching kind, with a live preview of the real card and the number it will get.
  */
-const props = defineProps<{ cardholder: Pick<Cardholder, 'id' | 'full_name'>; /** Preselect a holder: '' = the cardholder. */ familyMemberId?: string }>();
+const props = defineProps<{
+    cardholder: Pick<Cardholder, 'id' | 'full_name'>;
+    /** Preselect a holder: '' = the cardholder. */
+    familyMemberId?: string;
+    /** Holders who already had a card ('' = the cardholder, else the family member id): "new" is for the first card only. */
+    previousHolders?: string[];
+}>();
 const open = defineModel<boolean>('open', { default: false });
 const emit = defineEmits<{ issued: [cardId: string] }>();
 const { t, te } = useI18n();
@@ -54,6 +60,7 @@ watch(open, async (value) => {
         return;
     }
     Object.assign(form, { holder: props.familyMemberId ?? '', template: '', reason: 'new', notes: '', issue_date: today(), expiry_date: '', rf_card_no: '' });
+    form.reason = defaultReason();
     document.value = null;
     errors.value = {};
     preview.value = null;
@@ -72,6 +79,21 @@ const forFamily = computed(() => form.holder !== '');
 const usableTemplates = computed(() => templates.value.filter((template) => template.audience === (forFamily.value ? 'family_member' : 'cardholder')));
 const template = computed(() => templates.value.find((item) => item.id === form.template) ?? null);
 const needs = computed(() => cardReasons.needs(form.reason));
+/** Legacy: once a holder had a card, "new" is no longer offered; the server enforces it too. */
+const hadCard = computed(() => (props.previousHolders ?? []).includes(form.holder));
+const reasonOptions = computed(() => cardReasons.reasons.value.filter((reason) => !(hadCard.value && reason.key === 'new')));
+function defaultReason(): string {
+    const keys = reasonOptions.value.map((reason) => reason.key);
+
+    return hadCard.value ? (keys.includes('renewal') ? 'renewal' : (keys[0] ?? '')) : 'new';
+}
+watch(() => form.holder, () => (form.reason = defaultReason()));
+// Reasons may arrive after the dialog opened
+watch(reasonOptions, (options) => {
+    if (options.length && !options.some((reason) => reason.key === form.reason)) {
+        form.reason = defaultReason();
+    }
+});
 
 function pickDefaultTemplate(): void {
     if (!usableTemplates.value.some((item) => item.id === form.template)) {
@@ -219,7 +241,7 @@ async function submit(event: SubmitEvent): Promise<void> {
                     :error="errors.template"
                     data-field="template"
                 />
-                <UiSelect v-model="form.reason" :label="t('cards.reason')" required :options="cardReasons.reasons.value.map((reason) => ({ value: reason.key, label: reasonLabel(reason.key) }))" :error="errors.reason" data-field="reason" />
+                <UiSelect v-model="form.reason" :label="t('cards.reason')" required :options="reasonOptions.map((reason) => ({ value: reason.key, label: reasonLabel(reason.key) }))" :error="errors.reason" data-field="reason" />
                 <UiInput v-model="form.rf_card_no" :label="t('cards.rfCardNo')" :maxlength="60" :error="errors.rf_card_no" />
                 <UiInput v-model="form.issue_date" type="date" :label="t('cards.issueDate')" :error="errors.issue_date" />
                 <UiInput v-model="form.expiry_date" type="date" :label="t('cards.expiryDate')" :hint="t('cards.expiryHint')" :error="errors.expiry_date" @input="expiryTouched = true" />
