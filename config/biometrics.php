@@ -21,6 +21,17 @@
 return [
 
     /*
+     * Storage: every image and template is encrypted (AES-256-GCM) with a key of its own, not APP_KEY,
+     * so biometric data stays apart from the rest of the application's encryption. Create it with
+     * `php artisan app:biometric-key`. To change the key, move the old one to BIOMETRIC_PREVIOUS_KEYS
+     * (comma separated): data saved with it can still be read.
+     */
+    'disk' => env('BIOMETRIC_DISK', 'local'),
+    'key' => env('BIOMETRIC_KEY'),
+    'previous_keys' => array_values(array_filter(explode(',', (string) env('BIOMETRIC_PREVIOUS_KEYS', '')))),
+    'cipher' => 'aes-256-gcm',
+
+    /*
      * What can be captured. Positions use the ISO/IEC 19794 finger position codes, so captures can be
      * exchanged with HR, access control and government systems.
      *

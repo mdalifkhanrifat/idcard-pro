@@ -32,5 +32,6 @@
         <env name="PULSE_ENABLED" value="false"/>
         <env name="TELESCOPE_ENABLED" value="false"/>
         <env name="NIGHTWATCH_ENABLED" value="false"/>
+        <env name="BIOMETRIC_KEY" value="base64:aGyrMlLbZBVyhZ+LoPbz/ORldFgF46h8ErtEcwTWSi4="/>
     </php>
 </phpunit>

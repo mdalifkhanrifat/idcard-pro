@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Repositories\Contracts\CardholderRepositoryInterface;
 use App\Repositories\Contracts\CardRepositoryInterface;
 use App\Repositories\Contracts\MasterDataRepositoryInterface;
+use App\Services\Biometrics\BiometricService;
 use App\Services\CustomFields\CustomFieldService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
@@ -23,6 +24,7 @@ class CardholderService
         private CardholderFileService $files,
         private CustomFieldService $customFields,
         private CardRepositoryInterface $cards,
+        private BiometricService $biometrics,
     ) {}
 
     /**
@@ -69,9 +71,11 @@ class CardholderService
             throw new BusinessRuleException(__('cards.in_use.cardholder'));
         }
         $locations = $this->files->storedLocations($cardholder);
+        $biometricLocations = $this->biometrics->storedLocations($cardholder);
 
         $this->cardholders->delete($cardholder);
         $this->files->deleteStored($locations);
+        $this->biometrics->deleteStored($biometricLocations);
     }
 
     /**

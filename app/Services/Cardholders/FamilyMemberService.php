@@ -8,6 +8,7 @@ use App\Models\FamilyMember;
 use App\Repositories\Contracts\CardRepositoryInterface;
 use App\Repositories\Contracts\FamilyMemberRepositoryInterface;
 use App\Repositories\Contracts\MasterDataRepositoryInterface;
+use App\Services\Biometrics\BiometricService;
 use Illuminate\Support\Collection;
 
 /**
@@ -23,6 +24,7 @@ class FamilyMemberService
         private MasterDataRepositoryInterface $masterData,
         private CardRepositoryInterface $cards,
         private CardholderFileService $files,
+        private BiometricService $biometrics,
     ) {}
 
     /**
@@ -60,10 +62,12 @@ class FamilyMemberService
         if ($this->cards->existsForFamilyMember($member->id)) {
             throw new BusinessRuleException(__('cards.in_use.family_member'));
         }
-        // The file records go with the member (foreign key cascade); the stored files are removed afterwards
+        // File and biometric records go with the member (foreign key cascade); the stored files are removed afterwards
         $locations = $this->files->storedLocationsOfMember($member);
+        $biometricLocations = $this->biometrics->storedLocationsOfMember($member);
         $this->members->delete($member);
         $this->files->deleteStored($locations);
+        $this->biometrics->deleteStored($biometricLocations);
     }
 
     /**
