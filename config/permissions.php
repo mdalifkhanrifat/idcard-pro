@@ -31,6 +31,8 @@ return [
         'images' => ['view', 'create', 'update', 'delete'],
         // Issued cards: issue a new card, print it, update its RF number or notes, revoke it
         'cards' => ['view', 'issue', 'print', 'update', 'revoke'],
+        // Biometric captures (Phase 4): see them, capture or mark a position unavailable, delete them
+        'biometrics' => ['view', 'enroll', 'delete'],
     ],
 
     'default_roles' => [
@@ -45,9 +47,10 @@ return [
             'fonts.view', 'fonts.create', 'fonts.delete',
             'images.view', 'images.create', 'images.update', 'images.delete',
             'cards.view', 'cards.issue', 'cards.print', 'cards.update', 'cards.revoke',
+            'biometrics.view', 'biometrics.enroll', 'biometrics.delete',
         ],
         // Legacy operators printed cards, so they issue them too
-        'Operator' => ['users.view', 'master_data.view', 'cardholders.view', 'cardholders.create', 'cardholders.update', 'templates.view', 'cards.view', 'cards.issue', 'cards.print'],
+        'Operator' => ['users.view', 'master_data.view', 'cardholders.view', 'cardholders.create', 'cardholders.update', 'templates.view', 'cards.view', 'cards.issue', 'cards.print', 'biometrics.view', 'biometrics.enroll'],
         'Viewer' => ['users.view', 'audit.view', 'master_data.view', 'cardholders.view', 'cards.view'],
     ],
 

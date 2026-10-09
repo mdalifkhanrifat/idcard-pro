@@ -154,7 +154,8 @@
             "templates": "কার্ড টেমপ্লেট",
             "fonts": "ফন্ট",
             "images": "ছবির লাইব্রেরি",
-            "cards": "ইস্যু হওয়া কার্ড"
+            "cards": "ইস্যু হওয়া কার্ড",
+            "biometrics": "বায়োমেট্রিক"
         },
         "abilities": {
             "view": "দেখা",
@@ -164,7 +165,8 @@
             "import": "ইমপোর্ট",
             "issue": "ইস্যু",
             "print": "প্রিন্ট",
-            "revoke": "বাতিল"
+            "revoke": "বাতিল",
+            "enroll": "নেওয়া"
         }
     },
     "audit": {
@@ -179,6 +181,22 @@
         "ip": "আইপি ঠিকানা",
         "identifier": "লগইন আইডি",
         "device": "ডিভাইস",
+        "logs": {
+            "user": "ইউজার",
+            "tenant": "প্রতিষ্ঠান",
+            "cardholders": "কার্ডধারী",
+            "cardholder_files": "কার্ডধারীর ফাইল",
+            "family_members": "পরিবারের সদস্য",
+            "qualifications": "শিক্ষা ও প্রশিক্ষণ",
+            "custom_fields": "কাস্টম ফিল্ড",
+            "master_data": "মাস্টার ডেটা",
+            "signatories": "সইকারী",
+            "card_templates": "কার্ড টেমপ্লেট",
+            "fonts": "ফন্ট",
+            "images": "ছবির লাইব্রেরি",
+            "cards": "কার্ড",
+            "biometrics": "বায়োমেট্রিক"
+        },
         "events": {
             "created": "তৈরি",
             "updated": "হালনাগাদ",

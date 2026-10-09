@@ -271,6 +271,16 @@ class Cardholder extends Model
     }
 
     /**
+     * Biometric captures of the cardholder and their family members, current and history (Phase 4).
+     *
+     * @return HasMany<BiometricCapture, $this>
+     */
+    public function biometricCaptures(): HasMany
+    {
+        return $this->hasMany(BiometricCapture::class);
+    }
+
+    /**
      * Issued cards, newest first (the cardholder's own and their family members').
      *
      * @return HasMany<Card, $this>

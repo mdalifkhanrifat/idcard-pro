@@ -8,6 +8,7 @@ use App\Http\Controllers\Api\V1\Auth\PasswordResetController;
 use App\Http\Controllers\Api\V1\Auth\SessionController;
 use App\Http\Controllers\Api\V1\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\Api\V1\Auth\TwoFactorController;
+use App\Http\Controllers\Api\V1\BiometricCaptureController;
 use App\Http\Controllers\Api\V1\CardController;
 use App\Http\Controllers\Api\V1\CardholderController;
 use App\Http\Controllers\Api\V1\CardholderFileController;
@@ -58,6 +59,10 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::get('library-image-files/{image}', [TenantImageController::class, 'file'])
         ->middleware(['signed:relative', 'throttle:240,1'])
         ->name('library-image-files.show');
+    // Decrypted biometric images (authorization happened when the link was issued; never cached)
+    Route::get('biometric-images/{capture}', [BiometricCaptureController::class, 'image'])
+        ->middleware(['signed:relative', 'throttle:120,1'])
+        ->name('biometric-images.show');
 
     // Public card verification (3.7): the code from the card's QR code, no sign-in
     Route::get('verify/{code}', [CardVerificationController::class, 'show'])
@@ -135,6 +140,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::delete('signatories/{signatory}/signature', [SignatoryController::class, 'removeSignature'])->name('signatories.signature.destroy');
             Route::apiResource('cardholders.files', CardholderFileController::class)->only(['index', 'store', 'destroy'])->scoped(['cardholder' => 'public_id', 'file' => 'public_id']);
             Route::apiResource('cardholders.family-members', FamilyMemberController::class)->except('show')->scoped(['cardholder' => 'public_id', 'family_member' => 'public_id']);
+            Route::post('cardholders/{cardholder}/biometrics/unavailable', [BiometricCaptureController::class, 'unavailable'])->name('cardholders.biometrics.unavailable');
+            Route::apiResource('cardholders.biometrics', BiometricCaptureController::class)->only(['index', 'store', 'destroy'])->parameters(['biometrics' => 'biometric_capture'])->scoped(['cardholder' => 'public_id', 'biometric_capture' => 'public_id']);
             Route::get('cardholders/{cardholder}/cards/next-number', [CardController::class, 'nextNumber'])->name('cardholders.cards.next-number');
             Route::apiResource('cardholders.cards', CardController::class)->only(['index', 'store'])->scoped(['cardholder' => 'public_id']);
             Route::get('cards', [CardController::class, 'list'])->name('cards.index');

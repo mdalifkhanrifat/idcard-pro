@@ -88,8 +88,25 @@ return [
     // The simulator makes up fingerprints and faces: never offered in production
     'simulator' => (bool) env('BIOMETRIC_SIMULATOR', env('APP_ENV', 'production') !== 'production'),
 
-    // Why a position could not be captured (e.g. a missing finger); "other" asks for a note
+    // Why a position could not be captured (e.g. a missing finger)
     'unavailable_reasons' => ['missing', 'injured', 'bandaged', 'unreadable', 'other'],
+    // Reasons that need a note saying what happened
+    'unavailable_reasons_with_note' => ['other'],
+
+    /*
+     * Image formats drivers may send: the first bytes that identify the format (hex), the content type
+     * when shown, and whether a browser can show it (WSQ cannot; it is kept for exchange).
+     */
+    'image_types' => [
+        'png' => ['signature' => '89504e47', 'mime' => 'image/png', 'displayable' => true],
+        'jpeg' => ['signature' => 'ffd8ff', 'mime' => 'image/jpeg', 'displayable' => true],
+        'bmp' => ['signature' => '424d', 'mime' => 'image/bmp', 'displayable' => true],
+        'wsq' => ['signature' => 'ffa0', 'mime' => 'application/octet-stream', 'displayable' => false],
+    ],
+    'max_image_kb' => 2048,
+    'max_template_kb' => 64,
+    // Minutes a signed link to a capture's image stays valid
+    'url_ttl' => 5,
 
     // Moments the organization may require complete biometrics before (enforced in 4.9)
     'required_before' => ['issue', 'print'],

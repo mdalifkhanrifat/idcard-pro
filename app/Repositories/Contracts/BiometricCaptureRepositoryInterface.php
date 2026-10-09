@@ -20,7 +20,18 @@ interface BiometricCaptureRepositoryInterface extends RepositoryInterface
     public function currentFor(Cardholder $cardholder, ?FamilyMember $member = null): Collection;
 
     /**
-     * Move the current capture of a position (if any) to history; returns how many were moved.
+     * The current capture of one position of the cardholder or of one of their family members.
+     */
+    public function currentAt(Cardholder $cardholder, ?FamilyMember $member, string $modality, string $position): ?BiometricCapture;
+
+    /**
+     * Find a capture regardless of the current tenant (used by signed image links).
+     */
+    public function findAnyTenant(string $publicId): ?BiometricCapture;
+
+    /**
+     * Move the current capture of a position (if any) to history, without its files (read their
+     * locations first to remove them); returns how many were moved.
      */
     public function markReplaced(Cardholder $cardholder, ?FamilyMember $member, string $modality, string $position): int;
 

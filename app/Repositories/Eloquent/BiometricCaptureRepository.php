@@ -29,13 +29,24 @@ class BiometricCaptureRepository extends EloquentRepository implements Biometric
             ->get();
     }
 
+    public function currentAt(Cardholder $cardholder, ?FamilyMember $member, string $modality, string $position): ?BiometricCapture
+    {
+        return $this->ownedBy($cardholder, $member)->current()->where('modality', $modality)->where('position', $position)->first();
+    }
+
+    public function findAnyTenant(string $publicId): ?BiometricCapture
+    {
+        return BiometricCapture::query()->withoutGlobalScopes()->where('public_id', $publicId)->first();
+    }
+
     public function markReplaced(Cardholder $cardholder, ?FamilyMember $member, string $modality, string $position): int
     {
+        // History keeps what was captured and when, not the biometric data itself
         return $this->ownedBy($cardholder, $member)
             ->current()
             ->where('modality', $modality)
             ->where('position', $position)
-            ->update(['replaced_at' => now(), 'current_key' => null]);
+            ->update(['replaced_at' => now(), 'current_key' => null, 'disk' => null, 'image_path' => null, 'template_path' => null]);
     }
 
     public function locationsFor(Cardholder $cardholder): Collection

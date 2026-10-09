@@ -154,7 +154,8 @@
             "templates": "Card templates",
             "fonts": "Fonts",
             "images": "Image library",
-            "cards": "Issued cards"
+            "cards": "Issued cards",
+            "biometrics": "Biometrics"
         },
         "abilities": {
             "view": "View",
@@ -164,7 +165,8 @@
             "import": "Import",
             "issue": "Issue",
             "print": "Print",
-            "revoke": "Revoke"
+            "revoke": "Revoke",
+            "enroll": "Enroll"
         }
     },
     "audit": {
@@ -179,6 +181,22 @@
         "ip": "IP address",
         "identifier": "Login used",
         "device": "Device",
+        "logs": {
+            "user": "Users",
+            "tenant": "Organization",
+            "cardholders": "Cardholders",
+            "cardholder_files": "Cardholder files",
+            "family_members": "Family members",
+            "qualifications": "Education and training",
+            "custom_fields": "Custom fields",
+            "master_data": "Master data",
+            "signatories": "Signatories",
+            "card_templates": "Card templates",
+            "fonts": "Fonts",
+            "images": "Image library",
+            "cards": "Cards",
+            "biometrics": "Biometrics"
+        },
         "events": {
             "created": "Created",
             "updated": "Updated",
