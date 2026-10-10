@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, watch } from 'vue';
+import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Ban, RotateCcw, ScanLine, Trash2 } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
@@ -7,7 +7,8 @@ import UiButton from '@/components/ui/UiButton.vue';
 import UiCard from '@/components/ui/UiCard.vue';
 import UiSelect from '@/components/ui/UiSelect.vue';
 import UiTextarea from '@/components/ui/UiTextarea.vue';
-import { acceptFor, biometricDriver, CaptureError, type CaptureResult } from '@/lib/biometrics';
+import { acceptFor, CaptureError, hasBiometricDriver, loadBiometricDriver, type BiometricDriver, type CaptureResult } from '@/lib/biometrics';
+import { stationUrl } from '@/lib/biometrics/station';
 import { biometricLabel, type BiometricLabelKind } from '@/lib/biometrics/labels';
 import { formatDateTime } from '@/lib/format';
 import { http, toApiError } from '@/lib/http';
@@ -39,7 +40,7 @@ const PREFERENCE_KEY = `biometric-driver:${props.modality}`;
 const driverChoices = computed(() =>
     settings.value.drivers
         .filter((name) => options.value.drivers[name]?.modalities.includes(props.modality))
-        .map((name) => ({ name, available: !!biometricDriver(name) })),
+        .map((name) => ({ name, available: hasBiometricDriver(name) })),
 );
 function remembered(): string | null {
     try {
@@ -49,18 +50,37 @@ function remembered(): string | null {
     }
 }
 const driverName = ref(driverChoices.value.find((choice) => choice.available && choice.name === remembered())?.name ?? driverChoices.value.find((choice) => choice.available)?.name ?? '');
-const driver = computed(() => (driverName.value ? biometricDriver(driverName.value) : undefined));
-watch(driverName, (name) => {
-    try {
-        localStorage.setItem(PREFERENCE_KEY, name);
-    } catch {
-        // Only a convenience for this station
-    }
-});
+const error = ref('');
+/** The chosen driver's module, loaded when picked. */
+const driver = shallowRef<BiometricDriver | undefined>();
+watch(
+    driverName,
+    async (name, previous) => {
+        driver.value = undefined;
+        if (previous !== undefined) {
+            try {
+                localStorage.setItem(PREFERENCE_KEY, name);
+            } catch {
+                // Only a convenience for this station
+            }
+        }
+        if (!name || !hasBiometricDriver(name)) {
+            return;
+        }
+        try {
+            const loadedDriver = await loadBiometricDriver(name);
+            if (driverName.value === name) {
+                driver.value = loadedDriver;
+            }
+        } catch {
+            error.value = t('biometrics.errors.not_available');
+        }
+    },
+    { immediate: true },
+);
 
 const file = ref<File | null>(null);
 const busy = ref(false);
-const error = ref('');
 /** Tries at this position since the panel opened, and the best result so far. */
 const attempts = ref(0);
 const result = ref<CaptureResult | null>(null);
@@ -102,7 +122,7 @@ async function takeCapture(): Promise<void> {
     error.value = '';
     abort = new AbortController();
     try {
-        const captured = await driver.value.capture({ modality: props.modality, position: props.position, options: options.value, file: file.value, signal: abort.signal });
+        const captured = await driver.value.capture({ modality: props.modality, position: props.position, options: options.value, file: file.value, localUrl: stationUrl(driverName.value, options.value), signal: abort.signal });
         attempts.value++;
         result.value = captured;
         if (!best.value || (captured.quality ?? 101) > (best.value.quality ?? 101) || isGood(captured)) {

@@ -1,33 +1,53 @@
 import type { BiometricOptions } from '@/types';
-import { simulatorDriver } from './drivers/simulator';
-import { uploadDriver } from './drivers/upload';
 import type { BiometricDriver } from './types';
 
 export * from './types';
 export { acceptFor, detectImageFormat } from './files';
 
 /**
- * Browser drivers by their key in config/biometrics.php. A driver the registry offers but this
- * browser build does not have yet (e.g. a scanner brand added later) is simply not found, and the
- * station says it is not available.
+ * Browser drivers by their key in config/biometrics.php. Each driver is its own module, loaded only
+ * when a station uses it, so adding a scanner brand means adding a module and one line here (or
+ * calling `registerBiometricDriver` from a plug-in) without touching the screens. A driver the
+ * registry offers but this build lacks is simply not found, and the station says it is not available.
  */
-const drivers = new Map<string, BiometricDriver>([simulatorDriver, uploadDriver].map((driver) => [driver.id, driver]));
+type DriverLoader = () => Promise<BiometricDriver>;
 
-export function registerBiometricDriver(driver: BiometricDriver): void {
-    drivers.set(driver.id, driver);
+const loaders = new Map<string, DriverLoader>([
+    ['simulator', async () => (await import('./drivers/simulator')).simulatorDriver],
+    ['upload', async () => (await import('./drivers/upload')).uploadDriver],
+]);
+const loaded = new Map<string, Promise<BiometricDriver>>();
+
+export function registerBiometricDriver(id: string, loader: DriverLoader): void {
+    loaders.set(id, loader);
+    loaded.delete(id);
 }
 
-export function biometricDriver(name: string): BiometricDriver | undefined {
-    return drivers.get(name);
+export function hasBiometricDriver(name: string): boolean {
+    return loaders.has(name);
+}
+
+/** The driver's module, loaded once; undefined when this build has no such driver. */
+export function loadBiometricDriver(name: string): Promise<BiometricDriver | undefined> {
+    const loader = loaders.get(name);
+    if (!loader) {
+        return Promise.resolve(undefined);
+    }
+    if (!loaded.has(name)) {
+        // A failed load (e.g. offline) may be tried again
+        loaded.set(name, loader().catch((error: unknown) => {
+            loaded.delete(name);
+            throw error;
+        }));
+    }
+
+    return loaded.get(name)!;
 }
 
 /**
  * Drivers a station may use for a kind: allowed by the organization's settings, offered by this
  * installation and present in this browser build, in the organization's order.
  */
-export function driversFor(modality: string, allowed: string[], options: BiometricOptions): BiometricDriver[] {
-    return allowed
-        .filter((name) => options.drivers[name]?.modalities.includes(modality))
-        .map((name) => drivers.get(name))
-        .filter((driver): driver is BiometricDriver => driver !== undefined);
+export function driversFor(modality: string, allowed: string[], options: BiometricOptions): string[] {
+    return allowed.filter((name) => options.drivers[name]?.modalities.includes(modality) && loaders.has(name));
 }

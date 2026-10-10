@@ -55,7 +55,7 @@ export interface BiometricDriver {
 }
 
 /** Shown as `biometrics.errors.<code>` with `params`. */
-export type CaptureErrorCode = 'no_file' | 'format' | 'too_large' | 'unreadable' | 'not_available' | 'cancelled' | 'device';
+export type CaptureErrorCode = 'no_file' | 'format' | 'too_large' | 'unreadable' | 'not_available' | 'cancelled' | 'device' | 'timeout' | 'no_finger' | 'busy';
 
 export class CaptureError extends Error {
     constructor(
