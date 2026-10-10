@@ -71,6 +71,8 @@ export interface BiometricOptions {
     modes: string[];
     required_before: string[];
     unavailable_reasons: string[];
+    /** Reasons that need a note. */
+    unavailable_reasons_with_note: string[];
     /** Image format => first bytes (hex), content type, and whether a browser can show it. */
     image_types: Record<string, { signature: string; mime: string; displayable: boolean }>;
     max_image_kb: number;

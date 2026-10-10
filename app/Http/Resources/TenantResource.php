@@ -55,6 +55,8 @@ class TenantResource extends JsonResource
                 'modes' => config('biometrics.modes'),
                 'required_before' => config('biometrics.required_before'),
                 'unavailable_reasons' => config('biometrics.unavailable_reasons'),
+                // Reasons that need a note saying what happened
+                'unavailable_reasons_with_note' => config('biometrics.unavailable_reasons_with_note'),
                 // How a station recognizes an image file (first bytes) and whether a browser can show it
                 'image_types' => config('biometrics.image_types'),
                 'max_image_kb' => (int) config('biometrics.max_image_kb'),

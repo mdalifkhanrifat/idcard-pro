@@ -33,7 +33,8 @@ it('keeps biometrics off until the organization turns it on, and lists what can 
         ->and($response->json('data.biometric_options.modalities.face.template_formats'))->toBe([])
         ->and($response->json('data.biometric_options.modalities.fingerprint.template_formats'))->toContain('iso-19794-2')
         ->and($response->json('data.biometric_options.image_types.png'))->toBe(['signature' => '89504e47', 'mime' => 'image/png', 'displayable' => true])
-        ->and($response->json('data.biometric_options.max_image_kb'))->toBe(2048);
+        ->and($response->json('data.biometric_options.max_image_kb'))->toBe(2048)
+        ->and($response->json('data.biometric_options.unavailable_reasons_with_note'))->toBe(['other']);
 });
 
 it('only lists group positions the registry offers', function () {
