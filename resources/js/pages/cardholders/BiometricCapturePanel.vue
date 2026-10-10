@@ -5,10 +5,11 @@ import { Ban, RotateCcw, ScanLine, Trash2 } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiCard from '@/components/ui/UiCard.vue';
+import UiInput from '@/components/ui/UiInput.vue';
 import UiSelect from '@/components/ui/UiSelect.vue';
 import UiTextarea from '@/components/ui/UiTextarea.vue';
-import { acceptFor, CaptureError, hasBiometricDriver, loadBiometricDriver, type BiometricDriver, type CaptureResult } from '@/lib/biometrics';
-import { stationUrl } from '@/lib/biometrics/station';
+import { acceptFor, CaptureError, hasBiometricDriver, loadBiometricDriver, type BiometricDriver, type CaptureErrorCode, type CaptureResult } from '@/lib/biometrics';
+import { isLoopbackUrl, setStationUrl, stationUrl } from '@/lib/biometrics/station';
 import { biometricLabel, type BiometricLabelKind } from '@/lib/biometrics/labels';
 import { formatDateTime } from '@/lib/format';
 import { http, toApiError } from '@/lib/http';
@@ -51,12 +52,53 @@ function remembered(): string | null {
 }
 const driverName = ref(driverChoices.value.find((choice) => choice.available && choice.name === remembered())?.name ?? driverChoices.value.find((choice) => choice.available)?.name ?? '');
 const error = ref('');
+
+/* Drivers that talk to a service on this computer: whether it answers, and this station's address for it. */
+const usesLocalService = computed(() => (options.value.drivers[driverName.value]?.local_url ?? null) !== null);
+const deviceStatus = ref<{ state: 'checking' | 'ready' | 'offline'; name?: string; reason?: CaptureErrorCode } | null>(null);
+const editingAddress = ref(false);
+const address = ref('');
+const addressError = ref('');
+
+async function checkDevice(): Promise<void> {
+    const current = driver.value;
+    if (!current || !usesLocalService.value) {
+        deviceStatus.value = null;
+        return;
+    }
+    deviceStatus.value = { state: 'checking' };
+    const result = await current.probe({ modality: props.modality, options: options.value, localUrl: stationUrl(driverName.value, options.value) });
+    if (driver.value === current) {
+        deviceStatus.value = result.ready
+            ? { state: 'ready', name: [result.device?.vendor, result.device?.model].filter(Boolean).join(' ') }
+            : { state: 'offline', reason: result.reason ?? 'device' };
+    }
+}
+
+function editAddress(): void {
+    address.value = stationUrl(driverName.value, options.value) ?? '';
+    addressError.value = '';
+    editingAddress.value = !editingAddress.value;
+}
+
+function saveAddress(useDefault = false): void {
+    if (!useDefault && !isLoopbackUrl(address.value.trim())) {
+        addressError.value = t('biometrics.station.loopbackOnly');
+        return;
+    }
+    setStationUrl(driverName.value, useDefault ? null : address.value.trim());
+    editingAddress.value = false;
+    void checkDevice();
+}
+
 /** The chosen driver's module, loaded when picked. */
 const driver = shallowRef<BiometricDriver | undefined>();
 watch(
     driverName,
     async (name, previous) => {
         driver.value = undefined;
+        deviceStatus.value = null;
+        editingAddress.value = false;
         if (previous !== undefined) {
             try {
                 localStorage.setItem(PREFERENCE_KEY, name);
@@ -71,6 +113,7 @@ watch(
             const loadedDriver = await loadBiometricDriver(name);
             if (driverName.value === name) {
                 driver.value = loadedDriver;
+                void checkDevice();
             }
         } catch {
             error.value = t('biometrics.errors.not_available');
@@ -81,11 +124,17 @@ watch(
 
 const file = ref<File | null>(null);
 const busy = ref(false);
+/** A capture is waiting for the device (it can be cancelled). */
+const capturing = ref(false);
 /** Tries at this position since the panel opened, and the best result so far. */
 const attempts = ref(0);
 const result = ref<CaptureResult | null>(null);
 const best = ref<CaptureResult | null>(null);
 let abort: AbortController | null = null;
+
+function cancelCapture(): void {
+    abort?.abort();
+}
 
 const isGood = (capture: CaptureResult) => capture.quality === null || capture.quality >= settings.value.min_quality;
 const resultUrl = computed(() => {
@@ -119,6 +168,7 @@ async function takeCapture(): Promise<void> {
         return;
     }
     busy.value = true;
+    capturing.value = true;
     error.value = '';
     abort = new AbortController();
     try {
@@ -134,6 +184,7 @@ async function takeCapture(): Promise<void> {
         }
     } finally {
         busy.value = false;
+        capturing.value = false;
         abort = null;
     }
 }
@@ -331,6 +382,27 @@ onBeforeUnmount(() => abort?.abort());
                     :placeholder="driverChoices.some((choice) => choice.available) ? undefined : t('biometrics.panel.noDriver')"
                     data-driver-select
                 />
+                <div v-if="deviceStatus" class="space-y-2 rounded-lg border border-line p-3 text-sm" data-device-status :data-state="deviceStatus.state">
+                    <div class="flex items-center gap-2">
+                        <span class="size-2 shrink-0 rounded-full" :class="{ 'bg-success': deviceStatus.state === 'ready', 'animate-pulse bg-muted': deviceStatus.state === 'checking', 'bg-danger': deviceStatus.state === 'offline' }" />
+                        <span class="min-w-0 flex-1 text-fg">
+                            {{ deviceStatus.state === 'ready' ? (deviceStatus.name ? t('biometrics.station.readyDevice', { device: deviceStatus.name }) : t('biometrics.station.ready')) : deviceStatus.state === 'checking' ? t('biometrics.station.checking') : t('biometrics.station.offline') }}
+                        </span>
+                    </div>
+                    <div class="flex flex-wrap gap-x-4 gap-y-1 pl-4">
+                        <button type="button" class="text-xs text-brand-ink hover:underline" :disabled="deviceStatus.state === 'checking'" data-check-device @click="checkDevice">{{ t('biometrics.station.checkAgain') }}</button>
+                        <button type="button" class="text-xs text-brand-ink hover:underline" data-edit-address @click="editAddress">{{ t('biometrics.station.settings') }}</button>
+                    </div>
+                    <p v-if="deviceStatus.state === 'offline'" class="text-xs text-muted">{{ t(`biometrics.errors.${deviceStatus.reason}`) }}</p>
+                    <div v-if="editingAddress" class="space-y-2 border-t border-line pt-2" data-address-form>
+                        <UiInput v-model="address" :label="t('biometrics.station.address')" :hint="t('biometrics.station.addressHint', { default: options.drivers[driverName]?.local_url })" :error="addressError" data-address />
+                        <div class="flex flex-wrap items-center gap-2">
+                            <UiButton size="sm" data-save-address @click="saveAddress()">{{ t('common.save') }}</UiButton>
+                            <UiButton size="sm" variant="ghost" data-default-address @click="saveAddress(true)">{{ t('biometrics.station.useDefault') }}</UiButton>
+                            <a v-if="isLoopbackUrl(address.trim())" :href="address.trim()" target="_blank" rel="noopener noreferrer" class="text-xs text-brand-ink hover:underline">{{ t('biometrics.station.open') }}</a>
+                        </div>
+                    </div>
+                </div>
                 <div v-if="driver?.needsFile" class="space-y-1.5">
                     <input
                         type="file"
@@ -342,10 +414,11 @@ onBeforeUnmount(() => abort?.abort());
                     <p class="text-xs text-muted">{{ t('biometrics.panel.fileHint', { formats: options.modalities[modality].image_formats.map((format) => format.toUpperCase()).join(', '), kb: options.max_image_kb }) }}</p>
                 </div>
                 <div class="flex flex-wrap gap-2">
-                    <UiButton :loading="busy" :disabled="!driver || (driver.needsFile && !file)" data-capture @click="takeCapture">
+                    <UiButton :loading="busy" :disabled="!driver || (driver.needsFile && !file) || deviceStatus?.state === 'checking'" data-capture @click="takeCapture">
                         <ScanLine class="size-4" />{{ capture?.status === 'captured' ? t('biometrics.panel.captureAgain') : t('biometrics.panel.capture') }}
                     </UiButton>
-                    <UiButton v-if="!marking" variant="secondary" :disabled="busy" data-mark-unavailable @click="marking = true">
+                    <UiButton v-if="capturing" variant="ghost" data-cancel-capture @click="cancelCapture">{{ t('common.cancel') }}</UiButton>
+                    <UiButton v-if="!marking && !capturing" variant="secondary" :disabled="busy" data-mark-unavailable @click="marking = true">
                         <Ban class="size-4" />{{ t('biometrics.panel.cannotCapture') }}
                     </UiButton>
                 </div>

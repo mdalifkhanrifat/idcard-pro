@@ -1381,7 +1381,7 @@
         },
         "errors": {
             "no_file": "Choose a file first.",
-            "format": "This file is not one of the accepted formats ({formats}).",
+            "format": "The image is not in an accepted format ({formats}).",
             "too_large": "The image may be at most {kb} KB.",
             "unreadable": "The {format} file could not be read.",
             "not_available": "This capture method is not available on this station yet.",
@@ -1389,7 +1389,9 @@
             "device": "The device did not answer. Check that it is connected and its service is running.",
             "timeout": "The device did not answer in time. Try again.",
             "no_finger": "No finger was placed on the scanner in time.",
-            "busy": "The device is busy with another capture."
+            "busy": "The device is busy with another capture.",
+            "not_supported": "The capture service on this computer speaks a different version. Update it.",
+            "no_device": "The service answers, but no scanner for this kind is connected and ready."
         },
         "tab": {
             "title": "Biometrics",
@@ -1446,6 +1448,19 @@
             "deleteHint": "The image and template are removed for good.",
             "delete": "Delete capture",
             "deleteMark": "Remove the mark"
+        },
+        "station": {
+            "checking": "Checking the device…",
+            "ready": "Device ready",
+            "readyDevice": "Ready: {device}",
+            "offline": "Not ready",
+            "checkAgain": "Check again",
+            "settings": "Station settings",
+            "address": "Service address on this computer",
+            "addressHint": "Only an address on this computer (localhost, 127.0.0.1). Default: {default}. Kept in this browser only.",
+            "useDefault": "Use the default",
+            "open": "Open the address",
+            "loopbackOnly": "Use an address on this computer, e.g. http://127.0.0.1:47800."
         }
     }
 }

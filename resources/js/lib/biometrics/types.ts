@@ -49,13 +49,13 @@ export interface BiometricDriver {
     id: string;
     /** The station picks a file before capturing. */
     needsFile?: boolean;
-    /** Whether the device can be used now (e.g. the vendor's service answers). */
-    probe(request: Pick<CaptureRequest, 'options' | 'localUrl' | 'signal'>): Promise<ProbeResult>;
+    /** Whether the device can be used now for a kind (e.g. the vendor's service answers and a scanner is connected). */
+    probe(request: Pick<CaptureRequest, 'modality' | 'options' | 'localUrl' | 'signal'>): Promise<ProbeResult>;
     capture(request: CaptureRequest): Promise<CaptureResult>;
 }
 
 /** Shown as `biometrics.errors.<code>` with `params`. */
-export type CaptureErrorCode = 'no_file' | 'format' | 'too_large' | 'unreadable' | 'not_available' | 'cancelled' | 'device' | 'timeout' | 'no_finger' | 'busy';
+export type CaptureErrorCode = 'no_file' | 'format' | 'too_large' | 'unreadable' | 'not_available' | 'cancelled' | 'device' | 'timeout' | 'no_finger' | 'busy' | 'not_supported' | 'no_device';
 
 export class CaptureError extends Error {
     constructor(

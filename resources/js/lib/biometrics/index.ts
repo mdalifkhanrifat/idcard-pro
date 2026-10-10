@@ -15,6 +15,7 @@ type DriverLoader = () => Promise<BiometricDriver>;
 const loaders = new Map<string, DriverLoader>([
     ['simulator', async () => (await import('./drivers/simulator')).simulatorDriver],
     ['upload', async () => (await import('./drivers/upload')).uploadDriver],
+    ['bridge', async () => (await import('./drivers/bridge')).bridgeDriver],
 ]);
 const loaded = new Map<string, Promise<BiometricDriver>>();
 
