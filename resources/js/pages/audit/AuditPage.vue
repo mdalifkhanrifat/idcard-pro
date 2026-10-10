@@ -17,7 +17,8 @@ interface ActivityRow {
     event: string;
     subject_type: string;
     causer: { name: string; email: string } | null;
-    changes: { attributes?: Record<string, unknown>; old?: Record<string, unknown> } | null;
+    /** Field changes, or what an event recorded (e.g. requirements_overridden: moment, reason, requirements). */
+    changes: { attributes?: Record<string, unknown>; old?: Record<string, unknown>; reason?: string; moment?: string } | null;
     created_at: string;
 }
 interface LoginRow {
@@ -42,11 +43,14 @@ onMounted(() => activities.load());
 const logNames = computed(() =>
     ((activities.meta.value as { log_names?: string[] }).log_names ?? []).map((name) => ({ value: name, label: te(`audit.logs.${name}`) ? t(`audit.logs.${name}`) : name })),
 );
+/** Events that occurred (from the API, so new kinds such as requirements_overridden appear by themselves). */
+const eventLabel = (event: string) => (te(`audit.events.${event}`) ? t(`audit.events.${event}`) : event);
+const events = computed(() => ((activities.meta.value as { events?: string[] }).events ?? []).map((value) => ({ value, label: eventLabel(value) })));
 watch(tab, (value) => (value === 'logins' ? logins.load() : activities.load()));
 
 const loginEvents = ['succeeded', 'failed', 'locked', 'blocked', 'two_factor_required', 'two_factor_failed', 'logged_out', 'password_reset'];
 const tone = (event: string) =>
-    ({ succeeded: 'success', created: 'success', failed: 'danger', locked: 'danger', blocked: 'danger', deleted: 'danger', two_factor_failed: 'warning', updated: 'brand' })[event] as
+    ({ succeeded: 'success', created: 'success', failed: 'danger', locked: 'danger', blocked: 'danger', deleted: 'danger', two_factor_failed: 'warning', updated: 'brand', requirements_overridden: 'warning' })[event] as
         | 'success' | 'danger' | 'warning' | 'brand' | undefined;
 
 function changedFields(row: ActivityRow): string[] {
@@ -74,16 +78,19 @@ function browser(ua: string): string {
             <TabsContent value="changes" class="rounded-xl border border-line bg-surface">
                 <div class="grid gap-3 border-b border-line p-4 sm:grid-cols-4">
                     <UiSelect v-model="activities.filters.log_name" :label="t('audit.what')" :placeholder="t('common.all')" :options="logNames" />
-                    <UiSelect v-model="activities.filters.event" :label="t('audit.event')" :placeholder="t('common.all')" :options="['created', 'updated', 'deleted'].map((v) => ({ value: v, label: t(`audit.events.${v}`) }))" />
+                    <UiSelect v-model="activities.filters.event" :label="t('audit.event')" :placeholder="t('common.all')" :options="events" />
                     <UiInput v-model="activities.filters.date_from" type="date" :label="t('common.from')" />
                     <UiInput v-model="activities.filters.date_to" type="date" :label="t('common.to')" />
                 </div>
                 <ul class="divide-y divide-line" :class="activities.loading.value && 'opacity-50'">
                     <li v-for="row in activities.rows.value" :key="row.id" class="flex flex-col gap-1 px-5 py-3 text-sm sm:flex-row sm:items-center sm:gap-4">
-                        <UiBadge :tone="tone(row.event) ?? 'neutral'" class="w-fit">{{ t(`audit.events.${row.event}`) }}</UiBadge>
+                        <UiBadge :tone="tone(row.event) ?? 'neutral'" class="w-fit">{{ eventLabel(row.event) }}</UiBadge>
                         <div class="min-w-0 flex-1">
                             <p class="text-fg"><span class="font-medium">{{ row.causer?.name ?? 'System' }}</span> · {{ row.subject_type }}</p>
                             <p v-if="changedFields(row).length" class="truncate text-xs text-muted">{{ changedFields(row).join(', ') }}</p>
+                            <p v-if="row.changes?.reason" class="text-xs text-muted" data-audit-reason>
+                                <template v-if="row.changes.moment && te(`audit.moments.${row.changes.moment}`)">{{ t(`audit.moments.${row.changes.moment}`) }} · </template>{{ t('audit.reason', { reason: row.changes.reason }) }}
+                            </p>
                         </div>
                         <time class="text-xs whitespace-nowrap text-muted">{{ formatDateTime(row.created_at) }}</time>
                     </li>

@@ -41,6 +41,14 @@ class AuditService
     }
 
     /**
+     * @return array<int, string>
+     */
+    public function events(): array
+    {
+        return $this->activities->events();
+    }
+
+    /**
      * @return LengthAwarePaginator<int, LoginEvent>
      */
     public function logins(LoginEventFilter $filter): LengthAwarePaginator

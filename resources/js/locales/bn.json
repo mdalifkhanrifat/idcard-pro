@@ -209,7 +209,13 @@
             "two_factor_required": "২-ধাপ শুরু",
             "two_factor_failed": "২-ধাপ ব্যর্থ",
             "logged_out": "লগআউট",
-            "password_reset": "পাসওয়ার্ড রিসেট"
+            "password_reset": "পাসওয়ার্ড রিসেট",
+            "requirements_overridden": "শর্ত পার করা হয়েছে"
+        },
+        "reason": "কারণ: {reason}",
+        "moments": {
+            "issue": "ইস্যু",
+            "print": "প্রিন্ট"
         }
     },
     "settings": {

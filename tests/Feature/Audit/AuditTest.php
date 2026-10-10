@@ -30,10 +30,13 @@ it('lists in the filter every kind of record this organization changed, includin
 
     Sanctum::actingAs($this->owner);
     $this->putJson('/api/v1/auth/me', ['name' => 'Alpha Renamed'])->assertOk();
-    $this->getJson('/api/v1/audit/activities')->assertOk()->assertJsonPath('meta.log_names', ['user']);
+    $this->getJson('/api/v1/audit/activities')->assertOk()->assertJsonPath('meta.log_names', ['user'])
+        // Events too: only this organization's (the other one's "created" is not listed)
+        ->assertJsonPath('meta.events', ['updated']);
 
     $this->postJson('/api/v1/cardholders', ['full_name' => 'Alpha Person'])->assertCreated();
-    $this->getJson('/api/v1/audit/activities?filter[log_name]=user')->assertJsonCount(1, 'data')->assertJsonPath('meta.log_names', ['cardholders', 'user']);
+    $this->getJson('/api/v1/audit/activities?filter[log_name]=user')->assertJsonCount(1, 'data')->assertJsonPath('meta.log_names', ['cardholders', 'user'])->assertJsonPath('meta.events', ['created', 'updated']);
+    $this->getJson('/api/v1/audit/activities?filter[event]=Robert\'); DROP')->assertJsonValidationErrors('filter.event');
 });
 
 it('filters the sign-in history of the current organization', function () {

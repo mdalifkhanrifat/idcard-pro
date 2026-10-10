@@ -21,7 +21,7 @@ class AuditController extends Controller
     public function activities(ListActivitiesRequest $request): AnonymousResourceCollection
     {
         return ActivityResource::collection($this->audit->activities($request->toFilter()))
-            ->additional(['meta' => ['log_names' => $this->audit->logNames()]]);
+            ->additional(['meta' => ['log_names' => $this->audit->logNames(), 'events' => $this->audit->events()]]);
     }
 
     /**

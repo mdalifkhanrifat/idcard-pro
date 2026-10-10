@@ -21,4 +21,11 @@ interface ActivityRepositoryInterface
      * @return array<int, string>
      */
     public function logNames(): array;
+
+    /**
+     * Events the organization's users caused (created, updated, requirements_overridden, ...), for the filter.
+     *
+     * @return array<int, string>
+     */
+    public function events(): array;
 }

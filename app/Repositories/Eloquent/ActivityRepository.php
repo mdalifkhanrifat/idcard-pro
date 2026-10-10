@@ -30,6 +30,11 @@ class ActivityRepository implements ActivityRepositoryInterface
         return $this->byTenantUsers()->whereNotNull('log_name')->distinct()->orderBy('log_name')->pluck('log_name')->all();
     }
 
+    public function events(): array
+    {
+        return $this->byTenantUsers()->whereNotNull('event')->distinct()->orderBy('event')->pluck('event')->all();
+    }
+
     /**
      * User::query() is tenant-scoped, so only changes made by this tenant's users are returned.
      *

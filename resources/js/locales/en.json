@@ -209,7 +209,13 @@
             "two_factor_required": "2-step started",
             "two_factor_failed": "2-step failed",
             "logged_out": "Signed out",
-            "password_reset": "Password reset"
+            "password_reset": "Password reset",
+            "requirements_overridden": "Requirement overridden"
+        },
+        "reason": "Reason: {reason}",
+        "moments": {
+            "issue": "Issue",
+            "print": "Print"
         }
     },
     "settings": {
