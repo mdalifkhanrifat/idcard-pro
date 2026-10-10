@@ -1387,6 +1387,37 @@
             "not_available": "This capture method is not available on this station yet.",
             "cancelled": "Capture was cancelled.",
             "device": "The device did not answer. Check that it is connected and its service is running."
+        },
+        "tab": {
+            "title": "Biometrics",
+            "person": "Whose biometrics",
+            "cardholder": "Cardholder",
+            "notForFamily": "This organization does not capture biometrics of family members.",
+            "allComplete": "Complete",
+            "notComplete": "Not complete",
+            "allCompleteHint": "Everything the organization requires is captured.",
+            "notCompleteHint": "Required kinds still need captures (dashed positions are next).",
+            "counted": "{counted} of {needed}",
+            "complete": "Complete",
+            "completeWithExceptions": "Complete with exceptions",
+            "incomplete": "Incomplete",
+            "optionalOpen": "Optional",
+            "preferred": "Preferred order",
+            "legend": "Numbers show the preferred order; dashed positions are next; the corner shows the quality."
+        },
+        "panel": {
+            "empty": "Not captured yet.",
+            "notDisplayable": "{format} images cannot be shown in a browser; it is kept for exchange with other systems.",
+            "quality": "Quality",
+            "lowQuality": "Low quality",
+            "minimum": "Minimum {min}",
+            "method": "Captured with",
+            "image": "Image",
+            "template": "Template",
+            "noTemplate": "None",
+            "attempts": "Tries",
+            "capturedAt": "Captured",
+            "unavailable": "Not available: {reason}"
         }
     }
 }

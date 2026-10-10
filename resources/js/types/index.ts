@@ -79,6 +79,54 @@ export interface BiometricOptions {
     max_template_kb: number;
 }
 
+/** A current capture (or a position marked unavailable) of a cardholder or family member. */
+export interface BiometricCapture {
+    id: string;
+    modality: string;
+    position: string;
+    /** ISO/IEC 19794 position code. */
+    position_code: number | null;
+    status: 'captured' | 'unavailable';
+    unavailable_reason: string | null;
+    note: string | null;
+    driver: string | null;
+    device: { vendor?: string | null; model?: string | null; serial?: string | null } | null;
+    image_format: string | null;
+    image_width: number | null;
+    image_height: number | null;
+    image_dpi: number | null;
+    /** Short-lived signed link; null when not shown in a browser (e.g. WSQ). */
+    image_url: string | null;
+    has_template: boolean;
+    template_format: string | null;
+    quality: number | null;
+    low_quality: boolean;
+    attempts: number;
+    captured_by?: { id: string; name: string } | null;
+    captured_at: string;
+}
+
+/** Whether a person meets the organization's biometric settings (`meta.status`). */
+export interface BiometricStatus {
+    enabled: boolean;
+    /** False for family members when the organization does not capture them. */
+    applies: boolean;
+    complete: boolean;
+    modalities: Record<string, {
+        mode: string;
+        required: boolean;
+        needed: number;
+        captured: string[];
+        unavailable: string[];
+        counted: number;
+        complete: boolean;
+        /** Complete because every possible position was taken or marked unavailable. */
+        with_exceptions: boolean;
+        /** Positions to take next, preferred first. */
+        next: string[];
+    }>;
+}
+
 export interface TenantVerification {
     enabled: boolean;
     /** Details shown on the public page, in this order. */

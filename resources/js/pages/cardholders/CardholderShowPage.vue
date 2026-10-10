@@ -6,6 +6,7 @@ import { ArrowLeft, Loader2, Pencil, Trash2, UserRound } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiCard from '@/components/ui/UiCard.vue';
+import CardholderBiometrics from './CardholderBiometrics.vue';
 import CardholderCards from './CardholderCards.vue';
 import CardholderDocuments from './CardholderDocuments.vue';
 import CardholderFamily from './CardholderFamily.vue';
@@ -29,11 +30,13 @@ const customFields = useCustomFields();
 
 const cardholder = ref<Cardholder | null>(null);
 const earlierImages = ref<CardholderFile[]>([]);
-const TABS = computed(() => ['details', ...(auth.can('cards.view') ? (['cards'] as const) : []), 'family', 'qualifications', 'documents'] as const);
-type TabKey = 'details' | 'cards' | 'family' | 'qualifications' | 'documents';
-const tab = ref<TabKey>(route.query.tab === 'cards' ? 'cards' : 'details');
+/** Biometrics only for those who may see them, while the organization captures them. */
+const showBiometrics = computed(() => auth.can('biometrics.view') && !!auth.tenant?.biometrics?.enabled);
+const TABS = computed(() => ['details', ...(auth.can('cards.view') ? (['cards'] as const) : []), ...(showBiometrics.value ? (['biometrics'] as const) : []), 'family', 'qualifications', 'documents'] as const);
+type TabKey = 'details' | 'cards' | 'biometrics' | 'family' | 'qualifications' | 'documents';
+const tab = ref<TabKey>((TABS.value as readonly string[]).includes(String(route.query.tab)) ? (route.query.tab as TabKey) : 'details');
 const tabLabel = (key: TabKey) =>
-    ({ details: t('cardholders.tabs.details'), cards: t('cards.tab'), family: t('cardholders.family.title'), qualifications: t('cardholders.qualifications.title'), documents: t('cardholders.files.document') })[key];
+    ({ details: t('cardholders.tabs.details'), cards: t('cards.tab'), biometrics: t('biometrics.tab.title'), family: t('cardholders.family.title'), qualifications: t('cardholders.qualifications.title'), documents: t('cardholders.files.document') })[key];
 
 type Row = [label: string, value: string | null | undefined];
 
@@ -235,6 +238,7 @@ onMounted(load);
         </div>
 
         <CardholderCards v-else-if="tab === 'cards'" :cardholder="cardholder" />
+        <CardholderBiometrics v-else-if="tab === 'biometrics'" :cardholder-id="cardholder.id" />
         <CardholderFamily v-else-if="tab === 'family'" :cardholder-id="cardholder.id" />
         <CardholderQualifications v-else-if="tab === 'qualifications'" :cardholder-id="cardholder.id" />
         <CardholderDocuments v-else :cardholder-id="cardholder.id" />
