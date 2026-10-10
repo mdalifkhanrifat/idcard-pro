@@ -1378,6 +1378,15 @@
             "bandaged": "Bandaged",
             "unreadable": "Cannot be read",
             "other": "Other"
+        },
+        "errors": {
+            "no_file": "Choose a file first.",
+            "format": "This file is not one of the accepted formats ({formats}).",
+            "too_large": "The image may be at most {kb} KB.",
+            "unreadable": "The {format} file could not be read.",
+            "not_available": "This capture method is not available on this station yet.",
+            "cancelled": "Capture was cancelled.",
+            "device": "The device did not answer. Check that it is connected and its service is running."
         }
     }
 }
