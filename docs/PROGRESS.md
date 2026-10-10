@@ -1,8 +1,21 @@
 # IDCard Pro: কাজের অগ্রগতি ও হ্যান্ডঅফ
 
 > নতুন চ্যাট বা নতুন ডেভেলপার এই ফাইল থেকে শুরু করবেন। পুরো পরিকল্পনা আছে [ROADMAP.md](ROADMAP.md)-এ।
-> সর্বশেষ আপডেট: ১০ অক্টোবর ২০২৬। **Phase 1, 2, 3 সম্পন্ন।** **Phase 4 (বায়োমেট্রিক) চলছে:** ৪.১ সেটিং, ৪.২ এনক্রিপ্ট করা সংরক্ষণ, ৪.৩ এনরোলমেন্ট API (পুরো ব্যাকএন্ড) ৪.৪ Organization পাতায় সেটিংয়ের UI, ৪.৫ ব্রাউজারের ড্রাইভার কাঠামো আর ৪.৬ কার্ডধারীর বায়োমেট্রিক ট্যাব সম্পন্ন; **পরের কাজ ৪.৮** (ওয়েবক্যামে মুখ; ৪.৭ স্ক্যানার-লাইব্রেরি — bridge, SecuGen, JS টেস্ট — সম্পন্ন)। ৩১০টা টেস্ট + ২৩টা JS টেস্ট।
+> সর্বশেষ আপডেট: ১০ অক্টোবর ২০২৬ (রাত)। **Phase 1, 2, 3 সম্পন্ন।** **Phase 4 (বায়োমেট্রিক) চলছে:** ৪.১–৪.৮ সম্পন্ন (সেটিং, এনক্রিপ্ট করা সংরক্ষণ, এনরোলমেন্ট API, Organization পাতার সেটিং, ড্রাইভার-লাইব্রেরি, কার্ডধারীর ট্যাব, bridge + SecuGen, ওয়েবক্যাম); **পরের কাজ ৪.৯**। ৩১০টা PHP টেস্ট + ২৭টা JS টেস্ট।
 > **এখান থেকে শুরু:** ঠিক নিচের "পরের চ্যাট এখান থেকে শুরু (৯ অক্টোবর রাত, Phase 4)" — সেখানে চালুর কমান্ড, পুরো প্রজেক্টের অবস্থা, Phase 4-এর ধাপের টেবিল (একমাত্র তালিকা), API-র বিবরণ আর সাবধানতা। তার নিচের "আগামীকাল এখান থেকে শুরু (৯ অক্টোবর)" আর পুরনো তারিখের অংশগুলো ইতিহাস (Phase 3)। শেষ commit: `git log --oneline -1`।
+
+**মোট অগ্রগতি (আনুমানিক, কাজের পরিমাণ ধরে; ১০ অক্টোবর রাত):** প্রায় **৬৪% সম্পন্ন, ~৩৬% বাকি**।
+
+| Phase | ভার (মোট কাজের) | অবস্থা | সম্পন্ন |
+|---|---|---|---|
+| 1 ভিত্তি | ১২% | ✅ | ১২% |
+| 2 Master data | ১৩% | ✅ | ১৩% |
+| 3 কার্ড (পুরনো সিস্টেমের মূল কাজ) | ৩০% | ✅ | ৩০% |
+| 4 বায়োমেট্রিক | ১২% | 🔄 ৪.১–৪.৮ হয়েছে; বাকি ৪.৯ বাধা + ফিল্টার, ৪.১০ ডিজাইনার/প্রিন্টে আঙুলের ছাপ, ৪.১১ শেষের পরীক্ষা (~২৫%) | ~৯% |
+| 5 অপারেশন (অ্যাপয়েন্টমেন্ট + ইমেইল/SMS, রিপোর্ট — পুরনো Print History/Expired, মেয়াদের রিমাইন্ডার) | ১৮% | ⬜ | ০ |
+| 6 ইন্টিগ্রেশন (webhooks, API token UI, SSO, পুরনো ডেটা মাইগ্রেশন, HR sync) | ১৫% | ⬜ | ০ |
+
+(Phase 1–3 লেগেছে ৩–৯ অক্টোবর; ভার সেই অভিজ্ঞতা থেকে। ছয় Phase-এর বাইরে চালুর প্রস্তুতি — সার্ভার/ডিপ্লয়, ব্যাকআপ, নিরাপত্তা পর্যালোচনা — এই হিসাবে ধরা হয়নি। প্রতিটা ধাপের পর এই টেবিলও হালনাগাদ করুন।)
 
 ### পরের চ্যাট এখান থেকে শুরু (৯ অক্টোবর রাত, Phase 4) — নতুন চ্যাটের জন্য
 
@@ -11,12 +24,12 @@
 **১. চালু করে মিলিয়ে নিন:**
 ```bash
 cd /var/www/php74/idcard/idcard-pro && docker compose up -d && docker compose ps --format '{{.Service}} {{.State}}'
-git log --oneline -1                                           # শেষ commit: ৪.৭-এর পরের docs commit (তার আগে b39c733)
+git log --oneline -1                                           # শেষ commit: ৪.৮-এর পরের docs commit (তার আগে f114632)
 docker compose exec app php artisan migrate --no-interaction   # নতুন মেশিনে: biometric_captures টেবিল
 docker compose exec app php artisan app:sync-permissions       # নতুন মেশিনে: biometrics.* পারমিশন (Owner পায়)
 grep -c '^BIOMETRIC_KEY=base64:' .env                          # 1 হওয়া উচিত; না থাকলে: docker compose exec app php artisan app:biometric-key
 docker compose exec app php artisan test --compact             # ৩১০টা টেস্ট পাস হওয়ার কথা
-docker compose run --rm --no-deps vite npm test                # ২৩টা ব্রাউজার unit টেস্ট (Vitest)
+docker compose run --rm --no-deps vite npm test                # ২৭টা ব্রাউজার unit টেস্ট (Vitest)
 docker compose run --rm --no-deps vite npm run build           # ফ্রন্টএন্ড (vue-tsc + vite)
 ```
 **সাবধান — BIOMETRIC_KEY:** dev `.env`-এ বসানো (৯ অক্টোবর)। সরাসরি কখনো বদলাবেন না — পুরনোটা `BIOMETRIC_PREVIOUS_KEYS`-এ রেখে তবেই `app:biometric-key --force`, নইলে সংরক্ষিত বায়োমেট্রিক আর পড়া যাবে না (কমান্ড নিজেও `--force` ছাড়া বদলায় না)।
@@ -41,8 +54,8 @@ docker compose run --rm --no-deps vite npm run build           # ফ্রন্
 | ৪.৫ | ব্রাউজারের ড্রাইভার কাঠামো `resources/js/lib/biometrics/` (`simulator` + `upload`) — নিচে ৫-এ বিবরণ | ✅ ক `2c85ec9` (API-র `biometric_options`-এ প্রতিটা ধরনের `image_formats`/`template_formats`, `image_types` (চেনার বাইট, mime, displayable), `max_image_kb`, `max_template_kb`), খ `ff77062` |
 | ৪.৬ | কার্ডধারীর পাতায় "বায়োমেট্রিক" ট্যাব (শুধু `biometrics.view` থাকলে আর প্রতিষ্ঠানে চালু থাকলে): `meta.status` দেখানো (কোনটা বাকি — `next`), অবস্থান বাছাই, ড্রাইভার বাছাই (স্টেশনের পছন্দ localStorage-এ), quality-র দণ্ড, কম quality হলে আবার চেষ্টা/রাখা, "পাওয়া যায়নি" + কারণ, মোছা, পরিবারের সদস্য (সেটিং চালু থাকলে) | ✅ ক `be65319` (API-তে `unavailable_reasons_with_note`), খ `3967914` (ট্যাব দেখানো), গ `c3b9ceb` (নেওয়ার প্যানেল) — নিচে ৫-এ বিবরণ |
 | ৪.৭ | আসল স্ক্যানার — **ইউজার (১০ অক্টোবর): এখন স্ক্যানার নেই; পরে যোগ হবে, সব লাইব্রেরি (plug-in module) হিসেবে সেটআপে থাকবে; "৪.৭-এর সব best way-তে"।** ক: ড্রাইভার আলাদা module, ব্যবহার হলে তবেই লোড (`loadBiometricDriver`, `hasBiometricDriver`, `registerBiometricDriver(id, loader)`); স্টেশনের ঠিকানা `lib/biometrics/station.ts` (localStorage `biometric-station:<driver>:url`, শুধু localhost/127.x/::1); `localService.ts` → `callLocalService()` (form, বা JSON `text/plain` বডিতে — CORS preflight নয়; এরর → device/timeout/cancelled)। খ: **`docs/BIOMETRIC_BRIDGE.md`** (protocol 1: `GET /v1/info`, `POST /v1/capture` — `min_quality` ইঙ্গিতসহ, `POST /v1/cancel`; এরর কোড; শুধু 127.0.0.1; কিছু জমায় না; CORS/Chrome local network access; ইংরেজিতে) + `drivers/bridge.ts`; প্যানেলে যন্ত্রের অবস্থা, "আবার দেখুন", "স্টেশনের সেটিং" (ঠিকানা, ডিফল্ট, খোলার লিংক), অপেক্ষায় "বাতিল"। DigitalPersona/ZKTeco **bridge দিয়ে** (ইউজারের সিদ্ধান্ত) — রেজিস্ট্রি থেকে আলাদা ড্রাইভার সরানো। গ: রেজিস্ট্রিতে ড্রাইভারের প্রকাশ্য সেটিং `client` (স্টেশনে যায়, তাই গোপন কিছু নয়) — SecuGen লাইসেন্স `BIOMETRIC_SECUGEN_LICENSE`; `drivers/secugen.ts` (SecuGen WebAPI `https://localhost:8443`: `/SGIFPGetInfo`, `/SGIFPCapture` form — Timeout, Quality = প্রতিষ্ঠানের ন্যূনতম মান, licstr, templateFormat ISO/ANSI, WSQ হলে imageWSQRate; BMP → lossless PNG ব্রাউজারে; এরর 53/55 no_device, 54 no_finger, 59 busy, 61 not_supported, বাকি device "SecuGen <কোড>"; তথ্যের call না থাকা পুরনো সার্ভিস = তৈরি; **নির্মাতার docs/নমুনা থেকে — আসল যন্ত্রে একবার মিলিয়ে নিতে হবে, সব এক জায়গায় `PROTOCOL`-এ**); https সার্ভিস বন্ধ দেখালে সার্টিফিকেট মানার পরামর্শ; `outdated` (এজেন্টের সংস্করণ) আর `not_supported` (যন্ত্র পারে না) আলাদা বার্তা। ঘ: **Vitest 5.0.2** (dev, MIT, network নয়) — `npm test`, ২৩টা টেস্ট `resources/js/lib/biometrics/__tests__/` (ঠিকানার নিয়ম, local service, ফাইল, রেজিস্ট্রি/plug-in, bridge, SecuGen)। ব্রাউজার যাচাই: scratchpad `qa-bridge.mjs`, `qa-secugen.mjs` (নকল session + নকল সার্ভিস CDP Fetch দিয়ে, ডেটাবেসে লেখা নয়) | ✅ `420615c`, `b01cf3b`, `ffa80ce`, `52a77da`, `8184342`, `b39c733` |
-| ৪.৮ | মুখ (ওয়েবক্যাম `getUserMedia`) — একই ড্রাইভার কাঠামোয় (`webcam` রেজিস্ট্রিতে আছে, ড্রাইভার module নেই); চোখের মণি bridge দিয়ে (তৈরি) | ⬜ পরের কাজ |
-| ৪.৯ | সেটিং `required_before` অনুযায়ী ইস্যু/প্রিন্টের আগে বাধা (`BiometricService::status()` → `complete`), কার্ডধারীর তালিকায় "বায়োমেট্রিক সম্পূর্ণ/অসম্পূর্ণ" ফিল্টার | ⬜ |
+| ৪.৮ | মুখ: `drivers/webcam.ts` (`needsVideo` + `openStream()` — ড্রাইভার কাঠামোয় লাইভ পূর্বরূপের সাধারণ ব্যবস্থা): অপারেটর চাপলে তবেই ক্যামেরা (হঠাৎ অনুমতি চাওয়া নয়), আয়নার মতো পূর্বরূপ + মুখের ডিম্বাকার গাইড (তোলা ছবি উল্টো নয়), একাধিক ক্যামেরায় বাছাই (স্টেশনে মনে থাকে — `stationPreference('webcam:camera')`), মাঝখান থেকে ৩:৪ পোর্ট্রেট (সর্বোচ্চ ৯৬০px উঁচু) ধরনের প্রথম ফরম্যাটে (মুখে JPEG), মান বানানো নয় (null), সেভ/ড্রাইভার বদল/পাতা ছাড়লে ক্যামেরা বন্ধ; এরর: permission, no_device, busy, insecure (HTTPS লাগে)। চোখের মণি bridge দিয়ে (আগেই তৈরি)। Vitest ২৭টা। যাচাই: scratchpad `qa-webcam.mjs`/`qa-webcam-phone.mjs` (Chrome-এর নকল ক্যামেরা `--use-fake-device-for-media-stream`; অনুমতি না দেওয়া `Browser.setPermission camera denied`; helper `launch({ args })`) | ✅ `f114632` |
+| ৪.৯ ⬜ **পরের কাজ** | সেটিং `required_before` অনুযায়ী ইস্যু/প্রিন্টের আগে বাধা (`BiometricService::status()` → `complete`), কার্ডধারীর তালিকায় "বায়োমেট্রিক সম্পূর্ণ/অসম্পূর্ণ" ফিল্টার | ⬜ |
 | ৪.১০ | ডিজাইনারে আঙুলের ছাপের ঘর (শুধু `print_on_card` চালু আর modality `printable` হলে), প্রিন্ট/PDF-এ ডিক্রিপ্ট করা ছবি | ⬜ |
 | ৪.১১ | Phase 4 শেষের পরীক্ষা (সব সেটিং বদলে বদলে, পরিবারের সদস্য, পারমিশন, ফোনের মাপ) | ⬜ |
 | পরে | ১:১ মিলিয়ে দেখা আর ডুপ্লিকেট খোঁজা — matcher লাগবে (যেমন SourceAFIS আলাদা container-এ); **ইউজারকে জিজ্ঞেস করে** | ⬜ |
@@ -93,7 +106,7 @@ app(App\Support\Tenancy\TenantContext::class)->run($tenant, function () {
 
 **৭. dev ডাটাবেসের অবস্থা:** `biometric_captures`-এ শুধু উপরের পরীক্ষার কার্ডধারীর capture; Acme-এর বায়োমেট্রিক সেটিং সংরক্ষিত নেই (ডিফল্ট = বন্ধ; ৪.৪-এর ব্রাউজার যাচাইয়ে সেভ CDP Fetch দিয়ে নকল উত্তরে করা হয়েছে, ডেটাবেসে কিছু লেখা হয়নি — স্ক্রিপ্ট scratchpad-এ `qa-bio-settings.mjs` ধরনে); পারমিশন sync করা (৪৩টা)। ব্রাউজারে যাচাই (৯ অক্টোবর রাত): audit পাতার "কী"-তে Acme-এর ১০ ধরন, "Cardholders" দিয়ে ছাঁকা কাজ করে; রোল ডায়ালগে "Biometrics" + "Enroll" — কিছু সেভ করা হয়নি। বাকি সব আগের মতো (নিচে "আগামীকাল এখান থেকে শুরু (৯ অক্টোবর)" → ৪)।
 
-**৮. পরের চ্যাটে কী করবেন:** ৪.৮ থেকে শুরু (উপরের টেবিল)। প্রতিটা ধাপ: আগে বাংলায় বলা → কোড (Controller → Service → Repository; UI-তে ধরন/অবস্থান API থেকে) → টেস্ট + pint + phpstan + build → ব্রাউজারে যাচাই (`.claude/qa/cdp.mjs` scratchpad-এ কপি করে) → commit (ইউজারের git পরিচয়, AI attribution নয়) → এই টেবিলে ✅ + commit → বাংলায় জানানো।
+**৮. পরের চ্যাটে কী করবেন:** ৪.৯ থেকে শুরু (উপরের টেবিল)। প্রতিটা ধাপ: আগে বাংলায় বলা → কোড (Controller → Service → Repository; UI-তে ধরন/অবস্থান API থেকে) → টেস্ট + pint + phpstan + build → ব্রাউজারে যাচাই (`.claude/qa/cdp.mjs` scratchpad-এ কপি করে) → commit (ইউজারের git পরিচয়, AI attribution নয়) → এই টেবিলে ✅ + commit → বাংলায় জানানো।
 
 ### আগামীকাল এখান থেকে শুরু (৯ অক্টোবর) — নতুন চ্যাটের জন্য
 
@@ -221,7 +234,7 @@ docker compose run --rm --no-deps vite npm run build         # ফ্রন্�
 
 **প্রতিটা ধাপের শেষে মান যাচাই:**
 ```bash
-docker compose exec app php artisan test --compact                       # এখন ৩১০টা টেস্ট + npm test-এ ২৩টা (১০ অক্টোবর)
+docker compose exec app php artisan test --compact                       # এখন ৩১০টা টেস্ট + npm test-এ ২৭টা (১০ অক্টোবর)
 docker compose exec app vendor/bin/phpstan analyse --memory-limit=1G
 docker compose exec app vendor/bin/pint --dirty --format agent
 docker compose run --rm --no-deps vite npx vue-tsc --noEmit
