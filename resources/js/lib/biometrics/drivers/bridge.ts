@@ -50,7 +50,7 @@ export const bridgeDriver: BiometricDriver = {
         try {
             const info = await callLocalService<BridgeInfo>(baseUrl(localUrl), '/v1/info', { method: 'GET', timeout: 2500, signal });
             if (info.protocol !== PROTOCOL) {
-                return { ready: false, reason: 'not_supported' };
+                return { ready: false, reason: 'outdated' };
             }
             const device = (info.devices ?? []).find((item) => item.ready && item.modalities?.includes(modality));
 
@@ -59,7 +59,7 @@ export const bridgeDriver: BiometricDriver = {
             return { ready: false, reason: error instanceof CaptureError ? error.code : 'device' };
         }
     },
-    async capture({ modality, position, options, localUrl, signal }) {
+    async capture({ modality, position, options, localUrl, minQuality, signal }) {
         const url = baseUrl(localUrl);
         const kind = options.modalities[modality];
         const settings = { image_formats: kind.image_formats, template_formats: kind.template_formats };
@@ -69,7 +69,7 @@ export const bridgeDriver: BiometricDriver = {
         let answer: BridgeCapture;
         try {
             answer = await callLocalService<BridgeCapture>(url, '/v1/capture', {
-                json: { modality, position, ...settings, timeout_ms: 30_000 },
+                json: { modality, position, ...settings, min_quality: minQuality ?? null, timeout_ms: 30_000 },
                 timeout: CAPTURE_TIMEOUT,
                 signal,
             });

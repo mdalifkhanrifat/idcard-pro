@@ -16,6 +16,8 @@ export interface CaptureRequest {
     position: string;
     /** The registry as the API sends it (formats, image types, limits). */
     options: BiometricOptions;
+    /** The organization's minimum quality: a hint for devices that capture on their own once it is reached. */
+    minQuality?: number;
     /** For drivers that need one (`needsFile`). */
     file?: File | null;
     /** The station's address of the vendor's local service, if it differs from the registry's. */
@@ -55,7 +57,7 @@ export interface BiometricDriver {
 }
 
 /** Shown as `biometrics.errors.<code>` with `params`. */
-export type CaptureErrorCode = 'no_file' | 'format' | 'too_large' | 'unreadable' | 'not_available' | 'cancelled' | 'device' | 'timeout' | 'no_finger' | 'busy' | 'not_supported' | 'no_device';
+export type CaptureErrorCode = 'no_file' | 'format' | 'too_large' | 'unreadable' | 'not_available' | 'cancelled' | 'device' | 'timeout' | 'no_finger' | 'busy' | 'not_supported' | 'no_device' | 'outdated';
 
 export class CaptureError extends Error {
     constructor(

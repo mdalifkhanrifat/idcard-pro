@@ -16,6 +16,7 @@ const loaders = new Map<string, DriverLoader>([
     ['simulator', async () => (await import('./drivers/simulator')).simulatorDriver],
     ['upload', async () => (await import('./drivers/upload')).uploadDriver],
     ['bridge', async () => (await import('./drivers/bridge')).bridgeDriver],
+    ['secugen', async () => (await import('./drivers/secugen')).secugenDriver],
 ]);
 const loaded = new Map<string, Promise<BiometricDriver>>();
 

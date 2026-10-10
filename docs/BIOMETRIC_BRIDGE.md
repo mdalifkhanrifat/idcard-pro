@@ -61,6 +61,7 @@ Request:
   "position": "right_thumb",
   "image_formats": ["png", "jpeg", "bmp", "wsq"],
   "template_formats": ["iso-19794-2", "ansi-378", "iso-19794-2-2011"],
+  "min_quality": 40,
   "timeout_ms": 30000
 }
 ```
@@ -68,6 +69,8 @@ Request:
 - `position` is a registry key; its ISO/IEC 19794 code is in `config/biometrics.php`.
 - `image_formats` / `template_formats`: what the application accepts for this kind, preferred
   first. Answer with one of them; `template_formats` may be empty (image only).
+- `min_quality`: the organization's minimum (0–100) or `null`. A hint only: a device that captures
+  on its own may wait for that quality within `timeout_ms`; otherwise answer with the best image.
 
 Answer when captured:
 

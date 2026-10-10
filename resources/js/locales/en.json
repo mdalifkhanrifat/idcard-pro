@@ -1388,8 +1388,9 @@
             "timeout": "The device did not answer in time. Try again.",
             "no_finger": "No finger was placed on the scanner in time.",
             "busy": "The device is busy with another capture.",
-            "not_supported": "The capture service on this computer speaks a different version. Update it.",
-            "no_device": "The service answers, but no scanner for this kind is connected and ready."
+            "not_supported": "This device cannot capture this kind or position.",
+            "no_device": "The service answers, but no scanner for this kind is connected and ready.",
+            "outdated": "The capture service on this computer speaks a different version. Update it."
         },
         "tab": {
             "title": "Biometrics",
@@ -1458,7 +1459,8 @@
             "addressHint": "Only an address on this computer (localhost, 127.0.0.1). Default: {default}. Kept in this browser only.",
             "useDefault": "Use the default",
             "open": "Open the address",
-            "loopbackOnly": "Use an address on this computer, e.g. http://127.0.0.1:47800."
+            "loopbackOnly": "Use an address on this computer, e.g. http://127.0.0.1:47800.",
+            "certificateHint": "If the service uses HTTPS, open its address once and accept its certificate, then check again."
         }
     }
 }

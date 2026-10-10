@@ -172,7 +172,7 @@ async function takeCapture(): Promise<void> {
     error.value = '';
     abort = new AbortController();
     try {
-        const captured = await driver.value.capture({ modality: props.modality, position: props.position, options: options.value, file: file.value, localUrl: stationUrl(driverName.value, options.value), signal: abort.signal });
+        const captured = await driver.value.capture({ modality: props.modality, position: props.position, options: options.value, file: file.value, localUrl: stationUrl(driverName.value, options.value), minQuality: settings.value.min_quality, signal: abort.signal });
         attempts.value++;
         result.value = captured;
         if (!best.value || (captured.quality ?? 101) > (best.value.quality ?? 101) || isGood(captured)) {
@@ -394,6 +394,10 @@ onBeforeUnmount(() => abort?.abort());
                         <button type="button" class="text-xs text-brand-ink hover:underline" data-edit-address @click="editAddress">{{ t('biometrics.station.settings') }}</button>
                     </div>
                     <p v-if="deviceStatus.state === 'offline'" class="text-xs text-muted">{{ t(`biometrics.errors.${deviceStatus.reason}`) }}</p>
+                    <p v-if="deviceStatus.state === 'offline' && deviceStatus.reason === 'device' && stationUrl(driverName, options)?.startsWith('https:')" class="text-xs text-muted" data-certificate-hint>
+                        {{ t('biometrics.station.certificateHint') }}
+                        <a :href="stationUrl(driverName, options) ?? undefined" target="_blank" rel="noopener noreferrer" class="text-brand-ink hover:underline">{{ t('biometrics.station.open') }}</a>
+                    </p>
                     <div v-if="editingAddress" class="space-y-2 border-t border-line pt-2" data-address-form>
                         <UiInput v-model="address" :label="t('biometrics.station.address')" :hint="t('biometrics.station.addressHint', { default: options.drivers[driverName]?.local_url })" :error="addressError" data-address />
                         <div class="flex flex-wrap items-center gap-2">

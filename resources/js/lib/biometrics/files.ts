@@ -35,3 +35,29 @@ export function checkImageSize(bytes: Uint8Array, options: BiometricOptions): vo
 export function formatsLabel(modality: string, options: BiometricOptions): string {
     return options.modalities[modality].image_formats.map((format) => format.toUpperCase()).join(', ');
 }
+
+/** Base64 (no data URL prefix) to bytes. */
+export function fromBase64(base64: string): Uint8Array {
+    return Uint8Array.from(atob(base64), (char) => char.charCodeAt(0));
+}
+
+/**
+ * Re-encode an image the browser can read (e.g. a scanner's BMP) as PNG: lossless, and much smaller
+ * than an uncompressed bitmap. Throws "unreadable" when the browser cannot decode it.
+ */
+export async function toPng(bytes: Uint8Array, mime: string): Promise<{ base64: string; width: number; height: number }> {
+    let bitmap: ImageBitmap;
+    try {
+        bitmap = await createImageBitmap(new Blob([bytes as BlobPart], { type: mime }));
+    } catch {
+        throw new CaptureError('unreadable', { format: mime.split('/')[1]?.toUpperCase() ?? '' });
+    }
+    const canvas = document.createElement('canvas');
+    canvas.width = bitmap.width;
+    canvas.height = bitmap.height;
+    (canvas.getContext('2d') as CanvasRenderingContext2D).drawImage(bitmap, 0, 0);
+    bitmap.close();
+    const dataUrl = canvas.toDataURL('image/png');
+
+    return { base64: dataUrl.slice(dataUrl.indexOf(',') + 1), width: canvas.width, height: canvas.height };
+}
