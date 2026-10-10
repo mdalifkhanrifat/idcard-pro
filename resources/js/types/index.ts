@@ -62,11 +62,19 @@ export interface BiometricOptions {
         groups: Record<string, string[]> | [];
         printable: boolean;
         drivers: string[];
+        /** Formats a capture may be sent as. */
+        image_formats: string[];
+        /** Template formats; empty = image only. */
+        template_formats: string[];
     }>;
     drivers: Record<string, { modalities: string[]; local_url: string | null; testing: boolean }>;
     modes: string[];
     required_before: string[];
     unavailable_reasons: string[];
+    /** Image format => first bytes (hex), content type, and whether a browser can show it. */
+    image_types: Record<string, { signature: string; mime: string; displayable: boolean }>;
+    max_image_kb: number;
+    max_template_kb: number;
 }
 
 export interface TenantVerification {

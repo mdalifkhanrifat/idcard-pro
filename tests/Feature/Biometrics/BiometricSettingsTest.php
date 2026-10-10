@@ -27,7 +27,13 @@ it('keeps biometrics off until the organization turns it on, and lists what can 
         ->and($response->json('data.biometric_options.drivers.secugen.testing'))->toBeFalse()
         // Screens lay positions out from the registry's groups (a row per hand), not from code
         ->and($response->json('data.biometric_options.modalities.fingerprint.groups.right_hand'))->toBe(['right_thumb', 'right_index', 'right_middle', 'right_ring', 'right_little'])
-        ->and($response->json('data.biometric_options.modalities.face.groups'))->toBe([]);
+        ->and($response->json('data.biometric_options.modalities.face.groups'))->toBe([])
+        // Stations check files the way the server does, from the same registry
+        ->and($response->json('data.biometric_options.modalities.face.image_formats'))->toBe(['jpeg', 'png'])
+        ->and($response->json('data.biometric_options.modalities.face.template_formats'))->toBe([])
+        ->and($response->json('data.biometric_options.modalities.fingerprint.template_formats'))->toContain('iso-19794-2')
+        ->and($response->json('data.biometric_options.image_types.png'))->toBe(['signature' => '89504e47', 'mime' => 'image/png', 'displayable' => true])
+        ->and($response->json('data.biometric_options.max_image_kb'))->toBe(2048);
 });
 
 it('only lists group positions the registry offers', function () {

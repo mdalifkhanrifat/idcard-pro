@@ -46,12 +46,19 @@ class TenantResource extends JsonResource
                         ->map(fn (array $positions): array => array_values(array_intersect($positions, array_keys($modality['positions']))))
                         ->filter()->all(),
                     'printable' => (bool) $modality['printable'],
+                    // What a capture may be sent as, e.g. for the file picker of the upload driver
+                    'image_formats' => array_values((array) $modality['image_formats']),
+                    'template_formats' => array_values((array) $modality['template_formats']),
                     'drivers' => BiometricSettings::driversFor($name),
                 ])->all(),
                 'drivers' => BiometricSettings::drivers(),
                 'modes' => config('biometrics.modes'),
                 'required_before' => config('biometrics.required_before'),
                 'unavailable_reasons' => config('biometrics.unavailable_reasons'),
+                // How a station recognizes an image file (first bytes) and whether a browser can show it
+                'image_types' => config('biometrics.image_types'),
+                'max_image_kb' => (int) config('biometrics.max_image_kb'),
+                'max_template_kb' => (int) config('biometrics.max_template_kb'),
             ],
             'status' => $this->status,
             'users_count' => $this->whenCounted('users'),
