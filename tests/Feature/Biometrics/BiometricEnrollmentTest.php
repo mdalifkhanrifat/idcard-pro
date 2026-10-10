@@ -91,7 +91,8 @@ it('takes only the positions, drivers and formats the organization allows', func
     ($this->enable)(['face' => ['mode' => 'optional', 'count' => 1, 'positions' => ['face'], 'drivers' => ['webcam']]]);
 
     $this->postJson($this->url, ($this->finger)(['position' => 'right_index']))->assertJsonValidationErrors('position');
-    $this->postJson($this->url, ($this->finger)(['driver' => 'zkteco']))->assertJsonValidationErrors('driver');
+    // A driver of this installation the organization does not allow
+    $this->postJson($this->url, ($this->finger)(['driver' => 'bridge']))->assertJsonValidationErrors('driver');
     $this->postJson($this->url, ($this->finger)(['image_base64' => base64_encode('not a png at all'), 'template_base64' => null]))->assertJsonValidationErrors('image');
     $this->postJson($this->url, ($this->finger)(['image_base64' => '***']))->assertJsonValidationErrors('image_base64');
     $this->postJson($this->url, ($this->finger)(['template_format' => 'vendor-x']))->assertJsonValidationErrors('template_format');

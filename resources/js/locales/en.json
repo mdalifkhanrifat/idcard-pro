@@ -1363,8 +1363,6 @@
             "simulator": "Simulator",
             "webcam": "Webcam",
             "secugen": "SecuGen",
-            "digitalpersona": "DigitalPersona",
-            "zkteco": "ZKTeco",
             "bridge": "Bridge agent"
         },
         "modes": {

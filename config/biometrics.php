@@ -84,9 +84,8 @@ return [
         'simulator' => ['modalities' => ['fingerprint', 'face', 'iris'], 'testing' => true],
         'webcam' => ['modalities' => ['face']],
         'secugen' => ['modalities' => ['fingerprint'], 'local_url' => 'https://localhost:8443'],
-        'digitalpersona' => ['modalities' => ['fingerprint'], 'local_url' => 'https://127.0.0.1:52181'],
-        'zkteco' => ['modalities' => ['fingerprint'], 'local_url' => 'http://127.0.0.1:47800'],
-        // Our own small local agent (docs/BIOMETRIC_BRIDGE.md): wraps any vendor SDK
+        // Our own small local agent (docs/BIOMETRIC_BRIDGE.md): wraps any vendor SDK. Brands without a
+        // browser service of their own (e.g. DigitalPersona, ZKTeco) connect through it.
         'bridge' => ['modalities' => ['fingerprint', 'face', 'iris'], 'local_url' => 'http://127.0.0.1:47800'],
     ],
 
