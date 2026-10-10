@@ -3,6 +3,7 @@
 namespace App\Services\Tenants;
 
 use App\Data\Tenants\TenantFilter;
+use App\Jobs\RefreshBiometricStatuses;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Repositories\Contracts\RoleRepositoryInterface;
@@ -113,13 +114,22 @@ class TenantService
             unset($data['verification']);
         }
 
+        $biometricsChanged = false;
         if (array_key_exists('biometrics', $data)) {
             $current = (array) ($tenant->settings['biometrics'] ?? []);
-            $data['settings'] = [...($data['settings'] ?? $tenant->settings ?? []), 'biometrics' => BiometricSettings::normalize(BiometricSettings::merge($current, (array) $data['biometrics']))];
+            $biometrics = BiometricSettings::normalize(BiometricSettings::merge($current, (array) $data['biometrics']));
+            $biometricsChanged = $biometrics !== $tenant->biometricSettings();
+            $data['settings'] = [...($data['settings'] ?? $tenant->settings ?? []), 'biometrics' => $biometrics];
             unset($data['biometrics']);
         }
 
-        return $this->tenants->update($tenant, $data)->refresh();
+        $tenant = $this->tenants->update($tenant, $data)->refresh();
+        if ($biometricsChanged) {
+            // Everybody's status follows the new rules (in the background: organizations can be large)
+            RefreshBiometricStatuses::dispatch($tenant->id)->afterCommit();
+        }
+
+        return $tenant;
     }
 
     /**

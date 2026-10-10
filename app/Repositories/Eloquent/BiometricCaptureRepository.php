@@ -29,6 +29,12 @@ class BiometricCaptureRepository extends EloquentRepository implements Biometric
             ->get();
     }
 
+    public function currentForCardholders(array $cardholderIds): Collection
+    {
+        return $this->query()->current()->whereIn('cardholder_id', $cardholderIds)
+            ->get(['id', 'cardholder_id', 'family_member_id', 'modality', 'position', 'status']);
+    }
+
     public function currentAt(Cardholder $cardholder, ?FamilyMember $member, string $modality, string $position): ?BiometricCapture
     {
         return $this->ownedBy($cardholder, $member)->current()->where('modality', $modality)->where('position', $position)->first();

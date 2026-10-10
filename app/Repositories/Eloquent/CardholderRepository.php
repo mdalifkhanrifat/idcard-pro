@@ -3,6 +3,7 @@
 namespace App\Repositories\Eloquent;
 
 use App\Data\Cardholders\CardholderFilter;
+use App\Enums\BiometricStatus;
 use App\Models\Cardholder;
 use App\Models\MasterDataItem;
 use App\Repositories\Contracts\CardholderRepositoryInterface;
@@ -43,7 +44,8 @@ class CardholderRepository extends EloquentRepository implements CardholderRepos
             ->when($filter->joinedTo, fn (Builder $q, string $date) => $q->whereDate('joining_date', '<=', $date))
             ->when($filter->card === 'none', fn (Builder $q) => $q->whereDoesntHave('currentCard'))
             ->when($filter->card === 'pending', fn (Builder $q) => $q->whereHas('currentCard', fn (Builder $c) => $c->where('print_count', 0)))
-            ->when($filter->card === 'printed', fn (Builder $q) => $q->whereHas('currentCard', fn (Builder $c) => $c->where('print_count', '>', 0)));
+            ->when($filter->card === 'printed', fn (Builder $q) => $q->whereHas('currentCard', fn (Builder $c) => $c->where('print_count', '>', 0)))
+            ->when($filter->biometrics !== null, fn (Builder $q) => $q->where('biometric_status', $filter->biometrics));
 
         foreach ($filter->custom as $key => $value) {
             in_array($value, ['true', 'false'], true)
@@ -72,5 +74,17 @@ class CardholderRepository extends EloquentRepository implements CardholderRepos
     public function findByEmployeeNo(string $employeeNo): ?Cardholder
     {
         return $this->query()->where('employee_no', $employeeNo)->first();
+    }
+
+    public function setBiometricStatus(array $ids, BiometricStatus $status): void
+    {
+        if ($ids !== []) {
+            $this->query()->whereKey($ids)->toBase()->update(['biometric_status' => $status->value]);
+        }
+    }
+
+    public function eachBatch(int $size, callable $callback): void
+    {
+        $this->query()->select(['id', 'tenant_id'])->with('familyMembers:id,cardholder_id')->chunkById($size, $callback);
     }
 }

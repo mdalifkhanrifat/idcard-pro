@@ -48,4 +48,12 @@ interface BiometricCaptureRepositoryInterface extends RepositoryInterface
      * @return Collection<int, array{disk: string, path: string}>
      */
     public function locationsForMember(FamilyMember $member): Collection;
+
+    /**
+     * Current captures of the cardholders and their family members, for working out many statuses at once.
+     *
+     * @param  array<int, int>  $cardholderIds
+     * @return Collection<int, BiometricCapture>
+     */
+    public function currentForCardholders(array $cardholderIds): Collection;
 }

@@ -30,6 +30,7 @@ class BiometricService
         private BiometricCaptureRepositoryInterface $captures,
         private BiometricVault $vault,
         private TenantContext $tenantContext,
+        private BiometricStatusService $statuses,
     ) {}
 
     /**
@@ -123,6 +124,7 @@ class BiometricService
         $locations = $this->locationsOf($capture);
         $this->captures->delete($capture);
         $this->vault->delete($locations);
+        $this->statuses->refresh($capture->cardholder, $capture->familyMember);
     }
 
     /**
@@ -315,6 +317,7 @@ class BiometricService
             ]);
         });
         $this->vault->delete($oldLocations);
+        $this->statuses->refresh($cardholder, $member);
 
         return $capture->load('capturer');
     }

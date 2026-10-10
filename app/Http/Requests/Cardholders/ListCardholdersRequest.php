@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Cardholders;
 
 use App\Data\Cardholders\CardholderFilter;
+use App\Enums\BiometricStatus;
 use App\Enums\CardholderStatus;
 use App\Enums\EmploymentType;
 use Illuminate\Foundation\Http\FormRequest;
@@ -23,7 +24,7 @@ class ListCardholdersRequest extends FormRequest
     {
         $sorts = collect(CardholderFilter::SORTS)->flatMap(fn (string $s) => [$s, "-{$s}"])->all();
         $lookupKeys = array_keys(CardholderFilter::LOOKUP_FILTERS);
-        $allowed = implode(',', ['search', 'status', 'employment_type', 'joined_from', 'joined_to', 'card', 'custom', ...$lookupKeys]);
+        $allowed = implode(',', ['search', 'status', 'employment_type', 'joined_from', 'joined_to', 'card', 'biometrics', 'custom', ...$lookupKeys]);
 
         return [
             'filter' => ['sometimes', "array:{$allowed}"],
@@ -33,6 +34,7 @@ class ListCardholdersRequest extends FormRequest
             'filter.joined_from' => ['nullable', 'date_format:Y-m-d'],
             'filter.joined_to' => ['nullable', 'date_format:Y-m-d'],
             'filter.card' => ['nullable', Rule::in(CardholderFilter::CARD_STATES)],
+            'filter.biometrics' => ['nullable', new Enum(BiometricStatus::class)],
             'filter.custom' => ['nullable', 'array', 'max:10'],
             'filter.custom.*' => ['nullable', 'string', 'max:100'],
             ...collect($lookupKeys)->mapWithKeys(fn (string $key) => ["filter.{$key}" => ['nullable', 'string', 'size:26']])->all(),
@@ -43,6 +45,10 @@ class ListCardholdersRequest extends FormRequest
 
     public function toFilter(): CardholderFilter
     {
-        return CardholderFilter::fromArray($this->validated(), searchCards: (bool) $this->user()?->can('cards.view'));
+        return CardholderFilter::fromArray(
+            $this->validated(),
+            searchCards: (bool) $this->user()?->can('cards.view'),
+            biometrics: (bool) $this->user()?->can('biometrics.view'),
+        );
     }
 }

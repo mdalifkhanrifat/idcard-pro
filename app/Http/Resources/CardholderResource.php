@@ -63,6 +63,8 @@ class CardholderResource extends JsonResource
             ...$lookups,
             'custom_fields' => (object) ($this->custom_fields ?? []),
             'status' => $this->status,
+            // Whether the person meets the organization's biometric settings (complete, exceptions, incomplete, not_required)
+            'biometric_status' => $this->when((bool) $request->user()?->can('biometrics.view'), fn () => $this->biometric_status),
             'photo' => $this->whenLoaded('photo', fn () => $this->fileSummary($this->photo)),
             // Cards were issued to the person or their family: kept as records, so the cardholder cannot be deleted
             'has_cards' => $this->when($this->resource->getAttribute('cards_exists') !== null, fn () => (bool) $this->resource->getAttribute('cards_exists')),

@@ -39,6 +39,8 @@ final readonly class CardholderFilter
         public ?string $joinedFrom = null,
         public ?string $joinedTo = null,
         public ?string $card = null,
+        /** BiometricStatus value; only for those who may see biometrics. */
+        public ?string $biometrics = null,
         /** The search also finds card numbers and RF card numbers (legacy list search); only for those who may see cards. */
         public bool $searchCards = false,
         public string $sort = 'created_at',
@@ -49,7 +51,7 @@ final readonly class CardholderFilter
     /**
      * @param  array<string, mixed>  $input  validated request input
      */
-    public static function fromArray(array $input, bool $searchCards = false): self
+    public static function fromArray(array $input, bool $searchCards = false, bool $biometrics = false): self
     {
         $filter = $input['filter'] ?? [];
         $sort = (string) ($input['sort'] ?? '-created_at');
@@ -74,6 +76,7 @@ final readonly class CardholderFilter
             joinedFrom: $filter['joined_from'] ?? null,
             joinedTo: $filter['joined_to'] ?? null,
             card: $filter['card'] ?? null,
+            biometrics: $biometrics ? ($filter['biometrics'] ?? null) : null,
             searchCards: $searchCards,
             sort: ltrim($sort, '-'),
             descending: str_starts_with($sort, '-'),

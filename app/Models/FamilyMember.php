@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Enums\BiometricStatus;
 use App\Enums\FamilyRelation;
 use App\Enums\Gender;
 use App\Models\Concerns\BelongsToTenant;
+use App\Observers\BiometricStatusObserver;
 use Database\Factories\FamilyMemberFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -27,6 +30,7 @@ use Spatie\Activitylog\Support\LogOptions;
  * @property int $tenant_id
  * @property int $cardholder_id
  * @property FamilyRelation $relation
+ * @property BiometricStatus $biometric_status kept by BiometricStatusService, never filled from input
  * @property string $name
  * @property string|null $name_local
  * @property Gender|null $gender
@@ -46,6 +50,7 @@ use Spatie\Activitylog\Support\LogOptions;
  * @property-read CardholderFile|null $signature
  * @property-read Collection<int, CardholderFile> $files
  */
+#[ObservedBy([BiometricStatusObserver::class])]
 #[Fillable([
     'cardholder_id', 'relation', 'name', 'name_local', 'gender', 'date_of_birth', 'phone', 'blood_group_id',
     'national_id', 'passport_no', 'identification_mark', 'card_no', 'sort_order',
@@ -75,6 +80,7 @@ class FamilyMember extends Model
     {
         return [
             'relation' => FamilyRelation::class,
+            'biometric_status' => BiometricStatus::class,
             'gender' => Gender::class,
             'date_of_birth' => 'date',
             'sort_order' => 'integer',

@@ -2,6 +2,7 @@
 
 namespace App\Repositories\Eloquent;
 
+use App\Enums\BiometricStatus;
 use App\Models\Cardholder;
 use App\Models\FamilyMember;
 use App\Models\MasterDataItem;
@@ -36,5 +37,12 @@ class FamilyMemberRepository extends EloquentRepository implements FamilyMemberR
     public function usesMasterDataItem(MasterDataItem $item): bool
     {
         return $item->type === 'blood_group' && $this->query()->where('blood_group_id', $item->id)->exists();
+    }
+
+    public function setBiometricStatus(array $ids, BiometricStatus $status): void
+    {
+        if ($ids !== []) {
+            $this->query()->whereKey($ids)->toBase()->update(['biometric_status' => $status->value]);
+        }
     }
 }

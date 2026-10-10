@@ -2,14 +2,17 @@
 
 namespace App\Models;
 
+use App\Enums\BiometricStatus;
 use App\Enums\CardholderStatus;
 use App\Enums\CardStatus;
 use App\Enums\EmploymentType;
 use App\Enums\Gender;
 use App\Enums\MaritalStatus;
 use App\Models\Concerns\BelongsToTenant;
+use App\Observers\BiometricStatusObserver;
 use Database\Factories\CardholderFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -72,6 +75,7 @@ use Spatie\Activitylog\Support\LogOptions;
  * @property int|null $trade_id
  * @property int|null $appointment_id
  * @property CardholderStatus $status
+ * @property BiometricStatus $biometric_status kept by BiometricStatusService, never filled from input
  * @property int|null $created_by
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -82,6 +86,7 @@ use Spatie\Activitylog\Support\LogOptions;
  * @property-read Collection<int, FamilyMember> $familyMembers
  * @property-read Collection<int, Qualification> $qualifications
  */
+#[ObservedBy([BiometricStatusObserver::class])]
 #[Fillable([
     'full_name', 'full_name_local', 'date_of_birth', 'gender', 'marital_status', 'nationality', 'national_id', 'passport_no',
     'email', 'personal_phone', 'emergency_phone', 'present_address', 'permanent_address', 'postal_code',
@@ -122,6 +127,7 @@ class Cardholder extends Model
     protected $attributes = [
         'employment_type' => 'staff',
         'status' => 'active',
+        'biometric_status' => 'not_required',
     ];
 
     /**
@@ -160,6 +166,7 @@ class Cardholder extends Model
             'marital_status' => MaritalStatus::class,
             'employment_type' => EmploymentType::class,
             'status' => CardholderStatus::class,
+            'biometric_status' => BiometricStatus::class,
             'custom_fields' => 'array',
         ];
     }
