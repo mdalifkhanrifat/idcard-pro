@@ -5,15 +5,16 @@ namespace App\Jobs;
 use App\Models\Tenant;
 use App\Services\Biometrics\BiometricStatusService;
 use App\Support\Tenancy\TenantContext;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
+use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
 /**
  * Works out every person's biometric status again after an organization changed its biometric settings.
- * One run per organization at a time; a later change queues another run.
+ * At most one waiting run per organization; the lock is released when a run starts, so a change made
+ * while it runs (which it may not have seen) queues another one.
  */
-class RefreshBiometricStatuses implements ShouldBeUnique, ShouldQueue
+class RefreshBiometricStatuses implements ShouldBeUniqueUntilProcessing, ShouldQueue
 {
     use Queueable;
 

@@ -1,10 +1,12 @@
 <?php
 
 use App\Enums\BiometricStatus;
+use App\Jobs\RefreshBiometricStatuses;
 use App\Models\Cardholder;
 use App\Models\FamilyMember;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 
@@ -77,6 +79,18 @@ it('works out everybody again when the settings change, family members included'
 
     ($this->settings)(['enabled' => '0']);
     expect(($this->statusOf)($member))->toBe(BiometricStatus::NotRequired);
+});
+
+it('works everybody out again only when a change can alter their status', function () {
+    ($this->settings)(['enabled' => '1', 'modalities' => ['fingerprint' => $this->fingerprint]]);
+    Queue::fake();
+
+    // When it is required and whether it prints change no status
+    ($this->settings)(['enabled' => '1', 'required_before' => ['issue'], 'print_on_card' => '1', 'modalities' => ['fingerprint' => $this->fingerprint]]);
+    Queue::assertNotPushed(RefreshBiometricStatuses::class);
+
+    ($this->settings)(['enabled' => '1', 'required_before' => ['issue'], 'modalities' => ['fingerprint' => [...$this->fingerprint, 'count' => 1]]]);
+    Queue::assertPushed(RefreshBiometricStatuses::class, fn (RefreshBiometricStatuses $job) => $job->tenantId === $this->tenant->id);
 });
 
 it('is not an edit of the person: no audit entry and the same updated_at', function () {

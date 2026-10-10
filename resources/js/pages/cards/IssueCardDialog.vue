@@ -68,14 +68,23 @@ const overrideReason = ref('');
 const issueBlocked = computed(() => !!issueRequirements.value?.problems.length && !(overriding.value && overrideReason.value.trim()));
 const printBlocked = computed(() => !!printRequirements.value?.problems.length);
 
+/** Only the latest answer counts (the holder may change while an earlier question is on its way). */
+let requirementsRequest = 0;
 async function loadRequirements(): Promise<void> {
+    const request = ++requirementsRequest;
     const ask = (moment: 'issue' | 'print') =>
         http.get(`/cardholders/${props.cardholder.id}/card-requirements`, { params: { moment, family_member: form.holder || undefined } }).then(({ data }) => data.data as Requirements);
     try {
         const [issue, print] = await Promise.all([ask('issue'), auth.can('cards.print') ? ask('print') : Promise.resolve(null)]);
+        if (request !== requirementsRequest) {
+            return;
+        }
         issueRequirements.value = issue;
         printRequirements.value = print;
     } catch {
+        if (request !== requirementsRequest) {
+            return;
+        }
         // The server checks again when issuing
         issueRequirements.value = null;
         printRequirements.value = null;

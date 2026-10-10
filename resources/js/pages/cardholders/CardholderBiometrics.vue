@@ -65,10 +65,16 @@ function modalityState(modality: string): string {
     return t(state.required ? 'biometrics.tab.incomplete' : 'biometrics.tab.optionalOpen');
 }
 
+/** Only the latest answer counts (the person may change while an earlier list is on its way). */
+let latestLoad = 0;
 async function load(): Promise<void> {
+    const request = ++latestLoad;
     loading.value = true;
     try {
         const { data } = await http.get(`/cardholders/${props.cardholderId}/biometrics`, { params: person.value ? { family_member: person.value } : {} });
+        if (request !== latestLoad) {
+            return;
+        }
         captures.value = data.data;
         status.value = data.meta.status;
         // Start where work is left: the first position still needed
@@ -79,7 +85,9 @@ async function load(): Promise<void> {
     } catch (error) {
         ui.notify(toApiError(error).message, 'error');
     } finally {
-        loading.value = false;
+        if (request === latestLoad) {
+            loading.value = false;
+        }
     }
 }
 

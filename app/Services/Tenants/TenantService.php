@@ -118,7 +118,9 @@ class TenantService
         if (array_key_exists('biometrics', $data)) {
             $current = (array) ($tenant->settings['biometrics'] ?? []);
             $biometrics = BiometricSettings::normalize(BiometricSettings::merge($current, (array) $data['biometrics']));
-            $biometricsChanged = $biometrics !== $tenant->biometricSettings();
+            // Only what decides a person's status (not when it is required or whether it prints)
+            $decides = fn (array $settings): array => array_intersect_key($settings, array_flip(['enabled', 'modalities', 'family_members']));
+            $biometricsChanged = $decides($biometrics) !== $decides($tenant->biometricSettings());
             $data['settings'] = [...($data['settings'] ?? $tenant->settings ?? []), 'biometrics' => $biometrics];
             unset($data['biometrics']);
         }
