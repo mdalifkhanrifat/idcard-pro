@@ -11,6 +11,8 @@ final readonly class PrintCardsData
         public string $method,
         public int $copies = 1,
         public ?string $note = null,
+        /** Print although something the organization requires is missing (cards.override_requirements). */
+        public ?string $overrideReason = null,
     ) {}
 
     /**
@@ -24,6 +26,7 @@ final readonly class PrintCardsData
             method: $input['method'] ?? 'browser',
             copies: (int) ($input['copies'] ?? 1),
             note: $note === '' ? null : $note,
+            overrideReason: trim((string) ($input['override_reason'] ?? '')) ?: null,
         );
     }
 }

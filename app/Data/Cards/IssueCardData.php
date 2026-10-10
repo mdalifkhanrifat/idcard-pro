@@ -22,6 +22,8 @@ final readonly class IssueCardData
         /** An existing document of the cardholder, or a new upload stored as one. */
         public ?string $documentFileId = null,
         public ?UploadedFile $document = null,
+        /** Issue although something the organization requires is missing (cards.override_requirements). */
+        public ?string $overrideReason = null,
     ) {}
 
     /**
@@ -42,6 +44,7 @@ final readonly class IssueCardData
             rfCardNo: $text($input['rf_card_no'] ?? null),
             documentFileId: $input['document_file'] ?? null,
             document: $document,
+            overrideReason: $text($input['override_reason'] ?? null),
         );
     }
 }

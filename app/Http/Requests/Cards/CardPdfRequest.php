@@ -32,6 +32,7 @@ class CardPdfRequest extends FormRequest
             'sheet' => ['sometimes', 'string', Rule::in(CardRenderService::sheetKeys())],
             'record' => ['sometimes', 'boolean'],
             'note' => ['nullable', 'string', 'max:255'],
+            'override_reason' => ['nullable', 'string', 'max:500'],
         ];
     }
 

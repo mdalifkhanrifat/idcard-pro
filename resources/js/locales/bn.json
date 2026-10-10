@@ -166,7 +166,8 @@
             "issue": "ইস্যু",
             "print": "প্রিন্ট",
             "revoke": "বাতিল",
-            "enroll": "নেওয়া"
+            "enroll": "নেওয়া",
+            "override_requirements": "শর্ত পার করা"
         }
     },
     "audit": {

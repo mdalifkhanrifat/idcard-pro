@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\User;
+use App\Services\Cards\CardRequirements;
 use App\Support\Pdf\DisabledPdfRenderer;
 use App\Support\Pdf\GotenbergPdfRenderer;
 use App\Support\Pdf\PdfRenderer;
@@ -23,6 +24,8 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->scoped(TenantContext::class);
+        // One per request or job: requirements read the organization's settings once
+        $this->app->scoped(CardRequirements::class);
 
         $this->app->bind(PdfRenderer::class, fn () => match (config('pdf.driver')) {
             'gotenberg' => new GotenbergPdfRenderer((string) config('pdf.gotenberg.url'), (int) config('pdf.gotenberg.timeout')),

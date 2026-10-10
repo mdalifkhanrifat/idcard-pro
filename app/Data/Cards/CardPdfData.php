@@ -13,6 +13,8 @@ final readonly class CardPdfData
         public bool $record = false,
         public ?string $note = null,
         public string $sheet = 'card',
+        /** Make the PDF although something the organization requires is missing (cards.override_requirements). */
+        public ?string $overrideReason = null,
     ) {}
 
     /**
@@ -27,6 +29,7 @@ final readonly class CardPdfData
             record: (bool) ($input['record'] ?? false),
             note: $note === '' ? null : $note,
             sheet: $input['sheet'] ?? 'card',
+            overrideReason: trim((string) ($input['override_reason'] ?? '')) ?: null,
         );
     }
 }

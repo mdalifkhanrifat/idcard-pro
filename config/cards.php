@@ -1,5 +1,7 @@
 <?php
 
+use App\Services\Cards\Requirements\BiometricCardRequirement;
+
 /*
 |--------------------------------------------------------------------------
 | Card issuance
@@ -39,6 +41,15 @@ return [
      * Printing an issued card (3.6). Every print is logged in card_prints with its method;
      * a new method (e.g. a card printer driver) only needs a new entry here.
      */
+    /*
+     * What a person must meet before a card is issued or printed (App\Services\Cards\Requirements\CardRequirement),
+     * each one switched on by the organization's own settings. Users with cards.override_requirements may go
+     * ahead anyway with a reason, kept in the card's audit log.
+     */
+    'requirements' => [
+        BiometricCardRequirement::class,
+    ],
+
     'print' => [
         'methods' => ['browser', 'pdf'],
         'max_copies' => 10,

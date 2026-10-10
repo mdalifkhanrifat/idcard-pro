@@ -25,6 +25,7 @@ class IssueCardRequest extends FormRequest
             'family_member' => ['nullable', 'string', 'size:26'],
             'reason' => ['required', Rule::in(array_keys((array) config('cards.reasons')))],
             'notes' => ['nullable', 'string', 'max:1000'],
+            'override_reason' => ['nullable', 'string', 'max:500'],
             'issue_date' => ['nullable', 'date_format:Y-m-d'],
             'expiry_date' => ['nullable', 'date_format:Y-m-d'],
             'rf_card_no' => ['nullable', 'string', 'max:60'],

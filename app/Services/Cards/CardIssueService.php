@@ -43,6 +43,7 @@ class CardIssueService
         private CardholderFileService $fileService,
         private CardDataResolver $cardData,
         private CardPrintService $printing,
+        private CardRequirements $requirements,
     ) {}
 
     /**
@@ -70,9 +71,11 @@ class CardIssueService
         if ($data->rfCardNo !== null && $this->cards->rfCardInUse($data->rfCardNo, $holderKey)) {
             throw ValidationException::withMessages(['rf_card_no' => __('cards.issue.rf_in_use')]);
         }
+        // What the organization requires first (e.g. complete biometrics), unless overridden with a reason
+        $overridden = $this->requirements->enforce($cardholder, $member, 'issue', $data->overrideReason, $actor);
         $documentId = $this->documentId($cardholder, $data, $actor);
 
-        return DB::transaction(function () use ($cardholder, $template, $member, $data, $issueDate, $expiryDate, $holderKey, $documentId, $actor): Card {
+        $card = DB::transaction(function () use ($cardholder, $template, $member, $data, $issueDate, $expiryDate, $holderKey, $documentId, $actor): Card {
             $current = $this->cards->activeForHolder($holderKey, lock: true);
 
             return $this->createCard($cardholder, $member, $template, $current, [
@@ -86,6 +89,11 @@ class CardIssueService
                 'issued_by' => $actor->id,
             ]);
         });
+        if ($overridden !== []) {
+            $this->requirements->recordOverride($card, 'issue', (string) $data->overrideReason, $overridden, $actor);
+        }
+
+        return $card;
     }
 
     /**

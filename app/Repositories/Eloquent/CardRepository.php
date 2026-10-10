@@ -30,7 +30,7 @@ class CardRepository extends EloquentRepository implements CardRepositoryInterfa
     public function list(CardFilter $filter): LengthAwarePaginator
     {
         return $this->filtered($filter)
-            ->with(['template:id,public_id,name,code', 'familyMember:id,public_id,name,relation', 'cardholder:id,public_id,full_name,employee_no,department_id', 'cardholder.department', 'issuer:id,name'])
+            ->with(['template:id,public_id,name,code', 'familyMember:id,public_id,name,relation,biometric_status', 'cardholder:id,public_id,full_name,employee_no,department_id,biometric_status', 'cardholder.department', 'issuer:id,name'])
             ->paginate(min($filter->perPage, 100))
             ->withQueryString();
     }
@@ -126,7 +126,7 @@ class CardRepository extends EloquentRepository implements CardRepositoryInterfa
     {
         return $this->query()
             ->where('cardholder_id', $cardholder->id)
-            ->with(['template:id,public_id,name,code', 'familyMember:id,public_id,name,relation', 'issuer:id,name', 'replacedBy:id,public_id,number', 'document'])
+            ->with(['template:id,public_id,name,code', 'familyMember:id,public_id,name,relation,biometric_status', 'cardholder:id,public_id,full_name,employee_no,department_id,biometric_status', 'issuer:id,name', 'replacedBy:id,public_id,number', 'document'])
             ->latest('id')
             ->get();
     }

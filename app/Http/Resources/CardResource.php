@@ -5,6 +5,7 @@ namespace App\Http\Resources;
 use App\Models\Card;
 use App\Services\Cardholders\CardholderFileService;
 use App\Services\Cards\CardPrintService;
+use App\Services\Cards\CardRequirements;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -38,6 +39,8 @@ class CardResource extends JsonResource
             'last_verified_at' => $this->last_verified_at,
             // Active and not expired: the one rule for every client (print buttons, HR systems)
             'printable' => app(CardPrintService::class)->printable($this->resource),
+            // What the organization requires before printing that the holder is missing (e.g. biometrics); empty when none
+            'print_requirements' => app(CardRequirements::class)->forCard($this->resource),
             // Public verification link (null while the organization has verification off)
             'verify_url' => app(TenantContext::class)->get()?->verifyUrl($this->verify_code),
             'template' => $this->whenLoaded('template', fn () => ['id' => $this->template->public_id, 'name' => $this->template->name, 'code' => $this->template->code]),

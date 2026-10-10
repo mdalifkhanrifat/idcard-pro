@@ -166,7 +166,8 @@
             "issue": "Issue",
             "print": "Print",
             "revoke": "Revoke",
-            "enroll": "Enroll"
+            "enroll": "Enroll",
+            "override_requirements": "Override requirements"
         }
     },
     "audit": {

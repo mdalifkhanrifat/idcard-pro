@@ -22,6 +22,7 @@ class CardPdfService
         private CardPrintService $prints,
         private CardRenderService $render,
         private PdfRenderer $renderer,
+        private CardRequirements $requirements,
     ) {}
 
     /**
@@ -32,6 +33,8 @@ class CardPdfService
     {
         $cards = $this->prints->printableCards($cardIds);
         $ids = $cards->pluck('public_id')->all();
+        // A PDF prints as well as paper does: the same requirements, checked before it is made
+        $overridden = $this->requirements->enforceCards($cards, 'print', $data->overrideReason, $actor);
 
         try {
             $content = $this->renderer->renderUrl($this->render->link($ids, $data->sides, $data->sheet), new PdfOptions(waitForExpression: CardRenderService::READY_EXPRESSION));
@@ -42,7 +45,11 @@ class CardPdfService
         }
 
         if ($data->record) {
-            $this->prints->printCards($ids, new PrintCardsData('pdf', 1, $data->note), $actor);
+            $this->prints->printCards($ids, new PrintCardsData('pdf', 1, $data->note, $data->overrideReason), $actor);
+        } else {
+            foreach ($cards->whereIn('public_id', array_keys($overridden)) as $card) {
+                $this->requirements->recordOverride($card, 'print', (string) $data->overrideReason, $overridden[$card->public_id], $actor);
+            }
         }
 
         return ['content' => $content, 'filename' => $this->filename($cards->count() === 1 ? $cards->first() : null)];

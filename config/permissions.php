@@ -29,8 +29,9 @@ return [
         'fonts' => ['view', 'create', 'delete'],
         // Image library (logos, backgrounds) linked from templates; templates.view may also list it
         'images' => ['view', 'create', 'update', 'delete'],
-        // Issued cards: issue a new card, print it, update its RF number or notes, revoke it
-        'cards' => ['view', 'issue', 'print', 'update', 'revoke'],
+        // Issued cards: issue a new card, print it, update its RF number or notes, revoke it, and issue or print
+        // although something the organization requires is missing (with a reason, kept in the audit log)
+        'cards' => ['view', 'issue', 'print', 'update', 'revoke', 'override_requirements'],
         // Biometric captures (Phase 4): see them, capture or mark a position unavailable, delete them
         'biometrics' => ['view', 'enroll', 'delete'],
     ],
@@ -46,7 +47,7 @@ return [
             'templates.view', 'templates.create', 'templates.update', 'templates.delete',
             'fonts.view', 'fonts.create', 'fonts.delete',
             'images.view', 'images.create', 'images.update', 'images.delete',
-            'cards.view', 'cards.issue', 'cards.print', 'cards.update', 'cards.revoke',
+            'cards.view', 'cards.issue', 'cards.print', 'cards.update', 'cards.revoke', 'cards.override_requirements',
             'biometrics.view', 'biometrics.enroll', 'biometrics.delete',
         ],
         // Legacy operators printed cards, so they issue them too

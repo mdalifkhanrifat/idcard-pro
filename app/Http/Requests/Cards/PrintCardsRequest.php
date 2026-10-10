@@ -29,6 +29,7 @@ class PrintCardsRequest extends FormRequest
             'method' => ['sometimes', 'string', Rule::in((array) config('cards.print.methods'))],
             'copies' => ['sometimes', 'integer', 'between:1,'.(int) config('cards.print.max_copies')],
             'note' => ['nullable', 'string', 'max:255'],
+            'override_reason' => ['nullable', 'string', 'max:500'],
         ];
     }
 

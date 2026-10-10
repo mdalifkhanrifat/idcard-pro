@@ -27,6 +27,7 @@ class CardPrintService
     public function __construct(
         private CardRepositoryInterface $cards,
         private CardPrintRepositoryInterface $prints,
+        private CardRequirements $requirements,
     ) {}
 
     /**
@@ -54,6 +55,8 @@ class CardPrintService
 
         return DB::transaction(function () use ($cardIds, $data, $actor): Collection {
             $cards = $this->assertPrintable($this->cards->lockedByPublicIds($cardIds), $cardIds);
+            // What the organization requires before printing, for every card of the batch (or an override with a reason)
+            $overridden = $this->requirements->enforceCards($cards, 'print', $data->overrideReason, $actor);
 
             $batch = $cards->count() > 1 ? Str::lower((string) Str::ulid()) : null;
             $now = now();
@@ -67,6 +70,9 @@ class CardPrintService
                 'printed_at' => $now,
             ])->setRelation('card', $card)->setRelation('printer', $actor));
             $this->cards->addPrints($cards->pluck('id')->all(), $data->copies, $now);
+            foreach ($cards->whereIn('public_id', array_keys($overridden)) as $card) {
+                $this->requirements->recordOverride($card, 'print', (string) $data->overrideReason, $overridden[$card->public_id], $actor);
+            }
 
             return $prints;
         });

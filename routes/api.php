@@ -16,6 +16,7 @@ use App\Http\Controllers\Api\V1\CardholderImportController;
 use App\Http\Controllers\Api\V1\CardPdfController;
 use App\Http\Controllers\Api\V1\CardPrintController;
 use App\Http\Controllers\Api\V1\CardRenderController;
+use App\Http\Controllers\Api\V1\CardRequirementController;
 use App\Http\Controllers\Api\V1\CardTemplateController;
 use App\Http\Controllers\Api\V1\CardTemplateElementController;
 use App\Http\Controllers\Api\V1\CardVerificationController;
@@ -143,6 +144,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::post('cardholders/{cardholder}/biometrics/unavailable', [BiometricCaptureController::class, 'unavailable'])->name('cardholders.biometrics.unavailable');
             Route::apiResource('cardholders.biometrics', BiometricCaptureController::class)->only(['index', 'store', 'destroy'])->parameters(['biometrics' => 'biometric_capture'])->scoped(['cardholder' => 'public_id', 'biometric_capture' => 'public_id']);
             Route::get('cardholders/{cardholder}/cards/next-number', [CardController::class, 'nextNumber'])->name('cardholders.cards.next-number');
+            Route::get('cardholders/{cardholder}/card-requirements', [CardRequirementController::class, 'show'])->name('cardholders.card-requirements');
             Route::apiResource('cardholders.cards', CardController::class)->only(['index', 'store'])->scoped(['cardholder' => 'public_id']);
             Route::get('cards', [CardController::class, 'list'])->name('cards.index');
             Route::get('cards/summary', [CardController::class, 'summary'])->name('cards.summary');
