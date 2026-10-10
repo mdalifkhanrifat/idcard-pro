@@ -12,11 +12,12 @@ import UiTextarea from '@/components/ui/UiTextarea.vue';
 import CardRender from './CardRender.vue';
 import { SAMPLE_VERIFY_CODE, barcodeProblems, missingImages, qrProblems, verifyUrlFor, printPageHref, useCardReasons } from './cards';
 import CardBarcodeProblems from './CardBarcodeProblems.vue';
+import CardRequirementsNotice from './CardRequirementsNotice.vue';
 import { http, toApiError } from '@/lib/http';
 import { formatBytes } from '@/lib/format';
 import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
-import type { CardLayout, CardTemplate, CardValues, Cardholder, FamilyMember } from '@/types';
+import type { CardLayout, CardRequirementProblem, CardTemplate, CardValues, Cardholder, FamilyMember } from '@/types';
 
 /**
  * Issue a card (legacy card form + "Reason For Print"): for the cardholder or a family member, from an
@@ -54,6 +55,39 @@ const badBarcodes = computed(() => (preview.value ? barcodeProblems(preview.valu
 const badQr = computed(() => (preview.value ? qrProblems(preview.value.layout, preview.value.values) : []));
 
 const today = () => new Date().toISOString().slice(0, 10);
+
+/* What the organization requires first (e.g. complete biometrics), asked for the chosen holder. */
+interface Requirements {
+    problems: CardRequirementProblem[];
+    can_override: boolean;
+}
+const issueRequirements = ref<Requirements | null>(null);
+const printRequirements = ref<Requirements | null>(null);
+const overriding = ref(false);
+const overrideReason = ref('');
+const issueBlocked = computed(() => !!issueRequirements.value?.problems.length && !(overriding.value && overrideReason.value.trim()));
+const printBlocked = computed(() => !!printRequirements.value?.problems.length);
+
+async function loadRequirements(): Promise<void> {
+    const ask = (moment: 'issue' | 'print') =>
+        http.get(`/cardholders/${props.cardholder.id}/card-requirements`, { params: { moment, family_member: form.holder || undefined } }).then(({ data }) => data.data as Requirements);
+    try {
+        const [issue, print] = await Promise.all([ask('issue'), auth.can('cards.print') ? ask('print') : Promise.resolve(null)]);
+        issueRequirements.value = issue;
+        printRequirements.value = print;
+    } catch {
+        // The server checks again when issuing
+        issueRequirements.value = null;
+        printRequirements.value = null;
+    }
+}
+watch([open, () => form.holder], ([isOpen]) => {
+    overriding.value = false;
+    overrideReason.value = '';
+    if (isOpen) {
+        void loadRequirements();
+    }
+});
 
 watch(open, async (value) => {
     if (!value) {
@@ -197,6 +231,9 @@ async function submit(event: SubmitEvent): Promise<void> {
     if (document.value && needs.value.document) {
         body.append('document', document.value);
     }
+    if (overriding.value && overrideReason.value.trim()) {
+        body.append('override_reason', overrideReason.value.trim());
+    }
     try {
         const { data } = await http.post(`/cardholders/${props.cardholder.id}/cards`, body);
         ui.notify(t('cards.issued', { number: data.data.number }));
@@ -212,6 +249,11 @@ async function submit(event: SubmitEvent): Promise<void> {
         printTab?.close();
         const apiError = toApiError(error);
         errors.value = apiError.errors;
+        const refused = apiError.data as { requirements?: CardRequirementProblem[]; can_override?: boolean } | undefined;
+        if (refused?.requirements) {
+            // Something changed since the dialog opened: show what is missing now
+            issueRequirements.value = { problems: refused.requirements, can_override: !!refused.can_override };
+        }
         if (!Object.keys(apiError.errors).length) {
             ui.notify(apiError.message, 'error');
         }
@@ -246,6 +288,19 @@ async function submit(event: SubmitEvent): Promise<void> {
                 <UiInput v-model="form.issue_date" type="date" :label="t('cards.issueDate')" :error="errors.issue_date" />
                 <UiInput v-model="form.expiry_date" type="date" :label="t('cards.expiryDate')" :hint="t('cards.expiryHint')" :error="errors.expiry_date" @input="expiryTouched = true" />
                 <UiTextarea v-model="form.notes" class="sm:col-span-2" :label="t('cards.notes')" :required="needs.note" :maxlength="1000" :rows="2" :error="errors.notes" data-field="notes" />
+                <CardRequirementsNotice
+                    v-if="issueRequirements?.problems.length"
+                    v-model:overriding="overriding"
+                    v-model:reason="overrideReason"
+                    class="sm:col-span-2"
+                    moment="issue"
+                    :problems="issueRequirements.problems"
+                    :can-override="issueRequirements.can_override"
+                />
+                <p v-else-if="printBlocked" class="flex gap-2 rounded-lg border border-line bg-surface-2 p-3 text-xs text-muted sm:col-span-2" data-print-requirements>
+                    <TriangleAlert class="size-4 shrink-0 text-warning" />
+                    <span>{{ printRequirements!.problems.map((problem) => problem.message).join(' ') }} {{ t('cards.requirementsUi.printLater') }}</span>
+                </p>
                 <div v-if="needs.document" class="space-y-1 sm:col-span-2">
                     <button type="button" class="flex w-full items-center gap-3 rounded-lg border border-dashed border-line px-4 py-2.5 text-left hover:border-brand-ink hover:bg-surface-2" @click="documentInput?.click()">
                         <FileUp class="size-5 shrink-0 text-muted" />
@@ -292,8 +347,8 @@ async function submit(event: SubmitEvent): Promise<void> {
         <template #footer>
             <UiButton variant="secondary" @click="open = false">{{ t('common.cancel') }}</UiButton>
             <!-- First in the page so Enter issues without printing; shown last -->
-            <UiButton type="submit" form="issue-card-form" class="order-last" :loading="busy" :disabled="!form.template" data-issue-submit>{{ t('cards.issue') }}</UiButton>
-            <UiButton v-if="auth.can('cards.print')" type="submit" form="issue-card-form" variant="secondary" :loading="busy" :disabled="!form.template" data-issue-print>
+            <UiButton type="submit" form="issue-card-form" class="order-last" :loading="busy" :disabled="!form.template || issueBlocked" data-issue-submit>{{ t('cards.issue') }}</UiButton>
+            <UiButton v-if="auth.can('cards.print')" type="submit" form="issue-card-form" variant="secondary" :loading="busy" :disabled="!form.template || issueBlocked || printBlocked" :title="printBlocked ? t('cards.requirementsUi.printLater') : undefined" data-issue-print>
                 <Printer class="size-4" />{{ t('cards.issueAndPrint') }}
             </UiButton>
         </template>

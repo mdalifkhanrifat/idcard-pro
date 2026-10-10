@@ -217,8 +217,22 @@ export interface FileSummary {
 export type CardholderStatus = 'active' | 'inactive' | 'retired';
 export type EmploymentType = 'staff' | 'contractor' | 'visitor' | 'student' | 'other';
 
+/** Whether a person meets the organization's biometric settings (kept by the server). */
+export type BiometricStatusValue = 'complete' | 'exceptions' | 'incomplete' | 'not_required';
+
+/** Something missing before a card can be issued or printed (cards.requirements on the server). */
+export interface CardRequirementProblem {
+    code: string;
+    message: string;
+    details: { cardholder?: string; family_member?: string | null; status?: string } & Record<string, unknown>;
+    /** Card number, in batch answers. */
+    card?: string;
+}
+
 export interface Cardholder {
     id: string;
+    /** Only for those who may see biometrics. */
+    biometric_status?: BiometricStatusValue;
     full_name: string;
     full_name_local: string | null;
     date_of_birth: string | null;
@@ -293,6 +307,8 @@ export type FamilyRelation = 'father' | 'mother' | 'father_in_law' | 'mother_in_
 
 export interface FamilyMember {
     id: string;
+    /** Only for those who may see biometrics. */
+    biometric_status?: BiometricStatusValue;
     relation: FamilyRelation;
     name: string;
     name_local: string | null;
@@ -454,6 +470,8 @@ export interface IssuedCard {
     verify_url: string | null;
     /** Active and not expired: the server's rule for printing. */
     printable: boolean;
+    /** What the organization requires before printing that the holder is missing (empty when none). */
+    print_requirements?: CardRequirementProblem[];
     template?: { id: string; name: string; code: string };
     family_member?: { id: string; name: string; relation: string } | null;
     cardholder?: { id: string; full_name: string; employee_no: string | null; department?: string | null };

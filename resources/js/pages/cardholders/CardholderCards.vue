@@ -80,6 +80,7 @@ function show(id: string): void {
                 <h3 class="font-semibold text-fg">{{ t('cards.currentCard') }}</h3>
                 <span class="font-mono text-sm text-muted">{{ current.card.number }}</span>
                 <UiBadge :tone="statusTone(displayStatus(current.card))">{{ t(`cards.statuses.${displayStatus(current.card)}`) }}</UiBadge>
+                <UiBadge v-if="current.card.printable && current.card.print_requirements?.length" tone="warning" :title="current.card.print_requirements.map((problem) => problem.message).join(' ')" data-print-held>{{ t('cards.requirementsUi.held') }}</UiBadge>
                 <CardPrintButton :card="current.card" class="ml-auto" />
             </div>
             <button type="button" class="block text-left" :title="t('cards.open')" @click="show(current.card.id)">
@@ -115,7 +116,12 @@ function show(id: string): void {
                                 <p v-if="card.notes" class="max-w-56 truncate text-xs" :title="card.notes">{{ card.notes }}</p>
                             </td>
                             <td class="px-5 py-3 whitespace-nowrap text-muted">{{ formatDate(card.issue_date) }} – {{ card.expiry_date ? formatDate(card.expiry_date) : t('cards.noExpiry') }}</td>
-                            <td class="px-5 py-3"><UiBadge :tone="statusTone(displayStatus(card))">{{ t(`cards.statuses.${displayStatus(card)}`) }}</UiBadge></td>
+                            <td class="px-5 py-3">
+                                <div class="flex flex-wrap gap-1">
+                                    <UiBadge :tone="statusTone(displayStatus(card))">{{ t(`cards.statuses.${displayStatus(card)}`) }}</UiBadge>
+                                    <UiBadge v-if="card.printable && card.print_requirements?.length" tone="warning" :title="card.print_requirements.map((problem) => problem.message).join(' ')" data-print-held>{{ t('cards.requirementsUi.held') }}</UiBadge>
+                                </div>
+                            </td>
                             <td class="px-5 py-3 whitespace-nowrap text-muted">{{ card.issued_by ?? '—' }}</td>
                             <td class="px-3 py-2 text-right"><CardPrintButton :card="card" compact /></td>
                         </tr>

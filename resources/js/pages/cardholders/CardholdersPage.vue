@@ -35,7 +35,7 @@ const customFilters = computed(() => customFields.fields.value.filter((field) =>
 
 const list = useListQuery<Cardholder>('/cardholders', {
     filters: {
-        search: '', status: '', employment_type: '', department: '', unit: '', rank: '', designation: '', branch: '', blood_group: '', joined_from: '', joined_to: '', card: '',
+        search: '', status: '', employment_type: '', department: '', unit: '', rank: '', designation: '', branch: '', blood_group: '', joined_from: '', joined_to: '', card: '', biometrics: '',
     },
     sort: '-created_at',
 });
@@ -43,6 +43,10 @@ const { filters, rows, meta, loading, sort, page } = list;
 
 const showFilters = ref(false);
 const activeFilterCount = computed(() => Object.entries(filters).filter(([key, v]) => key !== 'search' && v !== '').length);
+
+/** Biometric status filter and badges: only for those who may see biometrics, while the organization captures them. */
+const showBiometrics = computed(() => auth.can('biometrics.view') && !!auth.tenant?.biometrics?.enabled);
+const biometricTone = (status: string) => ({ complete: 'success', exceptions: 'brand', incomplete: 'warning' })[status] as 'success' | 'brand' | 'warning' | undefined;
 
 const statusOptions = computed(() => (['active', 'inactive', 'retired'] as const).map((value) => ({ value, label: t(`cardholders.status.${value}`) })));
 const employmentOptions = computed(() =>
@@ -134,6 +138,14 @@ async function remove(cardholder: Cardholder): Promise<void> {
                     data-filter-card
                 />
                 <UiSelect
+                    v-if="showBiometrics"
+                    v-model="filters.biometrics"
+                    :label="t('biometrics.statusLabel')"
+                    :placeholder="t('common.all')"
+                    :options="(['incomplete', 'complete', 'exceptions', 'not_required'] as const).map((value) => ({ value, label: t(`biometrics.statuses.${value}`) }))"
+                    data-filter-biometrics
+                />
+                <UiSelect
                     v-for="field in customFilters"
                     :key="field.key"
                     v-model="filters[`custom.${field.key}`]"
@@ -189,6 +201,9 @@ async function remove(cardholder: Cardholder): Promise<void> {
                                 <div class="flex flex-wrap gap-1">
                                     <UiBadge :tone="statusTone(row.status)">{{ t(`cardholders.status.${row.status}`) }}</UiBadge>
                                     <UiBadge v-if="row.employment_type !== 'staff'">{{ t(`cardholders.employmentType.${row.employment_type}`) }}</UiBadge>
+                                    <UiBadge v-if="showBiometrics && row.biometric_status && row.biometric_status !== 'not_required'" :tone="biometricTone(row.biometric_status)" :data-biometric-status="row.biometric_status">
+                                        {{ t('biometrics.statusBadge', { status: t(`biometrics.statuses.${row.biometric_status}`) }) }}
+                                    </UiBadge>
                                 </div>
                                 <!-- Own card, legacy "Status": PENDING (never printed) / PRINTED -->
                                 <div v-if="auth.can('cards.view')" class="mt-1.5 text-xs" data-card-state>

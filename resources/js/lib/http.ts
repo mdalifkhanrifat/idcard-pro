@@ -78,6 +78,8 @@ export interface ApiError {
     message: string;
     errors: Record<string, string[]>;
     status: number;
+    /** The whole error body, for answers with more than message and errors (e.g. card requirements). */
+    data?: unknown;
 }
 
 export function toApiError(error: unknown): ApiError {
@@ -88,6 +90,7 @@ export function toApiError(error: unknown): ApiError {
             message: data?.message ?? error.message,
             errors: data?.errors ?? {},
             status: error.response?.status ?? 0,
+            data: error.response?.data,
         };
     }
 

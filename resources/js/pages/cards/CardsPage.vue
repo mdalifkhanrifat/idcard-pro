@@ -335,6 +335,7 @@ useCardsPrinted(changed);
                             <td class="px-5 py-3 whitespace-nowrap text-muted">{{ card.expiry_date ? formatDate(card.expiry_date) : t('cards.noExpiry') }}</td>
                             <td class="px-5 py-3">
                                 <UiBadge :tone="statusTone(displayStatus(card))">{{ t(`cards.statuses.${displayStatus(card)}`) }}</UiBadge>
+                                <UiBadge v-if="card.printable && card.print_requirements?.length" tone="warning" :title="card.print_requirements.map((problem) => problem.message).join(' ')" data-print-held>{{ t('cards.requirementsUi.held') }}</UiBadge>
                                 <p class="mt-1 text-xs whitespace-nowrap" :class="card.printable && !card.print_count ? 'text-warning' : 'text-muted'" :title="card.last_printed_at ? formatDateTime(card.last_printed_at) : undefined" data-print-state>
                                     {{ card.print_count ? t('cards.printedTimes', { count: card.print_count }) : t('cards.notPrinted') }}
                                 </p>

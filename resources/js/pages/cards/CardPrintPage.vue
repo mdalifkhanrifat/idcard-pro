@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, nextTick, onBeforeUnmount, onMounted, ref, watchEffect } from 'vue';
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, watch, watchEffect } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { AlertTriangle, CheckCircle2, FileDown, Loader2, Printer, X } from 'lucide-vue-next';
@@ -10,9 +10,11 @@ import UiTextarea from '@/components/ui/UiTextarea.vue';
 import CardSheets from './CardSheets.vue';
 import { announcePrinted, barcodeProblems, qrProblems, displayStatus, downloadCardsPdf, missingImages, printPages, SHEET_CARD, useCardReasons, type BarcodeProblem, type QrProblem, type CardImageKey, type PrintSides, type SheetCard } from './cards';
 import CardBarcodeProblems from './CardBarcodeProblems.vue';
+import CardRequirementsNotice from './CardRequirementsNotice.vue';
 import { http, toApiError } from '@/lib/http';
+import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
-import type { CardLayout, CardValues, IssuedCard } from '@/types';
+import type { CardLayout, CardRequirementProblem, CardValues, IssuedCard } from '@/types';
 
 /**
  * Prints issued cards at their real size (laid out by CardSheets: one page per card side, sized to the
@@ -26,6 +28,8 @@ interface Entry {
     values: CardValues | null;
     /** Why the card is left out: not found, or not printable (revoked, replaced, expired). */
     problem: string | null;
+    /** What the organization requires before printing that the holder is missing (e.g. biometrics). */
+    requirements: CardRequirementProblem[];
     missing: CardImageKey[];
     /** Barcodes and QR codes that will print blank. */
     barcodes: BarcodeProblem[];
@@ -59,7 +63,16 @@ const sheetsRef = ref<InstanceType<typeof CardSheets> | null>(null);
 
 const ids = computed(() => [...new Set(String(route.query.ids ?? '').split(',').map((id) => id.trim()).filter(Boolean))]);
 const tooMany = computed(() => ids.value.length > printOptions.value.max_batch);
-const printable = computed(() => entries.value.filter((entry) => !entry.problem));
+/* Cards held up by the organization's requirements: left out unless a user who may overrides with a reason. */
+const auth = useAuthStore();
+const overriding = ref(false);
+const overrideReason = ref('');
+const overrideActive = computed(() => overriding.value && overrideReason.value.trim() !== '');
+const blocked = computed(() => entries.value.filter((entry) => !entry.problem && entry.requirements.length));
+const blockedProblems = computed(() => blocked.value.flatMap((entry) => entry.requirements.map((problem) => ({ ...problem, card: entry.card?.number }))));
+const printable = computed(() => entries.value.filter((entry) => !entry.problem && (!entry.requirements.length || overrideActive.value)));
+/** Sent with the print log and the PDF when overridden cards are among them. */
+const overrideFor = (entries: Entry[]) => (overrideActive.value && entries.some((entry) => entry.requirements.length) ? overrideReason.value.trim() : undefined);
 const skipped = computed(() => entries.value.filter((entry) => entry.problem));
 const withMissing = computed(() => printable.value.filter((entry) => entry.missing.length));
 const withBarcodeProblems = computed(() => printable.value.filter((entry) => entry.barcodes.length || entry.qr.length));
@@ -94,12 +107,12 @@ async function loadEntry(id: string): Promise<Entry> {
         const card: IssuedCard = data.data;
         const problem = card.printable ? null : t('cards.print.notPrintable', { status: t(`cards.statuses.${displayStatus(card)}`) });
 
-        return { id, card, layout: data.meta.layout, values: data.meta.values, problem, missing: missingImages(data.meta.layout, data.meta.values), barcodes: barcodeProblems(data.meta.layout, data.meta.values), qr: qrProblems(data.meta.layout, data.meta.values) };
+        return { id, card, layout: data.meta.layout, values: data.meta.values, problem, requirements: card.print_requirements ?? [], missing: missingImages(data.meta.layout, data.meta.values), barcodes: barcodeProblems(data.meta.layout, data.meta.values), qr: qrProblems(data.meta.layout, data.meta.values) };
     } catch (error) {
         const apiError = toApiError(error);
         const problem = apiError.status === 404 ? t('cards.print.notFound') : apiError.message;
 
-        return { id, card: null, layout: null, values: null, problem, missing: [], barcodes: [], qr: [] };
+        return { id, card: null, layout: null, values: null, problem, requirements: [], missing: [], barcodes: [], qr: [] };
     }
 }
 
@@ -118,10 +131,13 @@ async function load(): Promise<void> {
     loading.value = false;
     await waitForAssets();
     // Print straight away (legacy behaviour) unless there is something to read first
-    if (printable.value.length && !skipped.value.length && !withMissing.value.length && !withBarcodeProblems.value.length) {
+    if (printable.value.length && !skipped.value.length && !blocked.value.length && !withMissing.value.length && !withBarcodeProblems.value.length) {
         print();
     }
 }
+
+// Overridden cards join the sheets: their images must load before printing
+watch(overrideActive, () => void waitForAssets());
 
 async function waitForAssets(): Promise<void> {
     assetsReady.value = false;
@@ -159,7 +175,7 @@ async function printBacks(): Promise<void> {
 async function logPrint(): Promise<void> {
     logging.value = true;
     noteError.value = [];
-    const body = { method: 'browser', copies: copies.value, note: note.value.trim() || null };
+    const body = { method: 'browser', copies: copies.value, note: note.value.trim() || null, override_reason: overrideFor(printable.value) };
     const cardIds = printable.value.map((entry) => entry.id);
     try {
         await (cardIds.length === 1 ? http.post(`/cards/${cardIds[0]}/prints`, body) : http.post('/cards/prints', { ...body, cards: cardIds }));
@@ -184,7 +200,7 @@ async function downloadPdf(): Promise<void> {
     downloading.value = true;
     const cardIds = printable.value.map((entry) => entry.id);
     try {
-        await downloadCardsPdf(cardIds, { sides: sides.value, record: recordPdf.value, sheet: sheet.value?.key ?? SHEET_CARD });
+        await downloadCardsPdf(cardIds, { sides: sides.value, record: recordPdf.value, sheet: sheet.value?.key ?? SHEET_CARD, overrideReason: overrideFor(printable.value) });
         if (recordPdf.value) {
             logged.value += cardIds.length;
             announcePrinted(cardIds);
@@ -269,6 +285,14 @@ onBeforeUnmount(() => {
                         <li v-for="entry in skipped" :key="entry.id">{{ entry.card?.number ?? entry.id }}: {{ entry.problem }}</li>
                     </ul>
                 </div>
+                <CardRequirementsNotice
+                    v-if="blocked.length"
+                    v-model:overriding="overriding"
+                    v-model:reason="overrideReason"
+                    moment="print"
+                    :problems="blockedProblems"
+                    :can-override="auth.can('cards.override_requirements')"
+                />
                 <div v-if="withMissing.length" class="rounded-lg border border-warning/40 bg-warning/10 p-3 text-fg" data-print-missing>
                     <p class="flex items-center gap-2 font-medium"><AlertTriangle class="size-4 text-warning" /> {{ t('cards.print.missingTitle') }}</p>
                     <ul class="mt-1 list-disc pl-5 text-xs text-muted">

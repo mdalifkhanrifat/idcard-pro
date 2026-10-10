@@ -1297,7 +1297,26 @@
             "pending": "Not printed yet",
             "printed": "Printed"
         },
-        "printedOn": "Printed on"
+        "printedOn": "Printed on",
+        "requirementsUi": {
+            "title": {
+                "issue": "This card cannot be issued yet",
+                "print": "These cards cannot be printed yet"
+            },
+            "fix": {
+                "biometrics": "Complete the biometrics",
+                "default": "Open the cardholder"
+            },
+            "override": {
+                "issue": "Issue anyway",
+                "print": "Print anyway"
+            },
+            "overrideHint": "Allowed by your role; your name and reason are kept in the card's audit log.",
+            "reason": "Reason",
+            "noOverride": "Complete what is missing first, or ask someone allowed to override.",
+            "printLater": "Printing waits until the requirements are met; issue now and print later.",
+            "held": "Printing held"
+        }
     },
     "verify": {
         "title": "Card verification",
@@ -1477,6 +1496,14 @@
             "guide": "Fit the face inside the oval, looking at the camera, with even light.",
             "choose": "Camera",
             "numbered": "Camera {n}"
+        },
+        "statusLabel": "Biometrics",
+        "statusBadge": "Biometrics: {status}",
+        "statuses": {
+            "complete": "Complete",
+            "exceptions": "With exceptions",
+            "incomplete": "Incomplete",
+            "not_required": "Not required"
         }
     }
 }

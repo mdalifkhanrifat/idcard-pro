@@ -121,12 +121,14 @@ export function addToSelection(selected: string[], ids: string[], max: number): 
  * Downloads a PDF of these cards made on the server (same drawing as printing). `record` also logs it as
  * a print (method "pdf"); a download alone is not counted as a printed card.
  */
-export async function downloadCardsPdf(cardIds: string[], options: { sides: PrintSides; record: boolean; sheet?: string }): Promise<void> {
+export async function downloadCardsPdf(cardIds: string[], options: { sides: PrintSides; record: boolean; sheet?: string; overrideReason?: string }): Promise<void> {
+    // Held-up cards (the organization's requirements) only with a reason from someone who may override
+    const override = options.overrideReason ? { override_reason: options.overrideReason } : {};
     try {
         const response =
             cardIds.length === 1
-                ? await http.get<Blob>(`/cards/${cardIds[0]}/pdf`, { params: { sides: options.sides, sheet: options.sheet, record: options.record ? 1 : 0 }, responseType: 'blob' })
-                : await http.post<Blob>('/cards/pdf', { cards: cardIds, ...options }, { responseType: 'blob' });
+                ? await http.get<Blob>(`/cards/${cardIds[0]}/pdf`, { params: { sides: options.sides, sheet: options.sheet, record: options.record ? 1 : 0, ...override }, responseType: 'blob' })
+                : await http.post<Blob>('/cards/pdf', { cards: cardIds, sides: options.sides, record: options.record, sheet: options.sheet, ...override }, { responseType: 'blob' });
         const filename = /filename="([^"]+)"/.exec(String(response.headers['content-disposition'] ?? ''))?.[1] ?? 'cards.pdf';
         const url = URL.createObjectURL(response.data);
         Object.assign(document.createElement('a'), { href: url, download: filename }).click();
