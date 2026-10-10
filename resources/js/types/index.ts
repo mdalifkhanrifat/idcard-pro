@@ -67,7 +67,8 @@ export interface BiometricOptions {
         /** Template formats; empty = image only. */
         template_formats: string[];
     }>;
-    drivers: Record<string, { modalities: string[]; local_url: string | null; testing: boolean }>;
+    /** client: public settings for the browser driver (e.g. a vendor's web license string). */
+    drivers: Record<string, { modalities: string[]; local_url: string | null; testing: boolean; client: Record<string, unknown> }>;
     modes: string[];
     required_before: string[];
     unavailable_reasons: string[];

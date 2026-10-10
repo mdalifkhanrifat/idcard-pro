@@ -78,12 +78,15 @@ return [
      * - modalities: what the driver can capture
      * - local_url:  default address of the vendor's local service (a station may use another)
      * - testing:    produces made-up data; offered only while `simulator` below is on
+     * - client:     public settings the browser driver needs (sent to stations, so never secrets),
+     *               e.g. the web license string of a vendor's local service
      */
     'drivers' => [
         'upload' => ['modalities' => ['fingerprint', 'face', 'iris']],
         'simulator' => ['modalities' => ['fingerprint', 'face', 'iris'], 'testing' => true],
         'webcam' => ['modalities' => ['face']],
-        'secugen' => ['modalities' => ['fingerprint'], 'local_url' => 'https://localhost:8443'],
+        // SecuGen WebAPI (SgiBioSrv). Its license string is bound to this site's domain (none needed on localhost)
+        'secugen' => ['modalities' => ['fingerprint'], 'local_url' => 'https://localhost:8443', 'client' => ['license' => env('BIOMETRIC_SECUGEN_LICENSE', '')]],
         // Our own small local agent (docs/BIOMETRIC_BRIDGE.md): wraps any vendor SDK. Brands without a
         // browser service of their own (e.g. DigitalPersona, ZKTeco) connect through it.
         'bridge' => ['modalities' => ['fingerprint', 'face', 'iris'], 'local_url' => 'http://127.0.0.1:47800'],

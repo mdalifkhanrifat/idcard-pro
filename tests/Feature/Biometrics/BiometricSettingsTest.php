@@ -25,6 +25,7 @@ it('keeps biometrics off until the organization turns it on, and lists what can 
         ->and($response->json('data.biometric_options.drivers.secugen.local_url'))->toBe('https://localhost:8443')
         ->and($response->json('data.biometric_options.drivers.simulator.testing'))->toBeTrue()
         ->and($response->json('data.biometric_options.drivers.secugen.testing'))->toBeFalse()
+        ->and($response->json('data.biometric_options.drivers.secugen.client'))->toBe(['license' => ''])
         // Screens lay positions out from the registry's groups (a row per hand), not from code
         ->and($response->json('data.biometric_options.modalities.fingerprint.groups.right_hand'))->toBe(['right_thumb', 'right_index', 'right_middle', 'right_ring', 'right_little'])
         ->and($response->json('data.biometric_options.modalities.face.groups'))->toBe([])
@@ -35,6 +36,14 @@ it('keeps biometrics off until the organization turns it on, and lists what can 
         ->and($response->json('data.biometric_options.image_types.png'))->toBe(['signature' => '89504e47', 'mime' => 'image/png', 'displayable' => true])
         ->and($response->json('data.biometric_options.max_image_kb'))->toBe(2048)
         ->and($response->json('data.biometric_options.unavailable_reasons_with_note'))->toBe(['other']);
+});
+
+it('sends stations the public settings a driver needs, such as a vendor license string', function () {
+    config(['biometrics.drivers.secugen.client.license' => 'LIC-FOR-THIS-DOMAIN']);
+
+    $this->getJson('/api/v1/settings')->assertOk()
+        ->assertJsonPath('data.biometric_options.drivers.secugen.client.license', 'LIC-FOR-THIS-DOMAIN')
+        ->assertJsonPath('data.biometric_options.drivers.upload.client', []);
 });
 
 it('only lists group positions the registry offers', function () {
