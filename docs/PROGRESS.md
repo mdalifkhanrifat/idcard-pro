@@ -1,21 +1,21 @@
 # IDCard Pro: কাজের অগ্রগতি ও হ্যান্ডঅফ
 
 > নতুন চ্যাট বা নতুন ডেভেলপার এই ফাইল থেকে শুরু করবেন। পুরো পরিকল্পনা আছে [ROADMAP.md](ROADMAP.md)-এ।
-> সর্বশেষ আপডেট: ৯ অক্টোবর ২০২৬ (রাত)। **Phase 1, 2, 3 সম্পন্ন।** **Phase 4 (বায়োমেট্রিক) চলছে:** ৪.১ সেটিং, ৪.২ এনক্রিপ্ট করা সংরক্ষণ, ৪.৩ এনরোলমেন্ট API সম্পন্ন (পুরো ব্যাকএন্ড); **পরের কাজ ৪.৪** (Organization পাতায় বায়োমেট্রিক সেটিংয়ের UI)। ৩০৭টা টেস্ট।
+> সর্বশেষ আপডেট: ১০ অক্টোবর ২০২৬। **Phase 1, 2, 3 সম্পন্ন।** **Phase 4 (বায়োমেট্রিক) চলছে:** ৪.১ সেটিং, ৪.২ এনক্রিপ্ট করা সংরক্ষণ, ৪.৩ এনরোলমেন্ট API (পুরো ব্যাকএন্ড) আর ৪.৪ Organization পাতায় সেটিংয়ের UI সম্পন্ন; **পরের কাজ ৪.৫** (ব্রাউজারের ড্রাইভার কাঠামো)। ৩০৯টা টেস্ট।
 > **এখান থেকে শুরু:** ঠিক নিচের "পরের চ্যাট এখান থেকে শুরু (৯ অক্টোবর রাত, Phase 4)" — সেখানে চালুর কমান্ড, পুরো প্রজেক্টের অবস্থা, Phase 4-এর ধাপের টেবিল (একমাত্র তালিকা), API-র বিবরণ আর সাবধানতা। তার নিচের "আগামীকাল এখান থেকে শুরু (৯ অক্টোবর)" আর পুরনো তারিখের অংশগুলো ইতিহাস (Phase 3)। শেষ commit: `git log --oneline -1`।
 
 ### পরের চ্যাট এখান থেকে শুরু (৯ অক্টোবর রাত, Phase 4) — নতুন চ্যাটের জন্য
 
-> **এক লাইনে:** Phase 1–3 সম্পন্ন। এখন **Phase 4 (বায়োমেট্রিক)** চলছে — ১১ ধাপের মধ্যে **৪.১, ৪.২, ৪.৩ সম্পন্ন** (পুরো ব্যাকএন্ড: সেটিং, এনক্রিপ্ট করা সংরক্ষণ, এনরোলমেন্ট API)। **পরের কাজ ৪.৪** (Organization পাতায় বায়োমেট্রিক সেটিংয়ের UI)। এখনো বায়োমেট্রিকের কোনো পাতা/ট্যাব নেই — শুধু API। ৩০৭টা টেস্ট, phpstan পরিষ্কার।
+> **এক লাইনে:** Phase 1–3 সম্পন্ন। এখন **Phase 4 (বায়োমেট্রিক)** চলছে — ১১ ধাপের মধ্যে **৪.১–৪.৪ সম্পন্ন** (পুরো ব্যাকএন্ড + Organization পাতায় "Biometrics" কার্ড, ১০ অক্টোবর)। **পরের কাজ ৪.৫** (ব্রাউজারের ড্রাইভার কাঠামো: simulator + upload)। কার্ডধারীর বায়োমেট্রিক ট্যাব এখনো নেই (৪.৬)। ৩০৯টা টেস্ট, phpstan পরিষ্কার।
 
 **১. চালু করে মিলিয়ে নিন:**
 ```bash
 cd /var/www/php74/idcard/idcard-pro && docker compose up -d && docker compose ps --format '{{.Service}} {{.State}}'
-git log --oneline -1                                           # শেষ commit: ৪.৩-এর পরের docs commit (তার আগে d898d3b)
+git log --oneline -1                                           # শেষ commit: ৪.৪-এর পরের docs commit (তার আগে 3b812c2)
 docker compose exec app php artisan migrate --no-interaction   # নতুন মেশিনে: biometric_captures টেবিল
 docker compose exec app php artisan app:sync-permissions       # নতুন মেশিনে: biometrics.* পারমিশন (Owner পায়)
 grep -c '^BIOMETRIC_KEY=base64:' .env                          # 1 হওয়া উচিত; না থাকলে: docker compose exec app php artisan app:biometric-key
-docker compose exec app php artisan test --compact             # ৩০৭টা টেস্ট পাস হওয়ার কথা
+docker compose exec app php artisan test --compact             # ৩০৯টা টেস্ট পাস হওয়ার কথা
 docker compose run --rm --no-deps vite npm run build           # ফ্রন্টএন্ড (vue-tsc + vite)
 ```
 **সাবধান — BIOMETRIC_KEY:** dev `.env`-এ বসানো (৯ অক্টোবর)। সরাসরি কখনো বদলাবেন না — পুরনোটা `BIOMETRIC_PREVIOUS_KEYS`-এ রেখে তবেই `app:biometric-key --force`, নইলে সংরক্ষিত বায়োমেট্রিক আর পড়া যাবে না (কমান্ড নিজেও `--force` ছাড়া বদলায় না)।
@@ -36,8 +36,8 @@ docker compose run --rm --no-deps vite npm run build           # ফ্রন্
 | ৪.১ | `config/biometrics.php` রেজিস্ট্রি + প্রতিষ্ঠানের সেটিং `tenants.settings.biometrics` (API `/settings`) | ✅ `3bbca00`, iris `27c6d45` |
 | ৪.২ | টেবিল `biometric_captures`, `BiometricVault` (AES-256-GCM, নিজস্ব চাবি), `app:biometric-key`, মুছলে ফাইলও মোছে | ✅ `b58c8b5` |
 | ৪.৩ | এনরোলমেন্ট API + শর্তের হিসাব (`BiometricRequirement`) + পারমিশন `biometrics.view/enroll/delete` | ✅ `d898d3b` (সাথে audit ফিল্টারের ফাঁক `b7d0c8b`) |
-| ৪.৪ | Organization পাতায় "বায়োমেট্রিক" কার্ড: চালু/বন্ধ; প্রতিটা ধরন (`biometric_options.modalities` থেকে লুপ — আঙুল/মুখ/চোখ কোডে লেখা নয়) বন্ধ/ঐচ্ছিক/বাধ্যতামূলক, অবস্থান বাছাই (আঙুলের জন্য দুই হাতের ছবি/গ্রিড), কয়টা, stand-in, ন্যূনতম quality, চেষ্টা, ড্রাইভার; পরিবারের সদস্য; কখন লাগবে (issue/print); কার্ডে ছাপা। পাঠানো: `biometrics[...]` FormData-তে (তালিকা না পাঠালে = কিছু নয়)। en/bn লেখা। ব্রাউজারে যাচাই + ফোনের মাপ। **সাবধান:** Organization পাতা সেভ করলে সব সেটিং লেখা হয় — পরীক্ষার পরে Acme-এর সেটিং আগের মতো ফেরাতে হবে (আগে না থাকা key মুছে) | ⬜ পরের কাজ |
-| ৪.৫ | ব্রাউজারের ড্রাইভার কাঠামো `resources/js/lib/biometrics/`: interface `{ id, modalities, probe(), capture({modality, position}) → {imageBase64, imageFormat, templateBase64?, templateFormat?, quality?, width?, height?, dpi?, device?} }`, রেজিস্ট্রি (নাম = `config/biometrics.php`-এর driver key), প্রথমে `simulator` (canvas-এ বানানো ছবি + এলোমেলো quality) আর `upload` | ⬜ |
+| ৪.৪ | Organization পাতায় "বায়োমেট্রিক" কার্ড: চালু/বন্ধ; প্রতিটা ধরন (`biometric_options.modalities` থেকে লুপ — আঙুল/মুখ/চোখ কোডে লেখা নয়) বন্ধ/ঐচ্ছিক/বাধ্যতামূলক, অবস্থান বাছাই (আঙুলের জন্য দুই হাতের ছবি/গ্রিড), কয়টা, stand-in, ন্যূনতম quality, চেষ্টা, ড্রাইভার; পরিবারের সদস্য; কখন লাগবে (issue/print); কার্ডে ছাপা। পাঠানো: `biometrics[...]` FormData-তে (তালিকা না পাঠালে = কিছু নয়)। en/bn লেখা। ব্রাউজারে যাচাই + ফোনের মাপ। | ✅ ক `bde20ce` (রেজিস্ট্রিতে অবস্থানের `groups` — ডান/বাঁ হাত — আর ড্রাইভারের `testing` API-তে; **বাগ ঠিক:** বায়োমেট্রিক বন্ধ থাকলে রাখা সেটিংয়ের ধরনভিত্তিক যাচাই আর Organization পাতার সেভ আটকায় না, চালু করার সময় সব যাচাই হয়), খ `3b812c2` (`BiometricSettingsCard.vue` — নিচে ৫-এ বিবরণ) |
+| ৪.৫ ⬜ **পরের কাজ** | ব্রাউজারের ড্রাইভার কাঠামো `resources/js/lib/biometrics/`: interface `{ id, modalities, probe(), capture({modality, position}) → {imageBase64, imageFormat, templateBase64?, templateFormat?, quality?, width?, height?, dpi?, device?} }`, রেজিস্ট্রি (নাম = `config/biometrics.php`-এর driver key), প্রথমে `simulator` (canvas-এ বানানো ছবি + এলোমেলো quality) আর `upload` | ⬜ |
 | ৪.৬ | কার্ডধারীর পাতায় "বায়োমেট্রিক" ট্যাব (শুধু `biometrics.view` থাকলে আর প্রতিষ্ঠানে চালু থাকলে): `meta.status` দেখানো (কোনটা বাকি — `next`), অবস্থান বাছাই, ড্রাইভার বাছাই (স্টেশনের পছন্দ localStorage-এ), quality-র দণ্ড, কম quality হলে আবার চেষ্টা/রাখা, "পাওয়া যায়নি" + কারণ, মোছা, পরিবারের সদস্য (সেটিং চালু থাকলে) | ⬜ |
 | ৪.৭ | আসল স্ক্যানার ড্রাইভার: SecuGen (WebAPI, `https://localhost:8443`), DigitalPersona, ZKTeco + নিজস্ব bridge agent-এর নিয়ম `docs/BIOMETRIC_BRIDGE.md`; হার্ডওয়্যার ছাড়া CDP Fetch দিয়ে নকল উত্তরে যাচাই; লোকাল সার্ভিসের ঠিকানা স্টেশনে বদলানো যায় | ⬜ |
 | ৪.৮ | মুখ (ওয়েবক্যাম `getUserMedia`) — একই ড্রাইভার কাঠামোয়; চোখের মণি bridge দিয়ে | ⬜ |
@@ -64,6 +64,7 @@ docker compose run --rm --no-deps vite npm run build           # ফ্রন্
   - ছবি: resource-এর `image_url` = ৫ মিনিটের signed link (`/api/v1/biometric-images/{id}`, `Cache-Control: no-store`); WSQ ব্রাউজারে দেখা যায় না বলে `image_url` null। টেমপ্লেটের বাইট কখনো API-তে আসে না (`has_template`, `template_format` শুধু)। `position_code` = ISO কোড (অন্য সিস্টেমের জন্য)।
   - একই অবস্থানে আবার নিলে আগেরটা ইতিহাসে যায় **ডেটা ছাড়া** (ছবি/টেমপ্লেট মুছে যায়, শুধু কবে কী নেওয়া হয়েছিল থাকে) — গোপনীয়তার জন্য।
 - **`meta.status`** (`BiometricRequirement::evaluate()`): `{enabled, applies (পরিবারের সদস্য আর family_members বন্ধ = false), complete, modalities: {<ধরন>: {mode, required, needed, captured[], unavailable[], counted, complete, with_exceptions, next[]}}}`। পূরণ = গোনা অবস্থান ≥ `count` (stand-in চালু হলে যেকোনো আঙুল গোনে); সম্ভাব্য সব অবস্থান নেওয়া/"পাওয়া যায়নি" হলে **ব্যতিক্রমসহ পূরণ** (আঙুল নেই এমন মানুষ আটকাবেন না); ঐচ্ছিক ধরন কখনো আটকায় না। ৪.৯-এ ইস্যু/প্রিন্টের বাধা এটাই ব্যবহার করবে।
+- **সেটিংয়ের UI (৪.৪):** `resources/js/pages/settings/BiometricSettingsCard.vue` (Organization পাতায়, `v-model` = `data.biometrics`, `options` = `data.biometric_options`)। ধরন/অবস্থান/ড্রাইভার/mode/সময় সব `biometric_options` থেকে লুপ; অবস্থান রেজিস্ট্রির `groups` অনুযায়ী সারিতে (দলে না থাকা অবস্থান শেষ সারিতে — `lib/biometrics/labels.ts` → `positionRows()`), চাপলে বাছাই, সংখ্যা = পছন্দের ক্রম, ক্রমের তালিকায় উপর/নিচ; একটাই অবস্থান থাকলে (মুখ) বাছাই/count/stand-in দেখায় না আর চালু করলে নিজে বাছাই হয়; stand-in বন্ধ হলে বা অবস্থান কমালে count নিজে সীমায় আসে; ড্রাইভারের পছন্দের ক্রম থাকে (নতুনটা শেষে), simulator-এ "Test only", স্ক্যানারের লোকাল ঠিকানা দেখায়; "কার্ডে ছাপা" শুধু `printable` ধরন থাকলে। পাঠানো `lib/biometrics/settings.ts` → `appendBiometricSettings()`: বন্ধ থাকলে শুধু enabled/family/print/required_before (ধরনগুলো আগের মতো থাকে)। লুকানো অংশের এরর (বন্ধ অবস্থায় বা বন্ধ ধরনে) দৃশ্যমান জায়গায় দেখায়। নামের লেখা `biometrics.{modalities,positions,groups,drivers,modes,reasons}.<key>` (en/bn locale-এ); অনুবাদ না থাকলে key থেকে লেখা ("right_palm" → "Right palm") — `biometricLabel()`, ৪.৬-এও এটাই ব্যবহার করবেন।
 - **ফাইল:** `app/Services/Biometrics/{BiometricSettings,BiometricVault,BiometricRequirement,BiometricService}.php`, `BiometricCaptureController`, `Requests/Biometrics/*`, `BiometricCaptureResource`, `Data/Biometrics/CaptureData`, `BiometricCaptureRepository`, টেস্ট `tests/Feature/Biometrics/{BiometricSettingsTest,BiometricStorageTest,BiometricEnrollmentTest}.php`।
 
 **৬. জানা সাবধানতা (এই সেশনে পাওয়া):**
@@ -72,9 +73,9 @@ docker compose run --rm --no-deps vite npm run build           # ফ্রন্
 - নতুন পারমিশন `app:sync-permissions`-এ শুধু **Owner** নিজে পায়; আগে থেকে থাকা প্রতিষ্ঠানের Administrator/Operator রোলে (`default_roles`) নতুন পারমিশন নিজে থেকে যায় না (নতুন প্রতিষ্ঠানে যায়) — রোল পাতা থেকে দিতে হয়। dev-এ Acme-এর Administrator/Operator-এর `biometrics.*` নেই। (আগের মডিউলগুলোতেও একই আচরণ; বদলাতে চাইলে ইউজারকে জিজ্ঞেস।)
 - audit-এর "কী" ফিল্টার এখন API-র `meta.log_names` থেকে (নতুন মডিউল নিজে থেকে আসে); লেখা `audit.logs.<নাম>` (না থাকলে নামটাই)।
 
-**৭. dev ডাটাবেসের অবস্থা:** `biometric_captures` খালি; Acme-এর বায়োমেট্রিক সেটিং সংরক্ষিত নেই (ডিফল্ট = বন্ধ); পারমিশন sync করা (৪৩টা)। ব্রাউজারে যাচাই (৯ অক্টোবর রাত): audit পাতার "কী"-তে Acme-এর ১০ ধরন, "Cardholders" দিয়ে ছাঁকা কাজ করে; রোল ডায়ালগে "Biometrics" + "Enroll" — কিছু সেভ করা হয়নি। বাকি সব আগের মতো (নিচে "আগামীকাল এখান থেকে শুরু (৯ অক্টোবর)" → ৪)।
+**৭. dev ডাটাবেসের অবস্থা:** `biometric_captures` খালি; Acme-এর বায়োমেট্রিক সেটিং সংরক্ষিত নেই (ডিফল্ট = বন্ধ; ৪.৪-এর ব্রাউজার যাচাইয়ে সেভ CDP Fetch দিয়ে নকল উত্তরে করা হয়েছে, ডেটাবেসে কিছু লেখা হয়নি — স্ক্রিপ্ট scratchpad-এ `qa-bio-settings.mjs` ধরনে); পারমিশন sync করা (৪৩টা)। ব্রাউজারে যাচাই (৯ অক্টোবর রাত): audit পাতার "কী"-তে Acme-এর ১০ ধরন, "Cardholders" দিয়ে ছাঁকা কাজ করে; রোল ডায়ালগে "Biometrics" + "Enroll" — কিছু সেভ করা হয়নি। বাকি সব আগের মতো (নিচে "আগামীকাল এখান থেকে শুরু (৯ অক্টোবর)" → ৪)।
 
-**৮. পরের চ্যাটে কী করবেন:** ৪.৪ থেকে শুরু (উপরের টেবিল)। প্রতিটা ধাপ: আগে বাংলায় বলা → কোড (Controller → Service → Repository; UI-তে ধরন/অবস্থান API থেকে) → টেস্ট + pint + phpstan + build → ব্রাউজারে যাচাই (`.claude/qa/cdp.mjs` scratchpad-এ কপি করে) → commit (ইউজারের git পরিচয়, AI attribution নয়) → এই টেবিলে ✅ + commit → বাংলায় জানানো।
+**৮. পরের চ্যাটে কী করবেন:** ৪.৫ থেকে শুরু (উপরের টেবিল)। প্রতিটা ধাপ: আগে বাংলায় বলা → কোড (Controller → Service → Repository; UI-তে ধরন/অবস্থান API থেকে) → টেস্ট + pint + phpstan + build → ব্রাউজারে যাচাই (`.claude/qa/cdp.mjs` scratchpad-এ কপি করে) → commit (ইউজারের git পরিচয়, AI attribution নয়) → এই টেবিলে ✅ + commit → বাংলায় জানানো।
 
 ### আগামীকাল এখান থেকে শুরু (৯ অক্টোবর) — নতুন চ্যাটের জন্য
 
@@ -202,7 +203,7 @@ docker compose run --rm --no-deps vite npm run build         # ফ্রন্�
 
 **প্রতিটা ধাপের শেষে মান যাচাই:**
 ```bash
-docker compose exec app php artisan test --compact                       # এখন ৩০৭টা টেস্ট (৯ অক্টোবর রাত)
+docker compose exec app php artisan test --compact                       # এখন ৩০৯টা টেস্ট (১০ অক্টোবর)
 docker compose exec app vendor/bin/phpstan analyse --memory-limit=1G
 docker compose exec app vendor/bin/pint --dirty --format agent
 docker compose run --rm --no-deps vite npx vue-tsc --noEmit
