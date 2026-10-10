@@ -19,8 +19,8 @@ return [
         'template_not_allowed' => 'এ ধরনের বায়োমেট্রিকের কোনো টেমপ্লেট হয় না।',
         'template_invalid' => 'টেমপ্লেটটা পড়া যায়নি।',
         'template_too_large' => 'টেমপ্লেট সর্বোচ্চ :kb KB হতে পারে।',
-        'low_quality_retry' => 'Quality :quality, দরকার কমপক্ষে :min। আবার চেষ্টা করুন (আর :left বার)।',
-        'low_quality_confirm' => ':tries বার চেষ্টার পরেও quality :quality, দরকার :min। তবুও সবচেয়ে ভালোটা রাখবেন?',
+        'low_quality_retry' => 'মান :quality, দরকার কমপক্ষে :min। আবার চেষ্টা করুন (বাকি চেষ্টা: :left)।',
+        'low_quality_confirm' => ':tries বার চেষ্টার পরেও মান :quality, দরকার :min। তবুও সবচেয়ে ভালোটা রাখবেন?',
         'note_required' => 'কেন নেওয়া যায়নি তা নোটে লিখুন।',
     ],
 ];

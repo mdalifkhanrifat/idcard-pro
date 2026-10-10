@@ -1417,7 +1417,32 @@
             "noTemplate": "নেই",
             "attempts": "চেষ্টা",
             "capturedAt": "নেওয়ার সময়",
-            "unavailable": "পাওয়া যায়নি: {reason}"
+            "unavailable": "পাওয়া যায়নি: {reason}",
+            "saved": "সংরক্ষণ হয়েছে।",
+            "attempt": "{max} বারের মধ্যে {attempt} নম্বর চেষ্টা",
+            "qualityUnknown": "এই উপায়ে জানা যায় না",
+            "retry": "মান {quality}, দরকার কমপক্ষে {min}। আবার চেষ্টা করুন (বাকি চেষ্টা: {left})।",
+            "keep": "{tries} বার চেষ্টার পরও মান {min}-এর কম (সবচেয়ে ভালো {quality})। সবচেয়ে ভালোটা \"কম মান\" চিহ্ন দিয়ে রাখুন, অথবা আবার চেষ্টা করুন।",
+            "tryAgain": "আবার চেষ্টা",
+            "keepBest": "সবচেয়ে ভালোটা রাখুন ({quality})",
+            "discard": "বাদ দিন",
+            "driver": "নেওয়ার উপায়",
+            "driverMissing": "{driver} (এই স্টেশনে এখনো নেই)",
+            "noDriver": "নেওয়ার কোনো উপায় নেই",
+            "fileHint": "{formats}, সর্বোচ্চ {kb} KB।",
+            "capture": "নিন",
+            "captureAgain": "আবার নিন",
+            "cannotCapture": "নেওয়া যাচ্ছে না",
+            "reason": "কারণ",
+            "chooseReason": "কারণ বাছাই করুন",
+            "note": "নোট",
+            "markUnavailable": "\"পাওয়া যায়নি\" চিহ্ন দিন",
+            "noteNeeded": "কেন নেওয়া যাচ্ছে না, একটা নোট লিখুন।",
+            "markedUnavailable": "\"পাওয়া যায়নি\" চিহ্ন দেওয়া হয়েছে।",
+            "deleteConfirm": "{position}-এর ছাপ মুছবেন?",
+            "deleteHint": "ছবি আর টেমপ্লেট চিরতরে মুছে যাবে।",
+            "delete": "মুছুন",
+            "deleteMark": "চিহ্ন সরান"
         }
     }
 }

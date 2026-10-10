@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Ban, Loader2, ScanLine } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
@@ -106,6 +106,15 @@ async function saved(): Promise<void> {
     }
 }
 
+/** On narrow screens the panel sits below the positions: bring it into view when one is picked. */
+async function pick(modality: string, position: string): Promise<void> {
+    selected.value = { modality, position };
+    if (window.matchMedia('(max-width: 1023px)').matches) {
+        await nextTick();
+        document.querySelector('[data-capture-panel]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
 watch(person, () => {
     selected.value = null;
     void load();
@@ -172,7 +181,7 @@ onMounted(async () => {
                                     :aria-pressed="selected?.modality === modality && selected.position === position"
                                     :data-position="position"
                                     :data-state="captureAt(modality, position)?.status ?? (status.modalities[modality].next.includes(position) ? 'next' : 'empty')"
-                                    @click="selected = { modality, position }"
+                                    @click="pick(modality, position)"
                                 >
                                     <span class="flex aspect-[4/5] w-full items-center justify-center overflow-hidden rounded bg-surface-2 text-muted">
                                         <img v-if="captureAt(modality, position)?.image_url" :src="captureAt(modality, position)!.image_url!" alt="" class="size-full object-contain" @error="imageExpired" />

@@ -1417,7 +1417,32 @@
             "noTemplate": "None",
             "attempts": "Tries",
             "capturedAt": "Captured",
-            "unavailable": "Not available: {reason}"
+            "unavailable": "Not available: {reason}",
+            "saved": "Capture saved.",
+            "attempt": "try {attempt} of {max}",
+            "qualityUnknown": "Not given by this method",
+            "retry": "Quality {quality} is below the required {min}. Please try again (tries left: {left}).",
+            "keep": "Still below the required {min} (tries: {tries}, best {quality}). Keep the best capture, marked as low quality, or try again.",
+            "tryAgain": "Try again",
+            "keepBest": "Keep the best ({quality})",
+            "discard": "Discard",
+            "driver": "Capture with",
+            "driverMissing": "{driver} (not on this station yet)",
+            "noDriver": "No capture method available",
+            "fileHint": "{formats}, up to {kb} KB.",
+            "capture": "Capture",
+            "captureAgain": "Capture again",
+            "cannotCapture": "Cannot be captured",
+            "reason": "Reason",
+            "chooseReason": "Choose a reason",
+            "note": "Note",
+            "markUnavailable": "Mark as not available",
+            "noteNeeded": "Please add a note saying why it cannot be captured.",
+            "markedUnavailable": "Marked as not available.",
+            "deleteConfirm": "Delete the capture of {position}?",
+            "deleteHint": "The image and template are removed for good.",
+            "delete": "Delete capture",
+            "deleteMark": "Remove the mark"
         }
     }
 }
