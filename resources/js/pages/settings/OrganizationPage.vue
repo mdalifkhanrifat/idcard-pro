@@ -11,11 +11,13 @@ import UiPageHeader from '@/components/ui/UiPageHeader.vue';
 import UiSelect from '@/components/ui/UiSelect.vue';
 import UiTextarea from '@/components/ui/UiTextarea.vue';
 import { applyBrand } from '@/lib/brand';
+import { appendBiometricSettings } from '@/lib/biometrics/settings';
 import { http, toApiError } from '@/lib/http';
 import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
 import { SAMPLE_VERIFY_CODE, verificationFieldLabel, verifyUrlFor } from '@/pages/cards/cards';
-import type { Tenant, TenantVerification } from '@/types';
+import BiometricSettingsCard from '@/pages/settings/BiometricSettingsCard.vue';
+import type { BiometricOptions, Tenant, TenantBiometrics, TenantVerification } from '@/types';
 
 const { t, te } = useI18n();
 const auth = useAuthStore();
@@ -40,6 +42,10 @@ function moveField(index: number, step: -1 | 1): void {
     verification.fields = fields;
 }
 
+/** Biometric capture (Phase 4): the organization's choices and what the registry offers. */
+const biometrics = ref<TenantBiometrics | null>(null);
+const biometricOptions = ref<BiometricOptions | null>(null);
+
 const sampleCode = ref('EMP');
 const numberPreview = ref('');
 const previewError = ref('');
@@ -59,6 +65,8 @@ onMounted(async () => {
     }
     Object.assign(verification, data.data.verification ?? {});
     verificationFields.value = data.data.verification_fields ?? [];
+    biometrics.value = data.data.biometrics ?? null;
+    biometricOptions.value = data.data.biometric_options ?? null;
     logoPreview.value = data.data.logo_url;
     Object.assign(cardSize, data.data.default_card_size ?? {});
 });
@@ -100,6 +108,9 @@ async function save(): Promise<void> {
     body.append('verification[link]', verification.link?.trim() ?? '');
     body.append('verification[note]', verification.note?.trim() ?? '');
     body.append('verification[log_checks]', verification.log_checks ? '1' : '0');
+    if (biometrics.value) {
+        appendBiometricSettings(body, biometrics.value);
+    }
     if (logo.value) {
         body.append('logo', logo.value);
     }
@@ -226,6 +237,7 @@ async function save(): Promise<void> {
                         </template>
                     </fieldset>
                 </UiCard>
+                <BiometricSettingsCard v-if="biometrics && biometricOptions" v-model="biometrics" :options="biometricOptions" :errors="errors" :disabled="!canEdit" />
             </div>
 
             <UiCard :title="t('settings.preview')">

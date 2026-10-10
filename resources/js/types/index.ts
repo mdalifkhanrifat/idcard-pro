@@ -21,9 +21,52 @@ export interface Tenant {
     verification?: TenantVerification;
     /** Details the verification page may show. */
     verification_fields?: string[];
+    /** Biometric capture (Phase 4), chosen by the organization. */
+    biometrics?: TenantBiometrics;
+    /** What this installation can capture and with what (registry). */
+    biometric_options?: BiometricOptions;
     status: 'active' | 'suspended';
     users_count?: number;
     created_at: string;
+}
+
+/** How one kind of biometric (fingerprint, face, iris… from the registry) is captured. */
+export interface BiometricModalitySettings {
+    /** One of BiometricOptions.modes (off / optional / required). */
+    mode: string;
+    /** How many positions are needed. */
+    count: number;
+    /** Positions to capture, preferred first. */
+    positions: string[];
+    /** Another position may stand in for a preferred one that cannot be captured. */
+    substitutes: boolean;
+    /** 0-100; below it the station asks for another try. */
+    min_quality: number;
+    max_attempts: number;
+    drivers: string[];
+}
+
+export interface TenantBiometrics {
+    enabled: boolean;
+    modalities: Record<string, BiometricModalitySettings>;
+    family_members: boolean;
+    /** Moments complete biometrics are needed before (issue, print). */
+    required_before: string[];
+    print_on_card: boolean;
+}
+
+export interface BiometricOptions {
+    modalities: Record<string, {
+        positions: string[];
+        /** Screen layout: group => positions (e.g. a row per hand); may be empty. */
+        groups: Record<string, string[]> | [];
+        printable: boolean;
+        drivers: string[];
+    }>;
+    drivers: Record<string, { modalities: string[]; local_url: string | null; testing: boolean }>;
+    modes: string[];
+    required_before: string[];
+    unavailable_reasons: string[];
 }
 
 export interface TenantVerification {

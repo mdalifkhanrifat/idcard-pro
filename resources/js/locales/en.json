@@ -274,6 +274,45 @@
                 "photo": "Photo",
                 "template": "Card type"
             }
+        },
+        "biometrics": {
+            "title": "Biometrics",
+            "description": "Fingerprints, face and other biometrics captured at the ID card desk. Images and templates are stored encrypted with a key of their own.",
+            "enabled": "Capture biometrics",
+            "enabledHint": "Off: nothing is captured or asked for. The choices below are kept for when you turn it on.",
+            "mode": "Capture",
+            "modeHint": {
+                "off": "Not captured.",
+                "optional": "Captured when possible; never holds up a card.",
+                "required": "Must be complete before the moments chosen below. Someone whose positions are all marked unavailable (e.g. missing fingers) is not held up."
+            },
+            "positions": "Positions",
+            "positionsHint": "Click to choose. The number shows the order the station asks for them in.",
+            "order": "Order of preference",
+            "up": "Move up",
+            "down": "Move down",
+            "count": "How many are needed",
+            "countHint": "From 1 to {max}.",
+            "minQuality": "Minimum quality (0–100)",
+            "minQualityHint": "Below it the station asks for another try. 0: any quality.",
+            "maxAttempts": "Tries",
+            "maxAttemptsHint": "After these the best capture may be kept, marked as low quality.",
+            "substitutes": "Another position may stand in",
+            "substitutesHint": "When a chosen position cannot be captured (e.g. a missing thumb), any other one counts instead.",
+            "drivers": "Ways to capture",
+            "driversHint": "Each station picks one of these. A scanner needs its maker’s service running on the station’s computer.",
+            "localService": "Local service: {url}",
+            "testOnly": "Test only",
+            "familyMembers": "Capture family members who get cards too",
+            "familyMembersHint": "Off: only cardholders are captured.",
+            "requiredBefore": "Required kinds must be complete before",
+            "requiredBeforeHint": "Optional kinds never hold anything up.",
+            "moments": {
+                "issue": "Issuing a card",
+                "print": "Printing a card"
+            },
+            "printOnCard": "Allow on cards: {kinds}",
+            "printOnCardHint": "Offers the image as a field in the card designer. Off by default for privacy."
         }
     },
     "account": {
@@ -1293,5 +1332,52 @@
             }
         },
         "footer": "Only details the organization chose to share are shown."
+    },
+    "biometrics": {
+        "modalities": {
+            "fingerprint": "Fingerprint",
+            "face": "Face",
+            "iris": "Iris"
+        },
+        "positions": {
+            "right_thumb": "Right thumb",
+            "right_index": "Right index",
+            "right_middle": "Right middle",
+            "right_ring": "Right ring",
+            "right_little": "Right little",
+            "left_thumb": "Left thumb",
+            "left_index": "Left index",
+            "left_middle": "Left middle",
+            "left_ring": "Left ring",
+            "left_little": "Left little",
+            "face": "Face",
+            "right_iris": "Right eye",
+            "left_iris": "Left eye"
+        },
+        "groups": {
+            "right_hand": "Right hand",
+            "left_hand": "Left hand"
+        },
+        "drivers": {
+            "upload": "File upload",
+            "simulator": "Simulator",
+            "webcam": "Webcam",
+            "secugen": "SecuGen",
+            "digitalpersona": "DigitalPersona",
+            "zkteco": "ZKTeco",
+            "bridge": "Bridge agent"
+        },
+        "modes": {
+            "off": "Off",
+            "optional": "Optional",
+            "required": "Required"
+        },
+        "reasons": {
+            "missing": "Missing",
+            "injured": "Injured",
+            "bandaged": "Bandaged",
+            "unreadable": "Cannot be read",
+            "other": "Other"
+        }
     }
 }
