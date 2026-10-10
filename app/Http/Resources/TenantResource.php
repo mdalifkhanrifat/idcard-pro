@@ -41,6 +41,10 @@ class TenantResource extends JsonResource
             'biometric_options' => [
                 'modalities' => collect((array) config('biometrics.modalities'))->map(fn (array $modality, string $name): array => [
                     'positions' => array_keys($modality['positions']),
+                    // Layout for screens (e.g. a row per hand), offered positions only
+                    'groups' => collect((array) ($modality['groups'] ?? []))
+                        ->map(fn (array $positions): array => array_values(array_intersect($positions, array_keys($modality['positions']))))
+                        ->filter()->all(),
                     'printable' => (bool) $modality['printable'],
                     'drivers' => BiometricSettings::driversFor($name),
                 ])->all(),

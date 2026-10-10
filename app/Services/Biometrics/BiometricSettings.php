@@ -10,9 +10,9 @@ namespace App\Services\Biometrics;
 class BiometricSettings
 {
     /**
-     * Drivers this installation offers, with what each can capture.
+     * Drivers this installation offers, with what each can capture and whether it only makes up data.
      *
-     * @return array<string, array{modalities: array<int, string>, local_url: string|null}>
+     * @return array<string, array{modalities: array<int, string>, local_url: string|null, testing: bool}>
      */
     public static function drivers(): array
     {
@@ -21,7 +21,7 @@ class BiometricSettings
             if (($driver['testing'] ?? false) && ! config('biometrics.simulator')) {
                 continue;
             }
-            $drivers[$name] = ['modalities' => array_values((array) $driver['modalities']), 'local_url' => $driver['local_url'] ?? null];
+            $drivers[$name] = ['modalities' => array_values((array) $driver['modalities']), 'local_url' => $driver['local_url'] ?? null, 'testing' => (bool) ($driver['testing'] ?? false)];
         }
 
         return $drivers;

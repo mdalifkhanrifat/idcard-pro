@@ -39,6 +39,7 @@ return [
      * - image_formats:    image formats a driver may send
      * - template_formats: template formats a driver may send (none = image only)
      * - printable:        the image may be placed on a card (only when the organization allows it)
+     * - groups:           optional, how screens lay out the positions (e.g. one row per hand)
      */
     'modalities' => [
         'fingerprint' => [
@@ -49,6 +50,10 @@ return [
             'image_formats' => ['png', 'jpeg', 'bmp', 'wsq'],
             'template_formats' => ['iso-19794-2', 'ansi-378', 'iso-19794-2-2011'],
             'printable' => true,
+            'groups' => [
+                'right_hand' => ['right_thumb', 'right_index', 'right_middle', 'right_ring', 'right_little'],
+                'left_hand' => ['left_thumb', 'left_index', 'left_middle', 'left_ring', 'left_little'],
+            ],
         ],
         'face' => [
             'positions' => ['face' => 0],

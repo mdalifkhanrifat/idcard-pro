@@ -22,7 +22,21 @@ it('keeps biometrics off until the organization turns it on, and lists what can 
     expect($response->json('data.biometric_options.modalities.fingerprint.positions'))->toHaveCount(10)
         ->and($response->json('data.biometric_options.modalities.face.drivers'))->toBe(['upload', 'simulator', 'webcam', 'bridge'])
         ->and($response->json('data.biometric_options.modalities.fingerprint.printable'))->toBeTrue()
-        ->and($response->json('data.biometric_options.drivers.secugen.local_url'))->toBe('https://localhost:8443');
+        ->and($response->json('data.biometric_options.drivers.secugen.local_url'))->toBe('https://localhost:8443')
+        ->and($response->json('data.biometric_options.drivers.simulator.testing'))->toBeTrue()
+        ->and($response->json('data.biometric_options.drivers.secugen.testing'))->toBeFalse()
+        // Screens lay positions out from the registry's groups (a row per hand), not from code
+        ->and($response->json('data.biometric_options.modalities.fingerprint.groups.right_hand'))->toBe(['right_thumb', 'right_index', 'right_middle', 'right_ring', 'right_little'])
+        ->and($response->json('data.biometric_options.modalities.face.groups'))->toBe([]);
+});
+
+it('only lists group positions the registry offers', function () {
+    config(['biometrics.modalities.fingerprint.groups.left_hand' => ['left_thumb', 'left_tail'], 'biometrics.modalities.fingerprint.groups.paws' => ['tail']]);
+
+    $response = $this->getJson('/api/v1/settings')->assertOk();
+
+    expect($response->json('data.biometric_options.modalities.fingerprint.groups'))->toHaveKeys(['right_hand', 'left_hand'])->not->toHaveKey('paws')
+        ->and($response->json('data.biometric_options.modalities.fingerprint.groups.left_hand'))->toBe(['left_thumb']);
 });
 
 it('saves which fingers, how many, the quality and the drivers, sent as a form', function () {
@@ -73,6 +87,16 @@ it('refuses positions, drivers and counts that cannot work', function () {
     // With stand-ins allowed, more can be asked for than the preferred positions
     ($this->settings)(['enabled' => '1', 'modalities' => ['fingerprint' => [...$this->fingerprint, 'count' => 4]]])
         ->assertOk()->assertJsonPath('data.biometrics.modalities.fingerprint.count', 4);
+});
+
+it('never blocks a save with settings kept while biometrics are off, and checks them when turned on', function () {
+    config(['biometrics.simulator' => false]);
+    // Saved earlier with a driver this installation no longer offers
+    $this->tenant->update(['settings' => ['biometrics' => ['enabled' => false, 'modalities' => ['fingerprint' => ['mode' => 'required', 'positions' => ['right_thumb'], 'drivers' => ['simulator']]]]]]);
+
+    ($this->settings)(['enabled' => '0', 'family_members' => '1'])->assertOk()->assertJsonPath('data.biometrics.family_members', true);
+    $this->owner->unsetRelation('tenant');
+    ($this->settings)(['enabled' => '1'])->assertJsonValidationErrors('biometrics.modalities.fingerprint.drivers');
 });
 
 it('takes iris capture from the settings like any other kind', function () {

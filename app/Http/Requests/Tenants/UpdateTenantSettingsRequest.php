@@ -100,8 +100,9 @@ class UpdateTenantSettingsRequest extends FormRequest
     }
 
     /**
-     * Checks across fields: a modality in use needs positions and a driver, and cannot ask for more
-     * positions than it may capture; biometrics turned on needs at least one modality in use.
+     * Checks across fields, only while biometrics are on (turning them on checks everything): a modality
+     * in use needs positions and a driver, and cannot ask for more positions than it may capture; at
+     * least one modality must be in use. Settings kept while biometrics are off never block a save.
      *
      * @return array<int, callable(ValidationValidator): void>
      */
@@ -115,6 +116,9 @@ class UpdateTenantSettingsRequest extends FormRequest
             // Checked as it will be saved: the change applied to the current settings
             $raw = BiometricSettings::merge((array) ($this->tenantContext()->get()->settings['biometrics'] ?? []), $change);
             $settings = BiometricSettings::normalize($raw);
+            if (! $settings['enabled']) {
+                return;
+            }
             $inUse = 0;
             foreach ($settings['modalities'] as $name => $modality) {
                 if ($modality['mode'] === 'off') {
@@ -133,7 +137,7 @@ class UpdateTenantSettingsRequest extends FormRequest
                     $validator->errors()->add("{$key}.count", __('biometrics.settings.count_too_high'));
                 }
             }
-            if ($settings['enabled'] && $inUse === 0) {
+            if ($inUse === 0) {
                 $validator->errors()->add('biometrics.modalities', __('biometrics.settings.nothing_on'));
             }
         }];
