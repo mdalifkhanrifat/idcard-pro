@@ -1390,7 +1390,9 @@
             "busy": "The device is busy with another capture.",
             "not_supported": "This device cannot capture this kind or position.",
             "no_device": "The service answers, but no scanner for this kind is connected and ready.",
-            "outdated": "The capture service on this computer speaks a different version. Update it."
+            "outdated": "The capture service on this computer speaks a different version. Update it.",
+            "permission": "The browser was not allowed to use the camera. Allow it in the address bar and try again.",
+            "insecure": "Cameras work only when the site is opened over HTTPS (or on localhost)."
         },
         "tab": {
             "title": "Biometrics",
@@ -1461,6 +1463,13 @@
             "open": "Open the address",
             "loopbackOnly": "Use an address on this computer, e.g. http://127.0.0.1:47800.",
             "certificateHint": "If the service uses HTTPS, open its address once and accept its certificate, then check again."
+        },
+        "camera": {
+            "off": "The camera is off.",
+            "start": "Start the camera",
+            "guide": "Fit the face inside the oval, looking at the camera, with even light.",
+            "choose": "Camera",
+            "numbered": "Camera {n}"
         }
     }
 }

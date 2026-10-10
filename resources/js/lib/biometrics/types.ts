@@ -20,6 +20,8 @@ export interface CaptureRequest {
     minQuality?: number;
     /** For drivers that need one (`needsFile`). */
     file?: File | null;
+    /** The live preview to take the picture from (`needsVideo`). */
+    video?: HTMLVideoElement | null;
     /** The station's address of the vendor's local service, if it differs from the registry's. */
     localUrl?: string | null;
     signal?: AbortSignal;
@@ -51,13 +53,17 @@ export interface BiometricDriver {
     id: string;
     /** The station picks a file before capturing. */
     needsFile?: boolean;
+    /** The station shows a live preview (`openStream`) and captures from it. */
+    needsVideo?: boolean;
+    /** Start the live preview, e.g. a camera; the station stops its tracks when done. */
+    openStream?(request: { deviceId?: string | null }): Promise<MediaStream>;
     /** Whether the device can be used now for a kind (e.g. the vendor's service answers and a scanner is connected). */
     probe(request: Pick<CaptureRequest, 'modality' | 'options' | 'localUrl' | 'signal'>): Promise<ProbeResult>;
     capture(request: CaptureRequest): Promise<CaptureResult>;
 }
 
 /** Shown as `biometrics.errors.<code>` with `params`. */
-export type CaptureErrorCode = 'no_file' | 'format' | 'too_large' | 'unreadable' | 'not_available' | 'cancelled' | 'device' | 'timeout' | 'no_finger' | 'busy' | 'not_supported' | 'no_device' | 'outdated';
+export type CaptureErrorCode = 'no_file' | 'format' | 'too_large' | 'unreadable' | 'not_available' | 'cancelled' | 'device' | 'timeout' | 'no_finger' | 'busy' | 'not_supported' | 'no_device' | 'outdated' | 'permission' | 'insecure';
 
 export class CaptureError extends Error {
     constructor(

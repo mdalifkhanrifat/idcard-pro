@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, ref, shallowRef, watch } from 'vue';
+import { computed, nextTick, onBeforeUnmount, ref, shallowRef, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Ban, RotateCcw, ScanLine, Trash2 } from 'lucide-vue-next';
+import { Ban, Camera, RotateCcw, ScanLine, Trash2 } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiCard from '@/components/ui/UiCard.vue';
@@ -9,7 +9,7 @@ import UiInput from '@/components/ui/UiInput.vue';
 import UiSelect from '@/components/ui/UiSelect.vue';
 import UiTextarea from '@/components/ui/UiTextarea.vue';
 import { acceptFor, CaptureError, hasBiometricDriver, loadBiometricDriver, type BiometricDriver, type CaptureErrorCode, type CaptureResult } from '@/lib/biometrics';
-import { isLoopbackUrl, setStationUrl, stationUrl } from '@/lib/biometrics/station';
+import { isLoopbackUrl, setStationPreference, setStationUrl, stationPreference, stationUrl } from '@/lib/biometrics/station';
 import { biometricLabel, type BiometricLabelKind } from '@/lib/biometrics/labels';
 import { formatDateTime } from '@/lib/format';
 import { http, toApiError } from '@/lib/http';
@@ -52,6 +52,51 @@ function remembered(): string | null {
 }
 const driverName = ref(driverChoices.value.find((choice) => choice.available && choice.name === remembered())?.name ?? driverChoices.value.find((choice) => choice.available)?.name ?? '');
 const error = ref('');
+
+/* Drivers with a live preview (a camera): started by the operator, stopped after saving, on discard or when leaving. */
+const video = ref<HTMLVideoElement | null>(null);
+const stream = shallowRef<MediaStream | null>(null);
+const cameras = ref<{ value: string; label: string }[]>([]);
+const cameraId = ref<string | null>(null);
+
+function stopCamera(): void {
+    stream.value?.getTracks().forEach((track) => track.stop());
+    stream.value = null;
+}
+
+async function startCamera(): Promise<void> {
+    const current = driver.value;
+    if (!current?.openStream) {
+        return;
+    }
+    stopCamera();
+    error.value = '';
+    try {
+        const opened = await current.openStream({ deviceId: cameraId.value ?? stationPreference(`${driverName.value}:camera`) });
+        if (driver.value !== current) {
+            opened.getTracks().forEach((track) => track.stop());
+            return;
+        }
+        stream.value = opened;
+        await nextTick();
+        if (video.value) {
+            video.value.srcObject = opened;
+            await video.value.play().catch(() => undefined);
+        }
+        // Camera names are only given once the operator allowed a camera
+        const devices = await navigator.mediaDevices.enumerateDevices();
+        cameras.value = devices.filter((item) => item.kind === 'videoinput').map((item, index) => ({ value: item.deviceId, label: item.label || t('biometrics.camera.numbered', { n: index + 1 }) }));
+        cameraId.value = opened.getVideoTracks()[0]?.getSettings().deviceId ?? null;
+    } catch (caught) {
+        error.value = captureMessage(caught);
+    }
+}
+
+async function chooseCamera(id: string | number | null | undefined): Promise<void> {
+    cameraId.value = id ? String(id) : null;
+    setStationPreference(`${driverName.value}:camera`, cameraId.value);
+    await startCamera();
+}
 
 /* Drivers that talk to a service on this computer: whether it answers, and this station's address for it. */
 const usesLocalService = computed(() => (options.value.drivers[driverName.value]?.local_url ?? null) !== null);
@@ -96,6 +141,7 @@ const driver = shallowRef<BiometricDriver | undefined>();
 watch(
     driverName,
     async (name, previous) => {
+        stopCamera();
         driver.value = undefined;
         deviceStatus.value = null;
         editingAddress.value = false;
@@ -172,7 +218,7 @@ async function takeCapture(): Promise<void> {
     error.value = '';
     abort = new AbortController();
     try {
-        const captured = await driver.value.capture({ modality: props.modality, position: props.position, options: options.value, file: file.value, localUrl: stationUrl(driverName.value, options.value), minQuality: settings.value.min_quality, signal: abort.signal });
+        const captured = await driver.value.capture({ modality: props.modality, position: props.position, options: options.value, file: file.value, localUrl: stationUrl(driverName.value, options.value), minQuality: settings.value.min_quality, video: video.value, signal: abort.signal });
         attempts.value++;
         result.value = captured;
         if (!best.value || (captured.quality ?? 101) > (best.value.quality ?? 101) || isGood(captured)) {
@@ -232,6 +278,7 @@ function retake(): void {
 
 /** After a save, a mark or a delete the panel shows what is stored (it stays open when no position is left). */
 function reset(): void {
+    stopCamera();
     retake();
     best.value = null;
     attempts.value = 0;
@@ -291,7 +338,10 @@ async function remove(): Promise<void> {
     }
 }
 
-onBeforeUnmount(() => abort?.abort());
+onBeforeUnmount(() => {
+    abort?.abort();
+    stopCamera();
+});
 </script>
 
 <template>
@@ -374,7 +424,7 @@ onBeforeUnmount(() => abort?.abort());
             <p v-else class="rounded-lg bg-surface-2 p-3 text-sm text-muted" data-capture-empty>{{ t('biometrics.panel.empty') }}</p>
 
             <!-- Capturing -->
-            <div v-if="canEnroll && !result" class="space-y-3 border-t border-line pt-4" data-capture-controls>
+            <div v-if="canEnroll" v-show="!result" class="space-y-3 border-t border-line pt-4" data-capture-controls>
                 <UiSelect
                     v-model="driverName"
                     :label="t('biometrics.panel.driver')"
@@ -407,6 +457,17 @@ onBeforeUnmount(() => abort?.abort());
                         </div>
                     </div>
                 </div>
+                <div v-if="driver?.needsVideo" class="space-y-2" data-camera>
+                    <div class="relative aspect-[3/4] overflow-hidden rounded-lg border border-line bg-black">
+                        <!-- Mirrored like a mirror; the picture taken is not -->
+                        <video v-show="stream" ref="video" class="size-full -scale-x-100 object-cover" muted playsinline data-camera-video />
+                        <div v-if="stream" class="pointer-events-none absolute inset-x-[20%] top-[10%] bottom-[22%] rounded-[50%] border-2 border-dashed border-white/70" />
+                        <p v-else class="absolute inset-0 flex items-center justify-center p-4 text-center text-sm text-white/70">{{ t('biometrics.camera.off') }}</p>
+                    </div>
+                    <p v-if="stream" class="text-xs text-muted">{{ t('biometrics.camera.guide') }}</p>
+                    <UiSelect v-if="stream && cameras.length > 1" :model-value="cameraId" :label="t('biometrics.camera.choose')" :options="cameras" data-camera-select @update:model-value="chooseCamera" />
+                    <UiButton v-if="!stream" variant="secondary" data-start-camera @click="startCamera"><Camera class="size-4" />{{ t('biometrics.camera.start') }}</UiButton>
+                </div>
                 <div v-if="driver?.needsFile" class="space-y-1.5">
                     <input
                         type="file"
@@ -418,7 +479,7 @@ onBeforeUnmount(() => abort?.abort());
                     <p class="text-xs text-muted">{{ t('biometrics.panel.fileHint', { formats: options.modalities[modality].image_formats.map((format) => format.toUpperCase()).join(', '), kb: options.max_image_kb }) }}</p>
                 </div>
                 <div class="flex flex-wrap gap-2">
-                    <UiButton :loading="busy" :disabled="!driver || (driver.needsFile && !file) || deviceStatus?.state === 'checking'" data-capture @click="takeCapture">
+                    <UiButton :loading="busy" :disabled="!driver || (driver.needsFile && !file) || (driver.needsVideo && !stream) || deviceStatus?.state === 'checking'" data-capture @click="takeCapture">
                         <ScanLine class="size-4" />{{ capture?.status === 'captured' ? t('biometrics.panel.captureAgain') : t('biometrics.panel.capture') }}
                     </UiButton>
                     <UiButton v-if="capturing" variant="ghost" data-cancel-capture @click="cancelCapture">{{ t('common.cancel') }}</UiButton>

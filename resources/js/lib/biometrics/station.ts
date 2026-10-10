@@ -45,3 +45,24 @@ export function setStationUrl(driver: string, url: string | null): void {
         // Private windows may refuse; the default address is used
     }
 }
+
+/** Another per-station choice kept in this browser (e.g. which camera); null when none is saved. */
+export function stationPreference(name: string): string | null {
+    try {
+        return localStorage.getItem(`biometric-station:${name}`);
+    } catch {
+        return null;
+    }
+}
+
+export function setStationPreference(name: string, value: string | null): void {
+    try {
+        if (value === null) {
+            localStorage.removeItem(`biometric-station:${name}`);
+        } else {
+            localStorage.setItem(`biometric-station:${name}`, value);
+        }
+    } catch {
+        // Only a convenience for this station
+    }
+}
