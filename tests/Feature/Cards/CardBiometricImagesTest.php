@@ -16,6 +16,7 @@ use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
+use Spatie\Permission\PermissionRegistrar;
 
 beforeEach(function () {
     Storage::fake(config('cardholder_files.disk'));
@@ -293,4 +294,31 @@ it('warns before issuing and printing that a biometric image will not print, as 
     // A printable capture now does not change a card that keeps what was captured at issue
     ($this->capture)('left_thumb', 40);
     expect($this->getJson("/api/v1/cards/{$issued->json('data.id')}")->json('meta.warnings'))->toContain(['type' => 'missing_biometric', 'field' => 'biometric.fingerprint.left_thumb']);
+});
+
+it('gives biometric images only to people who may see biometrics or print cards', function () {
+    ($this->settings)();
+    ($this->design)([['field' => 'biometric.fingerprint.auto'], ['field' => 'biometric.fingerprint.left_index', 'x' => 40]]);
+    ($this->capture)('right_thumb');
+    $card = ($this->issue)()->assertCreated()->json('data');
+    $preview = "/api/v1/card-templates/{$this->template->public_id}/preview?cardholder={$this->holder->public_id}";
+
+    // A viewer of cards (and here of templates) sees the fallback, with no warning about what it may not see
+    $viewer = tenantUser($this->tenant, 'Viewer');
+    app(TenantContext::class)->run($this->tenant, fn () => $viewer->givePermissionTo('templates.view'));
+    Sanctum::actingAs($viewer);
+    $shown = $this->getJson("/api/v1/cards/{$card['id']}")->assertOk();
+    expect($shown->json('meta.values.images.biometrics'))->toBe([])
+        ->and(collect($shown->json('meta.warnings'))->where('type', 'missing_biometric'))->toBeEmpty()
+        ->and($this->getJson($preview)->assertOk()->json('data.images.biometrics'))->toBe([]);
+
+    // Printing cards is enough, as is seeing biometrics (an operator has both)
+    app(TenantContext::class)->run($this->tenant, fn () => $viewer->givePermissionTo('cards.print'));
+    $viewer->unsetRelation('permissions');
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+    expect($this->getJson("/api/v1/cards/{$card['id']}")->json('meta.values.images.biometrics'))->toHaveKeys(['biometric.fingerprint.auto', 'biometric.fingerprint.left_index'])
+        ->and($this->getJson($preview)->json('data.images.biometrics')['biometric.fingerprint.auto'])->toStartWith('/api/v1/biometric-images/');
+
+    Sanctum::actingAs(tenantUser($this->tenant, 'Operator'));
+    expect($this->getJson("/api/v1/cards/{$card['id']}")->json('meta.warnings'))->toContain(['type' => 'missing_biometric', 'field' => 'biometric.fingerprint.left_index']);
 });

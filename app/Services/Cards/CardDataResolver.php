@@ -49,9 +49,11 @@ class CardDataResolver
     ) {}
 
     /**
+     * Biometric images are left out with `withBiometrics` false (people who may not see them).
+     *
      * @return array{fields: array<string, string>, images: array{photo: string|null, cardholder_signature: string|null, signatory_signature: string|null, biometrics: array<string, string|null>}}
      */
-    public function resolve(CardTemplate $template, Cardholder $cardholder, ?FamilyMember $member = null, ?CarbonInterface $on = null): array
+    public function resolve(CardTemplate $template, Cardholder $cardholder, ?FamilyMember $member = null, ?CarbonInterface $on = null, bool $withBiometrics = true): array
     {
         $signatory = $template->authority_type_id === null ? null : $this->signatories->activeFor($template->authority_type_id, $on ?? now());
         [$photo, $signature] = $this->holderImages($cardholder, $member);
@@ -63,11 +65,11 @@ class CardDataResolver
                 'cardholder_signature' => $signature ? $this->files->temporaryUrl($signature) : null,
                 'signatory_signature' => $signatory ? $this->signatoryService->signatureUrl($signatory) : null,
                 // What the template's biometric elements would print now
-                'biometrics' => $this->biometricImages->latestUrls(
+                'biometrics' => $withBiometrics ? $this->biometricImages->latestUrls(
                     CardBiometricImageService::fieldsIn(['elements' => $template->elements()->get(['type', 'field', 'style'])->toArray()]),
                     $cardholder,
                     $member,
-                ),
+                ) : [],
             ],
         ];
     }

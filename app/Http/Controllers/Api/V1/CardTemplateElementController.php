@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\CardTemplates\SaveCardTemplateElementsRequest;
 use App\Http\Resources\CardTemplateElementResource;
 use App\Models\CardTemplate;
+use App\Services\Biometrics\CardBiometricImageService;
 use App\Services\CardTemplates\CardTemplateDesignService;
 use App\Services\CardTemplates\CardTemplateImageService;
 use Illuminate\Http\JsonResponse;
@@ -53,7 +54,9 @@ class CardTemplateElementController extends Controller
             'family_member' => ['nullable', 'string', 'size:26'],
         ]);
 
-        return response()->json(['data' => $this->design->preview($template, $input['cardholder'], $input['family_member'] ?? null)]);
+        $seesBiometrics = $request->user()->canAny(CardBiometricImageService::SEE_PERMISSIONS);
+
+        return response()->json(['data' => $this->design->preview($template, $input['cardholder'], $input['family_member'] ?? null, $seesBiometrics)]);
     }
 
     /**

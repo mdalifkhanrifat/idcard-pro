@@ -26,6 +26,12 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  */
 class CardBiometricImageService
 {
+    /**
+     * Who gets the biometric images of cards and previews (the card details, designer and issue previews):
+     * people who may see biometrics or print cards. Others see the element's fallback, without a warning.
+     */
+    public const SEE_PERMISSIONS = ['biometrics.view', 'cards.print'];
+
     public function __construct(
         private BiometricCaptureRepositoryInterface $captures,
         private CardBiometricImageRepositoryInterface $images,

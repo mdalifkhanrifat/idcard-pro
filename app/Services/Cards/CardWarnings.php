@@ -25,9 +25,9 @@ class CardWarnings
     /**
      * @return array<int, array<string, string|int>>
      */
-    public function forCard(Card $card): array
+    public function forCard(Card $card, bool $withBiometrics = true): array
     {
-        return $this->check($card->layout['elements'] ?? [], $this->cardData->forCard($card));
+        return $this->check($card->layout['elements'] ?? [], $this->cardData->forCard($card, $withBiometrics));
     }
 
     /**

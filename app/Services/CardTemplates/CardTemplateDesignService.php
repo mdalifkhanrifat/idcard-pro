@@ -119,7 +119,7 @@ class CardTemplateDesignService
      *
      * @return array{fields: array<string, string>, images: array<string, mixed>}
      */
-    public function preview(CardTemplate $template, string $cardholderId, ?string $familyMemberId): array
+    public function preview(CardTemplate $template, string $cardholderId, ?string $familyMemberId, bool $withBiometrics = true): array
     {
         $cardholder = $this->cardholders->findByPublicId($cardholderId) ?? throw new NotFoundHttpException;
         $member = null;
@@ -130,7 +130,7 @@ class CardTemplateDesignService
             }
         }
 
-        return $this->cardData->resolve($template, $cardholder, $member);
+        return $this->cardData->resolve($template, $cardholder, $member, withBiometrics: $withBiometrics);
     }
 
     /**

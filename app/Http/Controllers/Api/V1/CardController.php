@@ -9,6 +9,7 @@ use App\Http\Requests\Cards\ListCardsRequest;
 use App\Http\Resources\CardResource;
 use App\Models\Card;
 use App\Models\Cardholder;
+use App\Services\Biometrics\CardBiometricImageService;
 use App\Services\Cards\CardDataResolver;
 use App\Services\Cards\CardIssueService;
 use App\Services\Cards\CardLayoutPresenter;
@@ -87,18 +88,20 @@ class CardController extends Controller
     {
         $card = $this->cards->issue($cardholder, IssueCardData::fromArray($request->validated(), $request->file('document')), $request->user());
 
-        return (new CardResource($card))->additional(['meta' => ['warnings' => $warnings->forCard($card)]])->response()->setStatusCode(201);
+        $seesBiometrics = $request->user()->canAny(CardBiometricImageService::SEE_PERMISSIONS);
+
+        return (new CardResource($card))->additional(['meta' => ['warnings' => $warnings->forCard($card, $seesBiometrics)]])->response()->setStatusCode(201);
     }
 
     /**
      * One card with what it prints: `meta.layout` (design snapshot), `meta.values` (text and images) and
      * `meta.warnings` (missing photos or signatures, barcodes that cannot be printed).
      */
-    public function show(Card $card, CardLayoutPresenter $layout, CardDataResolver $cardData, CardWarnings $warnings): CardResource
+    public function show(Request $request, Card $card, CardLayoutPresenter $layout, CardDataResolver $cardData, CardWarnings $warnings): CardResource
     {
         Gate::authorize('cards.view');
 
-        $values = $cardData->forCard($card);
+        $values = $cardData->forCard($card, $request->user()->canAny(CardBiometricImageService::SEE_PERMISSIONS));
 
         return (new CardResource($card->load(['template', 'familyMember', 'cardholder', 'issuer', 'replacedBy', 'document'])))
             ->additional(['meta' => ['layout' => $layout->present($card), 'values' => $values, 'warnings' => $warnings->check($card->layout['elements'] ?? [], $values)]]);
