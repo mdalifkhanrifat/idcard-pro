@@ -250,7 +250,11 @@ it('prints no biometric image once the organization stops printing them, not eve
 
     ($this->settings)(['print_on_card' => '0']);
 
-    expect($this->getJson("/api/v1/cards/{$card['id']}")->json('meta.values.images.biometrics'))->toBe(['biometric.fingerprint.auto' => null]);
+    $shown = $this->getJson("/api/v1/cards/{$card['id']}")->assertOk();
+
+    // The organization's choice: the fallback prints, without a warning on every card
+    expect($shown->json('meta.values.images.biometrics'))->toBe([])
+        ->and(collect($shown->json('meta.warnings'))->where('type', 'missing_biometric'))->toBeEmpty();
 });
 
 it('draws the same images in the PDF engine and previews what a design would print, but never shows them on the public verification page', function () {
@@ -272,4 +276,21 @@ it('draws the same images in the PDF engine and previews what a design would pri
     $code = Card::query()->withoutGlobalScopes()->value('verify_code');
     $public = $this->getJson("/api/v1/verify/{$code}")->assertOk()->getContent();
     expect($public)->not->toContain('biometric');
+});
+
+it('warns before issuing and printing that a biometric image will not print, as for a missing photo', function () {
+    ($this->settings)();
+    ($this->design)([['field' => 'biometric.fingerprint.auto'], ['field' => 'biometric.fingerprint.left_thumb', 'x' => 40], ['field' => 'biometric.fingerprint.left_index', 'x' => 20, 'style' => ['hidden' => true]]]);
+    ($this->capture)('right_thumb');
+    ($this->capture)('left_thumb', 0, 'wsq');
+
+    $issued = ($this->issue)()->assertCreated();
+
+    // The left thumb is WSQ only, which cannot be printed; the hidden element is never printed
+    expect($issued->json('meta.warnings'))->toContain(['type' => 'missing_biometric', 'field' => 'biometric.fingerprint.left_thumb'])
+        ->and(collect($issued->json('meta.warnings'))->where('type', 'missing_biometric'))->toHaveCount(1);
+
+    // A printable capture now does not change a card that keeps what was captured at issue
+    ($this->capture)('left_thumb', 40);
+    expect($this->getJson("/api/v1/cards/{$issued->json('data.id')}")->json('meta.warnings'))->toContain(['type' => 'missing_biometric', 'field' => 'biometric.fingerprint.left_thumb']);
 });

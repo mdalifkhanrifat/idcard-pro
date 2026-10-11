@@ -50,8 +50,9 @@ class CardBiometricImageService
     }
 
     /**
-     * Links to the biometric images an issued card prints, by element field (null = the element's fallback).
-     * Nothing while the organization does not print them. With the image captured at issue, the card's own
+     * Links to the biometric images an issued card prints, by element field (null = nothing to print, so the
+     * element's fallback prints and CardWarnings warns). No fields at all while the organization does not print
+     * them: that is its choice, not something to warn about. With the image captured at issue, the card's own
      * copy (none if nothing was captured then); a card issued while the latest capture was printed (or
      * imported) has no copies and keeps printing the latest.
      *
@@ -62,7 +63,7 @@ class CardBiometricImageService
         $fields = self::fieldsIn((array) $card->layout);
         $settings = $cardholder->tenant->biometricSettings();
         if ($fields === [] || BiometricSettings::printable($settings) === []) {
-            return array_fill_keys($fields, null);
+            return [];
         }
 
         $kept = $settings['print_source'] === 'issue' ? $this->images->forCard($card) : collect();
@@ -83,14 +84,18 @@ class CardBiometricImageService
     }
 
     /**
-     * Links to what a design's biometric elements would print for the person now (designer and issue previews).
+     * Links to what a design's biometric elements would print for the person now (designer and issue previews);
+     * none while the organization does not print them.
      *
      * @param  array<int, string>  $fields
      * @return array<string, string|null>
      */
     public function latestUrls(array $fields, Cardholder $cardholder, ?FamilyMember $member): array
     {
-        $current = $fields === [] ? collect() : $this->captures->currentFor($cardholder, $member);
+        if ($fields === [] || BiometricSettings::printable($cardholder->tenant->biometricSettings()) === []) {
+            return [];
+        }
+        $current = $this->captures->currentFor($cardholder, $member);
 
         return collect($fields)->mapWithKeys(function (string $field) use ($cardholder, $member, $current): array {
             $capture = $this->latest($cardholder, $member, $field, $current);

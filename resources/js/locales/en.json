@@ -1185,6 +1185,8 @@
         },
         "missingImageHint": "The template's placeholder image prints instead, or nothing. Add it on the cardholder page to print it.",
         "missingImageFamily": "Family cards print the member's own photo and signature, never the cardholder's. Add them in the Family tab, or the template's placeholder image (or nothing) prints.",
+        "missingBiometric": "{name}: no printable image",
+        "missingBiometricHint": "The element's placeholder image prints instead, or nothing. Capture an image that can be printed (not WSQ) on the person's Biometrics tab; a card that keeps the image captured at issue prints a new one only on a new card.",
         "previewHint": "With the current details. The number is reserved only when you issue the card; text and images are then fixed on the card.",
         "numberKept": "Same number as the previous card",
         "numberNew": "New number",
@@ -1369,6 +1371,7 @@
         "footer": "Only details the organization chose to share are shown."
     },
     "biometrics": {
+        "autoPosition": "First captured",
         "modalities": {
             "fingerprint": "Fingerprint",
             "face": "Face",

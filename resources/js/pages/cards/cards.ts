@@ -277,6 +277,20 @@ export function missingImages(layout: CardLayout, values: CardValues): CardImage
     return [...new Set(missing)];
 }
 
+/**
+ * Biometric elements of a card with nothing printable (none captured, only an image a browser cannot draw such
+ * as WSQ, or none captured at issue for a card that keeps those), as their fields. The same rule as the server's
+ * `missing_biometric` warning: a field the values leave out entirely is not printed by the organization's choice.
+ */
+export function missingBiometrics(layout: CardLayout, values: CardValues): string[] {
+    const images = (values.images.biometrics ?? {}) as Record<string, string | null>;
+    const missing = layout.elements
+        .filter((element) => element.type === 'biometric' && !element.style.hidden && element.field && element.field in images && !images[element.field])
+        .map((element) => element.field as string);
+
+    return [...new Set(missing)];
+}
+
 /** A barcode on a card that prints nothing: the holder has no value for its field, or its format cannot encode the value. */
 export interface BarcodeProblem {
     field: string;

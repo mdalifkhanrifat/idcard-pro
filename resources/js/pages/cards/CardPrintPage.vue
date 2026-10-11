@@ -8,9 +8,10 @@ import UiCheckbox from '@/components/ui/UiCheckbox.vue';
 import UiDialog from '@/components/ui/UiDialog.vue';
 import UiTextarea from '@/components/ui/UiTextarea.vue';
 import CardSheets from './CardSheets.vue';
-import { announcePrinted, barcodeProblems, qrProblems, displayStatus, downloadCardsPdf, missingImages, printPages, SHEET_CARD, useCardReasons, type BarcodeProblem, type QrProblem, type CardImageKey, type PrintSides, type SheetCard } from './cards';
+import { announcePrinted, barcodeProblems, qrProblems, displayStatus, downloadCardsPdf, missingBiometrics, missingImages, printPages, SHEET_CARD, useCardReasons, type BarcodeProblem, type QrProblem, type CardImageKey, type PrintSides, type SheetCard } from './cards';
 import CardBarcodeProblems from './CardBarcodeProblems.vue';
 import CardRequirementsNotice from './CardRequirementsNotice.vue';
+import { biometricFieldLabel } from '@/lib/biometrics/labels';
 import { http, toApiError } from '@/lib/http';
 import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
@@ -31,6 +32,8 @@ interface Entry {
     /** What the organization requires before printing that the holder is missing (e.g. biometrics). */
     requirements: CardRequirementProblem[];
     missing: CardImageKey[];
+    /** Biometric elements with nothing printable (their fields). */
+    biometrics: string[];
     /** Barcodes and QR codes that will print blank. */
     barcodes: BarcodeProblem[];
     qr: QrProblem[];
@@ -74,7 +77,8 @@ const printable = computed(() => entries.value.filter((entry) => !entry.problem 
 /** Sent with the print log and the PDF when overridden cards are among them. */
 const overrideFor = (entries: Entry[]) => (overrideActive.value && entries.some((entry) => entry.requirements.length) ? overrideReason.value.trim() : undefined);
 const skipped = computed(() => entries.value.filter((entry) => entry.problem));
-const withMissing = computed(() => printable.value.filter((entry) => entry.missing.length));
+const withMissing = computed(() => printable.value.filter((entry) => entry.missing.length || entry.biometrics.length));
+const missingBiometric = computed(() => withMissing.value.some((entry) => entry.biometrics.length));
 const withBarcodeProblems = computed(() => printable.value.filter((entry) => entry.barcodes.length || entry.qr.length));
 const anyDoubleSided = computed(() => printable.value.some((entry) => entry.layout?.is_double_sided));
 
@@ -107,12 +111,12 @@ async function loadEntry(id: string): Promise<Entry> {
         const card: IssuedCard = data.data;
         const problem = card.printable ? null : t('cards.print.notPrintable', { status: t(`cards.statuses.${displayStatus(card)}`) });
 
-        return { id, card, layout: data.meta.layout, values: data.meta.values, problem, requirements: card.print_requirements ?? [], missing: missingImages(data.meta.layout, data.meta.values), barcodes: barcodeProblems(data.meta.layout, data.meta.values), qr: qrProblems(data.meta.layout, data.meta.values) };
+        return { id, card, layout: data.meta.layout, values: data.meta.values, problem, requirements: card.print_requirements ?? [], missing: missingImages(data.meta.layout, data.meta.values), biometrics: missingBiometrics(data.meta.layout, data.meta.values), barcodes: barcodeProblems(data.meta.layout, data.meta.values), qr: qrProblems(data.meta.layout, data.meta.values) };
     } catch (error) {
         const apiError = toApiError(error);
         const problem = apiError.status === 404 ? t('cards.print.notFound') : apiError.message;
 
-        return { id, card: null, layout: null, values: null, problem, requirements: [], missing: [], barcodes: [], qr: [] };
+        return { id, card: null, layout: null, values: null, problem, requirements: [], missing: [], biometrics: [], barcodes: [], qr: [] };
     }
 }
 
@@ -298,10 +302,11 @@ onBeforeUnmount(() => {
                     <ul class="mt-1 list-disc pl-5 text-xs text-muted">
                         <li v-for="entry in withMissing" :key="entry.id">
                             {{ entry.card!.number }} ({{ entry.card!.family_member?.name ?? entry.card!.cardholder?.full_name }}):
-                            {{ entry.missing.map((key) => t(`cards.missingImage.${key}`)).join(', ') }}
+                            {{ [...entry.missing.map((key) => t(`cards.missingImage.${key}`)), ...entry.biometrics.map((field) => t('cards.missingBiometric', { name: biometricFieldLabel(field, t, te) }))].join(', ') }}
                         </li>
                     </ul>
                     <p class="mt-1 text-xs text-muted">{{ t('cards.missingImageHint') }}</p>
+                    <p v-if="missingBiometric" class="mt-1 text-xs text-muted" data-print-missing-biometric>{{ t('cards.missingBiometricHint') }}</p>
                 </div>
                 <div v-if="withBarcodeProblems.length" class="rounded-lg border border-warning/40 bg-warning/10 p-3 text-fg" data-print-barcodes>
                     <p class="flex items-center gap-2 font-medium"><AlertTriangle class="size-4 text-warning" /> {{ t('cards.barcode.title') }}</p>

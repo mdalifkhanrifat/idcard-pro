@@ -544,7 +544,7 @@ export interface CardTemplate {
 
 export type CardSide = 'front' | 'back';
 
-export type DesignElementType = 'logo' | 'background' | 'photo' | 'signatory_signature' | 'cardholder_signature' | 'qr_code' | 'field' | 'text' | 'shape' | 'barcode';
+export type DesignElementType = 'logo' | 'background' | 'photo' | 'signatory_signature' | 'cardholder_signature' | 'qr_code' | 'field' | 'text' | 'shape' | 'barcode' | 'biometric';
 
 export interface DesignElementStyle {
     font_family?: string;
@@ -631,7 +631,7 @@ export interface DesignElement {
 }
 
 export interface DesignerCatalog {
-    types: Record<DesignElementType, { image?: boolean; single_per_side?: boolean; needs_field?: boolean; needs_content?: boolean }>;
+    types: Record<DesignElementType, { image?: boolean; single_per_side?: boolean; needs_field?: boolean; needs_content?: boolean; needs_biometric?: boolean }>;
     fields: Record<string, string[]>;
     custom_fields: { key: string; label: string; label_local: string | null }[];
     /** Shipped with the application. */

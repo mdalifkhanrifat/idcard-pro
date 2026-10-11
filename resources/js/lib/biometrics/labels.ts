@@ -14,6 +14,16 @@ export function biometricLabel(kind: BiometricLabelKind, key: string, t: (key: s
     return words.charAt(0).toUpperCase() + words.slice(1);
 }
 
+/**
+ * Name of a card designer biometric element's field (`biometric.<modality>.<position|auto>`), e.g.
+ * "Fingerprint · First captured" or "Fingerprint · Right thumb".
+ */
+export function biometricFieldLabel(field: string, t: (key: string) => string, te: (key: string) => boolean): string {
+    const [, modality = '', position = ''] = field.split('.');
+
+    return `${biometricLabel('modalities', modality, t, te)} · ${position === 'auto' ? t('biometrics.autoPosition') : biometricLabel('positions', position, t, te)}`;
+}
+
 /** Positions of a modality laid out in rows: the registry's groups, then any position no group holds. */
 export function positionRows(positions: string[], groups: Record<string, string[]> | []): { group: string | null; positions: string[] }[] {
     const rows = Object.entries(groups).map(([group, members]) => ({ group, positions: members.filter((position) => positions.includes(position)) }));

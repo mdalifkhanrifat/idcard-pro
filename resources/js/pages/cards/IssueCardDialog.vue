@@ -10,9 +10,10 @@ import UiInput from '@/components/ui/UiInput.vue';
 import UiSelect from '@/components/ui/UiSelect.vue';
 import UiTextarea from '@/components/ui/UiTextarea.vue';
 import CardRender from './CardRender.vue';
-import { SAMPLE_VERIFY_CODE, barcodeProblems, missingImages, qrProblems, verifyUrlFor, printPageHref, useCardReasons } from './cards';
+import { SAMPLE_VERIFY_CODE, barcodeProblems, missingBiometrics, missingImages, qrProblems, verifyUrlFor, printPageHref, useCardReasons } from './cards';
 import CardBarcodeProblems from './CardBarcodeProblems.vue';
 import CardRequirementsNotice from './CardRequirementsNotice.vue';
+import { biometricFieldLabel } from '@/lib/biometrics/labels';
 import { http, toApiError } from '@/lib/http';
 import { formatBytes } from '@/lib/format';
 import { useAuthStore } from '@/stores/auth';
@@ -51,6 +52,8 @@ const preview = ref<{ layout: CardLayout; values: CardValues } | null>(null);
 const previewLoading = ref(false);
 /** Photo or signatures the card has a place for but nothing to print. */
 const missing = computed(() => (preview.value ? missingImages(preview.value.layout, preview.value.values) : []));
+/** Biometric images the card has a place for but nothing printable. */
+const missingBio = computed(() => (preview.value ? missingBiometrics(preview.value.layout, preview.value.values) : []));
 const badBarcodes = computed(() => (preview.value ? barcodeProblems(preview.value.layout, preview.value.values) : []));
 const badQr = computed(() => (preview.value ? qrProblems(preview.value.layout, preview.value.values) : []));
 
@@ -340,6 +343,13 @@ async function submit(event: SubmitEvent): Promise<void> {
                     <div class="space-y-1">
                         <p class="font-medium">{{ missing.map((key) => t(`cards.missingImage.${key}`)).join(', ') }}</p>
                         <p class="text-muted">{{ t(form.holder ? 'cards.missingImageFamily' : 'cards.missingImageHint') }}</p>
+                    </div>
+                </div>
+                <div v-if="missingBio.length" class="flex gap-2 rounded-lg border border-warning/40 bg-warning/10 p-3 text-xs text-fg" role="status" data-missing-biometrics>
+                    <TriangleAlert class="size-4 shrink-0 text-warning" />
+                    <div class="space-y-1">
+                        <p class="font-medium">{{ missingBio.map((field) => t('cards.missingBiometric', { name: biometricFieldLabel(field, t, te) })).join(', ') }}</p>
+                        <p class="text-muted">{{ t('cards.missingBiometricHint') }}</p>
                     </div>
                 </div>
                 <div v-if="badBarcodes.length || badQr.length" class="flex gap-2 rounded-lg border border-warning/40 bg-warning/10 p-3 text-xs text-fg" role="status" data-barcode-problems>
