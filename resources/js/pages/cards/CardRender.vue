@@ -43,6 +43,7 @@ onMounted(ensureTenantFonts);
                 :image-of="imageOf"
                 :editable="false"
                 bare
+                blank-missing
                 :data-side="side"
             />
             <figcaption v-if="shownSides.length > 1" class="text-center text-xs text-muted">{{ t(`designer.sides.${side}`) }}</figcaption>

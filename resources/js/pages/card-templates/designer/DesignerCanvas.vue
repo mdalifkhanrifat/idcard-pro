@@ -30,6 +30,8 @@ const props = defineProps<{
     snap?: number;
     /** Only what prints: no outlines, handles or hidden elements (thumbnails). */
     bare?: boolean;
+    /** A real card: images with nothing to show print blank instead of the designer placeholder. */
+    blankMissing?: boolean;
     /** Show the safe area and centre lines. */
     guides?: boolean;
 }>();
@@ -393,7 +395,7 @@ onBeforeUnmount(() => {
         <!-- What prints: clipped to the card's rounded corners -->
         <div class="pointer-events-none absolute inset-0 overflow-hidden rounded-[inherit]">
             <div v-for="item in layers" :key="item.key" class="absolute" :class="item.style.hidden && 'opacity-25'" :style="box(item)" :data-content-key="item.key">
-                <DesignerElement :element="item" :scale="scale" :value="contentOf(item)" :image-url="imageOf?.(item)" :bare="bare" />
+                <DesignerElement :element="item" :scale="scale" :value="contentOf(item)" :image-url="imageOf?.(item)" :bare="bare" :blank-missing="blankMissing" />
             </div>
         </div>
         <div

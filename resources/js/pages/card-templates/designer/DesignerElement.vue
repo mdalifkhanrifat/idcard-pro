@@ -21,6 +21,8 @@ const props = defineProps<{
     imageUrl?: string | null;
     /** The card as it prints: problems leave a blank space instead of an error box (they are warned about before printing). */
     bare?: boolean;
+    /** A real card (printing, issue preview, card details): an image with nothing to show and no fallback prints nothing, not a placeholder. */
+    blankMissing?: boolean;
 }>();
 
 const { t } = useI18n();
@@ -149,7 +151,8 @@ const image = computed(() => (props.element.type === 'logo' ? props.element.imag
 
             <template v-else-if="element.type !== 'shape'">
                 <img v-if="image" :src="image" alt="" class="size-full" :class="fit" draggable="false" />
-                <div v-else class="flex size-full items-center justify-center bg-slate-500/10 text-slate-500" :class="element.type === 'photo' && 'bg-slate-500/20'">
+                <!-- Placeholder for designing and thumbnails; a real card leaves the space blank (warned about before printing) -->
+                <div v-else-if="!blankMissing" class="flex size-full items-center justify-center bg-slate-500/10 text-slate-500" :class="element.type === 'photo' && 'bg-slate-500/20'" data-image-placeholder>
                     <UserRound v-if="element.type === 'photo'" class="size-3/5" />
                     <QrCode v-else-if="element.type === 'qr_code'" class="size-full" :stroke-width="1.25" />
                     <span v-else-if="element.type === 'signatory_signature' || element.type === 'cardholder_signature'" class="flex items-center gap-1 font-serif italic" :style="{ fontSize: `${Math.max(8, scale * 2.5)}px` }">
