@@ -10,6 +10,7 @@ export function appendBiometricSettings(body: FormData, settings: TenantBiometri
     body.append('biometrics[enabled]', flag(settings.enabled));
     body.append('biometrics[family_members]', flag(settings.family_members));
     body.append('biometrics[print_on_card]', flag(settings.print_on_card));
+    body.append('biometrics[print_source]', settings.print_source);
     settings.required_before.forEach((moment) => body.append('biometrics[required_before][]', moment));
     if (!settings.enabled) {
         return;

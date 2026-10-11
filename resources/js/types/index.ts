@@ -53,6 +53,8 @@ export interface TenantBiometrics {
     /** Moments complete biometrics are needed before (issue, print). */
     required_before: string[];
     print_on_card: boolean;
+    /** Which image a card prints: one of `BiometricOptions.print_sources` (e.g. kept at issue, latest at print). */
+    print_source: string;
 }
 
 export interface BiometricOptions {
@@ -71,6 +73,7 @@ export interface BiometricOptions {
     drivers: Record<string, { modalities: string[]; local_url: string | null; testing: boolean; client: Record<string, unknown> }>;
     modes: string[];
     required_before: string[];
+    print_sources: string[];
     unavailable_reasons: string[];
     /** Reasons that need a note. */
     unavailable_reasons_with_note: string[];

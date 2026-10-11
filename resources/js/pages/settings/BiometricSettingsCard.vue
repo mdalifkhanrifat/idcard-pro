@@ -214,6 +214,27 @@ function toggleMoment(moment: string, on: boolean): void {
                     :description="t('settings.biometrics.printOnCardHint')"
                     data-setting="biometrics.print_on_card"
                 />
+                <div v-if="printableKinds.length > 0 && settings.print_on_card" class="space-y-2 ps-7" data-setting="biometrics.print_source">
+                    <p class="text-sm font-medium text-fg">{{ t('settings.biometrics.printSource') }}</p>
+                    <div role="radiogroup" :aria-label="t('settings.biometrics.printSource')" class="inline-flex max-w-full overflow-x-auto rounded-lg border border-line p-0.5">
+                        <button
+                            v-for="source in options.print_sources"
+                            :key="source"
+                            type="button"
+                            role="radio"
+                            :aria-checked="settings.print_source === source"
+                            class="rounded-md px-3 py-1 text-sm whitespace-nowrap transition"
+                            :class="settings.print_source === source ? 'bg-brand text-brand-contrast' : 'text-muted hover:text-fg'"
+                            :data-print-source="source"
+                            @click="settings.print_source = source"
+                        >
+                            {{ te(`settings.biometrics.printSources.${source}`) ? t(`settings.biometrics.printSources.${source}`) : source }}
+                        </button>
+                    </div>
+                    <p class="text-xs" :class="error('print_source') ? 'text-danger' : 'text-muted'">
+                        {{ error('print_source') ?? (te(`settings.biometrics.printSourceHints.${settings.print_source}`) ? t(`settings.biometrics.printSourceHints.${settings.print_source}`) : '') }}
+                    </p>
+                </div>
             </template>
         </fieldset>
     </UiCard>

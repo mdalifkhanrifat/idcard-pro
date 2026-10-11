@@ -319,7 +319,16 @@
                 "print": "Printing a card"
             },
             "printOnCard": "Allow on cards: {kinds}",
-            "printOnCardHint": "Offers the image as a field in the card designer. Off by default for privacy."
+            "printOnCardHint": "Offers the image as a field in the card designer. Off by default for privacy.",
+            "printSource": "Image printed",
+            "printSources": {
+                "issue": "Kept at issue",
+                "print": "Latest at print"
+            },
+            "printSourceHints": {
+                "issue": "The image captured when the card is issued stays on that card, like the photo and signature. A later capture changes only new cards. The card keeps its own encrypted copy of the image (never the template).",
+                "print": "Each print uses the person's latest capture, so a reprint of the same card can show a newer image."
+            }
         }
     },
     "account": {

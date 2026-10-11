@@ -23,6 +23,7 @@ export function registryOptions(): BiometricOptions {
         },
         modes: ['off', 'optional', 'required'],
         required_before: ['issue', 'print'],
+        print_sources: ['issue', 'print'],
         unavailable_reasons: ['missing', 'other'],
         unavailable_reasons_with_note: ['other'],
         image_types: {
