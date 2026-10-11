@@ -48,7 +48,7 @@ class CardVerificationService
         }
 
         return $this->tenantContext->run($tenant, function () use ($card, $tenant, $settings, $address): array {
-            $values = $this->cardData->forCard($card);
+            $values = $this->cardData->forCard($card, withBiometrics: false);
             $status = $this->status($card);
             if ($settings['log_checks']) {
                 $this->log($card, $tenant, $status, $address);

@@ -17,6 +17,7 @@ return new class extends Migration
     {
         Schema::create('card_biometric_images', function (Blueprint $table) {
             $table->id();
+            $table->ulid('public_id')->unique();
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->foreignId('card_id')->constrained()->cascadeOnDelete();
             // The design element's field: biometric.<modality>.<position|auto>

@@ -513,10 +513,13 @@ export interface CardLayout {
     elements: DesignElement[];
 }
 
-/** What a card prints: text by data field, and the photo and signatures. */
+/** What a card prints: text by data field, the photo and signatures, and biometric images. */
 export interface CardValues {
     fields: Record<string, string>;
-    images: { photo: string | null; cardholder_signature: string | null; signatory_signature: string | null };
+    images: { photo: string | null; cardholder_signature: string | null; signatory_signature: string | null;
+        /** Biometric element field => image link; null (or missing) prints the element's fallback. */
+        biometrics?: Record<string, string | null> | [];
+    };
 }
 
 export interface CardTemplate {

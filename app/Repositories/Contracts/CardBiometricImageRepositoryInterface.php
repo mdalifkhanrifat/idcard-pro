@@ -17,4 +17,9 @@ interface CardBiometricImageRepositoryInterface extends RepositoryInterface
      * @return Collection<string, CardBiometricImage>
      */
     public function forCard(Card $card): Collection;
+
+    /**
+     * Find a copy regardless of the current tenant (used by signed image links).
+     */
+    public function findAnyTenant(string $publicId): ?CardBiometricImage;
 }

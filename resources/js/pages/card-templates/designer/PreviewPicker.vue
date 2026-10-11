@@ -9,7 +9,10 @@ import type { Cardholder, FamilyMember } from '@/types';
 
 export interface PreviewData {
     fields: Record<string, string>;
-    images: { photo: string | null; cardholder_signature: string | null; signatory_signature: string | null };
+    images: { photo: string | null; cardholder_signature: string | null; signatory_signature: string | null;
+        /** Biometric element field => image link; null (or missing) prints the element's fallback. */
+        biometrics?: Record<string, string | null> | [];
+    };
 }
 
 /**

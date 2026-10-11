@@ -4,6 +4,7 @@ namespace App\Services\Biometrics;
 
 use App\Models\BiometricCapture;
 use App\Models\Card;
+use App\Models\CardBiometricImage;
 use App\Models\Cardholder;
 use App\Models\FamilyMember;
 use App\Repositories\Contracts\BiometricCaptureRepositoryInterface;
@@ -12,7 +13,10 @@ use App\Support\Biometrics\BiometricCardField;
 use Illuminate\Contracts\Encryption\DecryptException;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\URL;
 use RuntimeException;
+use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
  * Biometric images printed on cards (designer `biometric` elements, 4.10). The organization chooses
@@ -26,6 +30,7 @@ class CardBiometricImageService
         private BiometricCaptureRepositoryInterface $captures,
         private CardBiometricImageRepositoryInterface $images,
         private BiometricVault $vault,
+        private BiometricService $biometrics,
     ) {}
 
     /**
@@ -42,6 +47,91 @@ class CardBiometricImageService
             ->unique()
             ->values()
             ->all();
+    }
+
+    /**
+     * Links to the biometric images an issued card prints, by element field (null = the element's fallback).
+     * Nothing while the organization does not print them. With the image captured at issue, the card's own
+     * copy (none if nothing was captured then); a card issued while the latest capture was printed (or
+     * imported) has no copies and keeps printing the latest.
+     *
+     * @return array<string, string|null>
+     */
+    public function urlsForCard(Card $card, Cardholder $cardholder, ?FamilyMember $member): array
+    {
+        $fields = self::fieldsIn((array) $card->layout);
+        $settings = $cardholder->tenant->biometricSettings();
+        if ($fields === [] || BiometricSettings::printable($settings) === []) {
+            return array_fill_keys($fields, null);
+        }
+
+        $kept = $settings['print_source'] === 'issue' ? $this->images->forCard($card) : collect();
+        $current = null;
+        $urls = [];
+        foreach ($fields as $field) {
+            if ($kept->has($field)) {
+                $urls[$field] = $this->imageUrl($kept->get($field));
+
+                continue;
+            }
+            $current ??= $this->captures->currentFor($cardholder, $member);
+            $capture = $this->latest($cardholder, $member, $field, $current);
+            $urls[$field] = $capture === null ? null : $this->biometrics->imageUrl($capture);
+        }
+
+        return $urls;
+    }
+
+    /**
+     * Links to what a design's biometric elements would print for the person now (designer and issue previews).
+     *
+     * @param  array<int, string>  $fields
+     * @return array<string, string|null>
+     */
+    public function latestUrls(array $fields, Cardholder $cardholder, ?FamilyMember $member): array
+    {
+        $current = $fields === [] ? collect() : $this->captures->currentFor($cardholder, $member);
+
+        return collect($fields)->mapWithKeys(function (string $field) use ($cardholder, $member, $current): array {
+            $capture = $this->latest($cardholder, $member, $field, $current);
+
+            return [$field => $capture === null ? null : $this->biometrics->imageUrl($capture)];
+        })->all();
+    }
+
+    /**
+     * Short-lived signed link to a card's copy; null when nothing was captured at issue.
+     */
+    public function imageUrl(CardBiometricImage $image): ?string
+    {
+        if ($image->path === null) {
+            return null;
+        }
+
+        return URL::temporarySignedRoute(
+            'api.v1.card-biometric-images.show',
+            now()->addMinutes((int) config('biometrics.url_ttl')),
+            ['image' => $image->public_id],
+            absolute: false,
+        );
+    }
+
+    /**
+     * The decrypted copy behind a signed link; never cached.
+     */
+    public function imageResponse(string $publicId): Response
+    {
+        $image = $this->images->findAnyTenant($publicId);
+        if ($image === null || $image->path === null || $image->disk === null) {
+            throw new NotFoundHttpException;
+        }
+
+        return response($this->vault->get($image->disk, $image->path), 200, [
+            'Content-Type' => (string) (config("biometrics.image_types.{$image->image_format}.mime") ?? 'application/octet-stream'),
+            'X-Content-Type-Options' => 'nosniff',
+            'Content-Security-Policy' => "default-src 'none'",
+            'Cache-Control' => 'no-store, private',
+        ]);
     }
 
     /**

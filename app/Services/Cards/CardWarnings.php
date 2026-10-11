@@ -31,7 +31,7 @@ class CardWarnings
 
     /**
      * @param  array<int, array<string, mixed>>  $elements  design elements (type, field, style)
-     * @param  array{fields: array<string, string>, images: array<string, string|null>}  $values
+     * @param  array{fields: array<string, string>, images: array<string, mixed>}  $values
      * @return array<int, array<string, string|int>> `{type: missing_image, image}`, `{type: barcode, field, format, value,
      *                                               reason: empty|invalid}` or `{type: qr, reason: empty|too_long, level, bytes}`
      */

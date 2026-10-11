@@ -21,4 +21,9 @@ class CardBiometricImageRepository extends EloquentRepository implements CardBio
     {
         return $this->query()->where('card_id', $card->id)->get()->keyBy('field');
     }
+
+    public function findAnyTenant(string $publicId): ?CardBiometricImage
+    {
+        return CardBiometricImage::query()->withoutGlobalScopes()->where('public_id', $publicId)->first();
+    }
 }

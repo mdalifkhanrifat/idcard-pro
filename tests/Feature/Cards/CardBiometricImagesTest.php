@@ -9,6 +9,7 @@ use App\Models\FamilyMember;
 use App\Services\Biometrics\BiometricVault;
 use App\Services\Biometrics\CardBiometricImageService;
 use App\Services\Cards\CardIssueService;
+use App\Services\Cards\CardRenderService;
 use App\Support\Tenancy\TenantContext;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\UniqueConstraintViolationException;
@@ -189,4 +190,86 @@ it('still issues the card when a captured image cannot be read, printing it as i
 
     $kept = ($this->kept)()['biometric.fingerprint.auto'];
     expect($kept->path)->toBeNull()->and($kept->biometric_capture_id)->toBeNull();
+});
+
+it('prints the card its copy kept at issue, through a short-lived link that is never cached', function () {
+    ($this->settings)();
+    ($this->design)([['field' => 'biometric.fingerprint.auto'], ['field' => 'biometric.fingerprint.left_thumb', 'x' => 40]]);
+    $thumb = ($this->capture)('right_thumb', 10);
+    $card = ($this->issue)()->assertCreated()->json('data');
+    ($this->capture)('right_thumb', 200);
+    ($this->capture)('left_thumb', 99);
+
+    $images = $this->getJson("/api/v1/cards/{$card['id']}")->assertOk()->json('meta.values.images.biometrics');
+
+    // The copy, not the newer captures; nothing at the left thumb then, so its fallback, not today's capture
+    expect($images['biometric.fingerprint.auto'])->toStartWith('/api/v1/card-biometric-images/')
+        ->and($images['biometric.fingerprint.left_thumb'])->toBeNull();
+    $this->app['auth']->forgetGuards();
+    $response = $this->get($images['biometric.fingerprint.auto'])->assertOk()
+        ->assertHeader('Content-Type', 'image/png')
+        ->assertHeader('Cache-Control', 'no-store, private');
+    expect($response->getContent())->toBe($thumb);
+
+    // A changed or unsigned link is refused
+    $this->get($images['biometric.fingerprint.auto'].'0')->assertForbidden();
+    $this->get(strtok($images['biometric.fingerprint.auto'], '?'))->assertForbidden();
+});
+
+it('prints the latest capture when the organization chooses so, also for cards issued before with copies', function () {
+    ($this->settings)();
+    ($this->design)([['field' => 'biometric.fingerprint.auto']]);
+    ($this->capture)('right_thumb', 10);
+    $card = ($this->issue)()->assertCreated()->json('data');
+    $newer = ($this->capture)('right_thumb', 200);
+
+    ($this->settings)(['print_source' => 'print']);
+    $url = $this->getJson("/api/v1/cards/{$card['id']}")->json('meta.values.images.biometrics')['biometric.fingerprint.auto'];
+
+    expect($url)->toStartWith('/api/v1/biometric-images/')
+        ->and($this->get($url)->assertOk()->getContent())->toBe($newer);
+});
+
+it('keeps printing the latest capture on cards issued while it was chosen, after switching to the image kept at issue', function () {
+    ($this->settings)(['print_source' => 'print']);
+    ($this->design)([['field' => 'biometric.fingerprint.auto']]);
+    $card = ($this->issue)()->assertCreated()->json('data');
+    $captured = ($this->capture)('left_index', 70);
+
+    ($this->settings)();
+    $url = $this->getJson("/api/v1/cards/{$card['id']}")->json('meta.values.images.biometrics')['biometric.fingerprint.auto'];
+
+    expect($this->get($url)->assertOk()->getContent())->toBe($captured);
+});
+
+it('prints no biometric image once the organization stops printing them, not even a kept copy', function () {
+    ($this->settings)();
+    ($this->design)([['field' => 'biometric.fingerprint.auto']]);
+    ($this->capture)('right_thumb');
+    $card = ($this->issue)()->assertCreated()->json('data');
+
+    ($this->settings)(['print_on_card' => '0']);
+
+    expect($this->getJson("/api/v1/cards/{$card['id']}")->json('meta.values.images.biometrics'))->toBe(['biometric.fingerprint.auto' => null]);
+});
+
+it('draws the same images in the PDF engine and previews what a design would print, but never shows them on the public verification page', function () {
+    ($this->settings)();
+    ($this->design)([['field' => 'biometric.fingerprint.auto']]);
+    ($this->capture)('right_thumb');
+    $card = ($this->issue)()->assertCreated()->json('data');
+
+    $link = app(TenantContext::class)->run($this->tenant, fn () => app(CardRenderService::class)->link([$card['id']]));
+    $this->app['auth']->forgetGuards();
+    $render = $this->getJson('/api/v1/card-render?'.parse_url($link, PHP_URL_QUERY))->assertOk()->json('data.cards.0.values.images.biometrics');
+    expect($render['biometric.fingerprint.auto'])->toStartWith('/api/v1/card-biometric-images/');
+
+    Sanctum::actingAs($this->owner);
+    $preview = $this->getJson("/api/v1/card-templates/{$this->template->public_id}/preview?cardholder={$this->holder->public_id}")->assertOk()->json('data.images.biometrics');
+    expect($preview['biometric.fingerprint.auto'])->toStartWith('/api/v1/biometric-images/');
+
+    $this->post('/api/v1/settings', ['name' => 'Acme', 'timezone' => 'UTC', 'locale' => 'en', 'primary_color' => '#112233', 'verification' => ['enabled' => '1', 'fields' => ['photo', 'full_name']]], ['Accept' => 'application/json'])->assertOk();
+    $code = Card::query()->withoutGlobalScopes()->value('verify_code');
+    $public = $this->getJson("/api/v1/verify/{$code}")->assertOk()->getContent();
+    expect($public)->not->toContain('biometric');
 });

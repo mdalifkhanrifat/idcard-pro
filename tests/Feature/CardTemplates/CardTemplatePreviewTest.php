@@ -5,6 +5,7 @@ use App\Models\FamilyMember;
 use App\Models\Signatory;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 
@@ -49,7 +50,7 @@ it('resolves the printed values of a cardholder in the organization language', f
         'organization.name' => 'Acme',
     ])
         ->and($data['fields'])->not->toHaveKeys(['national_id', 'card.number'])
-        ->and($data['images'])->toBe(['photo' => null, 'cardholder_signature' => null, 'signatory_signature' => null]);
+        ->and($data['images'])->toBe(['photo' => null, 'cardholder_signature' => null, 'signatory_signature' => null, 'biometrics' => []]);
 });
 
 it('links the current photo and signatures', function () {
@@ -64,7 +65,7 @@ it('links the current photo and signatures', function () {
 
     $images = $this->getJson("/api/v1/card-templates/{$this->template->public_id}/preview?cardholder={$person->public_id}")->json('data.images');
 
-    expect($images)->each->toBeString();
+    expect(Arr::except($images, 'biometrics'))->each->toBeString();
     $this->get($images['photo'])->assertOk();
     $this->get($images['signatory_signature'])->assertOk();
 

@@ -9,6 +9,7 @@ use App\Models\CardTemplate;
 use App\Models\FamilyMember;
 use App\Models\MasterDataItem;
 use App\Repositories\Contracts\SignatoryRepositoryInterface;
+use App\Services\Biometrics\CardBiometricImageService;
 use App\Services\Cardholders\CardholderFileService;
 use App\Services\Signatories\SignatoryService;
 use BackedEnum;
@@ -20,6 +21,8 @@ use Carbon\CarbonInterface;
  * Text is produced in the organization's language; empty values are left out. A missing photo or signature
  * is null here: the element's own image (uploaded in the designer) is then printed instead.
  * Family cards use the family member's own photo and signature, never the cardholder's.
+ * Biometric images (designer `biometric` elements) are keyed by the element's field; null prints the
+ * element's fallback (see CardBiometricImageService for which image a card prints).
  */
 class CardDataResolver
 {
@@ -42,10 +45,11 @@ class CardDataResolver
         private SignatoryRepositoryInterface $signatories,
         private SignatoryService $signatoryService,
         private CardholderFileService $files,
+        private CardBiometricImageService $biometricImages,
     ) {}
 
     /**
-     * @return array{fields: array<string, string>, images: array{photo: string|null, cardholder_signature: string|null, signatory_signature: string|null}}
+     * @return array{fields: array<string, string>, images: array{photo: string|null, cardholder_signature: string|null, signatory_signature: string|null, biometrics: array<string, string|null>}}
      */
     public function resolve(CardTemplate $template, Cardholder $cardholder, ?FamilyMember $member = null, ?CarbonInterface $on = null): array
     {
@@ -58,6 +62,12 @@ class CardDataResolver
                 'photo' => $photo ? $this->files->temporaryUrl($photo) : null,
                 'cardholder_signature' => $signature ? $this->files->temporaryUrl($signature) : null,
                 'signatory_signature' => $signatory ? $this->signatoryService->signatureUrl($signatory) : null,
+                // What the template's biometric elements would print now
+                'biometrics' => $this->biometricImages->latestUrls(
+                    CardBiometricImageService::fieldsIn(['elements' => $template->elements()->get(['type', 'field', 'style'])->toArray()]),
+                    $cardholder,
+                    $member,
+                ),
             ],
         ];
     }
@@ -78,13 +88,14 @@ class CardDataResolver
 
     /**
      * What an issued card prints: its text fixed at issue, its number and dates, and the photo,
-     * signatures and signatory it was issued with.
+     * signatures and signatory it was issued with, and its biometric images (left out with `withBiometrics`
+     * false, for uses that never show them, such as the public verification page).
      *
-     * @return array{fields: array<string, string>, images: array{photo: string|null, cardholder_signature: string|null, signatory_signature: string|null}}
+     * @return array{fields: array<string, string>, images: array{photo: string|null, cardholder_signature: string|null, signatory_signature: string|null, biometrics: array<string, string|null>}}
      */
-    public function forCard(Card $card): array
+    public function forCard(Card $card, bool $withBiometrics = true): array
     {
-        $card->loadMissing(['photo', 'signature', 'signatory', 'tenant']);
+        $card->loadMissing(['photo', 'signature', 'signatory', 'tenant', 'cardholder.tenant', 'familyMember']);
         $fields = [
             ...($card->values ?? []),
             'card.number' => $card->number,
@@ -100,6 +111,7 @@ class CardDataResolver
                 'photo' => $card->photo ? $this->files->temporaryUrl($card->photo) : null,
                 'cardholder_signature' => $card->signature ? $this->files->temporaryUrl($card->signature) : null,
                 'signatory_signature' => $card->signatory ? $this->signatoryService->signatureUrl($card->signatory) : null,
+                'biometrics' => $withBiometrics ? $this->biometricImages->urlsForCard($card, $card->cardholder, $card->familyMember) : [],
             ],
         ];
     }

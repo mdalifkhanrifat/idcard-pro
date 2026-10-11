@@ -117,7 +117,7 @@ class CardTemplateDesignService
      * Real values of one cardholder (and, for family cards, one of their family members) for the designer preview.
      * Card fields (number, dates) are only known once a card is issued, so they are not included.
      *
-     * @return array{fields: array<string, string>, images: array<string, string|null>}
+     * @return array{fields: array<string, string>, images: array<string, mixed>}
      */
     public function preview(CardTemplate $template, string $cardholderId, ?string $familyMemberId): array
     {

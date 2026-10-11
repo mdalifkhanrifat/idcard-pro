@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\V1\Auth\SessionController;
 use App\Http\Controllers\Api\V1\Auth\TwoFactorChallengeController;
 use App\Http\Controllers\Api\V1\Auth\TwoFactorController;
 use App\Http\Controllers\Api\V1\BiometricCaptureController;
+use App\Http\Controllers\Api\V1\CardBiometricImageController;
 use App\Http\Controllers\Api\V1\CardController;
 use App\Http\Controllers\Api\V1\CardholderController;
 use App\Http\Controllers\Api\V1\CardholderFileController;
@@ -65,6 +66,10 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::get('biometric-images/{capture}', [BiometricCaptureController::class, 'image'])
         ->middleware(['signed:relative', 'throttle:signed-files'])
         ->name('biometric-images.show');
+    // Biometric images an issued card keeps as its own copy (4.10)
+    Route::get('card-biometric-images/{image}', [CardBiometricImageController::class, 'show'])
+        ->middleware(['signed:relative', 'throttle:signed-files'])
+        ->name('card-biometric-images.show');
 
     // Public card verification (3.7): the code from the card's QR code, no sign-in
     Route::get('verify/{code}', [CardVerificationController::class, 'show'])

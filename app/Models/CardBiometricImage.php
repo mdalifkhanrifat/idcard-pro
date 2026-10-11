@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Models\Concerns\BelongsToTenant;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -12,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  * The file is encrypted (BiometricVault); no file means the person had nothing printable at issue.
  *
  * @property int $id
+ * @property string $public_id
  * @property int $tenant_id
  * @property int $card_id
  * @property string $field biometric.<modality>.<position|auto>
@@ -26,7 +28,15 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[Fillable(['card_id', 'field', 'modality', 'position', 'biometric_capture_id', 'disk', 'path', 'image_format'])]
 class CardBiometricImage extends Model
 {
-    use BelongsToTenant;
+    use BelongsToTenant, HasUlids;
+
+    /**
+     * @return array<int, string>
+     */
+    public function uniqueIds(): array
+    {
+        return ['public_id'];
+    }
 
     /**
      * @return BelongsTo<Card, $this>
