@@ -1,5 +1,10 @@
 import { i18n } from './i18n';
 
+/** A count in the reader's digits (e.g. ১০ in Bangla). */
+export function formatNumber(value: number): string {
+    return new Intl.NumberFormat(i18n.global.locale.value === 'bn' ? 'bn-BD' : 'en').format(value);
+}
+
 export function formatDateTime(value: string | null | undefined): string {
     if (!value) {
         return '—';

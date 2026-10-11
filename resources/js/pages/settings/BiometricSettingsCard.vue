@@ -7,6 +7,7 @@ import UiCard from '@/components/ui/UiCard.vue';
 import UiCheckbox from '@/components/ui/UiCheckbox.vue';
 import UiInput from '@/components/ui/UiInput.vue';
 import { biometricLabel, positionRows, type BiometricLabelKind } from '@/lib/biometrics/labels';
+import { formatNumber } from '@/lib/format';
 import type { BiometricModalitySettings, BiometricOptions, TenantBiometrics } from '@/types';
 
 /**
@@ -15,7 +16,7 @@ import type { BiometricModalitySettings, BiometricOptions, TenantBiometrics } fr
  */
 const props = defineProps<{ options: BiometricOptions; errors: Record<string, string[]>; disabled?: boolean }>();
 const settings = defineModel<TenantBiometrics>({ required: true });
-const { t, te, locale } = useI18n();
+const { t, te } = useI18n();
 
 const label = (kind: BiometricLabelKind, key: string) => biometricLabel(kind, key, t, te);
 const modalities = computed(() => Object.keys(props.options.modalities).filter((name) => settings.value.modalities[name]));
@@ -25,7 +26,7 @@ const modality = (name: string): BiometricModalitySettings => settings.value.mod
 const offered = (name: string): string[] => props.options.modalities[name].positions;
 
 /** Count in the reader's digits (e.g. ১০ in Bangla). */
-const number = (value: number) => new Intl.NumberFormat(locale.value === 'bn' ? 'bn-BD' : 'en').format(value);
+const number = formatNumber;
 
 /** An error for a part not on screen (biometrics off, or a kind turned off) is shown on what is. */
 const hiddenError = (prefix: string): string | undefined => {

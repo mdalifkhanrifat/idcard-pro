@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatNumber } from '@/lib/format';
 import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Ban, Loader2, ScanLine } from 'lucide-vue-next';
@@ -169,7 +170,7 @@ onMounted(async () => {
                             <UiBadge>{{ label('modes', status.modalities[modality].mode) }}</UiBadge>
                         </h3>
                         <span class="flex items-center gap-2 text-sm text-muted">
-                            {{ t('biometrics.tab.counted', { counted: status.modalities[modality].counted, needed: status.modalities[modality].needed }) }}
+                            {{ t('biometrics.tab.counted', { counted: formatNumber(status.modalities[modality].counted), needed: formatNumber(status.modalities[modality].needed) }) }}
                             <UiBadge :tone="modalityTone(modality)" data-modality-state>{{ modalityState(modality) }}</UiBadge>
                         </span>
                     </div>

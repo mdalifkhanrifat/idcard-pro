@@ -1445,7 +1445,7 @@
             "notComplete": "Not complete",
             "allCompleteHint": "Everything the organization requires is captured.",
             "notCompleteHint": "Required kinds still need captures (dashed positions are next).",
-            "counted": "{counted} of {needed}",
+            "counted": "{counted} captured · {needed} needed",
             "complete": "Complete",
             "completeWithExceptions": "Complete with exceptions",
             "incomplete": "Incomplete",

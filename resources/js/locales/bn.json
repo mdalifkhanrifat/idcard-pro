@@ -1445,7 +1445,7 @@
             "notComplete": "অসম্পূর্ণ",
             "allCompleteHint": "প্রতিষ্ঠানের চাওয়া সব নেওয়া হয়েছে।",
             "notCompleteHint": "বাধ্যতামূলক ধরনে এখনো বাকি আছে (ড্যাশ দেওয়া অবস্থানগুলো পরের)।",
-            "counted": "{needed}টার মধ্যে {counted}টা",
+            "counted": "নেওয়া {counted}টা · দরকার {needed}টা",
             "complete": "সম্পূর্ণ",
             "completeWithExceptions": "ব্যতিক্রমসহ সম্পূর্ণ",
             "incomplete": "অসম্পূর্ণ",
