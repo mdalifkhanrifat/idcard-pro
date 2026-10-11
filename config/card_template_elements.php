@@ -24,6 +24,10 @@
 |                                  general sections that were only used for their bg_color
 |   (new) barcode               => one data field as a 1D barcode; the legacy BarcodeTrait
 |                                  (Code128, no text) existed but was never printed
+|   (new) biometric             => a captured biometric image (e.g. a fingerprint), only when the
+|                                  organization prints biometrics on cards; `field` names it as
+|                                  biometric.<modality>.<position>, or biometric.<modality>.auto for
+|                                  the first one captured in the organization's order of preference
 |
 */
 
@@ -41,6 +45,8 @@ return [
         'text' => ['needs_content' => true],
         'shape' => [],
         'barcode' => ['needs_field' => true],
+        // `image` is the optional fallback printed when the person has no printable capture
+        'biometric' => ['image' => true, 'needs_biometric' => true],
     ],
 
     /*

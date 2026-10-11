@@ -639,5 +639,7 @@ export interface DesignerCatalog {
     qr_error_levels: NonNullable<DesignElementStyle['qr_error_correction']>[];
     /** Licensed fonts uploaded by the organization, one entry per file. */
     tenant_fonts: { family: string; weight: number; style: string; url: string }[];
+    /** Biometric images the organization prints on cards: modality => element fields (`biometric.<modality>.auto` first); empty = not offered. */
+    biometric_fields: Record<string, string[]> | [];
     size_mm: { width: number; height: number };
 }

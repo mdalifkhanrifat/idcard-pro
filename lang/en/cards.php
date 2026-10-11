@@ -17,6 +17,9 @@ return [
         'tilted_outside_card' => 'Tilted like this, the element reaches past the card edge. Move it inward, reduce the angle, or allow it to be cut at the edge.',
         'image_missing' => 'The image was not found. Upload it again.',
         'image_or_library' => 'Use either an uploaded image or a library image, not both.',
+        'biometric_off' => 'This organization does not print biometrics on cards. Allow it on the Organization page (Biometrics), or remove this element.',
+        'biometric_required' => 'Choose which biometric image to print.',
+        'biometric_unknown' => 'This biometric image cannot be printed on cards. Choose another one.',
     ],
     // Printed values, in the organization's language (CardDataResolver)
     'issue' => [

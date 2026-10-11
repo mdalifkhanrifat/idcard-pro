@@ -38,6 +38,30 @@ class BiometricSettings
     }
 
     /**
+     * Modalities whose image the organization prints on cards, each with the positions a card designer
+     * element may name: any position of the registry (a stand-in may be the one captured). Empty while
+     * biometrics or printing on cards are off, or for a modality not in use or not printable.
+     *
+     * @param  array{enabled: bool, modalities: array<string, array{mode: string}>, print_on_card: bool}  $settings  normalized
+     * @return array<string, array<int, string>>
+     */
+    public static function printable(array $settings): array
+    {
+        if (! $settings['enabled'] || ! $settings['print_on_card']) {
+            return [];
+        }
+
+        $printable = [];
+        foreach ((array) config('biometrics.modalities') as $name => $modality) {
+            if (($modality['printable'] ?? false) && ($settings['modalities'][$name]['mode'] ?? 'off') !== 'off') {
+                $printable[$name] = array_keys((array) $modality['positions']);
+            }
+        }
+
+        return $printable;
+    }
+
+    /**
      * Apply a change to the current settings. Values not sent stay as they are and a modality not sent
      * is kept whole; lists (positions, drivers, required_before) that are missing mean none, because a
      * form cannot send an empty list.

@@ -14,8 +14,10 @@ use App\Repositories\Contracts\CardTemplateRepositoryInterface;
 use App\Repositories\Contracts\CustomFieldRepositoryInterface;
 use App\Repositories\Contracts\FamilyMemberRepositoryInterface;
 use App\Repositories\Contracts\TenantImageRepositoryInterface;
+use App\Services\Biometrics\BiometricSettings;
 use App\Services\Cards\CardDataResolver;
 use App\Services\Fonts\TenantFontService;
+use App\Support\Biometrics\BiometricCardField;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -104,6 +106,9 @@ class CardTemplateDesignService
                 ->all(),
             'barcode_formats' => config('card_template_elements.barcode_formats'),
             'qr_error_levels' => config('card_template_elements.qr_error_levels'),
+            // Biometric images the organization prints on cards: modality => element fields (`auto` first);
+            // empty while it does not, so the designer does not offer the element
+            'biometric_fields' => BiometricCardField::options($this->printableBiometrics($template)),
             'size_mm' => $template->sizeInMm(),
         ];
     }
@@ -173,6 +178,7 @@ class CardTemplateDesignService
         $layers = ['front' => 0, 'back' => 0];
         $backgrounds = [];
         $libraryIds = $this->library->idsForPublicIds(array_values(array_filter(array_column($input, 'library_image'))));
+        $biometrics = $this->printableBiometrics($template);
 
         foreach ($input as $index => $element) {
             $key = "elements.{$index}";
@@ -198,6 +204,14 @@ class CardTemplateDesignService
                     $errors["{$key}.field"] = __('cards.designer.field_required');
                 } elseif (! $this->fieldAllowed($field, $allowedFields)) {
                     $errors["{$key}.field"] = __('cards.designer.field_unknown');
+                }
+            }
+
+            if (! empty($options['needs_biometric'])) {
+                $field = $element['field'] ?? null;
+                $error = $this->biometricFieldError($field, $biometrics);
+                if ($error !== null) {
+                    $errors["{$key}.field"] = $error;
                 }
             }
 
@@ -345,6 +359,38 @@ class CardTemplateDesignService
         }
 
         return $groups;
+    }
+
+    /**
+     * Modalities the template's organization prints on cards, with the positions an element may name.
+     *
+     * @return array<string, array<int, string>>
+     */
+    private function printableBiometrics(CardTemplate $template): array
+    {
+        return BiometricSettings::printable($template->tenant->biometricSettings());
+    }
+
+    /**
+     * Why a biometric element's field cannot be saved, or null when it can. While the organization does not
+     * print biometrics on cards, no biometric element can be saved: remove it or turn printing on first.
+     *
+     * @param  array<string, array<int, string>>  $printable
+     */
+    private function biometricFieldError(?string $field, array $printable): ?string
+    {
+        if ($printable === []) {
+            return __('cards.designer.biometric_off');
+        }
+        if ($field === null || $field === '') {
+            return __('cards.designer.biometric_required');
+        }
+
+        $parsed = BiometricCardField::parse($field);
+        $allowed = $parsed !== null && isset($printable[$parsed['modality']])
+            && ($parsed['position'] === BiometricCardField::AUTO || in_array($parsed['position'], $printable[$parsed['modality']], true));
+
+        return $allowed ? null : __('cards.designer.biometric_unknown');
     }
 
     /**
