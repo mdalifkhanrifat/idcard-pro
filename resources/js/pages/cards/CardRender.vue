@@ -23,6 +23,10 @@ function valueOf(item: DesignerItem): string {
 }
 
 function imageOf(item: DesignerItem): string | null {
+    if (item.type === 'biometric') {
+        return item.field ? ((props.values.images.biometrics as Record<string, string | null> | undefined)?.[item.field] ?? null) : null;
+    }
+
     return item.type === 'photo' || item.type === 'cardholder_signature' || item.type === 'signatory_signature' ? props.values.images[item.type] : null;
 }
 

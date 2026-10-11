@@ -1,17 +1,19 @@
 <script setup lang="ts">
-import type { Component } from 'vue';
+import { computed, type Component } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Barcode, Database, ImageIcon, Minus, PanelTop, PenLine, QrCode, Signature, Square, Type, UserRound, Wallpaper } from 'lucide-vue-next';
+import { Barcode, Database, Fingerprint, ImageIcon, Minus, PanelTop, PenLine, QrCode, Signature, Square, Type, UserRound, Wallpaper } from 'lucide-vue-next';
 import type { DesignElementType } from '@/types';
 
 /**
  * "Add element" buttons (legacy "Add Section" + section type select).
  */
-defineProps<{ hasBackground: boolean }>();
+const props = defineProps<{ hasBackground: boolean; /** The organization prints biometric images on cards (catalog `biometric_fields`). */ biometric?: boolean }>();
 const emit = defineEmits<{ add: [type: DesignElementType, preset?: string] }>();
 const { t } = useI18n();
 
-const TYPES: { type: DesignElementType; preset?: string; icon: Component }[] = [
+type PaletteItem = { type: DesignElementType; preset?: string; icon: Component };
+
+const TYPES: PaletteItem[] = [
     { type: 'field', icon: Database },
     { type: 'text', icon: Type },
     { type: 'photo', icon: UserRound },
@@ -25,12 +27,13 @@ const TYPES: { type: DesignElementType; preset?: string; icon: Component }[] = [
     { type: 'shape', preset: 'band', icon: PanelTop },
     { type: 'background', icon: Wallpaper },
 ];
+const items = computed<PaletteItem[]>(() => (props.biometric ? [...TYPES, { type: 'biometric', icon: Fingerprint }] : TYPES));
 </script>
 
 <template>
     <div class="grid grid-cols-2 gap-1.5">
         <button
-            v-for="item in TYPES"
+            v-for="item in items"
             :key="item.preset ?? item.type"
             class="flex flex-col items-center gap-1 rounded-lg border border-line px-1 py-2 text-center text-xs text-fg hover:border-brand-ink hover:bg-surface-2"
             :data-add="item.preset ?? item.type"

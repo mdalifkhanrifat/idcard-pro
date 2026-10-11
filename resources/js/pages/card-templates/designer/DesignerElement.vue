@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref, useTemplateRef, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { ImageIcon, PenLine, QrCode, UserRound } from 'lucide-vue-next';
+import { Fingerprint, ImageIcon, PenLine, QrCode, UserRound } from 'lucide-vue-next';
 import { QUIET_ZONE_MODULES, encodeBarcode } from './barcode';
 import { DEFAULT_QR_ERROR_LEVEL, QR_QUIET_ZONE, encodeQr } from './qr';
 import { PT_TO_MM, boxCss, imageFit, rotationCss, textCss } from './styles';
@@ -17,7 +17,7 @@ const props = defineProps<{
     scale: number;
     /** Text shown for a data field (sample or real). */
     value: string;
-    /** Real photo or signature when previewing a cardholder; without one the element's own (fallback) image shows. */
+    /** Real photo, signature or biometric image when previewing a cardholder; without one the element's own (fallback) image shows. */
     imageUrl?: string | null;
     /** The card as it prints: problems leave a blank space instead of an error box (they are warned about before printing). */
     bare?: boolean;
@@ -155,6 +155,7 @@ const image = computed(() => (props.element.type === 'logo' ? props.element.imag
                 <div v-else-if="!blankMissing" class="flex size-full items-center justify-center bg-slate-500/10 text-slate-500" :class="element.type === 'photo' && 'bg-slate-500/20'" data-image-placeholder>
                     <UserRound v-if="element.type === 'photo'" class="size-3/5" />
                     <QrCode v-else-if="element.type === 'qr_code'" class="size-full" :stroke-width="1.25" />
+                    <Fingerprint v-else-if="element.type === 'biometric'" class="size-3/5" :stroke-width="1.25" />
                     <span v-else-if="element.type === 'signatory_signature' || element.type === 'cardholder_signature'" class="flex items-center gap-1 font-serif italic" :style="{ fontSize: `${Math.max(8, scale * 2.5)}px` }">
                         <PenLine class="size-[1.1em]" />{{ t('designer.sampleSignature') }}
                     </span>

@@ -262,9 +262,10 @@ export function useDesigner() {
 
     /**
      * Add an element in the middle of the current side and select it. A side has one background,
-     * so asking for a second one selects the existing one. `text` is the starting content of a text element.
+     * so asking for a second one selects the existing one. `text` is the starting content of a text element;
+     * `field` the data it shows when the default is not known here (e.g. a biometric image from the catalog).
      */
-    function add(type: DesignElementType, text = 'Text', preset?: string): void {
+    function add(type: DesignElementType, text = 'Text', preset?: string, field?: string): void {
         if (type === 'background') {
             const existing = sideItems.value.find((item) => item.type === 'background');
             if (existing) {
@@ -286,7 +287,7 @@ export function useDesigner() {
         const item = toItem({
             side: side.value,
             type,
-            field: 'field' in defaults ? (defaults.field ?? null) : null,
+            field: field ?? ('field' in defaults ? (defaults.field ?? null) : null),
             label: null,
             content: type === 'text' ? text : null,
             qr_lines: 'qr_lines' in defaults && defaults.qr_lines ? defaults.qr_lines.map((line) => ({ ...line })) : null,

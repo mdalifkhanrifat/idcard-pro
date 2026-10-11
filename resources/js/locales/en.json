@@ -774,7 +774,8 @@
             "field": "Data field",
             "text": "Text",
             "shape": "Shape",
-            "barcode": "Barcode"
+            "barcode": "Barcode",
+            "biometric": "Biometric"
         },
         "fields": {
             "full_name": "Full name",
@@ -975,6 +976,9 @@
         "systemFontHint": "This font is not included. It shows only on computers that have it installed; elsewhere a standard font is used.",
         "ansiFontHint": "SutonnyMJ is an ANSI (Bijoy) font: Unicode Bangla text will not print correctly in it. Use a Bangla font from “Included fonts”.",
         "fallbackHint": "Optional. Printed only when the real one is missing (legacy template image), e.g. a fixed signature or a placeholder photo.",
+        "biometricImage": "Image",
+        "biometricHint": "\"First captured\" prints the first image captured in the organization's order of preference. Which capture prints (kept at issue or the latest) follows the organization's settings.",
+        "biometricUnavailable": "This organization does not print this biometric image on cards (Organization page, Biometrics). Remove the element, or allow printing there, to save the design.",
         "hide": "Hide (not printed)",
         "show": "Show",
         "lock": "Lock",

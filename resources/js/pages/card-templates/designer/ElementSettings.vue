@@ -38,6 +38,7 @@ import FieldSelect from './FieldSelect.vue';
 import { sampleValue } from './sample';
 import { imageFit } from './styles';
 import type { DesignerItem, LayerMove, Rect } from './useDesigner';
+import { biometricFieldLabel, biometricLabel } from '@/lib/biometrics/labels';
 import { http, toApiError } from '@/lib/http';
 import { useUiStore } from '@/stores/ui';
 import type { DesignElementStyle, DesignerCatalog, LibraryImage } from '@/types';
@@ -59,12 +60,16 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{ rect: [rect: Rect]; tilt: [angle: number]; remove: []; duplicate: []; layer: [move: LayerMove]; flag: [flag: 'locked' | 'hidden']; otherSide: [] }>();
-const { t } = useI18n();
+const { t, te } = useI18n();
 const ui = useUiStore();
 
 const isText = computed(() => props.item.type === 'field' || props.item.type === 'text');
 const hasImage = computed(() => props.catalog.types[props.item.type]?.image === true);
 const isBarcode = computed(() => props.item.type === 'barcode');
+/** Biometric images the organization prints on cards: kind => element fields (`auto` first); empty when it does not. */
+const biometricGroups = computed(() => Object.entries(props.catalog.biometric_fields ?? {}) as [string, string[]][]);
+/** A biometric element whose image the organization no longer prints cannot be saved until it is removed or printing is allowed again. */
+const biometricUnavailable = computed(() => props.item.type === 'biometric' && !biometricGroups.value.some(([, fields]) => fields.includes(props.item.field ?? '')));
 const isQr = computed(() => props.item.type === 'qr_code');
 /** Families uploaded by the organization; a legacy name like SolaimanLipi then no longer depends on the computer. */
 const tenantFamilies = computed(() => [...new Set(props.catalog.tenant_fonts.map((font) => font.family))]);
@@ -341,6 +346,19 @@ function pickLibraryImage(image: LibraryImage): void {
                 <span class="text-xs font-medium text-muted">{{ t('designer.field') }}</span>
                 <FieldSelect v-model="item.field" :catalog="catalog" :field-label="fieldLabel" data-setting="field" />
             </label>
+            <div v-if="item.type === 'biometric'" class="space-y-1">
+                <label class="block space-y-1">
+                    <span class="text-xs font-medium text-muted">{{ t('designer.biometricImage') }}</span>
+                    <select v-model="item.field" :class="inputClass" data-setting="biometric">
+                        <option v-if="biometricUnavailable" :value="item.field">{{ item.field ? biometricFieldLabel(item.field, t, te) : '—' }}</option>
+                        <optgroup v-for="[modality, fields] in biometricGroups" :key="modality" :label="biometricLabel('modalities', modality, t, te)">
+                            <option v-for="field in fields" :key="field" :value="field">{{ biometricFieldLabel(field, t, te) }}</option>
+                        </optgroup>
+                    </select>
+                </label>
+                <p v-if="biometricUnavailable" class="rounded-md bg-warning/10 p-2 text-xs text-fg" data-biometric-unavailable>{{ t('designer.biometricUnavailable') }}</p>
+                <p v-else class="text-xs text-muted">{{ t('designer.biometricHint') }}</p>
+            </div>
             <label v-if="item.type === 'text'" class="block space-y-1">
                 <span class="text-xs font-medium text-muted">{{ t('designer.content') }}</span>
                 <textarea v-model="item.content" rows="3" maxlength="500" :class="[inputClass, 'h-auto py-1.5']" data-setting="content" />

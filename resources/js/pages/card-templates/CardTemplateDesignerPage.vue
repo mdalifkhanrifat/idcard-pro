@@ -15,6 +15,7 @@ import { buildLayoutFile, downloadLayout, importLayout, parseLayoutFile, type La
 import { sampleValue } from './designer/sample';
 import { useDesigner, type DesignerItem } from './designer/useDesigner';
 import { useConfirm } from '@/composables/useConfirm';
+import { biometricFieldLabel } from '@/lib/biometrics/labels';
 import { http, toApiError } from '@/lib/http';
 import { loadTenantFonts } from '@/lib/tenantFonts';
 import { SAMPLE_VERIFY_CODE, verifyUrlFor } from '@/pages/cards/cards';
@@ -73,8 +74,11 @@ onMounted(async () => {
     }
 });
 
+/** Biometric images the organization prints on cards, as element fields (`auto` of each kind first). */
+const biometricFields = computed(() => Object.values(catalog.value?.biometric_fields ?? {}).flat());
+
 function add(type: DesignElementType, preset?: string): void {
-    designer.add(type, t('designer.defaultText'), preset);
+    designer.add(type, t('designer.defaultText'), preset, type === 'biometric' ? biometricFields.value[0] : undefined);
 }
 
 /*
@@ -285,7 +289,14 @@ function valueOf(item: DesignerItem): string {
 function imageOf(item: DesignerItem): string | null {
     const images = preview.value?.images;
 
-    return images && (item.type === 'photo' || item.type === 'cardholder_signature' || item.type === 'signatory_signature') ? images[item.type] : null;
+    if (!images) {
+        return null;
+    }
+    if (item.type === 'biometric') {
+        return item.field ? ((images.biometrics as Record<string, string | null> | undefined)?.[item.field] ?? null) : null;
+    }
+
+    return item.type === 'photo' || item.type === 'cardholder_signature' || item.type === 'signatory_signature' ? images[item.type] : null;
 }
 
 /** Short name for the layer list. */
@@ -298,6 +309,9 @@ function itemTitle(item: DesignerItem): string {
     }
     if (item.type === 'text') {
         return item.content || t('designer.types.text');
+    }
+    if (item.type === 'biometric') {
+        return item.field ? biometricFieldLabel(item.field, t, te) : t('designer.types.biometric');
     }
     if (item.type === 'shape') {
         if (item.style.shape === 'ellipse') {
@@ -384,7 +398,7 @@ function itemTitle(item: DesignerItem): string {
             <aside class="space-y-2 rounded-xl border border-line bg-surface p-3">
                 <template v-if="editable">
                     <h2 class="flex items-center gap-2 text-sm font-medium text-fg"><Plus class="size-4" />{{ t('designer.addElement') }}</h2>
-                    <ElementPalette :has-background="hasBackground" @add="add" />
+                    <ElementPalette :has-background="hasBackground" :biometric="biometricFields.length > 0" @add="add" />
                     <hr class="border-line" />
                 </template>
                 <h2 class="flex items-center gap-2 text-sm font-medium text-fg"><Layers class="size-4" />{{ t('designer.layers') }}</h2>
