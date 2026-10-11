@@ -14,6 +14,8 @@ it('keeps biometrics off until the organization turns it on, and lists what can 
     $response = $this->getJson('/api/v1/settings')->assertOk()
         ->assertJsonPath('data.biometrics.enabled', false)
         ->assertJsonPath('data.biometrics.print_on_card', false)
+        ->assertJsonPath('data.biometrics.print_source', 'issue')
+        ->assertJsonPath('data.biometric_options.print_sources', ['issue', 'print'])
         ->assertJsonPath('data.biometrics.required_before', [])
         ->assertJsonPath('data.biometrics.modalities.fingerprint.positions', ['right_thumb', 'left_thumb'])
         ->assertJsonPath('data.biometrics.modalities.face.mode', 'off')
@@ -75,6 +77,21 @@ it('saves which fingers, how many, the quality and the drivers, sent as a form',
         ->assertJsonPath('data.biometrics.modalities.face.drivers', ['webcam'])
         ->assertJsonPath('data.biometrics.modalities.fingerprint.positions', ['right_index', 'left_index'])
         ->assertJsonPath('data.biometrics.required_before', []);
+});
+
+it('lets the organization print the image kept at issue or the latest one at print, and nothing else', function () {
+    ($this->settings)(['enabled' => '1', 'modalities' => ['fingerprint' => $this->fingerprint], 'print_on_card' => '1', 'print_source' => 'print'])
+        ->assertOk()
+        ->assertJsonPath('data.biometrics.print_source', 'print');
+
+    // Not sent: kept as it was
+    $this->owner->unsetRelation('tenant');
+    ($this->settings)(['enabled' => '1', 'family_members' => '1'])->assertOk()->assertJsonPath('data.biometrics.print_source', 'print');
+
+    ($this->settings)(['enabled' => '1', 'print_source' => 'scan'])->assertJsonValidationErrors('biometrics.print_source');
+    // A value saved earlier that the registry no longer offers falls back to the default
+    $this->tenant->update(['settings' => ['biometrics' => ['enabled' => false, 'print_source' => 'scan']]]);
+    expect($this->tenant->fresh()->biometricSettings()['print_source'])->toBe('issue');
 });
 
 it('allows a person without fingers to be enrolled by the face alone, and biometrics with nothing in use is refused', function () {

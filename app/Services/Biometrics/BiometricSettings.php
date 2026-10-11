@@ -64,7 +64,7 @@ class BiometricSettings
 
     /**
      * @param  array<string, mixed>  $saved
-     * @return array{enabled: bool, modalities: array<string, array{mode: string, count: int, positions: array<int, string>, substitutes: bool, min_quality: int, max_attempts: int, drivers: array<int, string>}>, family_members: bool, required_before: array<int, string>, print_on_card: bool}
+     * @return array{enabled: bool, modalities: array<string, array{mode: string, count: int, positions: array<int, string>, substitutes: bool, min_quality: int, max_attempts: int, drivers: array<int, string>}>, family_members: bool, required_before: array<int, string>, print_on_card: bool, print_source: string}
      */
     public static function normalize(array $saved): array
     {
@@ -80,6 +80,7 @@ class BiometricSettings
             'family_members' => (bool) ($saved['family_members'] ?? $defaults['family_members']),
             'required_before' => array_values(array_intersect((array) ($saved['required_before'] ?? $defaults['required_before']), (array) config('biometrics.required_before'))),
             'print_on_card' => (bool) ($saved['print_on_card'] ?? $defaults['print_on_card']),
+            'print_source' => in_array($saved['print_source'] ?? null, (array) config('biometrics.print_sources'), true) ? $saved['print_source'] : $defaults['print_source'],
         ];
     }
 

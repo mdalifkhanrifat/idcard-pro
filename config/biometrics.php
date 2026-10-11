@@ -121,6 +121,14 @@ return [
     // Capture is off, may be skipped, or must be complete
     'modes' => ['off', 'optional', 'required'],
 
+    /*
+     * Which image a card prints (when the organization prints biometrics on cards):
+     * - issue: the one captured when the card is issued; the card keeps its own encrypted copy (image only),
+     *          like the photo and signature, so a later capture does not change an issued card
+     * - print: the latest capture each time the card is printed
+     */
+    'print_sources' => ['issue', 'print'],
+
     'defaults' => [
         'enabled' => false,
         'modalities' => [
@@ -161,6 +169,7 @@ return [
         'required_before' => [],
         // Fingerprint image on cards (designer field); off for privacy until the organization allows it
         'print_on_card' => false,
+        'print_source' => 'issue',
     ],
 
 ];

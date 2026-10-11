@@ -54,6 +54,8 @@ class TenantResource extends JsonResource
                 'drivers' => BiometricSettings::drivers(),
                 'modes' => config('biometrics.modes'),
                 'required_before' => config('biometrics.required_before'),
+                // Which image a card prints: the one kept at issue or the latest at print
+                'print_sources' => config('biometrics.print_sources'),
                 'unavailable_reasons' => config('biometrics.unavailable_reasons'),
                 // Reasons that need a note saying what happened
                 'unavailable_reasons_with_note' => config('biometrics.unavailable_reasons_with_note'),

@@ -72,13 +72,14 @@ class UpdateTenantSettingsRequest extends FormRequest
     {
         $modalities = (array) config('biometrics.modalities');
         $rules = [
-            'biometrics' => ['sometimes', 'array:enabled,modalities,family_members,required_before,print_on_card'],
+            'biometrics' => ['sometimes', 'array:enabled,modalities,family_members,required_before,print_on_card,print_source'],
             'biometrics.enabled' => ['required_with:biometrics', 'boolean'],
             'biometrics.modalities' => ['sometimes', 'array:'.implode(',', array_keys($modalities))],
             'biometrics.family_members' => ['sometimes', 'boolean'],
             'biometrics.required_before' => ['sometimes', 'array'],
             'biometrics.required_before.*' => ['distinct', Rule::in((array) config('biometrics.required_before'))],
             'biometrics.print_on_card' => ['sometimes', 'boolean'],
+            'biometrics.print_source' => ['sometimes', Rule::in((array) config('biometrics.print_sources'))],
         ];
         foreach ($modalities as $name => $modality) {
             $key = "biometrics.modalities.{$name}";
