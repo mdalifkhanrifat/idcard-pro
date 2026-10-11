@@ -18,6 +18,7 @@ use App\Repositories\Contracts\CardRepositoryInterface;
 use App\Repositories\Contracts\CardTemplateRepositoryInterface;
 use App\Repositories\Contracts\FamilyMemberRepositoryInterface;
 use App\Repositories\Contracts\SignatoryRepositoryInterface;
+use App\Services\Biometrics\CardBiometricImageService;
 use App\Services\Cardholders\CardholderFileService;
 use App\Services\CardTemplates\CardTemplateDesignService;
 use Carbon\CarbonImmutable;
@@ -44,6 +45,7 @@ class CardIssueService
         private CardDataResolver $cardData,
         private CardPrintService $printing,
         private CardRequirements $requirements,
+        private CardBiometricImageService $biometricImages,
     ) {}
 
     /**
@@ -176,7 +178,7 @@ class CardIssueService
                 'issue_date' => $issueDate,
                 'expiry_date' => $this->expiryDate($template, $issueDate, $data->expiryDate),
                 'issued_by' => $actor?->id,
-            ]);
+            ], keepBiometrics: false);
             if ($data->lastPrintedAt !== null) {
                 $this->printing->recordPast($card, $data->lastPrintedAt, CardPrint::METHOD_IMPORT);
                 $card->refresh();
@@ -200,12 +202,14 @@ class CardIssueService
     }
 
     /**
-     * Save a new active card with what it prints fixed on it: design, data, photo, signatures and signatory.
+     * Save a new active card with what it prints fixed on it: design, data, photo, signatures and signatory,
+     * and its own copy of the biometric images it prints when the organization prints those captured at issue
+     * (not for cards imported from another system: they were issued before and print the latest capture).
      * The holder's current card (locked by the caller) becomes "replaced".
      *
      * @param  array{number: string, rf_card_no: ?string, reason: string, notes: ?string, document_file_id: ?int, issue_date: CarbonImmutable, expiry_date: ?CarbonImmutable, issued_by: ?int}  $attributes
      */
-    private function createCard(Cardholder $cardholder, ?FamilyMember $member, CardTemplate $template, ?Card $current, array $attributes): Card
+    private function createCard(Cardholder $cardholder, ?FamilyMember $member, CardTemplate $template, ?Card $current, array $attributes, bool $keepBiometrics = true): Card
     {
         [$photo, $signature] = $this->cardData->holderImages($cardholder, $member);
         $signatory = $template->authority_type_id === null ? null : $this->signatories->activeFor($template->authority_type_id, $attributes['issue_date']);
@@ -240,6 +244,9 @@ class CardIssueService
             $this->cards->update($current, ['replaced_by_id' => $card->id]);
         }
         $this->cards->recordAssets($card, $this->assets($card->layout));
+        if ($keepBiometrics) {
+            $this->biometricImages->keepForCard($card, $cardholder, $member);
+        }
 
         return $card->load(['template', 'familyMember', 'issuer', 'document']);
     }

@@ -197,6 +197,16 @@ class Card extends Model
     }
 
     /**
+     * Biometric images copied at issue (when the organization prints the image captured at issue).
+     *
+     * @return HasMany<CardBiometricImage, $this>
+     */
+    public function biometricImages(): HasMany
+    {
+        return $this->hasMany(CardBiometricImage::class);
+    }
+
+    /**
      * @return BelongsTo<CardholderFile, $this>
      */
     public function photo(): BelongsTo

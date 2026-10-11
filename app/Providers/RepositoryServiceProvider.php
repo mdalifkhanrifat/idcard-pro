@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Repositories\Contracts\ActivityRepositoryInterface;
 use App\Repositories\Contracts\BiometricCaptureRepositoryInterface;
+use App\Repositories\Contracts\CardBiometricImageRepositoryInterface;
 use App\Repositories\Contracts\CardholderFileRepositoryInterface;
 use App\Repositories\Contracts\CardholderImportRepositoryInterface;
 use App\Repositories\Contracts\CardholderRepositoryInterface;
@@ -27,6 +28,7 @@ use App\Repositories\Contracts\TenantRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Repositories\Eloquent\ActivityRepository;
 use App\Repositories\Eloquent\BiometricCaptureRepository;
+use App\Repositories\Eloquent\CardBiometricImageRepository;
 use App\Repositories\Eloquent\CardholderFileRepository;
 use App\Repositories\Eloquent\CardholderImportRepository;
 use App\Repositories\Eloquent\CardholderRepository;
@@ -64,6 +66,7 @@ class RepositoryServiceProvider extends ServiceProvider
         CardholderRepositoryInterface::class => CardholderRepository::class,
         CardholderFileRepositoryInterface::class => CardholderFileRepository::class,
         BiometricCaptureRepositoryInterface::class => BiometricCaptureRepository::class,
+        CardBiometricImageRepositoryInterface::class => CardBiometricImageRepository::class,
         FamilyMemberRepositoryInterface::class => FamilyMemberRepository::class,
         QualificationRepositoryInterface::class => QualificationRepository::class,
         CustomFieldRepositoryInterface::class => CustomFieldRepository::class,

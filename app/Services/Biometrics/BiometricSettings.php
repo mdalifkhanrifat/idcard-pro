@@ -62,6 +62,23 @@ class BiometricSettings
     }
 
     /**
+     * Positions of a modality in the order a card's `auto` image is looked for: the organization's preferred
+     * ones first, then (when another position may stand in) the rest of the registry's.
+     *
+     * @param  array{modalities: array<string, array{positions: array<int, string>, substitutes: bool}>}  $settings  normalized
+     * @return array<int, string>
+     */
+    public static function printOrder(array $settings, string $modality): array
+    {
+        $preferred = $settings['modalities'][$modality]['positions'] ?? [];
+        if (! ($settings['modalities'][$modality]['substitutes'] ?? false)) {
+            return $preferred;
+        }
+
+        return array_values(array_unique([...$preferred, ...array_keys((array) config("biometrics.modalities.{$modality}.positions"))]));
+    }
+
+    /**
      * Apply a change to the current settings. Values not sent stay as they are and a modality not sent
      * is kept whole; lists (positions, drivers, required_before) that are missing mean none, because a
      * form cannot send an empty list.
