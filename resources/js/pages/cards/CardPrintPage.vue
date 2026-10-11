@@ -79,6 +79,7 @@ const overrideFor = (entries: Entry[]) => (overrideActive.value && entries.some(
 const skipped = computed(() => entries.value.filter((entry) => entry.problem));
 const withMissing = computed(() => printable.value.filter((entry) => entry.missing.length || entry.biometrics.length));
 const missingBiometric = computed(() => withMissing.value.some((entry) => entry.biometrics.length));
+const missingPhotoOrSignature = computed(() => withMissing.value.some((entry) => entry.missing.length));
 const withBarcodeProblems = computed(() => printable.value.filter((entry) => entry.barcodes.length || entry.qr.length));
 const anyDoubleSided = computed(() => printable.value.some((entry) => entry.layout?.is_double_sided));
 
@@ -305,7 +306,7 @@ onBeforeUnmount(() => {
                             {{ [...entry.missing.map((key) => t(`cards.missingImage.${key}`)), ...entry.biometrics.map((field) => t('cards.missingBiometric', { name: biometricFieldLabel(field, t, te) }))].join(', ') }}
                         </li>
                     </ul>
-                    <p class="mt-1 text-xs text-muted">{{ t('cards.missingImageHint') }}</p>
+                    <p v-if="missingPhotoOrSignature" class="mt-1 text-xs text-muted" data-print-missing-image>{{ t('cards.missingImageHint') }}</p>
                     <p v-if="missingBiometric" class="mt-1 text-xs text-muted" data-print-missing-biometric>{{ t('cards.missingBiometricHint') }}</p>
                 </div>
                 <div v-if="withBarcodeProblems.length" class="rounded-lg border border-warning/40 bg-warning/10 p-3 text-fg" data-print-barcodes>
