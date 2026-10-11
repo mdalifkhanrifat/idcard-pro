@@ -55,5 +55,10 @@ class AppServiceProvider extends ServiceProvider
             Limit::perMinute(10)->by('ip:'.$request->ip()),
             Limit::perMinute(5)->by('login:'.strtolower((string) $request->input('login', $request->input('email'))).'|'.$request->ip()),
         ]);
+
+        // Files behind signed links (photos, signatures, biometric images, fonts, design images): a print batch
+        // loads several per card, so the limit follows the batch size; per user, else per address (PDF engine)
+        RateLimiter::for('signed-files', fn (Request $request) => Limit::perMinute((int) config('cards.print.files_per_minute'))
+            ->by($request->user() !== null ? 'user:'.$request->user()->getAuthIdentifier() : 'ip:'.$request->ip()));
     }
 }

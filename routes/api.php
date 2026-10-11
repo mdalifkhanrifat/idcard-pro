@@ -44,25 +44,26 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('reset-password', [PasswordResetController::class, 'reset'])->name('password.reset');
     });
 
-    // Signed, short-lived links to cardholder files (authorization happened when the link was issued)
+    // Signed, short-lived links to cardholder files (authorization happened when the link was issued).
+    // Rate limit `signed-files`: a whole print batch loads several of these per card.
     Route::get('cardholder-files/{file}', [CardholderFileController::class, 'content'])
-        ->middleware(['signed:relative', 'throttle:120,1'])
+        ->middleware(['signed:relative', 'throttle:signed-files'])
         ->name('cardholder-files.content');
     Route::get('signatory-signatures/{signatory}', [SignatoryController::class, 'signature'])
-        ->middleware(['signed:relative', 'throttle:120,1'])
+        ->middleware(['signed:relative', 'throttle:signed-files'])
         ->name('signatory-signatures.show');
     Route::get('card-template-images/{template}/{image}', [CardTemplateElementController::class, 'image'])
-        ->middleware(['signed:relative', 'throttle:120,1'])
+        ->middleware(['signed:relative', 'throttle:signed-files'])
         ->name('card-template-images.show');
     Route::get('font-files/{font}', [TenantFontController::class, 'file'])
-        ->middleware(['signed:relative', 'throttle:120,1'])
+        ->middleware(['signed:relative', 'throttle:signed-files'])
         ->name('font-files.show');
     Route::get('library-image-files/{image}', [TenantImageController::class, 'file'])
-        ->middleware(['signed:relative', 'throttle:240,1'])
+        ->middleware(['signed:relative', 'throttle:signed-files'])
         ->name('library-image-files.show');
     // Decrypted biometric images (authorization happened when the link was issued; never cached)
     Route::get('biometric-images/{capture}', [BiometricCaptureController::class, 'image'])
-        ->middleware(['signed:relative', 'throttle:120,1'])
+        ->middleware(['signed:relative', 'throttle:signed-files'])
         ->name('biometric-images.show');
 
     // Public card verification (3.7): the code from the card's QR code, no sign-in

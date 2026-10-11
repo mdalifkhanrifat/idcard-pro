@@ -56,6 +56,11 @@ return [
         // Cards printed together in one batch
         'max_batch' => 200,
         /*
+         * Files behind signed links (photos, signatures, biometric images, fonts, design images) one user, or
+         * the PDF engine, may load per minute. A batch loads several per card: keep it well above max_batch × 5.
+         */
+        'files_per_minute' => (int) env('CARD_FILES_PER_MINUTE', 2000),
+        /*
          * Paper for printing several cards on one sheet with crop marks (portrait, in mm), besides one card
          * per page ("card", for card printers). A new paper size only needs a new entry here.
          */
