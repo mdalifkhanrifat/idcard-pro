@@ -3,6 +3,8 @@
 use App\Enums\LoginEventType;
 use App\Services\Audit\AuditService;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 
 beforeEach(function () {
@@ -57,4 +59,53 @@ it('requires the audit permission', function () {
 
     $this->getJson('/api/v1/audit/activities')->assertForbidden();
     $this->getJson('/api/v1/audit/logins')->assertForbidden();
+});
+
+it('logs who changed which organization settings, old and new, without the unchanged ones', function () {
+    Sanctum::actingAs($this->owner);
+    $save = fn (array $extra) => $this->post('/api/v1/settings', ['name' => 'Alpha', 'timezone' => 'UTC', 'locale' => 'en', 'primary_color' => '#112233', ...$extra], ['Accept' => 'application/json'])->assertOk();
+    $tenantLogs = fn () => $this->getJson('/api/v1/audit/activities?filter[log_name]=tenant')->assertOk()->json('data');
+    $save([]);
+    $this->owner->unsetRelation('tenant');
+    $before = count($tenantLogs());
+
+    $save(['card_number_format' => '{CODE}-{SEQ:5}', 'biometrics' => [
+        'enabled' => '1', 'print_on_card' => '1',
+        'modalities' => ['fingerprint' => ['mode' => 'required', 'count' => 2, 'positions' => ['right_index', 'left_index'], 'substitutes' => '1', 'min_quality' => 40, 'max_attempts' => 3, 'drivers' => ['upload']]],
+    ]]);
+    $this->owner->unsetRelation('tenant');
+
+    $logs = $tenantLogs();
+    expect($logs)->toHaveCount($before + 1);
+    $changes = $logs[0]['changes'];
+    expect($logs[0]['causer']['email'])->toBe('a@example.com')
+        ->and($changes['attributes'])->toMatchArray([
+            'settings.card_number_format' => '{CODE}-{SEQ:5}',
+            'settings.biometrics.enabled' => true,
+            'settings.biometrics.print_on_card' => true,
+            'settings.biometrics.modalities.fingerprint.mode' => 'required',
+            // A list is one value
+            'settings.biometrics.modalities.fingerprint.positions' => ['right_index', 'left_index'],
+        ])
+        ->and($changes['old'])->toMatchArray([
+            'settings.biometrics.enabled' => false,
+            'settings.biometrics.print_on_card' => false,
+            'settings.biometrics.modalities.fingerprint.positions' => ['right_thumb', 'left_thumb'],
+        ])
+        // Unchanged settings are left out, and the whole JSON is never stored
+        ->and($changes['attributes'])->not->toHaveKeys(['settings', 'settings.biometrics.modalities.face.mode', 'settings.biometrics.family_members']);
+
+    // Saving the same again records nothing
+    $save(['card_number_format' => '{CODE}-{SEQ:5}']);
+    expect($tenantLogs())->toHaveCount($before + 1);
+});
+
+it('logs a new organization logo', function () {
+    Storage::fake('public');
+    Sanctum::actingAs($this->owner);
+
+    $this->post('/api/v1/settings', ['name' => 'Alpha', 'timezone' => 'UTC', 'locale' => 'en', 'primary_color' => '#112233', 'logo' => UploadedFile::fake()->image('logo.png', 40, 40)], ['Accept' => 'application/json'])->assertOk();
+
+    $changes = $this->getJson('/api/v1/audit/activities?filter[log_name]=tenant')->json('data.0.changes');
+    expect($changes['attributes']['logo_path'])->toStartWith('tenants/')->and($changes['old']['logo_path'])->toBeNull();
 });

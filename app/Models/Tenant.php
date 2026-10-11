@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Enums\TenantStatus;
 use App\Services\Biometrics\BiometricSettings;
+use App\Services\Cards\CardNumberFormat;
+use App\Support\Audit\JsonChanges;
 use Database\Factories\TenantFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
@@ -11,6 +13,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\Models\Activity;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
@@ -82,10 +85,50 @@ class Tenant extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['name', 'slug', 'legal_name', 'email', 'phone', 'timezone', 'locale', 'primary_color', 'status'])
+            ->logOnly(['name', 'slug', 'legal_name', 'email', 'phone', 'timezone', 'locale', 'primary_color', 'status', 'logo_path', 'settings'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->useLogName('tenant');
+    }
+
+    /**
+     * The settings as they take effect: what was saved, with the defaults of every setting not saved yet
+     * (for the audit log, and for reports or connected systems that need the whole picture).
+     *
+     * @return array<string, mixed>
+     */
+    public function effectiveSettings(): array
+    {
+        return [
+            ...($this->settings ?? []),
+            'card_number_format' => $this->settings['card_number_format'] ?? CardNumberFormat::DEFAULT,
+            'card_number_on_reissue' => $this->cardNumberOnReissue(),
+            'default_card_size' => $this->defaultCardSize(),
+            'verification' => $this->verificationSettings(),
+            'biometrics' => $this->biometricSettings(),
+        ];
+    }
+
+    /**
+     * Settings (card numbers, verification, biometrics...) are logged as the values that changed, by dot path
+     * ("settings.biometrics.print_on_card": old and new), not as the whole JSON each time.
+     */
+    public function beforeActivityLogged(Activity $activity, string $eventName): void
+    {
+        $changes = $activity->attribute_changes?->toArray() ?? [];
+        if (! array_key_exists('settings', $changes['attributes'] ?? [])) {
+            return;
+        }
+
+        // Compared as they take effect (defaults filled in), so a first save shows only what really changed
+        $effective = fn (array $settings): array => (new self)->forceFill(['settings' => $settings])->effectiveSettings();
+        $settings = JsonChanges::between($effective(JsonChanges::decode($changes['old']['settings'] ?? [])), $effective(JsonChanges::decode($changes['attributes']['settings'])), 'settings');
+        unset($changes['attributes']['settings'], $changes['old']['settings']);
+        $changes['attributes'] = [...$changes['attributes'], ...$settings['new']];
+        if ($eventName !== 'created') {
+            $changes['old'] = [...($changes['old'] ?? []), ...$settings['old']];
+        }
+        $activity->attribute_changes = collect($changes);
     }
 
     /**
