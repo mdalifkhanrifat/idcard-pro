@@ -45,12 +45,13 @@ class ReportDataService
     }
 
     /**
-     * The report as a file (csv, xlsx...) with the chosen columns (or the default ones), kept in the audit log.
+     * The report as a file (csv, xlsx, pdf...) with the chosen columns (or the default ones), kept in the audit
+     * log; `inline` when it is opened to print rather than saved.
      *
      * @param  array<int, string>|null  $columnKeys
      */
-    public function export(Report $report, ReportQuery $query, ?array $columnKeys, string $format, User $actor): ReportFile
+    public function export(Report $report, ReportQuery $query, ?array $columnKeys, string $format, User $actor, bool $inline = false): ReportFile
     {
-        return $this->exports->export($report, $this->columns($report, $columnKeys), $report->count($query), $report->rows($query), $format, $query->filter, $actor);
+        return $this->exports->export($report, $query, $this->columns($report, $columnKeys), $format, $actor, $inline);
     }
 }

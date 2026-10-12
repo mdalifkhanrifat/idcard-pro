@@ -108,9 +108,9 @@ it('refuses a download larger than the limit, and unknown formats', function () 
 
 it('lets only users with reports.export download, and offers the formats to them only', function () {
     $formats = fn () => $this->getJson('/api/v1/reports')->json('data.0');
-    expect($formats())->toMatchArray(['formats' => ['csv', 'xlsx'], 'max_export_rows' => 20000]);
+    expect($formats())->toMatchArray(['formats' => ['csv', 'xlsx', 'pdf'], 'max_export_rows' => 20000, 'format_limits' => ['csv' => 20000, 'xlsx' => 20000, 'pdf' => 2000]]);
 
     Sanctum::actingAs(tenantUser($this->tenant, 'Viewer'));
-    expect($formats())->toMatchArray(['formats' => [], 'max_export_rows' => null]);
+    expect($formats())->toMatchArray(['formats' => [], 'max_export_rows' => null, 'format_limits' => []]);
     $this->getJson('/api/v1/reports/card-prints/export?format=csv')->assertForbidden();
 });

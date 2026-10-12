@@ -54,3 +54,18 @@ it('can be switched off in the configuration', function () {
         ->and(fn () => app(PdfRenderer::class)->renderUrl('http://web/x'))->toThrow(PdfRenderException::class, 'not enabled');
     Http::assertNothingSent();
 });
+
+it('sends a footer for every page with the room it needs', function () {
+    Http::fake(['gotenberg:3000/*' => Http::response('%PDF-1.7 fake', 200)]);
+
+    app(PdfRenderer::class)->renderUrl('http://web/x', new PdfOptions(footerHtml: '<html><body><span class="pageNumber"></span></body></html>', marginBottom: '12mm'));
+
+    Http::assertSent(function (Request $request) {
+        $parts = collect($request->data());
+        $footer = $parts->firstWhere('name', 'files');
+
+        return $parts->firstWhere('name', 'marginBottom')['contents'] === '12mm'
+            && $footer['filename'] === 'footer.html'
+            && str_contains($footer['contents'], 'pageNumber');
+    });
+});

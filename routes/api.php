@@ -29,6 +29,7 @@ use App\Http\Controllers\Api\V1\Platform\TenantController;
 use App\Http\Controllers\Api\V1\QualificationController;
 use App\Http\Controllers\Api\V1\Reports\ReportController;
 use App\Http\Controllers\Api\V1\Reports\ReportDataController;
+use App\Http\Controllers\Api\V1\Reports\ReportRenderController;
 use App\Http\Controllers\Api\V1\RoleController;
 use App\Http\Controllers\Api\V1\SignatoryController;
 use App\Http\Controllers\Api\V1\TenantFontController;
@@ -82,6 +83,12 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::get('card-render', [CardRenderController::class, 'show'])
         ->middleware(['signed:relative', 'throttle:120,1'])
         ->name('card-render');
+
+    // A report document for the PDF engine (signed link made by PdfExporter, readable once)
+    Route::get('report-render/{token}', [ReportRenderController::class, 'show'])
+        ->where('token', '[A-Za-z0-9]{48}')
+        ->middleware(['signed:relative', 'throttle:60,1'])
+        ->name('report-render');
 
     Route::middleware(['auth:sanctum', 'tenant'])->group(function () {
 

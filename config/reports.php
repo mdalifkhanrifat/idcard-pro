@@ -3,6 +3,7 @@
 use App\Services\Reports\Definitions\CardPrintReport;
 use App\Services\Reports\Definitions\ExpiredCardReport;
 use App\Services\Reports\Export\CsvExporter;
+use App\Services\Reports\Export\PdfExporter;
 use App\Services\Reports\Export\XlsxExporter;
 
 /*
@@ -33,9 +34,14 @@ return [
     'exporters' => [
         'csv' => CsvExporter::class,
         'xlsx' => XlsxExporter::class,
+        // A document to read or print (logo, criteria, totals, page numbers), drawn by the local PDF engine
+        'pdf' => PdfExporter::class,
     ],
 
     // Rows one download may hold; for more, narrow the filter (e.g. by date) and download in parts
     'max_export_rows' => (int) env('REPORT_MAX_EXPORT_ROWS', 20000),
+
+    // Rows one PDF may hold (every row is drawn as a page of a document: heavier than a spreadsheet)
+    'pdf_max_rows' => (int) env('REPORT_PDF_MAX_ROWS', 2000),
 
 ];

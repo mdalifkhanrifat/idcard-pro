@@ -114,7 +114,15 @@ return [
         'cardholders' => 'Cardholders',
         'family_cards' => 'Family members\' cards',
     ],
+    'pdf' => [
+        'generated' => 'Made :when by :who',
+        'rows' => ':count rows',
+        'no_filter' => 'All rows (no filter)',
+        'empty' => 'No rows match.',
+        'page' => 'Page',
+    ],
     'export' => [
+        'pdf_unavailable' => 'The PDF could not be made right now. Try again, or download CSV or Excel.',
         'too_many' => 'The report has :count rows; one download may hold at most :max. Narrow the filter (for example by date) and download in parts.',
     ],
 ];

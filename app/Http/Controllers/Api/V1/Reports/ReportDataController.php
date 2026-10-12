@@ -37,13 +37,18 @@ class ReportDataController extends Controller
     }
 
     /**
-     * The rows the filter finds as a file (`format`: csv, xlsx...), with the chosen `columns[]` or the default
-     * ones; every download is kept in the audit log.
+     * The rows the filter finds as a file (`format`: csv, xlsx, pdf...), with the chosen `columns[]` or the
+     * default ones; `inline` opens a PDF to print. Every download is kept in the audit log.
      */
     public function export(ExportReportRequest $request): BinaryFileResponse
     {
-        $file = $this->data->export($request->report(), $request->toQuery(), $request->columnKeys(), (string) $request->validated('format'), $request->user());
+        $file = $this->data->export($request->report(), $request->toQuery(), $request->columnKeys(), (string) $request->validated('format'), $request->user(), $request->inline());
+        $headers = ['Content-Type' => $file->contentType, 'Cache-Control' => 'no-store'];
 
-        return response()->download($file->path, $file->filename, ['Content-Type' => $file->contentType])->deleteFileAfterSend();
+        // Opened to print: shown in the browser instead of saved
+        return ($request->inline()
+            ? response()->file($file->path, [...$headers, 'Content-Disposition' => 'inline; filename="'.$file->filename.'"'])
+            : response()->download($file->path, $file->filename, $headers)
+        )->deleteFileAfterSend();
     }
 }

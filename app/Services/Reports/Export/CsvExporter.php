@@ -15,6 +15,16 @@ use OpenSpout\Writer\CSV\Writer;
  */
 class CsvExporter implements ReportExporter
 {
+    public function available(): bool
+    {
+        return true;
+    }
+
+    public function maxRows(): ?int
+    {
+        return null;
+    }
+
     public function extension(): string
     {
         return 'csv';

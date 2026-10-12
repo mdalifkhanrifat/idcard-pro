@@ -20,7 +20,7 @@ class GotenbergPdfRenderer implements PdfRenderer
             'preferCssPageSize' => 'true',
             'printBackground' => $options->printBackground ? 'true' : 'false',
             'marginTop' => '0',
-            'marginBottom' => '0',
+            'marginBottom' => $options->marginBottom,
             'marginLeft' => '0',
             'marginRight' => '0',
             // A script error or a failed page load must not produce a half-drawn card
@@ -32,9 +32,12 @@ class GotenbergPdfRenderer implements PdfRenderer
         }
 
         try {
-            $response = Http::timeout($this->timeout)
-                ->asMultipart()
-                ->post(rtrim($this->endpoint, '/').'/forms/chromium/convert/url', $fields);
+            $request = Http::timeout($this->timeout)->asMultipart();
+            if ($options->footerHtml !== null) {
+                // Gotenberg takes the footer as a file named footer.html
+                $request = $request->attach('files', $options->footerHtml, 'footer.html', ['Content-Type' => 'text/html']);
+            }
+            $response = $request->post(rtrim($this->endpoint, '/').'/forms/chromium/convert/url', $fields);
         } catch (ConnectionException $exception) {
             throw new PdfRenderException('The PDF service cannot be reached.', previous: $exception);
         }

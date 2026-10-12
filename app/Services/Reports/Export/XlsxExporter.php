@@ -24,6 +24,16 @@ use OpenSpout\Writer\XLSX\Writer;
  */
 class XlsxExporter implements ReportExporter
 {
+    public function available(): bool
+    {
+        return true;
+    }
+
+    public function maxRows(): ?int
+    {
+        return null;
+    }
+
     public function extension(): string
     {
         return 'xlsx';

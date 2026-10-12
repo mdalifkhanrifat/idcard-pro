@@ -11,6 +11,16 @@ use App\Data\Reports\ReportDocument;
  */
 interface ReportExporter
 {
+    /**
+     * Whether this format can be made here (e.g. a PDF needs the PDF engine).
+     */
+    public function available(): bool;
+
+    /**
+     * Rows one file of this format may hold, when fewer than reports.max_export_rows (null: no own limit).
+     */
+    public function maxRows(): ?int;
+
     public function extension(): string;
 
     public function contentType(): string;

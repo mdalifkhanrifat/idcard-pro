@@ -26,7 +26,7 @@ class ReportService
      * `default_columns` are the organization's choice (or the report's own `standard_columns`); `formats`
      * (download formats) and `max_export_rows` are empty/null without reports.export.
      *
-     * @return array<int, array{key: string, name: string, description: string, columns: array<int, array{key: string, label: string, type: string, group: string}>, default_columns: array<int, string>, standard_columns: array<int, string>, filters: array<int, array<string, mixed>>, sorts: array<string, string>, default_sort: string, totals: array<int, array{key: string, label: string}>, formats: array<int, string>, max_export_rows: int|null}>
+     * @return array<int, array{key: string, name: string, description: string, columns: array<int, array{key: string, label: string, type: string, group: string}>, default_columns: array<int, string>, standard_columns: array<int, string>, filters: array<int, array<string, mixed>>, sorts: array<string, string>, default_sort: string, totals: array<int, array{key: string, label: string}>, formats: array<int, string>, max_export_rows: int|null, format_limits: array<string, int>}>
      */
     public function catalogue(User $user): array
     {
@@ -76,7 +76,7 @@ class ReportService
      * to the report's default, so later improvements to it apply.
      *
      * @param  array<int, string>|null  $columns  validated column keys
-     * @return array{key: string, name: string, description: string, columns: array<int, array{key: string, label: string, type: string, group: string}>, default_columns: array<int, string>, standard_columns: array<int, string>, filters: array<int, array<string, mixed>>, sorts: array<string, string>, default_sort: string, totals: array<int, array{key: string, label: string}>, formats: array<int, string>, max_export_rows: int|null}
+     * @return array{key: string, name: string, description: string, columns: array<int, array{key: string, label: string, type: string, group: string}>, default_columns: array<int, string>, standard_columns: array<int, string>, filters: array<int, array<string, mixed>>, sorts: array<string, string>, default_sort: string, totals: array<int, array{key: string, label: string}>, formats: array<int, string>, max_export_rows: int|null, format_limits: array<string, int>}
      */
     public function setDefaultColumns(Report $report, ?array $columns, User $actor): array
     {
@@ -90,7 +90,7 @@ class ReportService
     }
 
     /**
-     * @return array{key: string, name: string, description: string, columns: array<int, array{key: string, label: string, type: string, group: string}>, default_columns: array<int, string>, standard_columns: array<int, string>, filters: array<int, array<string, mixed>>, sorts: array<string, string>, default_sort: string, totals: array<int, array{key: string, label: string}>, formats: array<int, string>, max_export_rows: int|null}
+     * @return array{key: string, name: string, description: string, columns: array<int, array{key: string, label: string, type: string, group: string}>, default_columns: array<int, string>, standard_columns: array<int, string>, filters: array<int, array<string, mixed>>, sorts: array<string, string>, default_sort: string, totals: array<int, array{key: string, label: string}>, formats: array<int, string>, max_export_rows: int|null, format_limits: array<string, int>}
      */
     private function describe(Report $report, bool $canExport): array
     {
@@ -109,6 +109,8 @@ class ReportService
             'totals' => array_map(fn (string $key) => ['key' => $key, 'label' => (string) __("reports.totals.{$key}")], $report->totalKeys()),
             'formats' => $canExport ? $this->exports->formats() : [],
             'max_export_rows' => $canExport ? $this->exports->maxRows() : null,
+            // Rows one file may hold per format (a PDF holds fewer)
+            'format_limits' => $canExport ? $this->exports->limits() : [],
         ];
     }
 }
