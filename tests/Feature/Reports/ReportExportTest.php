@@ -87,7 +87,12 @@ it('keeps every download in the audit log with the report, format, columns, filt
             'columns' => ['holder.name', 'card.reason', 'card.number', 'note', 'printed_at', 'printed_by', 'copies'],
             'filter' => ['search' => 'jane', 'printed_from' => '2026-01-01'],
         ]);
-    $this->getJson('/api/v1/audit/activities?filter[log_name]=reports')->assertOk()->assertJsonCount(1, 'data')->assertJsonPath('data.0.event', 'exported');
+    // What was downloaded is shown in the audit log (events logged by hand have no field changes)
+    $this->getJson('/api/v1/audit/activities?filter[log_name]=reports')->assertOk()->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.event', 'exported')
+        ->assertJsonPath('data.0.changes.report', 'card_prints')
+        ->assertJsonPath('data.0.changes.format', 'csv')
+        ->assertJsonPath('data.0.changes.rows', 1);
 });
 
 it('refuses a download larger than the limit, and unknown formats', function () {

@@ -23,8 +23,25 @@ class ActivityResource extends JsonResource
             'description' => $this->description,
             'subject_type' => class_basename((string) $this->subject_type),
             'causer' => $this->causer?->only(['name', 'email']),
-            'changes' => $this->attribute_changes ?? $this->properties,
+            // Field changes of a record, else what an event recorded (an override's reason, a download's report...)
+            'changes' => $this->recorded(),
             'created_at' => $this->created_at,
         ];
+    }
+
+    /**
+     * Events logged by hand store an empty list of field changes (not null), so emptiness decides.
+     *
+     * @return array<string, mixed>|null
+     */
+    private function recorded(): ?array
+    {
+        $changes = $this->attribute_changes?->toArray() ?? [];
+        if ($changes !== []) {
+            return $changes;
+        }
+        $properties = $this->properties?->toArray() ?? [];
+
+        return $properties !== [] ? $properties : null;
     }
 }
