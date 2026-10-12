@@ -7,6 +7,7 @@ use App\Models\Card;
 use App\Models\CardPrint;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\LazyCollection;
 
 /**
  * @extends RepositoryInterface<CardPrint>
@@ -33,4 +34,11 @@ interface CardPrintRepositoryInterface extends RepositoryInterface
      * @return array{prints: int, copies: int, cards: int}
      */
     public function reportTotals(CardPrintReportFilter $filter): array;
+
+    /**
+     * Every printing the report's criteria find, in the report's order, read a chunk at a time (for downloads).
+     *
+     * @return LazyCollection<int, CardPrint>
+     */
+    public function reportRows(CardPrintReportFilter $filter): LazyCollection;
 }

@@ -198,7 +198,8 @@
             "fonts": "ফন্ট",
             "images": "ছবির লাইব্রেরি",
             "cards": "কার্ড",
-            "biometrics": "বায়োমেট্রিক"
+            "biometrics": "বায়োমেট্রিক",
+            "reports": "রিপোর্ট"
         },
         "events": {
             "created": "তৈরি",
@@ -212,7 +213,8 @@
             "two_factor_failed": "২-ধাপ ব্যর্থ",
             "logged_out": "লগআউট",
             "password_reset": "পাসওয়ার্ড রিসেট",
-            "requirements_overridden": "শর্ত পার করা হয়েছে"
+            "requirements_overridden": "শর্ত পার করা হয়েছে",
+            "exported": "ডাউনলোড (রপ্তানি)"
         },
         "reason": "কারণ: {reason}",
         "moments": {

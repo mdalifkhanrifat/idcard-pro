@@ -4,7 +4,9 @@ namespace App\Services\Reports;
 
 use App\Data\Reports\CardPrintReportFilter;
 use App\Data\Reports\ReportColumn;
+use App\Data\Reports\ReportFile;
 use App\Models\CardPrint;
+use App\Models\User;
 use App\Repositories\Contracts\CardPrintRepositoryInterface;
 use App\Services\Reports\Definitions\CardPrintReport;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -18,6 +20,7 @@ class CardPrintReportService
     public function __construct(
         private CardPrintRepositoryInterface $prints,
         private CardPrintReport $report,
+        private ReportExportService $exports,
     ) {}
 
     /**
@@ -58,5 +61,18 @@ class CardPrintReportService
     public function totals(CardPrintReportFilter $filter): array
     {
         return $this->prints->reportTotals($filter);
+    }
+
+    /**
+     * The report as a file (csv, xlsx...) with the chosen columns (or the default ones), kept in the audit log.
+     *
+     * @param  array<int, string>|null  $columnKeys
+     * @param  array<string, mixed>  $filterInput  the filter as asked for, for the audit log
+     */
+    public function export(CardPrintReportFilter $filter, ?array $columnKeys, string $format, array $filterInput, User $actor): ReportFile
+    {
+        $count = $this->prints->reportTotals($filter)['prints'];
+
+        return $this->exports->export($this->report, $this->columns($columnKeys), $count, $this->prints->reportRows($filter), $format, $filterInput, $actor);
     }
 }

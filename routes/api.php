@@ -173,6 +173,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             // Reports (Phase 5): the registry (columns of each report), then each report
             Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
             Route::get('reports/card-prints', [CardPrintReportController::class, 'index'])->name('reports.card-prints');
+            // Files are written whole before sending: heavier than other calls, so limited separately
+            Route::get('reports/card-prints/export', [CardPrintReportController::class, 'export'])->middleware('throttle:20,1')->name('reports.card-prints.export');
         });
 
         // Platform administration

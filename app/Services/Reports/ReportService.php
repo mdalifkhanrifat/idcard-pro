@@ -11,10 +11,15 @@ use App\Models\User;
  */
 class ReportService
 {
-    public function __construct(private ReportRegistry $registry) {}
+    public function __construct(
+        private ReportRegistry $registry,
+        private ReportExportService $exports,
+    ) {}
 
     /**
-     * @return array<int, array{key: string, name: string, columns: array<int, array{key: string, label: string, type: string, group: string}>, default_columns: array<int, string>}>
+     * `formats` (download formats) and `max_export_rows` are empty/null without reports.export.
+     *
+     * @return array<int, array{key: string, name: string, columns: array<int, array{key: string, label: string, type: string, group: string}>, default_columns: array<int, string>, formats: array<int, string>, max_export_rows: int|null}>
      */
     public function catalogue(User $user): array
     {
@@ -22,11 +27,15 @@ class ReportService
             return [];
         }
 
+        $canExport = $user->can('reports.export');
+
         return array_values(array_map(fn (Report $report) => [
             'key' => $report->key(),
             'name' => (string) __("reports.names.{$report->key()}"),
             'columns' => array_values(array_map(fn (ReportColumn $column) => $column->toArray(), $report->columns())),
             'default_columns' => $report->defaultColumns(),
+            'formats' => $canExport ? $this->exports->formats() : [],
+            'max_export_rows' => $canExport ? $this->exports->maxRows() : null,
         ], $this->registry->all()));
     }
 }

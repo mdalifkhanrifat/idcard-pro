@@ -77,4 +77,7 @@ return [
         'replaced' => 'Replaced',
         'revoked' => 'Revoked',
     ],
+    'export' => [
+        'too_many' => 'The report has :count rows; one download may hold at most :max. Narrow the filter (for example by date) and download in parts.',
+    ],
 ];

@@ -198,7 +198,8 @@
             "fonts": "Fonts",
             "images": "Image library",
             "cards": "Cards",
-            "biometrics": "Biometrics"
+            "biometrics": "Biometrics",
+            "reports": "Reports"
         },
         "events": {
             "created": "Created",
@@ -212,7 +213,8 @@
             "two_factor_failed": "2-step failed",
             "logged_out": "Signed out",
             "password_reset": "Password reset",
-            "requirements_overridden": "Requirement overridden"
+            "requirements_overridden": "Requirement overridden",
+            "exported": "Downloaded"
         },
         "reason": "Reason: {reason}",
         "moments": {

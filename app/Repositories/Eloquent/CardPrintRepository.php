@@ -12,6 +12,7 @@ use App\Support\Tenancy\TenantContext;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\LazyCollection;
 
 /**
  * @extends EloquentRepository<CardPrint>
@@ -35,19 +36,14 @@ class CardPrintRepository extends EloquentRepository implements CardPrintReposit
 
     public function report(CardPrintReportFilter $filter): LengthAwarePaginator
     {
-        return $this->reportQuery($filter)
-            ->with([
-                'printer:id,public_id,name',
-                'card:id,public_id,number,status,reason,issue_date,expiry_date,card_template_id,cardholder_id,family_member_id',
-                'card.template:id,public_id,name,code',
-                'card.familyMember:id,public_id,name,relation',
-                'card.cardholder',
-                ...array_map(fn (string $relation) => "card.cardholder.{$relation}", Cardholder::lookupRelations()),
-            ])
-            ->orderBy($filter->sort, $filter->descending ? 'desc' : 'asc')
-            ->orderBy('id', $filter->descending ? 'desc' : 'asc')
+        return $this->ordered($this->withReportRelations($this->reportQuery($filter)), $filter)
             ->paginate(min($filter->perPage, 100))
             ->withQueryString();
+    }
+
+    public function reportRows(CardPrintReportFilter $filter): LazyCollection
+    {
+        return $this->ordered($this->withReportRelations($this->reportQuery($filter)), $filter)->lazy(500);
     }
 
     public function reportTotals(CardPrintReportFilter $filter): array
@@ -94,5 +90,32 @@ class CardPrintRepository extends EloquentRepository implements CardPrintReposit
         }
 
         return $query;
+    }
+
+    /**
+     * @param  Builder<CardPrint>  $query
+     * @return Builder<CardPrint>
+     */
+    private function withReportRelations(Builder $query): Builder
+    {
+        return $query->with([
+            'printer:id,public_id,name',
+            'card:id,public_id,number,status,reason,issue_date,expiry_date,card_template_id,cardholder_id,family_member_id',
+            'card.template:id,public_id,name,code',
+            'card.familyMember:id,public_id,name,relation',
+            'card.cardholder',
+            ...array_map(fn (string $relation) => "card.cardholder.{$relation}", Cardholder::lookupRelations()),
+        ]);
+    }
+
+    /**
+     * @param  Builder<CardPrint>  $query
+     * @return Builder<CardPrint>
+     */
+    private function ordered(Builder $query, CardPrintReportFilter $filter): Builder
+    {
+        return $query
+            ->orderBy($filter->sort, $filter->descending ? 'desc' : 'asc')
+            ->orderBy('id', $filter->descending ? 'desc' : 'asc');
     }
 }
