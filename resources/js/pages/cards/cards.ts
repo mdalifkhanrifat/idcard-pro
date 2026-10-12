@@ -1,4 +1,5 @@
 import { onScopeDispose, ref } from 'vue';
+import { readBlobError, saveDownload } from '@/lib/download';
 import { http } from '@/lib/http';
 import { router } from '@/router';
 import { encodeBarcode, type BarcodeFormat } from '@/pages/card-templates/designer/barcode';
@@ -129,30 +130,10 @@ export async function downloadCardsPdf(cardIds: string[], options: { sides: Prin
             cardIds.length === 1
                 ? await http.get<Blob>(`/cards/${cardIds[0]}/pdf`, { params: { sides: options.sides, sheet: options.sheet, record: options.record ? 1 : 0, ...override }, responseType: 'blob' })
                 : await http.post<Blob>('/cards/pdf', { cards: cardIds, sides: options.sides, record: options.record, sheet: options.sheet, ...override }, { responseType: 'blob' });
-        const filename = /filename="([^"]+)"/.exec(String(response.headers['content-disposition'] ?? ''))?.[1] ?? 'cards.pdf';
-        const url = URL.createObjectURL(response.data);
-        Object.assign(document.createElement('a'), { href: url, download: filename }).click();
-        setTimeout(() => URL.revokeObjectURL(url), 10_000);
+        saveDownload(response, 'cards.pdf');
     } catch (error) {
         throw await readBlobError(error);
     }
-}
-
-/** A failed blob request carries its JSON error as a Blob; read it so the message can be shown. */
-async function readBlobError(error: unknown): Promise<Error> {
-    const data = (error as { response?: { data?: unknown } }).response?.data;
-    if (data instanceof Blob) {
-        try {
-            const body = JSON.parse(await data.text()) as { message?: string };
-            if (body.message) {
-                return new Error(body.message);
-            }
-        } catch {
-            // Not JSON: fall through to the generic message
-        }
-    }
-
-    return error instanceof Error ? error : new Error(String(error));
 }
 
 /** Status shown to people: an active card past its expiry shows as expired. */

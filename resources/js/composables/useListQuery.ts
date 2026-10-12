@@ -16,7 +16,10 @@ export interface PageMeta {
  * Server-side list state (filters, sort, page) mirrored in the URL so filtered views can be bookmarked and shared.
  * Filters are sent as `filter[key]=value`, compatible with spatie/laravel-query-builder.
  */
-export function useListQuery<T>(endpoint: string | (() => string), defaults: { filters: Record<string, string>; sort?: string; perPage?: number }) {
+export function useListQuery<T, M extends PageMeta = PageMeta>(
+    endpoint: string | (() => string),
+    defaults: { filters: Record<string, string>; sort?: string; perPage?: number; extraParams?: () => Record<string, unknown> },
+) {
     const route = useRoute();
     const router = useRouter();
     const ui = useUiStore();
@@ -33,7 +36,7 @@ export function useListQuery<T>(endpoint: string | (() => string), defaults: { f
     const page = ref<number>(Number(route.query.page ?? 1));
     const perPage = ref<number>(Number(route.query.per_page ?? defaults.perPage ?? 15));
     const rows = ref([]) as Ref<T[]>;
-    const meta = ref<PageMeta>({ current_page: 1, last_page: 1, total: 0, from: null, to: null });
+    const meta = ref({ current_page: 1, last_page: 1, total: 0, from: null, to: null } as PageMeta as M) as Ref<M>;
     const loading = ref(false);
 
     /** The list's filters and sort as request parameters (no page), e.g. to act on every row the filter finds. */
@@ -54,7 +57,8 @@ export function useListQuery<T>(endpoint: string | (() => string), defaults: { f
 
     async function load(): Promise<void> {
         loading.value = true;
-        const params = { ...queryParams(), page: page.value, per_page: perPage.value };
+        // Extra parameters (e.g. a report's chosen columns) shape the rows, not which rows: not in the URL
+        const params = { ...queryParams(), ...defaults.extraParams?.(), page: page.value, per_page: perPage.value };
 
         try {
             const { data } = await http.get(typeof endpoint === 'function' ? endpoint() : endpoint, { params });

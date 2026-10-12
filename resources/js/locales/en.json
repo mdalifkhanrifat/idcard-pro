@@ -217,6 +217,7 @@
             "exported": "Downloaded"
         },
         "reason": "Reason: {reason}",
+        "exportDetail": "{report} · {format} · {rows} rows",
         "moments": {
             "issue": "Issue",
             "print": "Print"
@@ -1524,6 +1525,64 @@
             "exceptions": "With exceptions",
             "incomplete": "Incomplete",
             "not_required": "Not required"
+        }
+    },
+    "reports": {
+        "title": "Reports",
+        "subtitle": "Lists of cards and printings to see, filter and download.",
+        "none": "No reports available to you.",
+        "names": {
+            "card_prints": "Card print history"
+        },
+        "descriptions": {
+            "card_prints": "Every printing of every card: when, by whom, how and how many copies."
+        },
+        "groups": {
+            "print": "Printing",
+            "card": "Card",
+            "holder": "Card holder",
+            "cardholder": "Cardholder",
+            "custom": "Additional information"
+        },
+        "columns": {
+            "button": "Columns",
+            "title": "Columns",
+            "description": "Choose what the report shows and in which order. Your choice is kept in this browser; downloads use it too.",
+            "search": "Find a column",
+            "noMatch": "No column matches.",
+            "chosen": "Shown ({count})",
+            "moveUp": "Move up",
+            "moveDown": "Move down",
+            "remove": "Remove",
+            "none": "Choose at least one column.",
+            "useDefault": "Use the organization's columns",
+            "resetOrgDefault": "Restore the report's standard columns for everybody",
+            "saveOrgDefault": "Save as the organization's default",
+            "apply": "Apply",
+            "savedDefault": "Saved as the organization's default columns.",
+            "resetDefault": "The report's standard columns are the default again."
+        },
+        "download": {
+            "csv": "CSV",
+            "xlsx": "Excel",
+            "tooMany": "Too many rows for one download (at most {max}). Narrow the filter, for example by date."
+        },
+        "totals": {
+            "prints": "Printings",
+            "copies": "Copies",
+            "cards": "Cards"
+        },
+        "cardPrints": {
+            "searchPlaceholder": "Card number, RF number, name or employee number",
+            "method": "Printed from",
+            "methods": {
+                "browser": "Browser",
+                "pdf": "PDF",
+                "import": "Imported (printed earlier)"
+            },
+            "printedBy": "Printed by",
+            "empty": "No printings found.",
+            "emptyHint": "Cards printed from this system appear here."
         }
     }
 }

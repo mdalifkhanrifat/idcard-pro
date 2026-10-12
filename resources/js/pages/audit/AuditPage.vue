@@ -18,7 +18,7 @@ interface ActivityRow {
     subject_type: string;
     causer: { name: string; email: string } | null;
     /** Field changes, or what an event recorded (e.g. requirements_overridden: moment, reason, requirements). */
-    changes: { attributes?: Record<string, unknown>; old?: Record<string, unknown>; reason?: string; moment?: string } | null;
+    changes: { attributes?: Record<string, unknown>; old?: Record<string, unknown>; reason?: string; moment?: string; report?: string; format?: string; rows?: number } | null;
     created_at: string;
 }
 interface LoginRow {
@@ -31,7 +31,7 @@ interface LoginRow {
     created_at: string;
 }
 
-const { t, te } = useI18n();
+const { t, te, n } = useI18n();
 const tab = ref('changes');
 
 const activities = useListQuery<ActivityRow>('/audit/activities', { filters: { log_name: '', event: '', date_from: '', date_to: '' }, perPage: 25 });
@@ -86,8 +86,11 @@ function browser(ua: string): string {
                     <li v-for="row in activities.rows.value" :key="row.id" class="flex flex-col gap-1 px-5 py-3 text-sm sm:flex-row sm:items-center sm:gap-4">
                         <UiBadge :tone="tone(row.event) ?? 'neutral'" class="w-fit">{{ eventLabel(row.event) }}</UiBadge>
                         <div class="min-w-0 flex-1">
-                            <p class="text-fg"><span class="font-medium">{{ row.causer?.name ?? 'System' }}</span> · {{ row.subject_type }}</p>
+                            <p class="text-fg"><span class="font-medium">{{ row.causer?.name ?? 'System' }}</span><template v-if="row.subject_type"> · {{ row.subject_type }}</template></p>
                             <p v-if="changedFields(row).length" class="truncate text-xs text-muted">{{ changedFields(row).join(', ') }}</p>
+                            <p v-if="row.event === 'exported' && row.changes?.report" class="text-xs text-muted" data-audit-export>
+                                {{ t('audit.exportDetail', { report: te(`reports.names.${row.changes.report}`) ? t(`reports.names.${row.changes.report}`) : row.changes.report, format: (row.changes.format ?? '').toUpperCase(), rows: n(row.changes.rows ?? 0) }) }}
+                            </p>
                             <p v-if="row.changes?.reason" class="text-xs text-muted" data-audit-reason>
                                 <template v-if="row.changes.moment && te(`audit.moments.${row.changes.moment}`)">{{ t(`audit.moments.${row.changes.moment}`) }} · </template>{{ t('audit.reason', { reason: row.changes.reason }) }}
                             </p>

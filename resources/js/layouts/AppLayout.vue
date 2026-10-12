@@ -30,8 +30,12 @@ const sections = computed<{ title?: string; items: NavItem[] }[]>(() => {
 
     if (auth.tenant) {
         result.push({ items: [{ to: '/', label: t('nav.dashboard'), icon: LayoutDashboard }] });
-        if (auth.can('cardholders.view')) {
-            result.push({ title: t('nav.records'), items: [{ to: '/cardholders', label: t('nav.cardholders'), icon: ContactRound }] });
+        const records = [
+            { to: '/cardholders', label: t('nav.cardholders'), icon: ContactRound, permission: 'cardholders.view' },
+            { to: '/reports', label: t('nav.reports'), icon: FileBarChart, permission: 'reports.view' },
+        ].filter((item) => auth.can(item.permission));
+        if (records.length) {
+            result.push({ title: t('nav.records'), items: records });
         }
         const cardItems = [
             { to: '/cards', label: t('nav.cards'), icon: CreditCard, permission: 'cards.view' },
@@ -44,7 +48,6 @@ const sections = computed<{ title?: string; items: NavItem[] }[]>(() => {
             title: t('nav.comingSoon'),
             items: [
                 { label: t('nav.appointments'), icon: CalendarClock, soon: true },
-                { label: t('nav.reports'), icon: FileBarChart, soon: true },
             ],
         });
         const setup = [
