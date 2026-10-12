@@ -125,8 +125,39 @@ class CardDataResolver
      */
     public function fields(CardTemplate $template, Cardholder $cardholder, ?FamilyMember $member = null, ?CarbonInterface $on = null): array
     {
+        $cardholder->loadMissing('tenant');
         $locale = $cardholder->tenant->locale ?: app()->getLocale();
-        $cardholder->loadMissing([...Cardholder::lookupRelations(), 'tenant']);
+        $fields = $this->holderFields($cardholder, $locale);
+
+        if ($member !== null) {
+            $member->loadMissing('bloodGroup');
+            foreach (self::FAMILY_TEXT_COLUMNS as $column) {
+                $fields["family.{$column}"] = (string) $member->{$column};
+            }
+            $fields['family.date_of_birth'] = $this->date($member->date_of_birth);
+            $fields['family.gender'] = $this->label('gender', $member->gender, $locale);
+            $fields['family.relation'] = $this->label('relation', $member->relation, $locale);
+            $fields['family.blood_group'] = $this->lookup($member->bloodGroup);
+        }
+
+        $signatory = $template->authority_type_id === null ? null : $this->signatories->activeFor($template->authority_type_id, $on ?? now());
+        $fields['signatory.name'] = (string) $signatory?->name;
+        $fields['signatory.designation'] = (string) $signatory?->designation;
+        $fields['organization.name'] = $cardholder->tenant->name;
+
+        return array_filter($fields, fn (string $value) => $value !== '');
+    }
+
+    /**
+     * Text values of a cardholder's own fields (config card_template_elements.fields.cardholder, master data by
+     * type, custom fields as "custom.<key>"), in the given language; empty when not set. The same values a card
+     * prints, so reports and exports show them the same way.
+     *
+     * @return array<string, string>
+     */
+    public function holderFields(Cardholder $cardholder, string $locale): array
+    {
+        $cardholder->loadMissing(Cardholder::lookupRelations());
         $fields = [];
 
         foreach (self::TEXT_COLUMNS as $column) {
@@ -146,23 +177,7 @@ class CardDataResolver
             $fields["custom.{$key}"] = $this->customValue($value, $locale);
         }
 
-        if ($member !== null) {
-            $member->loadMissing('bloodGroup');
-            foreach (self::FAMILY_TEXT_COLUMNS as $column) {
-                $fields["family.{$column}"] = (string) $member->{$column};
-            }
-            $fields['family.date_of_birth'] = $this->date($member->date_of_birth);
-            $fields['family.gender'] = $this->label('gender', $member->gender, $locale);
-            $fields['family.relation'] = $this->label('relation', $member->relation, $locale);
-            $fields['family.blood_group'] = $this->lookup($member->bloodGroup);
-        }
-
-        $signatory = $template->authority_type_id === null ? null : $this->signatories->activeFor($template->authority_type_id, $on ?? now());
-        $fields['signatory.name'] = (string) $signatory?->name;
-        $fields['signatory.designation'] = (string) $signatory?->designation;
-        $fields['organization.name'] = $cardholder->tenant->name;
-
-        return array_filter($fields, fn (string $value) => $value !== '');
+        return $fields;
     }
 
     private function date(?CarbonInterface $date): string

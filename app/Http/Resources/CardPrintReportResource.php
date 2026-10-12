@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Data\Reports\ReportColumn;
 use App\Models\Cardholder;
 use App\Models\CardPrint;
 use App\Models\MasterDataItem;
@@ -16,6 +17,15 @@ use Illuminate\Support\Str;
  */
 class CardPrintReportResource extends JsonResource
 {
+    /**
+     * @param  CardPrint  $resource
+     * @param  array<int, ReportColumn>  $columns  chosen columns whose values the row carries
+     */
+    public function __construct($resource, private array $columns = [])
+    {
+        parent::__construct($resource);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -57,6 +67,8 @@ class CardPrintReportResource extends JsonResource
                     return [$type => $item ? ['id' => $item->public_id, 'name' => $item->name, 'code' => $item->code] : null];
                 })->all(),
             ],
+            // The chosen columns as the report shows and exports them (only when columns were asked for)
+            'values' => $this->when($this->columns !== [], fn () => collect($this->columns)->mapWithKeys(fn (ReportColumn $column) => [$column->key => $column->jsonValueOf($this->resource)])->all()),
         ];
     }
 }

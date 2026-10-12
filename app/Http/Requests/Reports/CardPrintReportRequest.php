@@ -4,6 +4,7 @@ namespace App\Http\Requests\Reports;
 
 use App\Data\Reports\CardPrintReportFilter;
 use App\Models\CardPrint;
+use App\Services\Reports\CardPrintReportService;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -36,7 +37,18 @@ class CardPrintReportRequest extends FormRequest
             ...collect($lookupKeys)->mapWithKeys(fn (string $key) => ["filter.{$key}" => ['nullable', 'string', 'size:26']])->all(),
             'sort' => ['sometimes', Rule::in($sorts)],
             'per_page' => ['sometimes', 'integer', 'between:1,100'],
+            // Columns whose values each row carries (`values`), in this order; any column of GET /reports
+            'columns' => ['sometimes', 'array', 'max:100'],
+            'columns.*' => ['string', 'distinct', Rule::in(array_keys(app(CardPrintReportService::class)->availableColumns()))],
         ];
+    }
+
+    /**
+     * @return array<int, string>|null
+     */
+    public function columnKeys(): ?array
+    {
+        return $this->validated('columns');
     }
 
     public function toFilter(): CardPrintReportFilter

@@ -28,6 +28,7 @@ use App\Http\Controllers\Api\V1\PermissionController;
 use App\Http\Controllers\Api\V1\Platform\TenantController;
 use App\Http\Controllers\Api\V1\QualificationController;
 use App\Http\Controllers\Api\V1\Reports\CardPrintReportController;
+use App\Http\Controllers\Api\V1\Reports\ReportController;
 use App\Http\Controllers\Api\V1\RoleController;
 use App\Http\Controllers\Api\V1\SignatoryController;
 use App\Http\Controllers\Api\V1\TenantFontController;
@@ -169,7 +170,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('cards/{card}/pdf', [CardPdfController::class, 'show'])->middleware('throttle:60,1')->name('cards.pdf.show');
             Route::apiResource('cardholders.qualifications', QualificationController::class)->except('show')->scoped(['cardholder' => 'public_id', 'qualification' => 'public_id']);
 
-            // Reports (Phase 5)
+            // Reports (Phase 5): the registry (columns of each report), then each report
+            Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
             Route::get('reports/card-prints', [CardPrintReportController::class, 'index'])->name('reports.card-prints');
         });
 
