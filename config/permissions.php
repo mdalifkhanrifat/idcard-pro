@@ -34,6 +34,8 @@ return [
         'cards' => ['view', 'issue', 'print', 'update', 'revoke', 'override_requirements'],
         // Biometric captures (Phase 4): see them, capture or mark a position unavailable, delete them
         'biometrics' => ['view', 'enroll', 'delete'],
+        // Reports (Phase 5): see them, and download them as files (each download is kept in the audit log)
+        'reports' => ['view', 'export'],
     ],
 
     'default_roles' => [
@@ -49,10 +51,11 @@ return [
             'images.view', 'images.create', 'images.update', 'images.delete',
             'cards.view', 'cards.issue', 'cards.print', 'cards.update', 'cards.revoke', 'cards.override_requirements',
             'biometrics.view', 'biometrics.enroll', 'biometrics.delete',
+            'reports.view', 'reports.export',
         ],
         // Legacy operators printed cards, so they issue them too
         'Operator' => ['users.view', 'master_data.view', 'cardholders.view', 'cardholders.create', 'cardholders.update', 'templates.view', 'cards.view', 'cards.issue', 'cards.print', 'biometrics.view', 'biometrics.enroll'],
-        'Viewer' => ['users.view', 'audit.view', 'master_data.view', 'cardholders.view', 'cards.view'],
+        'Viewer' => ['users.view', 'audit.view', 'master_data.view', 'cardholders.view', 'cards.view', 'reports.view'],
     ],
 
 ];

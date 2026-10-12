@@ -155,7 +155,8 @@
             "fonts": "ফন্ট",
             "images": "ছবির লাইব্রেরি",
             "cards": "ইস্যু হওয়া কার্ড",
-            "biometrics": "বায়োমেট্রিক"
+            "biometrics": "বায়োমেট্রিক",
+            "reports": "রিপোর্ট"
         },
         "abilities": {
             "view": "দেখা",
@@ -167,7 +168,8 @@
             "print": "প্রিন্ট",
             "revoke": "বাতিল",
             "enroll": "নেওয়া",
-            "override_requirements": "শর্ত পার করা"
+            "override_requirements": "শর্ত পার করা",
+            "export": "রপ্তানি"
         }
     },
     "audit": {

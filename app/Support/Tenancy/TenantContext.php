@@ -3,6 +3,7 @@
 namespace App\Support\Tenancy;
 
 use App\Models\Tenant;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Context;
 
 /**
@@ -33,6 +34,17 @@ class TenantContext
     public function has(): bool
     {
         return $this->tenant !== null;
+    }
+
+    /**
+     * Start of a day (Y-m-d) in the organization's time zone, as stored (UTC). A date range "from A to B"
+     * covers [dayStart(A), dayStart(B) + 1 day), so the last day counts in full.
+     */
+    public function dayStart(string $date): CarbonImmutable
+    {
+        $timezone = $this->tenant?->timezone ?: (string) config('app.timezone');
+
+        return CarbonImmutable::parse($date, $timezone)->startOfDay()->utc();
     }
 
     /**

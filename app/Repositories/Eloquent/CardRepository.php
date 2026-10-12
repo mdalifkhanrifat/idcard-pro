@@ -11,7 +11,6 @@ use App\Models\CardTemplate;
 use App\Models\MasterDataItem;
 use App\Repositories\Contracts\CardRepositoryInterface;
 use App\Support\Tenancy\TenantContext;
-use Carbon\CarbonImmutable;
 use DateTimeInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -73,8 +72,8 @@ class CardRepository extends EloquentRepository implements CardRepositoryInterfa
             ->when($filter->printed === 'pending', fn (Builder $q) => $q->where('print_count', 0))
             ->when($filter->printed === 'printed', fn (Builder $q) => $q->where('print_count', '>', 0))
             ->when($filter->printedFrom || $filter->printedTo, fn (Builder $q) => $q->whereHas('prints', fn (Builder $p) => $p
-                ->when($filter->printedFrom, fn (Builder $w, string $date) => $w->where('printed_at', '>=', $this->dayStart($date)))
-                ->when($filter->printedTo, fn (Builder $w, string $date) => $w->where('printed_at', '<', $this->dayStart($date)->addDay()))));
+                ->when($filter->printedFrom, fn (Builder $w, string $date) => $w->where('printed_at', '>=', app(TenantContext::class)->dayStart($date)))
+                ->when($filter->printedTo, fn (Builder $w, string $date) => $w->where('printed_at', '<', app(TenantContext::class)->dayStart($date)->addDay()))));
 
         foreach ($filter->lookups as $column => $publicId) {
             $query->whereHas('cardholder', fn (Builder $c) => $c->whereIn($column, MasterDataItem::query()->where('public_id', $publicId)->select('id')));
@@ -110,16 +109,6 @@ class CardRepository extends EloquentRepository implements CardRepositoryInterfa
             // Valid cards never printed (legacy "PENDING")
             'pending' => $this->whereValid($this->query())->where('print_count', 0)->count(),
         ];
-    }
-
-    /**
-     * Start of a day in the organization's time zone, as stored (UTC).
-     */
-    private function dayStart(string $date): CarbonImmutable
-    {
-        $timezone = app(TenantContext::class)->get()?->timezone ?: (string) config('app.timezone');
-
-        return CarbonImmutable::parse($date, $timezone)->startOfDay()->utc();
     }
 
     public function forCardholder(Cardholder $cardholder): Collection

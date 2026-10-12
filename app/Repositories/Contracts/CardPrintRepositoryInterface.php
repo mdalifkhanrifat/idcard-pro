@@ -2,8 +2,10 @@
 
 namespace App\Repositories\Contracts;
 
+use App\Data\Reports\CardPrintReportFilter;
 use App\Models\Card;
 use App\Models\CardPrint;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
 /**
@@ -17,4 +19,18 @@ interface CardPrintRepositoryInterface extends RepositoryInterface
      * @return Collection<int, CardPrint>
      */
     public function listFor(Card $card): Collection;
+
+    /**
+     * Every printing the report's criteria find, a page at a time, with the card, its holder and who printed it.
+     *
+     * @return LengthAwarePaginator<int, CardPrint>
+     */
+    public function report(CardPrintReportFilter $filter): LengthAwarePaginator;
+
+    /**
+     * Totals of what the report's criteria find: printings, copies and distinct cards.
+     *
+     * @return array{prints: int, copies: int, cards: int}
+     */
+    public function reportTotals(CardPrintReportFilter $filter): array;
 }

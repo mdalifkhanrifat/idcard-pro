@@ -155,7 +155,8 @@
             "fonts": "Fonts",
             "images": "Image library",
             "cards": "Issued cards",
-            "biometrics": "Biometrics"
+            "biometrics": "Biometrics",
+            "reports": "Reports"
         },
         "abilities": {
             "view": "View",
@@ -167,7 +168,8 @@
             "print": "Print",
             "revoke": "Revoke",
             "enroll": "Enroll",
-            "override_requirements": "Override requirements"
+            "override_requirements": "Override requirements",
+            "export": "Export"
         }
     },
     "audit": {
