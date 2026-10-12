@@ -25,7 +25,7 @@ class ListLoginEventsRequest extends FormRequest
             'filter.identifier' => ['nullable', 'string', 'max:255'],
             'filter.ip_address' => ['nullable', 'ip'],
             'filter.date_from' => ['nullable', 'date_format:Y-m-d'],
-            'filter.date_to' => ['nullable', 'date_format:Y-m-d'],
+            'filter.date_to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:filter.date_from'],
             'per_page' => ['sometimes', 'integer', 'between:1,100'],
         ];
     }

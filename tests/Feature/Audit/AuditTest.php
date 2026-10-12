@@ -2,6 +2,7 @@
 
 use App\Enums\LoginEventType;
 use App\Services\Audit\AuditService;
+use Carbon\CarbonImmutable;
 use Illuminate\Http\Request;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
@@ -52,6 +53,27 @@ it('filters the sign-in history of the current organization', function () {
     $this->getJson('/api/v1/audit/logins')->assertJsonCount(2, 'data');
     $this->getJson('/api/v1/audit/logins?filter[event]=failed')->assertJsonCount(1, 'data')->assertJsonPath('data.0.ip_address', '10.0.0.7');
     $this->getJson('/api/v1/audit/logins?filter[event]=bogus')->assertJsonValidationErrors('filter.event');
+});
+
+it('filters changes and sign-ins by the organization\'s days, not UTC days', function () {
+    $this->tenant->update(['timezone' => 'Asia/Dhaka']);
+    $this->owner->setRelation('tenant', $this->tenant);
+    $request = Request::create('/');
+    Sanctum::actingAs($this->owner);
+    // 1 April, 01:30 in Dhaka is still 31 March in UTC
+    $this->travelTo(CarbonImmutable::parse('2026-04-01 01:30', 'Asia/Dhaka'));
+    $this->putJson('/api/v1/auth/me', ['name' => 'Early riser'])->assertOk();
+    app(AuditService::class)->recordLogin(LoginEventType::Succeeded, $request, $this->owner, $this->tenant, 'a@example.com');
+    // 1 April, 23:30 in Dhaka is 1 April in UTC too
+    $this->travelTo(CarbonImmutable::parse('2026-04-01 23:30', 'Asia/Dhaka'));
+    app(AuditService::class)->recordLogin(LoginEventType::Failed, $request, $this->owner, $this->tenant, 'a@example.com');
+    $this->travelBack();
+
+    $this->getJson('/api/v1/audit/activities?filter[event]=updated&filter[date_from]=2026-04-01&filter[date_to]=2026-04-01')->assertJsonCount(1, 'data');
+    $this->getJson('/api/v1/audit/activities?filter[event]=updated&filter[date_to]=2026-03-31')->assertJsonCount(0, 'data');
+    $this->getJson('/api/v1/audit/logins?filter[date_from]=2026-04-01&filter[date_to]=2026-04-01')->assertJsonCount(2, 'data');
+    $this->getJson('/api/v1/audit/logins?filter[date_from]=2026-04-02')->assertJsonCount(0, 'data');
+    $this->getJson('/api/v1/audit/logins?filter[date_from]=2026-04-02&filter[date_to]=2026-04-01')->assertJsonValidationErrors('filter.date_to');
 });
 
 it('requires the audit permission', function () {

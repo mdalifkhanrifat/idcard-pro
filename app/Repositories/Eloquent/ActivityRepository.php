@@ -5,6 +5,7 @@ namespace App\Repositories\Eloquent;
 use App\Data\Audit\ActivityFilter;
 use App\Models\User;
 use App\Repositories\Contracts\ActivityRepositoryInterface;
+use App\Support\Tenancy\TenantContext;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Spatie\Activitylog\Models\Activity;
@@ -18,8 +19,8 @@ class ActivityRepository implements ActivityRepositoryInterface
             ->when($filter->logName, fn (Builder $q, string $v) => $q->where('log_name', $v))
             ->when($filter->event, fn (Builder $q, string $v) => $q->where('event', $v))
             ->when($filter->causerPublicId, fn (Builder $q, string $v) => $q->whereIn('causer_id', User::query()->where('public_id', $v)->select('id')))
-            ->when($filter->dateFrom, fn (Builder $q, string $v) => $q->whereDate('created_at', '>=', $v))
-            ->when($filter->dateTo, fn (Builder $q, string $v) => $q->whereDate('created_at', '<=', $v))
+            ->when($filter->dateFrom, fn (Builder $q, string $v) => $q->where('created_at', '>=', app(TenantContext::class)->dayStart($v)))
+            ->when($filter->dateTo, fn (Builder $q, string $v) => $q->where('created_at', '<', app(TenantContext::class)->dayStart($v)->addDay()))
             ->orderByDesc('id')
             ->paginate(min($filter->perPage, 100))
             ->withQueryString();

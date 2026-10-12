@@ -24,7 +24,7 @@ class ListActivitiesRequest extends FormRequest
             'filter.event' => ['nullable', 'string', 'max:50', 'regex:/^[a-z_]+$/'],
             'filter.causer' => ['nullable', 'string', 'size:26'],
             'filter.date_from' => ['nullable', 'date_format:Y-m-d'],
-            'filter.date_to' => ['nullable', 'date_format:Y-m-d'],
+            'filter.date_to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:filter.date_from'],
             'per_page' => ['sometimes', 'integer', 'between:1,100'],
         ];
     }

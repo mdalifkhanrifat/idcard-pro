@@ -36,8 +36,8 @@ class LoginEventRepository implements LoginEventRepositoryInterface
             ->when($filter->event, fn (Builder $q, string $v) => $q->where('event', $v))
             ->when($filter->identifier, fn (Builder $q, string $v) => $q->where('identifier', 'like', "%{$v}%"))
             ->when($filter->ipAddress, fn (Builder $q, string $v) => $q->where('ip_address', $v))
-            ->when($filter->dateFrom, fn (Builder $q, string $v) => $q->whereDate('created_at', '>=', $v))
-            ->when($filter->dateTo, fn (Builder $q, string $v) => $q->whereDate('created_at', '<=', $v))
+            ->when($filter->dateFrom, fn (Builder $q, string $v) => $q->where('created_at', '>=', $this->tenantContext->dayStart($v)))
+            ->when($filter->dateTo, fn (Builder $q, string $v) => $q->where('created_at', '<', $this->tenantContext->dayStart($v)->addDay()))
             ->orderByDesc('id')
             ->paginate(min($filter->perPage, 100))
             ->withQueryString();
