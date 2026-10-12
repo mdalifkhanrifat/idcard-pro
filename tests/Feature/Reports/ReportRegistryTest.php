@@ -5,6 +5,7 @@ use App\Models\FamilyMember;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
+use Spatie\Activitylog\Models\Activity;
 
 beforeEach(function () {
     Storage::fake(config('cardholder_files.disk'));
@@ -78,4 +79,44 @@ it('shows the registry only to users who may see reports', function () {
     $this->getJson('/api/v1/reports')->assertForbidden();
     Sanctum::actingAs(tenantUser($this->tenant, 'Viewer'));
     $this->getJson('/api/v1/reports')->assertOk()->assertJsonPath('data.0.key', 'card_prints');
+});
+
+it('lets the organization choose the columns a report shows by default, kept in its audit log', function () {
+    $standard = ['holder.name', 'card.reason', 'card.number', 'note', 'printed_at', 'printed_by', 'copies'];
+    $chosen = ['holder.name', 'cardholder.rank', 'cardholder.branch', 'cardholder.employee_no', 'card.number', 'cardholder.custom.house'];
+
+    $this->putJson('/api/v1/reports/card-prints/columns', ['columns' => $chosen])->assertOk()
+        ->assertJsonPath('data.default_columns', $chosen)
+        ->assertJsonPath('data.standard_columns', $standard);
+    $this->getJson('/api/v1/reports')->assertJsonPath('data.0.default_columns', $chosen);
+    expect($this->tenant->refresh()->settings['reports'])->toBe(['card_prints' => ['columns' => $chosen]]);
+
+    // Downloads without chosen columns use the organization's
+    $this->get('/api/v1/reports/card-prints/export?format=csv')->assertOk();
+    expect(Activity::query()->where('log_name', 'reports')->sole()->properties['columns'])->toBe($chosen);
+
+    $change = Activity::query()->where('log_name', 'tenant')->latest('id')->first();
+    expect($change->causer_id)->toBe($this->owner->id)
+        ->and($change->attribute_changes['attributes'])->toBe(['settings.reports.card_prints.columns' => $chosen]);
+
+    // A custom field turned off drops out of the default
+    app(TenantContext::class)->run($this->tenant, fn () => CustomField::query()->where('key', 'house')->update(['is_active' => false]));
+    $this->getJson('/api/v1/reports')->assertJsonPath('data.0.default_columns', array_slice($chosen, 0, 5));
+
+    // Back to the report's own default: nothing is kept, so later improvements to it apply
+    $this->putJson('/api/v1/reports/card-prints/columns', ['columns' => $standard])->assertOk()->assertJsonPath('data.default_columns', $standard);
+    expect($this->tenant->refresh()->settings)->not->toHaveKey('reports');
+    $this->putJson('/api/v1/reports/card-prints/columns', ['columns' => ['card.number']])->assertOk();
+    $this->putJson('/api/v1/reports/card-prints/columns', ['columns' => null])->assertOk()->assertJsonPath('data.default_columns', $standard);
+    expect($this->tenant->refresh()->settings)->not->toHaveKey('reports');
+});
+
+it('validates the default columns and needs settings.update', function () {
+    $this->putJson('/api/v1/reports/card-prints/columns', ['columns' => []])->assertJsonValidationErrors('columns');
+    $this->putJson('/api/v1/reports/card-prints/columns', [])->assertJsonValidationErrors('columns');
+    $this->putJson('/api/v1/reports/card-prints/columns', ['columns' => ['card.number', 'card.number', 'cardholder.password']])->assertJsonValidationErrors(['columns.0', 'columns.2']);
+    $this->putJson('/api/v1/reports/no-such-report/columns', ['columns' => ['card.number']])->assertNotFound();
+
+    Sanctum::actingAs(tenantUser($this->tenant, 'Administrator'));
+    $this->putJson('/api/v1/reports/card-prints/columns', ['columns' => ['card.number']])->assertForbidden();
 });

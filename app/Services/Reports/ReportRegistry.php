@@ -25,6 +25,14 @@ class ReportRegistry
     }
 
     /**
+     * The registry key of a report's address ("card-prints" => "card_prints").
+     */
+    public static function keyOf(string $slug): string
+    {
+        return str_replace('-', '_', $slug);
+    }
+
+    /**
      * @throws NotFoundHttpException An unknown report
      */
     public function get(string $key): Report

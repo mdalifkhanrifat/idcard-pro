@@ -21,6 +21,7 @@ class CardPrintReportService
         private CardPrintRepositoryInterface $prints,
         private CardPrintReport $report,
         private ReportExportService $exports,
+        private ReportService $reports,
     ) {}
 
     /**
@@ -34,7 +35,8 @@ class CardPrintReportService
     }
 
     /**
-     * The chosen columns in the order given, or the default ones when none were chosen.
+     * The chosen columns in the order given, or the default ones (the organization's, else the report's) when
+     * none were chosen.
      *
      * @param  array<int, string>|null  $keys  validated keys of availableColumns()
      * @return array<int, ReportColumn>
@@ -42,7 +44,7 @@ class CardPrintReportService
     public function columns(?array $keys): array
     {
         $available = $this->report->columns();
-        $chosen = array_filter($keys ?: $this->report->defaultColumns(), fn (string $key) => isset($available[$key]));
+        $chosen = array_filter($keys ?: $this->reports->defaultColumns($this->report, $available), fn (string $key) => isset($available[$key]));
 
         return array_values(array_map(fn (string $key) => $available[$key], $chosen));
     }

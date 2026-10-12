@@ -199,4 +199,17 @@ class Tenant extends Model
 
         return is_array($size) ? ['width' => (float) $size['width'], 'height' => (float) $size['height']] : CardTemplate::CR80;
     }
+
+    /**
+     * Columns the organization chose to show by default in a report (config/reports.php key), or null for the
+     * report's own default.
+     *
+     * @return array<int, string>|null
+     */
+    public function reportColumns(string $report): ?array
+    {
+        $columns = $this->settings['reports'][$report]['columns'] ?? null;
+
+        return is_array($columns) && $columns !== [] ? array_values(array_map(strval(...), $columns)) : null;
+    }
 }

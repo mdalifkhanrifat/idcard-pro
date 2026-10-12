@@ -83,6 +83,30 @@ class TenantService
     }
 
     /**
+     * The columns a report shows by default in this organization (settings.reports.<report>.columns); null goes
+     * back to the report's own default. Kept in the organization's audit log like any other setting.
+     *
+     * @param  array<int, string>|null  $columns
+     */
+    public function updateReportColumns(Tenant $tenant, string $report, ?array $columns): Tenant
+    {
+        $settings = $tenant->settings ?? [];
+        $reports = (array) ($settings['reports'] ?? []);
+        if ($columns === null) {
+            unset($reports[$report]);
+        } else {
+            $reports[$report] = [...(array) ($reports[$report] ?? []), 'columns' => array_values($columns)];
+        }
+        if ($reports === []) {
+            unset($settings['reports']);
+        } else {
+            $settings['reports'] = $reports;
+        }
+
+        return $this->tenants->update($tenant, ['settings' => $settings])->refresh();
+    }
+
+    /**
      * Update branding and regional settings, optionally replacing the logo.
      *
      * @param  array<string, mixed>  $data
