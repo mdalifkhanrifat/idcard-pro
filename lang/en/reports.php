@@ -3,9 +3,11 @@
 return [
     'names' => [
         'card_prints' => 'Card print history',
+        'expired_cards' => 'Expired cards',
     ],
     'descriptions' => [
         'card_prints' => 'Every printing of every card: when, by whom, how and how many copies.',
+        'expired_cards' => 'Current cards past their last valid day, or expiring soon, to renew in time.',
     ],
     'groups' => [
         'print' => 'Printing',
@@ -29,6 +31,12 @@ return [
         'card.template' => 'Template',
         'holder.name' => 'Name',
         'family.relation' => 'Relation',
+        'card.rf_card_no' => 'RF card no',
+        'card.days_overdue' => 'Days past expiry',
+        'card.print_count' => 'Times printed',
+        'card.last_printed_at' => 'Last printed',
+        'card.issued_by' => 'Issued by',
+        'card.created_at' => 'Created at',
     ],
     'fields' => [
         'full_name' => 'Full name',
@@ -90,11 +98,21 @@ return [
             'cardholder' => 'Cardholders',
             'family' => 'Family members',
         ],
+        'validity' => 'Show',
+        'validities' => [
+            'expired' => 'Expired',
+            'expiring' => 'Expiring soon',
+        ],
+        'expiring_days' => 'Expiring within (days)',
+        'expiry_from' => 'Expiry date from',
+        'expiry_to' => 'Expiry date to',
     ],
     'totals' => [
         'prints' => 'Printings',
         'copies' => 'Copies',
         'cards' => 'Cards',
+        'cardholders' => 'Cardholders',
+        'family_cards' => 'Family members\' cards',
     ],
     'export' => [
         'too_many' => 'The report has :count rows; one download may hold at most :max. Narrow the filter (for example by date) and download in parts.',

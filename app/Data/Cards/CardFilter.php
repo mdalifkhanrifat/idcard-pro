@@ -47,6 +47,9 @@ final readonly class CardFilter
         public string $sort = 'created_at',
         public bool $descending = true,
         public int $perPage = 15,
+        /** Expiring on or after / on or before these days. */
+        public ?string $expiryFrom = null,
+        public ?string $expiryTo = null,
     ) {}
 
     /**

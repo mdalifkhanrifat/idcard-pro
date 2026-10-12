@@ -12,8 +12,6 @@ use App\Repositories\Contracts\CardPrintRepositoryInterface;
 use App\Services\Reports\Columns\CardholderColumns;
 use App\Services\Reports\Concerns\DescribesCards;
 use App\Services\Reports\Report;
-use App\Support\Tenancy\TenantContext;
-use Closure;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\LazyCollection;
@@ -30,7 +28,6 @@ class CardPrintReport implements Report
 
     public function __construct(
         private CardholderColumns $cardholderColumns,
-        private TenantContext $tenant,
         private CardPrintRepositoryInterface $prints,
     ) {}
 
@@ -46,26 +43,16 @@ class CardPrintReport implements Report
 
     public function columns(): array
     {
-        $labels = (array) __('reports.columns');
-        $timezone = $this->tenant->get()?->timezone ?: (string) config('app.timezone');
-        $column = fn (string $key, string $type, string $group, Closure $value) => new ReportColumn($key, (string) ($labels[$key] ?? $key), $type, $group, $value);
+        $timezone = $this->timezone();
 
         $columns = [
-            $column('printed_at', ReportColumn::DATETIME, 'print', fn (CardPrint $row) => $row->printed_at->setTimezone($timezone)),
-            $column('printed_by', ReportColumn::TEXT, 'print', fn (CardPrint $row) => $row->printer?->name),
-            $column('method', ReportColumn::TEXT, 'print', fn (CardPrint $row) => (string) __("reports.methods.{$row->method}")),
-            $column('copies', ReportColumn::NUMBER, 'print', fn (CardPrint $row) => $row->copies),
-            $column('note', ReportColumn::TEXT, 'print', fn (CardPrint $row) => $row->note),
-            $column('batch', ReportColumn::TEXT, 'print', fn (CardPrint $row) => $row->batch),
-            $column('card.number', ReportColumn::TEXT, 'card', fn (CardPrint $row) => $row->card->number),
-            $column('card.reason', ReportColumn::TEXT, 'card', fn (CardPrint $row) => (string) __("cards.reasons.{$row->card->reason}")),
-            $column('card.status', ReportColumn::TEXT, 'card', fn (CardPrint $row) => (string) __("reports.statuses.{$row->card->status->value}")),
-            $column('card.issue_date', ReportColumn::DATE, 'card', fn (CardPrint $row) => $row->card->issue_date),
-            $column('card.expiry_date', ReportColumn::DATE, 'card', fn (CardPrint $row) => $row->card->expiry_date),
-            $column('card.template', ReportColumn::TEXT, 'card', fn (CardPrint $row) => $row->card->template->name),
-            // Who the card is for: the family member on a family card, else the cardholder
-            $column('holder.name', ReportColumn::TEXT, 'holder', fn (CardPrint $row) => $row->card->familyMember->name ?? $row->card->cardholder->full_name),
-            $column('family.relation', ReportColumn::TEXT, 'holder', fn (CardPrint $row) => ($relation = $row->card->familyMember?->relation) ? (string) __("cards.values.relation.{$relation->value}") : null),
+            $this->column('printed_at', ReportColumn::DATETIME, 'print', fn (CardPrint $row) => $row->printed_at->setTimezone($timezone)),
+            $this->column('printed_by', ReportColumn::TEXT, 'print', fn (CardPrint $row) => $row->printer?->name),
+            $this->column('method', ReportColumn::TEXT, 'print', fn (CardPrint $row) => (string) __("reports.methods.{$row->method}")),
+            $this->column('copies', ReportColumn::NUMBER, 'print', fn (CardPrint $row) => $row->copies),
+            $this->column('note', ReportColumn::TEXT, 'print', fn (CardPrint $row) => $row->note),
+            $this->column('batch', ReportColumn::TEXT, 'print', fn (CardPrint $row) => $row->batch),
+            ...$this->cardColumns(fn (CardPrint $row) => $row->card),
         ];
 
         return [

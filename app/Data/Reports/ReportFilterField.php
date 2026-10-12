@@ -33,6 +33,7 @@ final readonly class ReportFilterField
 
     /**
      * @param  array<int, array{value: string, label: string}>  $options
+     * @param  array<string, string>|null  $when  shown only while these other filters have these values (their default counts)
      */
     public function __construct(
         public string $key,
@@ -45,6 +46,7 @@ final readonly class ReportFilterField
         public ?int $min = null,
         public ?int $max = null,
         public ?string $default = null,
+        public ?array $when = null,
     ) {}
 
     /**
@@ -77,6 +79,7 @@ final readonly class ReportFilterField
             'min' => $this->min,
             'max' => $this->max,
             'default' => $this->default,
+            'when' => $this->when,
         ], fn (mixed $value) => $value !== null);
     }
 }

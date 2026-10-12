@@ -3,9 +3,11 @@
 return [
     'names' => [
         'card_prints' => 'কার্ড ছাপার ইতিহাস',
+        'expired_cards' => 'মেয়াদোত্তীর্ণ কার্ড',
     ],
     'descriptions' => [
         'card_prints' => 'প্রতিটা কার্ডের প্রতিবার ছাপা: কবে, কে, কীভাবে আর কয় কপি।',
+        'expired_cards' => 'মেয়াদ পার হওয়া বা শিগগির শেষ হবে এমন চালু কার্ড — সময়মতো নবায়নের জন্য।',
     ],
     'groups' => [
         'print' => 'ছাপা',
@@ -29,6 +31,12 @@ return [
         'card.template' => 'টেমপ্লেট',
         'holder.name' => 'নাম',
         'family.relation' => 'সম্পর্ক',
+        'card.rf_card_no' => 'RF কার্ড নম্বর',
+        'card.days_overdue' => 'মেয়াদ পার (দিন)',
+        'card.print_count' => 'কতবার ছাপা',
+        'card.last_printed_at' => 'শেষ ছাপা',
+        'card.issued_by' => 'যিনি ইস্যু করেছেন',
+        'card.created_at' => 'তৈরির সময়',
     ],
     'fields' => [
         'full_name' => 'পূর্ণ নাম',
@@ -90,11 +98,21 @@ return [
             'cardholder' => 'কার্ডধারী',
             'family' => 'পরিবারের সদস্য',
         ],
+        'validity' => 'দেখান',
+        'validities' => [
+            'expired' => 'মেয়াদ শেষ',
+            'expiring' => 'শিগগির শেষ হবে',
+        ],
+        'expiring_days' => 'কত দিনের মধ্যে শেষ হবে',
+        'expiry_from' => 'মেয়াদের তারিখ থেকে',
+        'expiry_to' => 'মেয়াদের তারিখ পর্যন্ত',
     ],
     'totals' => [
         'prints' => 'মোট ছাপা',
         'copies' => 'কপি',
         'cards' => 'কার্ড',
+        'cardholders' => 'কার্ডধারী',
+        'family_cards' => 'পরিবারের সদস্যের কার্ড',
     ],
     'export' => [
         'too_many' => 'রিপোর্টে :countটা সারি, এক ডাউনলোডে সর্বোচ্চ :maxটা যায়। ফিল্টার ছোট করুন (যেমন তারিখ দিয়ে) আর ভাগে ভাগে নামান।',

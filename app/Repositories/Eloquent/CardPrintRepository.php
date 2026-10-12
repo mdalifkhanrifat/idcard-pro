@@ -100,7 +100,8 @@ class CardPrintRepository extends EloquentRepository implements CardPrintReposit
     {
         return $query->with([
             'printer:id,public_id,name',
-            'card:id,public_id,number,status,reason,issue_date,expiry_date,card_template_id,cardholder_id,family_member_id',
+            'card:id,public_id,number,rf_card_no,status,reason,issue_date,expiry_date,print_count,last_printed_at,issued_by,created_at,card_template_id,cardholder_id,family_member_id',
+            'card.issuer:id,name',
             'card.template:id,public_id,name,code',
             'card.familyMember:id,public_id,name,relation',
             'card.cardholder',

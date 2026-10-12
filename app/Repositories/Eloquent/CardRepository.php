@@ -15,6 +15,7 @@ use DateTimeInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\LazyCollection;
 
 /**
  * @extends EloquentRepository<Card>
@@ -32,6 +33,44 @@ class CardRepository extends EloquentRepository implements CardRepositoryInterfa
             ->with(['template:id,public_id,name,code', 'familyMember:id,public_id,name,relation,biometric_status', 'cardholder:id,public_id,full_name,employee_no,department_id,biometric_status', 'cardholder.department', 'issuer:id,name'])
             ->paginate(min($filter->perPage, 100))
             ->withQueryString();
+    }
+
+    public function report(CardFilter $filter): LengthAwarePaginator
+    {
+        return $this->withReportRelations($this->filtered($filter))
+            ->paginate(min($filter->perPage, 100))
+            ->withQueryString();
+    }
+
+    public function reportRows(CardFilter $filter): LazyCollection
+    {
+        return $this->withReportRelations($this->filtered($filter))->lazy(500);
+    }
+
+    public function reportTotals(CardFilter $filter): array
+    {
+        $totals = $this->filtered($filter)
+            ->reorder()
+            ->toBase()
+            ->selectRaw('count(*) as cards, count(distinct cardholder_id) as cardholders, coalesce(sum(case when family_member_id is null then 0 else 1 end), 0) as family_cards')
+            ->first();
+
+        return ['cards' => (int) ($totals->cards ?? 0), 'cardholders' => (int) ($totals->cardholders ?? 0), 'family_cards' => (int) ($totals->family_cards ?? 0)];
+    }
+
+    /**
+     * @param  Builder<Card>  $query
+     * @return Builder<Card>
+     */
+    private function withReportRelations(Builder $query): Builder
+    {
+        return $query->with([
+            'template:id,public_id,name,code',
+            'familyMember:id,public_id,name,relation',
+            'issuer:id,name',
+            'cardholder',
+            ...array_map(fn (string $relation) => "cardholder.{$relation}", Cardholder::lookupRelations()),
+        ]);
     }
 
     public function printablePublicIds(CardFilter $filter, int $limit): array
@@ -64,6 +103,8 @@ class CardRepository extends EloquentRepository implements CardRepositoryInterfa
             ->when($filter->holder === 'cardholder', fn (Builder $q) => $q->whereNull('family_member_id'))
             ->when($filter->issuedFrom, fn (Builder $q, string $date) => $q->whereDate('issue_date', '>=', $date))
             ->when($filter->issuedTo, fn (Builder $q, string $date) => $q->whereDate('issue_date', '<=', $date))
+            ->when($filter->expiryFrom, fn (Builder $q, string $date) => $q->whereDate('expiry_date', '>=', $date))
+            ->when($filter->expiryTo, fn (Builder $q, string $date) => $q->whereDate('expiry_date', '<=', $date))
             ->when($filter->validity === 'expired', fn (Builder $q) => $q->where('status', CardStatus::Active)->whereDate('expiry_date', '<', $today))
             ->when($filter->validity === 'expiring', fn (Builder $q) => $q->where('status', CardStatus::Active)
                 ->whereDate('expiry_date', '>=', $today)

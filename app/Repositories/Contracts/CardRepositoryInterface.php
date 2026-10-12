@@ -9,6 +9,7 @@ use App\Models\CardTemplate;
 use DateTimeInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\LazyCollection;
 
 /**
  * @extends RepositoryInterface<Card>
@@ -19,6 +20,27 @@ interface CardRepositoryInterface extends RepositoryInterface
      * @return LengthAwarePaginator<int, Card>
      */
     public function list(CardFilter $filter): LengthAwarePaginator;
+
+    /**
+     * Cards the criteria find (reports), a page at a time, with the template, holder, master data and issuer.
+     *
+     * @return LengthAwarePaginator<int, Card>
+     */
+    public function report(CardFilter $filter): LengthAwarePaginator;
+
+    /**
+     * Every card the criteria find, in their order, read a chunk at a time (downloads).
+     *
+     * @return LazyCollection<int, Card>
+     */
+    public function reportRows(CardFilter $filter): LazyCollection;
+
+    /**
+     * Totals of what the criteria find: cards, distinct cardholders, family members' cards.
+     *
+     * @return array{cards: int, cardholders: int, family_cards: int}
+     */
+    public function reportTotals(CardFilter $filter): array;
 
     /**
      * Public ids of the cards the list filter finds that may be printed (active, not expired), in the list's

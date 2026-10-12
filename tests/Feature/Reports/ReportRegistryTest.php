@@ -144,13 +144,13 @@ it('serves a new report from its class and a line in the registry alone, and onl
     $this->getJson('/api/v1/reports/no-such-report')->assertNotFound();
 
     $keys = fn () => collect($this->getJson('/api/v1/reports')->json('data'))->pluck('key')->all();
-    expect($keys())->toBe(['card_prints', 'biometric_prints']);
+    expect($keys())->toBe(['card_prints', 'expired_cards', 'biometric_prints']);
     $this->getJson('/api/v1/reports/biometric-prints?columns[]=holder.name')->assertOk()->assertJsonPath('meta.totals.prints', 0);
     $this->get('/api/v1/reports/biometric-prints/export?format=csv')->assertOk();
 
     // A Viewer has reports.view but not what this report asks for in addition
     Sanctum::actingAs(tenantUser($this->tenant, 'Viewer'));
-    expect($keys())->toBe(['card_prints']);
+    expect($keys())->toBe(['card_prints', 'expired_cards']);
     $this->getJson('/api/v1/reports/biometric-prints')->assertForbidden();
     $this->getJson('/api/v1/reports/card-prints')->assertOk();
 });

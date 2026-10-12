@@ -49,6 +49,16 @@ class ReportRequest extends FormRequest
         ];
     }
 
+    /**
+     * Messages name each filter as the report labels it (not "filter.expiring days").
+     *
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return collect($this->report()->filters())->mapWithKeys(fn (ReportFilterField $field) => ["filter.{$field->key}" => $field->label])->all();
+    }
+
     public function toQuery(): ReportQuery
     {
         $filter = array_filter(array_map(strval(...), (array) $this->validated('filter', [])), fn (string $value) => $value !== '');

@@ -27,6 +27,8 @@ export interface ReportFilterField {
     min?: number;
     max?: number;
     default?: string;
+    /** Shown only while these other filters have these values (their default counts). */
+    when?: Record<string, string>;
 }
 
 /** A report of the server's registry: every page and download is built from this. */

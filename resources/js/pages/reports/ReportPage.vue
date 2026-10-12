@@ -59,6 +59,11 @@ const panelFields = computed(() =>
         if (field === searchField.value || (field.type === 'user' && !auth.can('users.view'))) {
             return false;
         }
+        // Only while it means something (e.g. "within days" for cards expiring soon)
+        const other = (key: string) => filters[key] || fields.value.find((candidate) => candidate.key === key)?.default || '';
+        if (field.when && Object.entries(field.when).some(([key, value]) => other(key) !== value)) {
+            return false;
+        }
         // Master data lists the organization does not keep are left out (a child list shows with its parent)
         return field.type !== 'master_data' || !!field.parent || lookups.options(field.master_data ?? '').length > 0;
     }),
@@ -84,6 +89,15 @@ function optionsOf(field: ReportFilterField): { value: string; label: string }[]
 }
 
 const parentLabel = (field: ReportFilterField) => fields.value.find((other) => other.key === field.parent)?.label ?? '';
+
+/** What an empty choice means: the report's default (e.g. "Expired"), else every row. */
+function placeholderOf(field: ReportFilterField): string {
+    if (field.parent && !filters[field.parent]) {
+        return t('reports.filterInsideParent', { parent: parentLabel(field) });
+    }
+
+    return (field.default && field.options?.find((option) => option.value === field.default)?.label) || t('common.all');
+}
 
 // A child list (e.g. unit) only makes sense inside the chosen parent (department)
 const childFields = computed(() => fields.value.filter((field) => field.parent));
@@ -212,7 +226,7 @@ useCardsPrinted(() => list.load());
                         v-else
                         v-model="filters[field.key]"
                         :label="field.label"
-                        :placeholder="field.parent && !filters[field.parent] ? t('reports.filterInsideParent', { parent: parentLabel(field) }) : t('common.all')"
+                        :placeholder="placeholderOf(field)"
                         :options="optionsOf(field)"
                         :data-filter="field.key"
                     />
