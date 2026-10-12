@@ -27,6 +27,7 @@ it('lists every report with its fixed, cardholder and custom field columns and t
     $columns = collect($report['columns'])->keyBy('key');
 
     expect($report['name'])->toBe('Card print history')
+        ->and($report['description'])->toBe('Every printing of every card: when, by whom, how and how many copies.')
         ->and($report['default_columns'])->toBe(['holder.name', 'card.reason', 'card.number', 'note', 'printed_at', 'printed_by', 'copies'])
         ->and($columns['printed_at'])->toBe(['key' => 'printed_at', 'label' => 'Printed at', 'type' => 'datetime', 'group' => 'print'])
         ->and($columns['card.issue_date']['type'])->toBe('date')

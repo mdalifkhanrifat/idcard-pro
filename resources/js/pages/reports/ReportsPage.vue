@@ -11,7 +11,7 @@ import { reportSlug, useReports } from './reports';
 /**
  * Every report of the server's registry the user may see; a new report appears here by itself.
  */
-const { t, te } = useI18n();
+const { t } = useI18n();
 const ui = useUiStore();
 const { reports, load } = useReports();
 
@@ -32,7 +32,7 @@ onMounted(() => load(true).catch((error) => ui.notify(toApiError(error).message,
                 <span class="flex size-9 shrink-0 items-center justify-center rounded-lg bg-surface-2 text-fg"><FileBarChart class="size-5" /></span>
                 <span class="min-w-0 flex-1">
                     <span class="block font-medium text-fg">{{ report.name }}</span>
-                    <span v-if="te(`reports.descriptions.${report.key}`)" class="mt-0.5 block text-sm text-muted">{{ t(`reports.descriptions.${report.key}`) }}</span>
+                    <span v-if="report.description" class="mt-0.5 block text-sm text-muted">{{ report.description }}</span>
                 </span>
                 <ChevronRight class="mt-1 size-4 shrink-0 text-muted group-hover:text-fg" />
             </RouterLink>

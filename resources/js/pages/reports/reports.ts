@@ -13,15 +13,38 @@ export interface ReportColumn {
     group: string;
 }
 
+/** A way to filter a report (the server's ReportFilterField): the page draws it from this alone. */
+export interface ReportFilterField {
+    key: string;
+    type: 'search' | 'date' | 'select' | 'number' | 'template' | 'user' | 'master_data';
+    label: string;
+    options?: { value: string; label: string }[];
+    master_data?: string;
+    /** A child list's parent filter (e.g. unit inside department). */
+    parent?: string;
+    /** For a date range's end: the start field. */
+    after?: string;
+    min?: number;
+    max?: number;
+    default?: string;
+}
+
 /** A report of the server's registry: every page and download is built from this. */
 export interface ReportDefinition {
     key: string;
     name: string;
+    description: string;
     columns: ReportColumn[];
     /** The organization's choice, else the report's own. */
     default_columns: string[];
     /** The report's own default. */
     standard_columns: string[];
+    filters: ReportFilterField[];
+    /** Column key => sort field. */
+    sorts: Record<string, string>;
+    default_sort: string;
+    /** Totals counted over every page. */
+    totals: { key: string; label: string }[];
     /** Download formats (empty without reports.export). */
     formats: string[];
     max_export_rows: number | null;

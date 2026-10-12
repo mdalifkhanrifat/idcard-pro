@@ -10,6 +10,8 @@ import UiPagination from '@/components/ui/UiPagination.vue';
 import UiSelect from '@/components/ui/UiSelect.vue';
 import { useListQuery } from '@/composables/useListQuery';
 import { formatDateTime } from '@/lib/format';
+import { useReports } from '@/pages/reports/reports';
+import { useAuthStore } from '@/stores/auth';
 
 interface ActivityRow {
     id: number;
@@ -33,11 +35,20 @@ interface LoginRow {
 
 const { t, te, n } = useI18n();
 const tab = ref('changes');
+const auth = useAuthStore();
+const reports = useReports();
 
 const activities = useListQuery<ActivityRow>('/audit/activities', { filters: { log_name: '', event: '', date_from: '', date_to: '' }, perPage: 25 });
 const logins = useListQuery<LoginRow>('/audit/logins', { filters: { event: '', identifier: '', ip_address: '', date_from: '', date_to: '' }, perPage: 25 });
 
-onMounted(() => activities.load());
+onMounted(() => {
+    activities.load();
+    // Names of downloaded reports, in the reader's language (only for those who may see reports)
+    if (auth.can('reports.view')) {
+        reports.load().catch(() => undefined);
+    }
+});
+const reportName = (key: string) => reports.find(key)?.name ?? key.replaceAll('_', ' ');
 
 /** Kinds of record with changes in this organization (from the API, so new modules appear by themselves). */
 const logNames = computed(() =>
@@ -89,7 +100,7 @@ function browser(ua: string): string {
                             <p class="text-fg"><span class="font-medium">{{ row.causer?.name ?? 'System' }}</span><template v-if="row.subject_type"> · {{ row.subject_type }}</template></p>
                             <p v-if="changedFields(row).length" class="truncate text-xs text-muted">{{ changedFields(row).join(', ') }}</p>
                             <p v-if="row.event === 'exported' && row.changes?.report" class="text-xs text-muted" data-audit-export>
-                                {{ t('audit.exportDetail', { report: te(`reports.names.${row.changes.report}`) ? t(`reports.names.${row.changes.report}`) : row.changes.report, format: (row.changes.format ?? '').toUpperCase(), rows: n(row.changes.rows ?? 0) }) }}
+                                {{ t('audit.exportDetail', { report: reportName(row.changes.report), format: (row.changes.format ?? '').toUpperCase(), rows: n(row.changes.rows ?? 0) }) }}
                             </p>
                             <p v-if="row.changes?.reason" class="text-xs text-muted" data-audit-reason>
                                 <template v-if="row.changes.moment && te(`audit.moments.${row.changes.moment}`)">{{ t(`audit.moments.${row.changes.moment}`) }} · </template>{{ t('audit.reason', { reason: row.changes.reason }) }}

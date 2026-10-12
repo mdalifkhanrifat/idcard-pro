@@ -1531,12 +1531,6 @@
         "title": "Reports",
         "subtitle": "Lists of cards and printings to see, filter and download.",
         "none": "No reports available to you.",
-        "names": {
-            "card_prints": "Card print history"
-        },
-        "descriptions": {
-            "card_prints": "Every printing of every card: when, by whom, how and how many copies."
-        },
         "groups": {
             "print": "Printing",
             "card": "Card",
@@ -1567,22 +1561,7 @@
             "xlsx": "Excel",
             "tooMany": "Too many rows for one download (at most {max}). Narrow the filter, for example by date."
         },
-        "totals": {
-            "prints": "Printings",
-            "copies": "Copies",
-            "cards": "Cards"
-        },
-        "cardPrints": {
-            "searchPlaceholder": "Card number, RF number, name or employee number",
-            "method": "Printed from",
-            "methods": {
-                "browser": "Browser",
-                "pdf": "PDF",
-                "import": "Imported (printed earlier)"
-            },
-            "printedBy": "Printed by",
-            "empty": "No printings found.",
-            "emptyHint": "Cards printed from this system appear here."
-        }
+        "empty": "No rows found.",
+        "filterInsideParent": "Choose a {parent} first"
     }
 }

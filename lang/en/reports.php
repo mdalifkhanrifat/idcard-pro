@@ -4,6 +4,9 @@ return [
     'names' => [
         'card_prints' => 'Card print history',
     ],
+    'descriptions' => [
+        'card_prints' => 'Every printing of every card: when, by whom, how and how many copies.',
+    ],
     'groups' => [
         'print' => 'Printing',
         'card' => 'Card',
