@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\CardStatus;
 use App\Models\Concerns\BelongsToTenant;
+use App\Support\Tenancy\TenantContext;
 use Database\Factories\CardFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Collection;
@@ -156,7 +157,8 @@ class Card extends Model
 
     public function isExpired(): bool
     {
-        return $this->expiry_date !== null && $this->expiry_date->lt(today());
+        // The organization's today: a card expires at the end of its last day there, not in UTC
+        return $this->expiry_date !== null && $this->expiry_date->toDateString() < app(TenantContext::class)->today()->toDateString();
     }
 
     public function isPrinted(): bool

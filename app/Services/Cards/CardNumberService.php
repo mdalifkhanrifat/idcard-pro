@@ -29,7 +29,8 @@ class CardNumberService
      */
     public function next(string $code, ?CarbonInterface $date = null): string
     {
-        $date ??= now();
+        // The organization's today: a number's year changes at its midnight, not UTC's
+        $date ??= $this->tenantContext->today();
         $format = $this->format();
 
         return DB::transaction(fn (): string => $format->render($code, $date, $this->sequences->increment($format->prefix($code, $date))));
@@ -53,7 +54,8 @@ class CardNumberService
      */
     public function preview(string $code, ?string $pattern = null, ?CarbonInterface $date = null): string
     {
-        $date ??= now();
+        // The organization's today: a number's year changes at its midnight, not UTC's
+        $date ??= $this->tenantContext->today();
         $format = $pattern !== null ? new CardNumberFormat($pattern) : $this->format();
 
         return $format->render($code, $date, $this->sequences->peekNext($format->prefix($code, $date)));

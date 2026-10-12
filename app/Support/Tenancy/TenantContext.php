@@ -37,6 +37,15 @@ class TenantContext
     }
 
     /**
+     * Today in the organization's time zone (the app runs in UTC): the day that decides issue dates and
+     * whether a card has expired.
+     */
+    public function today(): CarbonImmutable
+    {
+        return CarbonImmutable::now($this->tenant?->timezone ?: (string) config('app.timezone'))->startOfDay();
+    }
+
+    /**
      * Start of a day (Y-m-d) in the organization's time zone, as stored (UTC). A date range "from A to B"
      * covers [dayStart(A), dayStart(B) + 1 day), so the last day counts in full.
      */

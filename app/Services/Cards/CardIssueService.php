@@ -21,6 +21,7 @@ use App\Repositories\Contracts\SignatoryRepositoryInterface;
 use App\Services\Biometrics\CardBiometricImageService;
 use App\Services\Cardholders\CardholderFileService;
 use App\Services\CardTemplates\CardTemplateDesignService;
+use App\Support\Tenancy\TenantContext;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -46,6 +47,7 @@ class CardIssueService
         private CardPrintService $printing,
         private CardRequirements $requirements,
         private CardBiometricImageService $biometricImages,
+        private TenantContext $tenant,
     ) {}
 
     /**
@@ -64,7 +66,7 @@ class CardIssueService
         if ($data->reason === 'new' && $this->cards->existsForHolder($cardholder->id, $member?->id)) {
             throw ValidationException::withMessages(['reason' => __('cards.issue.new_not_first')]);
         }
-        $issueDate = $data->issueDate ?? CarbonImmutable::today();
+        $issueDate = $data->issueDate ?? $this->tenant->today();
         $expiryDate = $this->expiryDate($template, $issueDate, $data->expiryDate);
         if ($expiryDate !== null && $expiryDate->lt($issueDate)) {
             throw ValidationException::withMessages(['expiry_date' => __('cards.issue.expiry_before_issue')]);
@@ -116,7 +118,7 @@ class CardIssueService
         if (! $template->is_active || $template->audience === TemplateAudience::FamilyMember) {
             $errors[] = __('cards.import.template_unavailable');
         }
-        $issueDate = $data->issueDate ?? CarbonImmutable::today();
+        $issueDate = $data->issueDate ?? $this->tenant->today();
         $expiryDate = $this->expiryDate($template, $issueDate, $data->expiryDate);
         if ($expiryDate !== null && $expiryDate->lt($issueDate)) {
             $errors[] = __('cards.issue.expiry_before_issue');
@@ -161,7 +163,7 @@ class CardIssueService
         if ($check['skip']) {
             return null;
         }
-        $issueDate = $data->issueDate ?? CarbonImmutable::today();
+        $issueDate = $data->issueDate ?? $this->tenant->today();
 
         return DB::transaction(function () use ($cardholder, $template, $data, $issueDate, $actor): Card {
             $current = $this->cards->activeForHolder(Card::holderKey($cardholder->id, null), lock: true);

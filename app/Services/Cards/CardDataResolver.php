@@ -12,6 +12,7 @@ use App\Repositories\Contracts\SignatoryRepositoryInterface;
 use App\Services\Biometrics\CardBiometricImageService;
 use App\Services\Cardholders\CardholderFileService;
 use App\Services\Signatories\SignatoryService;
+use App\Support\Tenancy\TenantContext;
 use BackedEnum;
 use Carbon\CarbonInterface;
 
@@ -46,6 +47,7 @@ class CardDataResolver
         private SignatoryService $signatoryService,
         private CardholderFileService $files,
         private CardBiometricImageService $biometricImages,
+        private TenantContext $tenantContext,
     ) {}
 
     /**
@@ -55,7 +57,7 @@ class CardDataResolver
      */
     public function resolve(CardTemplate $template, Cardholder $cardholder, ?FamilyMember $member = null, ?CarbonInterface $on = null, bool $withBiometrics = true): array
     {
-        $signatory = $template->authority_type_id === null ? null : $this->signatories->activeFor($template->authority_type_id, $on ?? now());
+        $signatory = $template->authority_type_id === null ? null : $this->signatories->activeFor($template->authority_type_id, $on ?? $this->tenantContext->today());
         [$photo, $signature] = $this->holderImages($cardholder, $member);
 
         return [
@@ -140,7 +142,7 @@ class CardDataResolver
             $fields['family.blood_group'] = $this->lookup($member->bloodGroup);
         }
 
-        $signatory = $template->authority_type_id === null ? null : $this->signatories->activeFor($template->authority_type_id, $on ?? now());
+        $signatory = $template->authority_type_id === null ? null : $this->signatories->activeFor($template->authority_type_id, $on ?? $this->tenantContext->today());
         $fields['signatory.name'] = (string) $signatory?->name;
         $fields['signatory.designation'] = (string) $signatory?->designation;
         $fields['organization.name'] = $cardholder->tenant->name;
