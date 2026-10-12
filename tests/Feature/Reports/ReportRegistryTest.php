@@ -2,6 +2,8 @@
 
 use App\Models\CustomField;
 use App\Models\FamilyMember;
+use App\Models\User;
+use App\Services\Reports\Definitions\CardPrintReport;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
@@ -120,3 +122,50 @@ it('validates the default columns and needs settings.update', function () {
     Sanctum::actingAs(tenantUser($this->tenant, 'Administrator'));
     $this->putJson('/api/v1/reports/card-prints/columns', ['columns' => ['card.number']])->assertForbidden();
 });
+
+it('describes each report\'s filters, sorts and totals so a client builds its page from them', function () {
+    $report = collect($this->getJson('/api/v1/reports')->json('data'))->keyBy('key')['card_prints'];
+    $filters = collect($report['filters'])->keyBy('key');
+
+    expect($report)->toMatchArray(['sorts' => ['printed_at' => 'printed_at', 'copies' => 'copies'], 'default_sort' => '-printed_at'])
+        ->and($report['totals'])->toBe([['key' => 'prints', 'label' => 'Printings'], ['key' => 'copies', 'label' => 'Copies'], ['key' => 'cards', 'label' => 'Cards']])
+        ->and($filters['printed_to'])->toBe(['key' => 'printed_to', 'type' => 'date', 'label' => 'Printed on or before', 'after' => 'printed_from'])
+        ->and($filters['method']['options'])->toContain(['value' => 'import', 'label' => 'Imported (printed earlier)'])
+        ->and($filters['printed_by']['type'])->toBe('user')
+        ->and($filters['template']['type'])->toBe('template')
+        // Every master data list of a cardholder, a child list inside its parent
+        ->and($filters['unit'])->toMatchArray(['type' => 'master_data', 'master_data' => 'unit', 'parent' => 'department'])
+        ->and($filters['rank'])->toMatchArray(['type' => 'master_data', 'master_data' => 'rank', 'label' => 'Rank / grade']);
+});
+
+it('serves a new report from its class and a line in the registry alone, and only to whom it allows', function () {
+    config(['reports.reports.biometric_prints' => BiometricPrintsReport::class]);
+    $this->getJson('/api/v1/reports/no-such-report')->assertNotFound();
+
+    $keys = fn () => collect($this->getJson('/api/v1/reports')->json('data'))->pluck('key')->all();
+    expect($keys())->toBe(['card_prints', 'biometric_prints']);
+    $this->getJson('/api/v1/reports/biometric-prints?columns[]=holder.name')->assertOk()->assertJsonPath('meta.totals.prints', 0);
+    $this->get('/api/v1/reports/biometric-prints/export?format=csv')->assertOk();
+
+    // A Viewer has reports.view but not what this report asks for in addition
+    Sanctum::actingAs(tenantUser($this->tenant, 'Viewer'));
+    expect($keys())->toBe(['card_prints']);
+    $this->getJson('/api/v1/reports/biometric-prints')->assertForbidden();
+    $this->getJson('/api/v1/reports/card-prints')->assertOk();
+});
+
+/**
+ * A report added in a test: the card print report under another key, for users who may see biometrics.
+ */
+class BiometricPrintsReport extends CardPrintReport
+{
+    public function key(): string
+    {
+        return 'biometric_prints';
+    }
+
+    public function allows(User $user): bool
+    {
+        return $user->can('biometrics.view');
+    }
+}

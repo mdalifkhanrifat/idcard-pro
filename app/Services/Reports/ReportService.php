@@ -3,6 +3,7 @@
 namespace App\Services\Reports;
 
 use App\Data\Reports\ReportColumn;
+use App\Data\Reports\ReportFilterField;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\Tenants\TenantService;
@@ -25,7 +26,7 @@ class ReportService
      * `default_columns` are the organization's choice (or the report's own `standard_columns`); `formats`
      * (download formats) and `max_export_rows` are empty/null without reports.export.
      *
-     * @return array<int, array{key: string, name: string, columns: array<int, array{key: string, label: string, type: string, group: string}>, default_columns: array<int, string>, standard_columns: array<int, string>, formats: array<int, string>, max_export_rows: int|null}>
+     * @return array<int, array{key: string, name: string, columns: array<int, array{key: string, label: string, type: string, group: string}>, default_columns: array<int, string>, standard_columns: array<int, string>, filters: array<int, array<string, mixed>>, sorts: array<string, string>, default_sort: string, totals: array<int, array{key: string, label: string}>, formats: array<int, string>, max_export_rows: int|null}>
      */
     public function catalogue(User $user): array
     {
@@ -35,7 +36,24 @@ class ReportService
 
         $canExport = $user->can('reports.export');
 
-        return array_values(array_map(fn (Report $report) => $this->describe($report, $canExport), $this->registry->all()));
+        $reports = array_filter($this->registry->all(), fn (Report $report) => $report->allows($user));
+
+        return array_values(array_map(fn (Report $report) => $this->describe($report, $canExport), $reports));
+    }
+
+    /**
+     * The chosen columns in the order given, or the default ones (the organization's, else the report's) when
+     * none were chosen.
+     *
+     * @param  array<int, string>|null  $keys  validated keys of the report's columns
+     * @return array<int, ReportColumn>
+     */
+    public function columns(Report $report, ?array $keys): array
+    {
+        $available = $report->columns();
+        $chosen = array_filter($keys ?: $this->defaultColumns($report, $available), fn (string $key) => isset($available[$key]));
+
+        return array_values(array_map(fn (string $key) => $available[$key], $chosen));
     }
 
     /**
@@ -58,7 +76,7 @@ class ReportService
      * to the report's default, so later improvements to it apply.
      *
      * @param  array<int, string>|null  $columns  validated column keys
-     * @return array{key: string, name: string, columns: array<int, array{key: string, label: string, type: string, group: string}>, default_columns: array<int, string>, standard_columns: array<int, string>, formats: array<int, string>, max_export_rows: int|null}
+     * @return array{key: string, name: string, columns: array<int, array{key: string, label: string, type: string, group: string}>, default_columns: array<int, string>, standard_columns: array<int, string>, filters: array<int, array<string, mixed>>, sorts: array<string, string>, default_sort: string, totals: array<int, array{key: string, label: string}>, formats: array<int, string>, max_export_rows: int|null}
      */
     public function setDefaultColumns(Report $report, ?array $columns, User $actor): array
     {
@@ -72,7 +90,7 @@ class ReportService
     }
 
     /**
-     * @return array{key: string, name: string, columns: array<int, array{key: string, label: string, type: string, group: string}>, default_columns: array<int, string>, standard_columns: array<int, string>, formats: array<int, string>, max_export_rows: int|null}
+     * @return array{key: string, name: string, columns: array<int, array{key: string, label: string, type: string, group: string}>, default_columns: array<int, string>, standard_columns: array<int, string>, filters: array<int, array<string, mixed>>, sorts: array<string, string>, default_sort: string, totals: array<int, array{key: string, label: string}>, formats: array<int, string>, max_export_rows: int|null}
      */
     private function describe(Report $report, bool $canExport): array
     {
@@ -84,6 +102,10 @@ class ReportService
             'columns' => array_values(array_map(fn (ReportColumn $column) => $column->toArray(), $columns)),
             'default_columns' => $this->defaultColumns($report, $columns),
             'standard_columns' => $report->defaultColumns(),
+            'filters' => array_map(fn (ReportFilterField $field) => $field->toArray(), $report->filters()),
+            'sorts' => $report->sorts(),
+            'default_sort' => $report->defaultSort(),
+            'totals' => array_map(fn (string $key) => ['key' => $key, 'label' => (string) __("reports.totals.{$key}")], $report->totalKeys()),
             'formats' => $canExport ? $this->exports->formats() : [],
             'max_export_rows' => $canExport ? $this->exports->maxRows() : null,
         ];

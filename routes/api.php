@@ -27,8 +27,8 @@ use App\Http\Controllers\Api\V1\MasterDataController;
 use App\Http\Controllers\Api\V1\PermissionController;
 use App\Http\Controllers\Api\V1\Platform\TenantController;
 use App\Http\Controllers\Api\V1\QualificationController;
-use App\Http\Controllers\Api\V1\Reports\CardPrintReportController;
 use App\Http\Controllers\Api\V1\Reports\ReportController;
+use App\Http\Controllers\Api\V1\Reports\ReportDataController;
 use App\Http\Controllers\Api\V1\RoleController;
 use App\Http\Controllers\Api\V1\SignatoryController;
 use App\Http\Controllers\Api\V1\TenantFontController;
@@ -173,9 +173,9 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             // Reports (Phase 5): the registry (columns of each report), then each report
             Route::get('reports', [ReportController::class, 'index'])->name('reports.index');
             Route::put('reports/{report}/columns', [ReportController::class, 'updateColumns'])->where('report', '[a-z0-9-]+')->name('reports.columns.update');
-            Route::get('reports/card-prints', [CardPrintReportController::class, 'index'])->name('reports.card-prints');
+            Route::get('reports/{report}', [ReportDataController::class, 'index'])->where('report', '[a-z0-9-]+')->name('reports.show');
             // Files are written whole before sending: heavier than other calls, so limited separately
-            Route::get('reports/card-prints/export', [CardPrintReportController::class, 'export'])->middleware('throttle:20,1')->name('reports.card-prints.export');
+            Route::get('reports/{report}/export', [ReportDataController::class, 'export'])->where('report', '[a-z0-9-]+')->middleware('throttle:20,1')->name('reports.export');
         });
 
         // Platform administration

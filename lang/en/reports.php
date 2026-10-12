@@ -77,6 +77,22 @@ return [
         'replaced' => 'Replaced',
         'revoked' => 'Revoked',
     ],
+    'filters' => [
+        'search_cards' => 'Card number, RF number, name or employee number',
+        'printed_from' => 'Printed on or after',
+        'printed_to' => 'Printed on or before',
+        'template' => 'Template',
+        'holder' => 'Card holder',
+        'holders' => [
+            'cardholder' => 'Cardholders',
+            'family' => 'Family members',
+        ],
+    ],
+    'totals' => [
+        'prints' => 'Printings',
+        'copies' => 'Copies',
+        'cards' => 'Cards',
+    ],
     'export' => [
         'too_many' => 'The report has :count rows; one download may hold at most :max. Narrow the filter (for example by date) and download in parts.',
     ],
