@@ -50,6 +50,8 @@ export interface ReportDefinition {
     /** Download formats (empty without reports.export). */
     formats: string[];
     max_export_rows: number | null;
+    /** Rows one file may hold, per format (a PDF holds fewer). */
+    format_limits: Record<string, number>;
 }
 
 export type ReportValue = string | number | null;
@@ -182,6 +184,27 @@ export async function downloadReport(report: string, format: string, params: Rec
         const response = await http.get<Blob>(`/reports/${reportSlug(report)}/export`, { params: { ...params, format, columns }, responseType: 'blob' });
         saveDownload(response, `${reportSlug(report)}.${format}`);
     } catch (error) {
+        throw await readBlobError(error);
+    }
+}
+
+/**
+ * Opens the report as a PDF in a new tab to print (shown, not saved). The tab is opened at once, while the
+ * click still counts as the user's (pop-up blockers), and shows the PDF when it is ready.
+ */
+export async function printReport(report: string, params: Record<string, string>, columns: string[], waiting: string): Promise<void> {
+    const tab = window.open('', '_blank');
+    if (!tab) {
+        throw new Error('popup-blocked');
+    }
+    tab.document.title = waiting;
+    tab.document.body.style.font = '14px system-ui, sans-serif';
+    tab.document.body.textContent = waiting;
+    try {
+        const response = await http.get<Blob>(`/reports/${reportSlug(report)}/export`, { params: { ...params, format: 'pdf', inline: 1, columns }, responseType: 'blob' });
+        tab.location.href = URL.createObjectURL(response.data);
+    } catch (error) {
+        tab.close();
         throw await readBlobError(error);
     }
 }

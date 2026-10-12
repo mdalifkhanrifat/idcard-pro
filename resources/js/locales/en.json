@@ -221,7 +221,8 @@
         "moments": {
             "issue": "Issue",
             "print": "Print"
-        }
+        },
+        "printed": "print"
     },
     "settings": {
         "title": "Organization",
@@ -1559,7 +1560,11 @@
         "download": {
             "csv": "CSV",
             "xlsx": "Excel",
-            "tooMany": "Too many rows for one download (at most {max}). Narrow the filter, for example by date."
+            "tooMany": "Too many rows for one download (at most {max}). Narrow the filter, for example by date.",
+            "pdf": "PDF",
+            "print": "Print",
+            "preparing": "Preparing the report…",
+            "popupBlocked": "The browser blocked the new tab. Allow pop-ups for this site, or download the PDF."
         },
         "empty": "No rows found.",
         "filterInsideParent": "Choose a {parent} first"

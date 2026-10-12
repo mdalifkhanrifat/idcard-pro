@@ -20,7 +20,7 @@ interface ActivityRow {
     subject_type: string;
     causer: { name: string; email: string } | null;
     /** Field changes, or what an event recorded (e.g. requirements_overridden: moment, reason, requirements). */
-    changes: { attributes?: Record<string, unknown>; old?: Record<string, unknown>; reason?: string; moment?: string; report?: string; format?: string; rows?: number } | null;
+    changes: { attributes?: Record<string, unknown>; old?: Record<string, unknown>; reason?: string; moment?: string; report?: string; format?: string; rows?: number; print?: boolean } | null;
     created_at: string;
 }
 interface LoginRow {
@@ -100,7 +100,7 @@ function browser(ua: string): string {
                             <p class="text-fg"><span class="font-medium">{{ row.causer?.name ?? 'System' }}</span><template v-if="row.subject_type"> · {{ row.subject_type }}</template></p>
                             <p v-if="changedFields(row).length" class="truncate text-xs text-muted">{{ changedFields(row).join(', ') }}</p>
                             <p v-if="row.event === 'exported' && row.changes?.report" class="text-xs text-muted" data-audit-export>
-                                {{ t('audit.exportDetail', { report: reportName(row.changes.report), format: (row.changes.format ?? '').toUpperCase(), rows: n(row.changes.rows ?? 0) }) }}
+                                {{ t('audit.exportDetail', { report: reportName(row.changes.report), format: (row.changes.format ?? '').toUpperCase() + (row.changes.print ? ` (${t('audit.printed')})` : ''), rows: n(row.changes.rows ?? 0) }) }}
                             </p>
                             <p v-if="row.changes?.reason" class="text-xs text-muted" data-audit-reason>
                                 <template v-if="row.changes.moment && te(`audit.moments.${row.changes.moment}`)">{{ t(`audit.moments.${row.changes.moment}`) }} · </template>{{ t('audit.reason', { reason: row.changes.reason }) }}

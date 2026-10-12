@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Columns3, FileDown, RotateCcw, Search, SlidersHorizontal } from 'lucide-vue-next';
+import { Columns3, FileDown, Printer, RotateCcw, Search, SlidersHorizontal } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiEmpty from '@/components/ui/UiEmpty.vue';
@@ -13,7 +13,7 @@ import CardDetailDialog from '@/pages/cards/CardDetailDialog.vue';
 import { useCardsPrinted } from '@/pages/cards/cards';
 import ReportColumnsDialog from './ReportColumnsDialog.vue';
 import ReportTable from './ReportTable.vue';
-import { downloadReport, reportSlug, useChosenColumns, useReports, type ReportFilterField, type ReportValue } from './reports';
+import { downloadReport, printReport, reportSlug, useChosenColumns, useReports, type ReportFilterField, type ReportValue } from './reports';
 import { useListQuery, type PageMeta } from '@/composables/useListQuery';
 import { useMasterDataOptions } from '@/composables/useMasterDataOptions';
 import { http, toApiError } from '@/lib/http';
@@ -144,7 +144,22 @@ function toggleSort(field: string): void {
 
 const columnsOpen = ref(false);
 const downloading = ref<string | null>(null);
-const tooMany = computed(() => report.value?.max_export_rows != null && meta.value.total > report.value.max_export_rows);
+/** Rows one file of this format may hold (a PDF holds fewer than a spreadsheet). */
+const limitOf = (format: string) => report.value?.format_limits?.[format] ?? report.value?.max_export_rows ?? Infinity;
+const tooMany = (format: string) => meta.value.total > limitOf(format);
+const canPrint = computed(() => report.value?.formats.includes('pdf') ?? false);
+const printing = ref(false);
+
+async function print(): Promise<void> {
+    printing.value = true;
+    try {
+        await printReport(props.reportKey, list.queryParams(), chosen.keys.value, t('reports.download.preparing'));
+    } catch (error) {
+        ui.notify((error as Error).message === 'popup-blocked' ? t('reports.download.popupBlocked') : (error as Error).message, 'error');
+    } finally {
+        printing.value = false;
+    }
+}
 
 async function download(format: string): Promise<void> {
     downloading.value = format;
@@ -179,13 +194,24 @@ useCardsPrinted(() => list.load());
                 v-for="format in report?.formats ?? []"
                 :key="format"
                 variant="secondary"
-                :disabled="tooMany || !meta.total"
+                :disabled="tooMany(format) || !meta.total"
                 :loading="downloading === format"
-                :title="tooMany ? t('reports.download.tooMany', { max: formatNumber(report?.max_export_rows ?? 0) }) : undefined"
+                :title="tooMany(format) ? t('reports.download.tooMany', { max: formatNumber(limitOf(format)) }) : undefined"
                 :data-download="format"
                 @click="download(format)"
             >
                 <FileDown class="size-4" />{{ t(`reports.download.${format}`) }}
+            </UiButton>
+            <UiButton
+                v-if="canPrint"
+                variant="secondary"
+                :disabled="tooMany('pdf') || !meta.total"
+                :loading="printing"
+                :title="tooMany('pdf') ? t('reports.download.tooMany', { max: formatNumber(limitOf('pdf')) }) : undefined"
+                data-print
+                @click="print"
+            >
+                <Printer class="size-4" />{{ t('reports.download.print') }}
             </UiButton>
         </UiPageHeader>
 
