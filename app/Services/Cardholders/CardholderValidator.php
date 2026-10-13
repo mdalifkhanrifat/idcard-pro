@@ -100,7 +100,12 @@ class CardholderValidator
      */
     public function attributes(): array
     {
-        return $this->customFields->attributes('cardholder');
+        return [
+            // Named as cards and reports name them (in the reader's language), master data by their lists
+            ...(array) __('reports.fields'),
+            ...(array) __('cardholders.fields'),
+            ...$this->customFields->attributes('cardholder'),
+        ];
     }
 
     /**
