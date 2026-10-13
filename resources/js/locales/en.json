@@ -1564,7 +1564,10 @@
             "pdf": "PDF",
             "print": "Print",
             "preparing": "Preparing the report…",
-            "popupBlocked": "The browser blocked the new tab. Allow pop-ups for this site, or download the PDF."
+            "popupBlocked": "The browser blocked the new tab. Allow pop-ups for this site, or download the PDF.",
+            "menu": "Download",
+            "openAsReport": "Open as a report",
+            "atMost": "up to {max} rows"
         },
         "empty": "No rows found.",
         "filterInsideParent": "Choose a {parent} first"

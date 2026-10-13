@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import ListPagination from '@/components/ListPagination.vue';
+import ReportDownloads from '@/pages/reports/ReportDownloads.vue';
 import { FileUp, Pencil, Plus, RotateCcw, Search, SlidersHorizontal, Trash2, UserRound } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
@@ -91,6 +92,8 @@ async function remove(cardholder: Cardholder): Promise<void> {
 <template>
     <div>
         <UiPageHeader :title="t('cardholders.title')" :subtitle="t('cardholders.subtitle')">
+            <!-- The list as found now, through the report of the same name (legacy list Print / PDF / Excel) -->
+            <ReportDownloads v-if="auth.can('reports.view')" report-key="cardholders" variant="menu" :params="list.queryParams" :total="meta.total" />
             <UiButton v-if="auth.can('cardholders.import')" variant="secondary" @click="router.push('/cardholders/import')"><FileUp class="size-4" />{{ t('cardholders.import.action') }}</UiButton>
             <UiButton v-if="auth.can('cardholders.create')" @click="router.push('/cardholders/new')"><Plus class="size-4" />{{ t('cardholders.new') }}</UiButton>
         </UiPageHeader>

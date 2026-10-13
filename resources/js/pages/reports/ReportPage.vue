@@ -2,7 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ListPagination from '@/components/ListPagination.vue';
-import { Columns3, FileDown, Printer, RotateCcw, Search, SlidersHorizontal } from 'lucide-vue-next';
+import { Columns3, RotateCcw, Search, SlidersHorizontal } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiEmpty from '@/components/ui/UiEmpty.vue';
@@ -12,12 +12,12 @@ import UiSelect from '@/components/ui/UiSelect.vue';
 import CardDetailDialog from '@/pages/cards/CardDetailDialog.vue';
 import { useCardsPrinted } from '@/pages/cards/cards';
 import ReportColumnsDialog from './ReportColumnsDialog.vue';
+import ReportDownloads from './ReportDownloads.vue';
 import ReportTable from './ReportTable.vue';
-import { downloadReport, printReport, reportSlug, useChosenColumns, useReports, type ReportFilterField, type ReportValue } from './reports';
+import { reportSlug, useChosenColumns, useReports, type ReportFilterField, type ReportValue } from './reports';
 import { useListQuery, type PageMeta } from '@/composables/useListQuery';
 import { useMasterDataOptions } from '@/composables/useMasterDataOptions';
 import { http, toApiError } from '@/lib/http';
-import { formatNumber } from '@/lib/format';
 import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
 import type { CardTemplate } from '@/types';
@@ -143,35 +143,6 @@ function toggleSort(field: string): void {
 }
 
 const columnsOpen = ref(false);
-const downloading = ref<string | null>(null);
-/** Rows one file of this format may hold (a PDF holds fewer than a spreadsheet). */
-const limitOf = (format: string) => report.value?.format_limits?.[format] ?? report.value?.max_export_rows ?? Infinity;
-const tooMany = (format: string) => meta.value.total > limitOf(format);
-const canPrint = computed(() => report.value?.formats.includes('pdf') ?? false);
-const printing = ref(false);
-
-async function print(): Promise<void> {
-    printing.value = true;
-    try {
-        await printReport(props.reportKey, list.queryParams(), chosen.keys.value, t('reports.download.preparing'));
-    } catch (error) {
-        ui.notify((error as Error).message === 'popup-blocked' ? t('reports.download.popupBlocked') : (error as Error).message, 'error');
-    } finally {
-        printing.value = false;
-    }
-}
-
-async function download(format: string): Promise<void> {
-    downloading.value = format;
-    try {
-        await downloadReport(props.reportKey, format, list.queryParams(), chosen.keys.value);
-    } catch (error) {
-        ui.notify((error as Error).message, 'error');
-    } finally {
-        downloading.value = null;
-    }
-}
-
 const detailOpen = ref(false);
 const detailId = ref<string | null>(null);
 function showCard(id: string): void {
@@ -190,29 +161,7 @@ useCardsPrinted(() => list.load());
                 <Columns3 class="size-4" />{{ t('reports.columns.button') }}
                 <UiBadge v-if="chosen.isOwn.value" tone="brand">{{ n(chosen.keys.value.length) }}</UiBadge>
             </UiButton>
-            <UiButton
-                v-for="format in report?.formats ?? []"
-                :key="format"
-                variant="secondary"
-                :disabled="tooMany(format) || !meta.total"
-                :loading="downloading === format"
-                :title="tooMany(format) ? t('reports.download.tooMany', { max: formatNumber(limitOf(format)) }) : undefined"
-                :data-download="format"
-                @click="download(format)"
-            >
-                <FileDown class="size-4" />{{ t(`reports.download.${format}`) }}
-            </UiButton>
-            <UiButton
-                v-if="canPrint"
-                variant="secondary"
-                :disabled="tooMany('pdf') || !meta.total"
-                :loading="printing"
-                :title="tooMany('pdf') ? t('reports.download.tooMany', { max: formatNumber(limitOf('pdf')) }) : undefined"
-                data-print
-                @click="print"
-            >
-                <Printer class="size-4" />{{ t('reports.download.print') }}
-            </UiButton>
+            <ReportDownloads :report-key="reportKey" :params="list.queryParams" :total="meta.total" :columns="chosen.keys.value" />
         </UiPageHeader>
 
         <!-- Totals over every page; as many per row as fit, so large counts are never cut on phones -->
