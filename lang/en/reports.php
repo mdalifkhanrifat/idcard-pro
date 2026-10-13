@@ -106,6 +106,10 @@ return [
         'expiring_days' => 'Expiring within (days)',
         'expiry_from' => 'Expiry date from',
         'expiry_to' => 'Expiry date to',
+        'issued_from' => 'Issue date from',
+        'issued_to' => 'Issue date to',
+        'created_from' => 'Card created from',
+        'created_to' => 'Card created to',
     ],
     'totals' => [
         'prints' => 'Printings',

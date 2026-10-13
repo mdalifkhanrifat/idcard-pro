@@ -126,6 +126,8 @@ it('filters and sorts the list', function () {
 
     $this->getJson('/api/v1/cardholders?filter[unknown]=1')->assertJsonValidationErrors('filter');
     $this->getJson('/api/v1/cardholders?sort=national_id')->assertJsonValidationErrors('sort');
+    // A range that ends before it starts is refused, not silently empty
+    $this->getJson('/api/v1/cardholders?filter[joined_from]=2021-01-01&filter[joined_to]=2020-12-31')->assertJsonValidationErrors('filter.joined_to');
 });
 
 it('keeps organizations isolated', function () {

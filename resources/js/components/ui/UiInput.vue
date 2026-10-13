@@ -16,6 +16,9 @@ const props = withDefaults(
         maxlength?: number;
         autofocus?: boolean;
         step?: string;
+        /** Lowest / highest value (e.g. a date range's end not before its start). */
+        min?: string;
+        max?: string;
     }>(),
     { type: 'text' },
 );
@@ -44,6 +47,8 @@ const inputType = computed(() => (props.type === 'password' && reveal.value ? 't
                 :inputmode="inputmode"
                 :maxlength="maxlength"
                 :step="step"
+                :min="min"
+                :max="max"
                 :autofocus="autofocus"
                 :aria-invalid="!!message"
                 :aria-describedby="message || hint ? `${id}-desc` : undefined"

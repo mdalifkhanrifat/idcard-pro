@@ -91,7 +91,7 @@ function browser(ua: string): string {
                     <UiSelect v-model="activities.filters.log_name" :label="t('audit.what')" :placeholder="t('common.all')" :options="logNames" />
                     <UiSelect v-model="activities.filters.event" :label="t('audit.event')" :placeholder="t('common.all')" :options="events" />
                     <UiInput v-model="activities.filters.date_from" type="date" :label="t('common.from')" />
-                    <UiInput v-model="activities.filters.date_to" type="date" :label="t('common.to')" />
+                    <UiInput v-model="activities.filters.date_to" type="date" :min="activities.filters.date_from || undefined" :error="activities.filterError('date_to')" :label="t('common.to')" />
                 </div>
                 <ul class="divide-y divide-line" :class="activities.loading.value && 'opacity-50'">
                     <li v-for="row in activities.rows.value" :key="row.id" class="flex flex-col gap-1 px-5 py-3 text-sm sm:flex-row sm:items-center sm:gap-4">
@@ -119,7 +119,7 @@ function browser(ua: string): string {
                     <UiInput v-model="logins.filters.identifier" :label="t('audit.identifier')" />
                     <UiInput v-model="logins.filters.ip_address" :label="t('audit.ip')" />
                     <UiInput v-model="logins.filters.date_from" type="date" :label="t('common.from')" />
-                    <UiInput v-model="logins.filters.date_to" type="date" :label="t('common.to')" />
+                    <UiInput v-model="logins.filters.date_to" type="date" :min="logins.filters.date_from || undefined" :error="logins.filterError('date_to')" :label="t('common.to')" />
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm" :class="logins.loading.value && 'opacity-50'">

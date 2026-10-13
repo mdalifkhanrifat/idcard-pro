@@ -72,6 +72,13 @@ it('finds cards never printed and cards printed on given days (legacy PENDING / 
     $this->getJson('/api/v1/cards?filter[printed_from]=2026-10-08')->assertJsonCount(0, 'data');
     $this->getJson('/api/v1/cards?sort=-last_printed_at')->assertJsonPath('data.0.id', $janeCard['id']);
     $this->getJson('/api/v1/cards?filter[printed]=maybe')->assertJsonValidationErrors('filter.printed');
+    // A range that ends before it starts is refused, not silently empty
+    $this->getJson('/api/v1/cards?filter[printed_from]=2026-10-08&filter[printed_to]=2026-10-07&filter[issued_from]=2026-01-02&filter[issued_to]=2026-01-01')
+        ->assertJsonValidationErrors(['filter.printed_to', 'filter.issued_to'])
+        ->assertJsonPath('errors', [
+            'filter.issued_to' => ['The issue date (to) field must be a date after or equal to issue date (from).'],
+            'filter.printed_to' => ['The printed on (to) field must be a date after or equal to printed on (from).'],
+        ]);
 
     // Pending = valid cards never printed: John's expiring card (Jane's is printed, the family card expired)
     $this->getJson('/api/v1/cards/summary')->assertJsonPath('data.pending', 1);

@@ -233,10 +233,10 @@ useCardsPrinted(changed);
                     :options="filters.department ? lookups.options('unit', filters.department) : []"
                 />
                 <UiInput v-model="filters.issued_from" type="date" :label="`${t('cards.issueDate')} · ${t('common.from')}`" />
-                <UiInput v-model="filters.issued_to" type="date" :label="`${t('cards.issueDate')} · ${t('common.to')}`" />
+                <UiInput v-model="filters.issued_to" type="date" :min="filters.issued_from || undefined" :error="list.filterError('issued_to')" :label="`${t('cards.issueDate')} · ${t('common.to')}`" />
                 <UiSelect v-model="filters.printed" :label="t('cards.printedFilter')" :placeholder="t('common.all')" :options="(['pending', 'printed'] as const).map((value) => ({ value, label: t(`cards.printedOptions.${value}`) }))" data-filter-printed />
                 <UiInput v-model="filters.printed_from" type="date" :label="`${t('cards.printedOn')} · ${t('common.from')}`" />
-                <UiInput v-model="filters.printed_to" type="date" :label="`${t('cards.printedOn')} · ${t('common.to')}`" />
+                <UiInput v-model="filters.printed_to" type="date" :min="filters.printed_from || undefined" :error="list.filterError('printed_to')" :label="`${t('cards.printedOn')} · ${t('common.to')}`" />
             </div>
 
             <!-- Batch printing -->

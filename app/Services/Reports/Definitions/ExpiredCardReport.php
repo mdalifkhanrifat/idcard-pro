@@ -70,6 +70,11 @@ class ExpiredCardReport implements Report
             new ReportFilterField('expiring_days', ReportFilterField::NUMBER, (string) __('reports.filters.expiring_days'), min: 1, max: 365, default: (string) self::EXPIRING_DAYS, when: ['validity' => 'expiring']),
             new ReportFilterField('expiry_from', ReportFilterField::DATE, (string) __('reports.filters.expiry_from')),
             new ReportFilterField('expiry_to', ReportFilterField::DATE, (string) __('reports.filters.expiry_to'), after: 'expiry_from'),
+            new ReportFilterField('issued_from', ReportFilterField::DATE, (string) __('reports.filters.issued_from')),
+            new ReportFilterField('issued_to', ReportFilterField::DATE, (string) __('reports.filters.issued_to'), after: 'issued_from'),
+            // Legacy From / To: when the card was recorded
+            new ReportFilterField('created_from', ReportFilterField::DATE, (string) __('reports.filters.created_from')),
+            new ReportFilterField('created_to', ReportFilterField::DATE, (string) __('reports.filters.created_to'), after: 'created_from'),
             $this->reasonFilter(),
             $this->templateFilter(),
             $this->holderFilter(),
@@ -157,6 +162,10 @@ class ExpiredCardReport implements Report
             perPage: $query->perPage,
             expiryFrom: $filter['expiry_from'] ?? null,
             expiryTo: $filter['expiry_to'] ?? null,
+            issuedFrom: $filter['issued_from'] ?? null,
+            issuedTo: $filter['issued_to'] ?? null,
+            createdFrom: $filter['created_from'] ?? null,
+            createdTo: $filter['created_to'] ?? null,
         );
     }
 }

@@ -245,15 +245,35 @@ useCardsPrinted(() => list.load());
             </div>
             <div v-if="showFilters" class="grid gap-4 border-b border-line bg-surface-2/50 p-4 sm:grid-cols-2 lg:grid-cols-4" data-report-filters>
                 <template v-for="field in panelFields" :key="field.key">
-                    <UiInput v-if="field.type === 'date'" v-model="filters[field.key]" type="date" :label="field.label" :data-filter="field.key" />
-                    <UiInput v-else-if="field.type === 'number'" v-model="filters[field.key]" type="number" :placeholder="field.default" :label="field.label" :data-filter="field.key" />
-                    <UiInput v-else-if="field.type === 'search'" v-model="filters[field.key]" :label="field.label" :data-filter="field.key" />
+                    <!-- An end date cannot be picked before its start -->
+                    <UiInput
+                        v-if="field.type === 'date'"
+                        v-model="filters[field.key]"
+                        type="date"
+                        :min="(field.after && filters[field.after]) || undefined"
+                        :label="field.label"
+                        :error="list.filterError(field.key)"
+                        :data-filter="field.key"
+                    />
+                    <UiInput
+                        v-else-if="field.type === 'number'"
+                        v-model="filters[field.key]"
+                        type="number"
+                        :min="field.min?.toString()"
+                        :max="field.max?.toString()"
+                        :placeholder="field.default"
+                        :label="field.label"
+                        :error="list.filterError(field.key)"
+                        :data-filter="field.key"
+                    />
+                    <UiInput v-else-if="field.type === 'search'" v-model="filters[field.key]" :label="field.label" :error="list.filterError(field.key)" :data-filter="field.key" />
                     <UiSelect
                         v-else
                         v-model="filters[field.key]"
                         :label="field.label"
                         :placeholder="placeholderOf(field)"
                         :options="optionsOf(field)"
+                        :error="list.filterError(field.key)"
                         :data-filter="field.key"
                     />
                 </template>

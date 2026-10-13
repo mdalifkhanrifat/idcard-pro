@@ -32,7 +32,7 @@ class ListCardholdersRequest extends FormRequest
             'filter.status' => ['nullable', new Enum(CardholderStatus::class)],
             'filter.employment_type' => ['nullable', new Enum(EmploymentType::class)],
             'filter.joined_from' => ['nullable', 'date_format:Y-m-d'],
-            'filter.joined_to' => ['nullable', 'date_format:Y-m-d'],
+            'filter.joined_to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:filter.joined_from'],
             'filter.card' => ['nullable', Rule::in(CardholderFilter::CARD_STATES)],
             'filter.biometrics' => ['nullable', new Enum(BiometricStatus::class)],
             'filter.custom' => ['nullable', 'array', 'max:10'],

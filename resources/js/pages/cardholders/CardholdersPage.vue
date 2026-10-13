@@ -128,7 +128,7 @@ async function remove(cardholder: Cardholder): Promise<void> {
                 <UiSelect v-model="filters.branch" :label="t('cardholders.fields.branch_id')" :placeholder="t('common.all')" :options="lookups.options('branch')" />
                 <UiSelect v-model="filters.blood_group" :label="t('cardholders.fields.blood_group_id')" :placeholder="t('common.all')" :options="lookups.options('blood_group')" />
                 <UiInput v-model="filters.joined_from" type="date" :label="`${t('cardholders.joined')} · ${t('common.from')}`" />
-                <UiInput v-model="filters.joined_to" type="date" :label="`${t('cardholders.joined')} · ${t('common.to')}`" />
+                <UiInput v-model="filters.joined_to" type="date" :min="filters.joined_from || undefined" :error="list.filterError('joined_to')" :label="`${t('cardholders.joined')} · ${t('common.to')}`" />
                 <UiSelect
                     v-if="auth.can('cards.view')"
                     v-model="filters.card"

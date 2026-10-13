@@ -38,6 +38,8 @@ export function useListQuery<T, M extends PageMeta = PageMeta>(
     const rows = ref([]) as Ref<T[]>;
     const meta = ref({ current_page: 1, last_page: 1, total: 0, from: null, to: null } as PageMeta as M) as Ref<M>;
     const loading = ref(false);
+    /** The server's validation messages for the last load, by field (e.g. "filter.printed_to"). */
+    const errors = ref<Record<string, string[]>>({});
 
     /** The list's filters and sort as request parameters (no page), e.g. to act on every row the filter finds. */
     function queryParams(): Record<string, string> {
@@ -64,8 +66,16 @@ export function useListQuery<T, M extends PageMeta = PageMeta>(
             const { data } = await http.get(typeof endpoint === 'function' ? endpoint() : endpoint, { params });
             rows.value = data.data;
             meta.value = data.meta ?? data;
+            errors.value = {};
         } catch (error) {
-            ui.notify(toApiError(error).message, 'error');
+            const apiError = toApiError(error);
+            errors.value = apiError.errors;
+            if (apiError.status === 422) {
+                // The rows shown no longer match the criteria
+                rows.value = [];
+                meta.value = { ...meta.value, current_page: 1, last_page: 1, total: 0, from: null, to: null };
+            }
+            ui.notify(apiError.message, 'error');
         } finally {
             loading.value = false;
         }
@@ -119,5 +129,10 @@ export function useListQuery<T, M extends PageMeta = PageMeta>(
     );
     watch([page, sort, perPage], load);
 
-    return { filters, sort, page, perPage, rows, meta, loading, load, queryParams, resetFilters, addFilters, toggleSort };
+    /** The server's message about one filter, if the last load refused it. */
+    function filterError(key: string): string | undefined {
+        return errors.value[`filter.${key}`]?.[0];
+    }
+
+    return { filters, sort, page, perPage, rows, meta, loading, errors, load, queryParams, resetFilters, addFilters, filterError, toggleSort };
 }

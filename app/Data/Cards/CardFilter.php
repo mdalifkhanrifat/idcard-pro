@@ -50,6 +50,9 @@ final readonly class CardFilter
         /** Expiring on or after / on or before these days. */
         public ?string $expiryFrom = null,
         public ?string $expiryTo = null,
+        /** Recorded here on or after / on or before these days (the organization's days; legacy "Create Date"). */
+        public ?string $createdFrom = null,
+        public ?string $createdTo = null,
     ) {}
 
     /**

@@ -197,6 +197,22 @@ return [
     |
     */
 
-    'attributes' => [],
+    'attributes' => [
+        // List filters (cards, cardholders, audit): named as the pages label them
+        'filter' => 'filter',
+        'filter.search' => 'search',
+        'filter.status' => 'status',
+        'filter.date_from' => 'from date',
+        'filter.date_to' => 'to date',
+        'filter.issued_from' => 'issue date (from)',
+        'filter.issued_to' => 'issue date (to)',
+        'filter.printed_from' => 'printed on (from)',
+        'filter.printed_to' => 'printed on (to)',
+        'filter.joined_from' => 'joined (from)',
+        'filter.joined_to' => 'joined (to)',
+        'filter.expiring_days' => 'expiring within (days)',
+        'per_page' => 'rows per page',
+        'sort' => 'sort order',
+    ],
 
 ];

@@ -105,6 +105,8 @@ class CardRepository extends EloquentRepository implements CardRepositoryInterfa
             ->when($filter->issuedTo, fn (Builder $q, string $date) => $q->whereDate('issue_date', '<=', $date))
             ->when($filter->expiryFrom, fn (Builder $q, string $date) => $q->whereDate('expiry_date', '>=', $date))
             ->when($filter->expiryTo, fn (Builder $q, string $date) => $q->whereDate('expiry_date', '<=', $date))
+            ->when($filter->createdFrom, fn (Builder $q, string $date) => $q->where('created_at', '>=', app(TenantContext::class)->dayStart($date)))
+            ->when($filter->createdTo, fn (Builder $q, string $date) => $q->where('created_at', '<', app(TenantContext::class)->dayStart($date)->addDay()))
             ->when($filter->validity === 'expired', fn (Builder $q) => $q->where('status', CardStatus::Active)->whereDate('expiry_date', '<', $today))
             ->when($filter->validity === 'expiring', fn (Builder $q) => $q->where('status', CardStatus::Active)
                 ->whereDate('expiry_date', '>=', $today)

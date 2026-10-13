@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Card;
 use App\Models\FamilyMember;
 use App\Support\Tenancy\TenantContext;
 use Carbon\CarbonImmutable;
@@ -65,6 +66,20 @@ it('looks ahead at cards expiring soon, and filters by dates, card type, holder,
     $this->getJson("/api/v1/reports/expired-cards?filter[rank]={$this->rank->public_id}")->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $this->expired['id']);
     $this->getJson('/api/v1/reports/expired-cards?filter[search]=S-2')->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $this->family['id']);
     $this->getJson('/api/v1/reports/expired-cards?sort=-expiry_date')->assertJsonPath('data.0.id', $this->family['id']);
+});
+
+it('filters by issue dates and, like the legacy From / To, by the organization\'s days the card was created, the last day whole', function () {
+    // Jane's card recorded late on 5 April and the daughter's just after midnight on 6 April, Dhaka time (both 5 April in UTC)
+    Card::query()->withoutGlobalScopes()->where('public_id', $this->expired['id'])->update(['created_at' => CarbonImmutable::parse('2026-04-05 23:30', 'Asia/Dhaka')->utc()]);
+    Card::query()->withoutGlobalScopes()->where('public_id', $this->family['id'])->update(['created_at' => CarbonImmutable::parse('2026-04-06 00:30', 'Asia/Dhaka')->utc()]);
+
+    $this->getJson('/api/v1/reports/expired-cards?filter[created_from]=2026-04-06&filter[created_to]=2026-04-06')->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $this->family['id']);
+    $this->getJson('/api/v1/reports/expired-cards?filter[created_to]=2026-04-05')->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $this->expired['id']);
+    $this->getJson('/api/v1/reports/expired-cards?filter[created_from]=2026-04-05')->assertJsonCount(2, 'data');
+    $this->getJson('/api/v1/reports/expired-cards?filter[issued_from]=2025-01-01')->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $this->family['id']);
+    $this->getJson('/api/v1/reports/expired-cards?filter[issued_to]=2024-12-31')->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $this->expired['id']);
+    $this->getJson('/api/v1/reports/expired-cards?filter[created_from]=2026-04-06&filter[created_to]=2026-04-05&filter[issued_from]=2025-01-01&filter[issued_to]=2024-01-01')
+        ->assertJsonValidationErrors(['filter.created_to', 'filter.issued_to']);
 });
 
 it('describes its filters, the days only for cards expiring soon', function () {
