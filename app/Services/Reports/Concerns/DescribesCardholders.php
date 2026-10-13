@@ -2,16 +2,12 @@
 
 namespace App\Services\Reports\Concerns;
 
-use App\Data\Reports\ReportColumn;
 use App\Data\Reports\ReportFilterField;
 use App\Enums\CustomFieldType;
 use App\Models\Cardholder;
 use App\Models\CustomField;
 use App\Models\MasterDataItem;
 use App\Repositories\Contracts\CustomFieldRepositoryInterface;
-use App\Support\Tenancy\TenantContext;
-use Closure;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 /**
@@ -20,36 +16,7 @@ use Illuminate\Support\Str;
  */
 trait DescribesCardholders
 {
-    /**
-     * A column labelled from reports.columns.<key>.
-     */
-    protected function column(string $key, string $type, string $group, Closure $value): ReportColumn
-    {
-        return new ReportColumn($key, $this->columnLabel($key), $type, $group, $value);
-    }
-
-    /**
-     * reports.columns.<key>, read from the list: the keys hold dots (card.reason) that __() would take as nesting.
-     */
-    protected function columnLabel(string $key): string
-    {
-        $labels = (array) __('reports.columns');
-
-        return (string) ($labels[$key] ?? $key);
-    }
-
-    /**
-     * Whether the reader may see something (e.g. cards or biometrics), so a report shows only that to them.
-     */
-    protected function userCan(string $permission): bool
-    {
-        return (bool) Auth::user()?->can($permission);
-    }
-
-    protected function timezone(): string
-    {
-        return app(TenantContext::class)->get()?->timezone ?: (string) config('app.timezone');
-    }
+    use DescribesColumns;
 
     /**
      * The cardholder with every master data reference (rank, branch, department...), null when not set: a

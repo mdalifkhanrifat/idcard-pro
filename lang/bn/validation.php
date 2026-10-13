@@ -187,6 +187,8 @@ return [
         'filter.printed_to' => 'ছাপার তারিখ (পর্যন্ত)',
         'filter.joined_from' => 'যোগদান (থেকে)',
         'filter.joined_to' => 'যোগদান (পর্যন্ত)',
+        'filter.created_from' => 'যোগ করার তারিখ (থেকে)',
+        'filter.created_to' => 'যোগ করার তারিখ (পর্যন্ত)',
         'filter.expiring_days' => 'যত দিনের মধ্যে মেয়াদ শেষ',
         'per_page' => 'প্রতি পাতায় সারি',
         'sort' => 'সাজানোর ক্রম',

@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ListPagination from '@/components/ListPagination.vue';
+import ReportDownloads from '@/pages/reports/ReportDownloads.vue';
 import { Lock, Pencil, Plus, RotateCcw, Search, ShieldCheck, SlidersHorizontal, Trash2 } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
@@ -77,6 +78,7 @@ const yesNo = computed(() => [
 <template>
     <div>
         <UiPageHeader :title="t('users.title')" :subtitle="t('users.subtitle')">
+            <ReportDownloads v-if="auth.can('reports.view')" report-key="users" variant="menu" :params="list.queryParams" :total="meta.total" />
             <UiButton v-if="auth.can('users.create')" @click="openCreate"><Plus class="size-4" />{{ t('users.new') }}</UiButton>
         </UiPageHeader>
 
@@ -104,7 +106,7 @@ const yesNo = computed(() => [
                 <UiSelect v-model="filters.two_factor" :label="t('users.filterTwoFactor')" :placeholder="t('common.all')" :options="yesNo" />
                 <UiSelect v-model="filters.locked" :label="t('users.filterLocked')" :placeholder="t('common.all')" :options="yesNo" />
                 <UiInput v-model="filters.created_from" type="date" :label="`${t('users.created')} · ${t('common.from')}`" />
-                <UiInput v-model="filters.created_to" type="date" :label="`${t('users.created')} · ${t('common.to')}`" />
+                <UiInput v-model="filters.created_to" type="date" :min="filters.created_from || undefined" :error="list.filterError('created_to')" :label="`${t('users.created')} · ${t('common.to')}`" />
             </div>
 
             <!-- Table -->

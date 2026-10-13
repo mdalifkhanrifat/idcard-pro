@@ -31,7 +31,7 @@ class ListUsersRequest extends FormRequest
             'filter.two_factor' => ['nullable', 'in:0,1,true,false'],
             'filter.locked' => ['nullable', 'in:0,1,true,false'],
             'filter.created_from' => ['nullable', 'date_format:Y-m-d'],
-            'filter.created_to' => ['nullable', 'date_format:Y-m-d'],
+            'filter.created_to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:filter.created_from'],
             'sort' => ['sometimes', Rule::in($sorts)],
             'per_page' => ListPage::rule(),
         ];

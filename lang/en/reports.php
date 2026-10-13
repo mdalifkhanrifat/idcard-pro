@@ -8,6 +8,8 @@ return [
         'cards' => 'Issued cards',
         'family_members' => 'Family members',
         'qualifications' => 'Education and training',
+        'users' => 'Users',
+        'roles' => 'Roles',
     ],
     'descriptions' => [
         'card_prints' => 'Every printing of every card: when, by whom, how and how many copies.',
@@ -16,6 +18,8 @@ return [
         'cards' => 'Every issued card as the card list finds it: status, validity, printed or not, reason, template and dates.',
         'family_members' => 'Every family member of every cardholder (father, mother, spouse, children…), with the cardholder\'s details.',
         'qualifications' => 'Every education and training record of every cardholder, with the cardholder\'s details.',
+        'users' => 'The organization\'s users as the user list finds them: roles, status, two-step sign-in and last sign-in.',
+        'roles' => 'The organization\'s roles: how many users have each and what each may do.',
     ],
     'groups' => [
         'print' => 'Printing',
@@ -25,6 +29,8 @@ return [
         'custom' => 'Additional information',
         'family' => 'Family member',
         'qualification' => 'Education / training',
+        'user' => 'User',
+        'role' => 'Role',
     ],
     'columns' => [
         'printed_at' => 'Printed at',
@@ -76,6 +82,22 @@ return [
         'qualification.result' => 'Result',
         'qualification.certificate_no' => 'Certificate no',
         'qualification.created_at' => 'Recorded at',
+        'user.name' => 'Name',
+        'user.email' => 'Email',
+        'user.username' => 'Username',
+        'user.phone' => 'Phone',
+        'user.roles' => 'Roles',
+        'user.status' => 'Status',
+        'user.two_factor' => 'Two-step sign-in',
+        'user.locked' => 'Locked',
+        'user.locale' => 'Language',
+        'user.last_login_at' => 'Last signed in',
+        'user.created_at' => 'Added at',
+        'role.name' => 'Role',
+        'role.users' => 'Users',
+        'role.permission_count' => 'Permissions',
+        'role.permissions' => 'Permission names',
+        'role.created_at' => 'Created at',
     ],
     'fields' => [
         'full_name' => 'Full name',
@@ -159,6 +181,9 @@ return [
         'search_qualifications' => 'Exam, course, institution, subject or result; cardholder name or employee no',
         'year_from' => 'Year from',
         'year_to' => 'Year to',
+        'search_users' => 'Name, email, username or phone',
+        'added_from' => 'Added on or after',
+        'added_to' => 'Added on or before',
     ],
     'totals' => [
         'prints' => 'Printings',
@@ -173,6 +198,10 @@ return [
         'records' => 'Records',
         'education' => 'Education',
         'courses' => 'Training courses',
+        'users' => 'Users',
+        'active' => 'Active',
+        'two_factor' => 'With two-step sign-in',
+        'roles' => 'Roles',
     ],
     'pdf' => [
         'generated' => 'Made :when by :who',
@@ -208,6 +237,10 @@ return [
         'qualification_kind' => [
             'education' => 'Education',
             'course' => 'Training course',
+        ],
+        'user_status' => [
+            'active' => 'Active',
+            'inactive' => 'Inactive',
         ],
     ],
 

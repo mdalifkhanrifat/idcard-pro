@@ -7,6 +7,7 @@ import UiButton from '@/components/ui/UiButton.vue';
 import UiDialog from '@/components/ui/UiDialog.vue';
 import UiInput from '@/components/ui/UiInput.vue';
 import UiPageHeader from '@/components/ui/UiPageHeader.vue';
+import ReportDownloads from '@/pages/reports/ReportDownloads.vue';
 import { useConfirm } from '@/composables/useConfirm';
 import { http, toApiError } from '@/lib/http';
 import { useAuthStore } from '@/stores/auth';
@@ -93,6 +94,7 @@ async function remove(role: Role): Promise<void> {
 <template>
     <div>
         <UiPageHeader :title="t('roles.title')" :subtitle="t('roles.subtitle')">
+            <ReportDownloads v-if="auth.can('reports.view')" report-key="roles" variant="menu" :params="() => ({})" :total="roles.length" />
             <UiButton v-if="auth.can('roles.create')" @click="edit(null)"><Plus class="size-4" />{{ t('roles.new') }}</UiButton>
         </UiPageHeader>
 

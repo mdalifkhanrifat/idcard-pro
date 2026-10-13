@@ -210,6 +210,8 @@ return [
         'filter.printed_to' => 'printed on (to)',
         'filter.joined_from' => 'joined (from)',
         'filter.joined_to' => 'joined (to)',
+        'filter.created_from' => 'added (from)',
+        'filter.created_to' => 'added (to)',
         'filter.expiring_days' => 'expiring within (days)',
         'per_page' => 'rows per page',
         'sort' => 'sort order',
