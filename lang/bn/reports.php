@@ -7,6 +7,7 @@ return [
         'cardholders' => 'কার্ডধারী',
         'cards' => 'ইস্যু করা কার্ড',
         'family_members' => 'পরিবারের সদস্য',
+        'qualifications' => 'শিক্ষা ও প্রশিক্ষণ',
     ],
     'descriptions' => [
         'card_prints' => 'প্রতিটা কার্ডের প্রতিবার ছাপা: কবে, কে, কীভাবে আর কয় কপি।',
@@ -14,6 +15,7 @@ return [
         'cardholders' => 'কার্ডধারীর তালিকা যেভাবে খোঁজে সেভাবে — প্রত্যেক কার্ডধারী, যেকোনো তথ্যসহ।',
         'cards' => 'কার্ডের তালিকা যেভাবে খোঁজে সেভাবে প্রতিটা ইস্যু করা কার্ড: অবস্থা, মেয়াদ, ছাপা হয়েছে কিনা, কারণ, টেমপ্লেট আর তারিখ।',
         'family_members' => 'প্রত্যেক কার্ডধারীর পরিবারের সব সদস্য (বাবা, মা, স্বামী/স্ত্রী, সন্তান…), কার্ডধারীর তথ্যসহ।',
+        'qualifications' => 'প্রত্যেক কার্ডধারীর শিক্ষাগত যোগ্যতা আর প্রশিক্ষণের প্রতিটা রেকর্ড, কার্ডধারীর তথ্যসহ।',
     ],
     'groups' => [
         'print' => 'ছাপা',
@@ -22,6 +24,7 @@ return [
         'cardholder' => 'কার্ডধারী',
         'custom' => 'অতিরিক্ত তথ্য',
         'family' => 'পরিবারের সদস্য',
+        'qualification' => 'শিক্ষা / প্রশিক্ষণ',
     ],
     'columns' => [
         'printed_at' => 'ছাপার সময়',
@@ -64,6 +67,15 @@ return [
         'family.card_number' => 'সদস্যের কার্ড নম্বর',
         'family.card_state' => 'সদস্যের কার্ড',
         'family.biometric_status' => 'সদস্যের বায়োমেট্রিক',
+        'qualification.kind' => 'ধরন',
+        'qualification.title' => 'পরীক্ষা / কোর্স',
+        'qualification.subject' => 'বিভাগ / বিষয়',
+        'qualification.degree' => 'ডিগ্রি',
+        'qualification.institution' => 'বোর্ড / প্রতিষ্ঠান',
+        'qualification.year' => 'বছর',
+        'qualification.result' => 'ফল',
+        'qualification.certificate_no' => 'সনদ নম্বর',
+        'qualification.created_at' => 'যোগ করার সময়',
     ],
     'fields' => [
         'full_name' => 'পূর্ণ নাম',
@@ -144,6 +156,9 @@ return [
         'joined_from' => 'যোগদান (থেকে)',
         'joined_to' => 'যোগদান (পর্যন্ত)',
         'search_family' => 'সদস্য বা কার্ডধারীর নাম, কর্মী নম্বর, ফোন বা এনআইডি',
+        'search_qualifications' => 'পরীক্ষা, কোর্স, প্রতিষ্ঠান, বিষয় বা ফল; কার্ডধারীর নাম বা কর্মী নম্বর',
+        'year_from' => 'বছর (থেকে)',
+        'year_to' => 'বছর (পর্যন্ত)',
     ],
     'totals' => [
         'prints' => 'মোট ছাপা',
@@ -155,6 +170,9 @@ return [
         'pending' => 'ছাপা বাকি',
         'printed' => 'ছাপা হয়েছে',
         'members' => 'পরিবারের সদস্য',
+        'records' => 'রেকর্ড',
+        'education' => 'শিক্ষাগত যোগ্যতা',
+        'courses' => 'প্রশিক্ষণ কোর্স',
     ],
     'pdf' => [
         'generated' => ':when-এ বানিয়েছেন :who',
@@ -186,6 +204,10 @@ return [
             'exceptions' => 'ব্যতিক্রমসহ',
             'incomplete' => 'অসম্পূর্ণ',
             'not_required' => 'দরকার নেই',
+        ],
+        'qualification_kind' => [
+            'education' => 'শিক্ষাগত যোগ্যতা',
+            'course' => 'প্রশিক্ষণ কোর্স',
         ],
     ],
 

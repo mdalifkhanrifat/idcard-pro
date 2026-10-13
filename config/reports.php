@@ -5,6 +5,7 @@ use App\Services\Reports\Definitions\CardPrintReport;
 use App\Services\Reports\Definitions\CardReport;
 use App\Services\Reports\Definitions\ExpiredCardReport;
 use App\Services\Reports\Definitions\FamilyMemberReport;
+use App\Services\Reports\Definitions\QualificationReport;
 use App\Services\Reports\Export\CsvExporter;
 use App\Services\Reports\Export\PdfExporter;
 use App\Services\Reports\Export\XlsxExporter;
@@ -34,6 +35,8 @@ return [
         'cards' => CardReport::class,
         // Legacy "Family Info" list: every family member of every cardholder
         'family_members' => FamilyMemberReport::class,
+        // Legacy "Education Info" and "Other Course" lists: education and training of every cardholder
+        'qualifications' => QualificationReport::class,
     ],
 
     /*

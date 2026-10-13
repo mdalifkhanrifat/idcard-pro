@@ -2,6 +2,7 @@
 
 namespace App\Data\Reports;
 
+use Illuminate\Support\Fluent;
 use Illuminate\Validation\Rule;
 
 /**
@@ -19,7 +20,7 @@ final readonly class ReportFilterField
     /** One of `options`. */
     public const SELECT = 'select';
 
-    /** A whole number between `min` and `max`. */
+    /** A whole number between `min` and `max`; `after` names the field it may not be below (a range). */
     public const NUMBER = 'number';
 
     /** A card template (public id); the client lists the organization's templates. */
@@ -58,7 +59,8 @@ final readonly class ReportFilterField
             self::SEARCH => ['nullable', 'string', 'max:100'],
             self::DATE => ['nullable', 'date_format:Y-m-d', ...($this->after ? ["after_or_equal:filter.{$this->after}"] : [])],
             self::SELECT => ['nullable', Rule::in(array_column($this->options, 'value'))],
-            self::NUMBER => ['nullable', 'integer', "between:{$this->min},{$this->max}"],
+            // Compared only while the other end has a value (gte fails against an empty field)
+            self::NUMBER => ['nullable', 'integer', "between:{$this->min},{$this->max}", ...($this->after ? [Rule::when(fn (Fluent $input) => filled($input->get("filter.{$this->after}")), ["gte:filter.{$this->after}"])] : [])],
             default => ['nullable', 'string', 'size:26'],
         };
     }

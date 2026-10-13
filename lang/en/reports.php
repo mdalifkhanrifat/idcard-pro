@@ -7,6 +7,7 @@ return [
         'cardholders' => 'Cardholders',
         'cards' => 'Issued cards',
         'family_members' => 'Family members',
+        'qualifications' => 'Education and training',
     ],
     'descriptions' => [
         'card_prints' => 'Every printing of every card: when, by whom, how and how many copies.',
@@ -14,6 +15,7 @@ return [
         'cardholders' => 'Every cardholder with any of their details, found as the cardholder list finds them.',
         'cards' => 'Every issued card as the card list finds it: status, validity, printed or not, reason, template and dates.',
         'family_members' => 'Every family member of every cardholder (father, mother, spouse, children…), with the cardholder\'s details.',
+        'qualifications' => 'Every education and training record of every cardholder, with the cardholder\'s details.',
     ],
     'groups' => [
         'print' => 'Printing',
@@ -22,6 +24,7 @@ return [
         'cardholder' => 'Cardholder',
         'custom' => 'Additional information',
         'family' => 'Family member',
+        'qualification' => 'Education / training',
     ],
     'columns' => [
         'printed_at' => 'Printed at',
@@ -64,6 +67,15 @@ return [
         'family.card_number' => 'Member\'s card no',
         'family.card_state' => 'Member\'s card',
         'family.biometric_status' => 'Member\'s biometrics',
+        'qualification.kind' => 'Kind',
+        'qualification.title' => 'Exam / course',
+        'qualification.subject' => 'Group / subject',
+        'qualification.degree' => 'Degree',
+        'qualification.institution' => 'Board / institution',
+        'qualification.year' => 'Year',
+        'qualification.result' => 'Result',
+        'qualification.certificate_no' => 'Certificate no',
+        'qualification.created_at' => 'Recorded at',
     ],
     'fields' => [
         'full_name' => 'Full name',
@@ -144,6 +156,9 @@ return [
         'joined_from' => 'Joined on or after',
         'joined_to' => 'Joined on or before',
         'search_family' => 'Member or cardholder name, employee no, phone or NID',
+        'search_qualifications' => 'Exam, course, institution, subject or result; cardholder name or employee no',
+        'year_from' => 'Year from',
+        'year_to' => 'Year to',
     ],
     'totals' => [
         'prints' => 'Printings',
@@ -155,6 +170,9 @@ return [
         'pending' => 'Not printed',
         'printed' => 'Printed',
         'members' => 'Family members',
+        'records' => 'Records',
+        'education' => 'Education',
+        'courses' => 'Training courses',
     ],
     'pdf' => [
         'generated' => 'Made :when by :who',
@@ -186,6 +204,10 @@ return [
             'exceptions' => 'With exceptions',
             'incomplete' => 'Incomplete',
             'not_required' => 'Not required',
+        ],
+        'qualification_kind' => [
+            'education' => 'Education',
+            'course' => 'Training course',
         ],
     ],
 

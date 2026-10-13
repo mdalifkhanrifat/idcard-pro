@@ -208,7 +208,7 @@ useCardsPrinted(() => list.load());
                         v-else-if="field.type === 'number'"
                         v-model="filters[field.key]"
                         type="number"
-                        :min="field.min?.toString()"
+                        :min="(field.after && filters[field.after]) || field.min?.toString()"
                         :max="field.max?.toString()"
                         :placeholder="field.default"
                         :label="field.label"
