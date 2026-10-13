@@ -12,6 +12,7 @@ use App\Support\ListPage;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\LazyCollection;
 
 class LoginEventRepository implements LoginEventRepositoryInterface
 {
@@ -31,16 +32,40 @@ class LoginEventRepository implements LoginEventRepositoryInterface
 
     public function list(LoginEventFilter $filter): LengthAwarePaginator
     {
-        return LoginEvent::query()
+        return $this->criteria($filter)
             ->with('user:id,name,email')
+            ->orderBy('id', $filter->descending ? 'desc' : 'asc')
+            ->paginate(ListPage::clamp($filter->perPage))
+            ->withQueryString();
+    }
+
+    public function reportRows(LoginEventFilter $filter): LazyCollection
+    {
+        return $this->criteria($filter)->with('user:id,name,email')->orderBy('id', $filter->descending ? 'desc' : 'asc')->lazy(500);
+    }
+
+    public function reportTotals(LoginEventFilter $filter): array
+    {
+        $totals = $this->criteria($filter)->toBase()
+            ->selectRaw('count(*) as events, coalesce(sum(case when event = ? then 1 else 0 end), 0) as succeeded, count(distinct ip_address) as addresses', [LoginEventType::Succeeded->value])
+            ->first();
+
+        return ['events' => (int) ($totals->events ?? 0), 'succeeded' => (int) ($totals->succeeded ?? 0), 'addresses' => (int) ($totals->addresses ?? 0)];
+    }
+
+    /**
+     * The audit page's criteria, without order.
+     *
+     * @return Builder<LoginEvent>
+     */
+    private function criteria(LoginEventFilter $filter): Builder
+    {
+        return LoginEvent::query()
             ->when($this->tenantContext->has(), fn (Builder $q) => $q->where('tenant_id', $this->tenantContext->id()))
             ->when($filter->event, fn (Builder $q, string $v) => $q->where('event', $v))
             ->when($filter->identifier, fn (Builder $q, string $v) => $q->where('identifier', 'like', "%{$v}%"))
             ->when($filter->ipAddress, fn (Builder $q, string $v) => $q->where('ip_address', $v))
             ->when($filter->dateFrom, fn (Builder $q, string $v) => $q->where('created_at', '>=', $this->tenantContext->dayStart($v)))
-            ->when($filter->dateTo, fn (Builder $q, string $v) => $q->where('created_at', '<', $this->tenantContext->dayStart($v)->addDay()))
-            ->orderByDesc('id')
-            ->paginate(ListPage::clamp($filter->perPage))
-            ->withQueryString();
+            ->when($filter->dateTo, fn (Builder $q, string $v) => $q->where('created_at', '<', $this->tenantContext->dayStart($v)->addDay()));
     }
 }

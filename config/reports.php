@@ -1,11 +1,13 @@
 <?php
 
+use App\Services\Reports\Definitions\AuditChangeReport;
 use App\Services\Reports\Definitions\CardholderReport;
 use App\Services\Reports\Definitions\CardPrintReport;
 use App\Services\Reports\Definitions\CardReport;
 use App\Services\Reports\Definitions\CardTemplateReport;
 use App\Services\Reports\Definitions\ExpiredCardReport;
 use App\Services\Reports\Definitions\FamilyMemberReport;
+use App\Services\Reports\Definitions\LoginEventReport;
 use App\Services\Reports\Definitions\MasterDataReport;
 use App\Services\Reports\Definitions\QualificationReport;
 use App\Services\Reports\Definitions\RoleReport;
@@ -52,6 +54,9 @@ return [
         'signatories' => SignatoryReport::class,
         // Legacy "Template Setup" list
         'card_templates' => CardTemplateReport::class,
+        // Legacy "Activity Log" list: changes, and sign-ins
+        'audit_changes' => AuditChangeReport::class,
+        'audit_logins' => LoginEventReport::class,
     ],
 
     /*

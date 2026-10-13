@@ -8,6 +8,7 @@ use App\Models\LoginEvent;
 use App\Models\Tenant;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\LazyCollection;
 
 interface LoginEventRepositoryInterface
 {
@@ -19,4 +20,16 @@ interface LoginEventRepositoryInterface
      * @return LengthAwarePaginator<int, LoginEvent>
      */
     public function list(LoginEventFilter $filter): LengthAwarePaginator;
+
+    /**
+     * @return LazyCollection<int, LoginEvent>
+     */
+    public function reportRows(LoginEventFilter $filter): LazyCollection;
+
+    /**
+     * Sign-in events, successful sign-ins and distinct addresses over every page.
+     *
+     * @return array{events: int, succeeded: int, addresses: int}
+     */
+    public function reportTotals(LoginEventFilter $filter): array;
 }

@@ -9,22 +9,45 @@ use App\Support\ListPage;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\LazyCollection;
 use Spatie\Activitylog\Models\Activity;
 
 class ActivityRepository implements ActivityRepositoryInterface
 {
     public function list(ActivityFilter $filter): LengthAwarePaginator
     {
-        return $this->byTenantUsers()
+        return $this->criteria($filter)
             ->with('causer:id,name,email')
+            ->orderBy('id', $filter->descending ? 'desc' : 'asc')
+            ->paginate(ListPage::clamp($filter->perPage))
+            ->withQueryString();
+    }
+
+    public function reportRows(ActivityFilter $filter): LazyCollection
+    {
+        return $this->criteria($filter)->with('causer:id,name,email')->orderBy('id', $filter->descending ? 'desc' : 'asc')->lazy(500);
+    }
+
+    public function reportTotals(ActivityFilter $filter): array
+    {
+        $totals = $this->criteria($filter)->toBase()->selectRaw('count(*) as changes, count(distinct causer_id) as people')->first();
+
+        return ['changes' => (int) ($totals->changes ?? 0), 'people' => (int) ($totals->people ?? 0)];
+    }
+
+    /**
+     * The audit page's criteria, without order.
+     *
+     * @return Builder<Activity>
+     */
+    private function criteria(ActivityFilter $filter): Builder
+    {
+        return $this->byTenantUsers()
             ->when($filter->logName, fn (Builder $q, string $v) => $q->where('log_name', $v))
             ->when($filter->event, fn (Builder $q, string $v) => $q->where('event', $v))
             ->when($filter->causerPublicId, fn (Builder $q, string $v) => $q->whereIn('causer_id', User::query()->where('public_id', $v)->select('id')))
             ->when($filter->dateFrom, fn (Builder $q, string $v) => $q->where('created_at', '>=', app(TenantContext::class)->dayStart($v)))
-            ->when($filter->dateTo, fn (Builder $q, string $v) => $q->where('created_at', '<', app(TenantContext::class)->dayStart($v)->addDay()))
-            ->orderByDesc('id')
-            ->paginate(ListPage::clamp($filter->perPage))
-            ->withQueryString();
+            ->when($filter->dateTo, fn (Builder $q, string $v) => $q->where('created_at', '<', app(TenantContext::class)->dayStart($v)->addDay()));
     }
 
     public function logNames(): array

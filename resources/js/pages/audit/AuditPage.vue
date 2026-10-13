@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ListPagination from '@/components/ListPagination.vue';
+import ReportDownloads from '@/pages/reports/ReportDownloads.vue';
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from 'reka-ui';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiEmpty from '@/components/ui/UiEmpty.vue';
@@ -75,6 +76,8 @@ function browser(ua: string): string {
 
     return [match?.[0]?.replace('Edg', 'Edge'), os].filter(Boolean).join(' · ') || ua.slice(0, 40);
 }
+
+const loginReportQuery = computed(() => Object.fromEntries(Object.entries(logins.filters).filter(([, value]) => value !== '').map(([key, value]) => [`f_${key}`, value])));
 </script>
 
 <template>
@@ -93,6 +96,9 @@ function browser(ua: string): string {
                     <UiSelect v-model="activities.filters.event" :label="t('audit.event')" :placeholder="t('common.all')" :options="events" />
                     <UiInput v-model="activities.filters.date_from" type="date" :label="t('common.from')" />
                     <UiInput v-model="activities.filters.date_to" type="date" :min="activities.filters.date_from || undefined" :error="activities.filterError('date_to')" :label="t('common.to')" />
+                    <div v-if="auth.can('reports.view')" class="flex items-end sm:col-span-4 sm:justify-end">
+                        <ReportDownloads report-key="audit_changes" variant="menu" :params="activities.queryParams" :total="activities.meta.value.total" />
+                    </div>
                 </div>
                 <ul class="divide-y divide-line" :class="activities.loading.value && 'opacity-50'">
                     <li v-for="row in activities.rows.value" :key="row.id" class="flex flex-col gap-1 px-5 py-3 text-sm sm:flex-row sm:items-center sm:gap-4">
@@ -121,6 +127,10 @@ function browser(ua: string): string {
                     <UiInput v-model="logins.filters.ip_address" :label="t('audit.ip')" />
                     <UiInput v-model="logins.filters.date_from" type="date" :label="t('common.from')" />
                     <UiInput v-model="logins.filters.date_to" type="date" :min="logins.filters.date_from || undefined" :error="logins.filterError('date_to')" :label="t('common.to')" />
+                    <!-- The sign-ins list keeps its criteria under login_*: the report's link names them as the report does -->
+                    <div v-if="auth.can('reports.view')" class="flex items-end sm:col-span-5 sm:justify-end">
+                        <ReportDownloads report-key="audit_logins" variant="menu" :params="logins.queryParams" :total="logins.meta.value.total" :link-query="loginReportQuery" />
+                    </div>
                 </div>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm" :class="logins.loading.value && 'opacity-50'">

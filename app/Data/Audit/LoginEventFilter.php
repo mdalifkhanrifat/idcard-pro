@@ -14,6 +14,8 @@ final readonly class LoginEventFilter
         public ?string $dateFrom = null,
         public ?string $dateTo = null,
         public int $perPage = 25,
+        /** Newest first, unless the report asks for the oldest first (sort=id). */
+        public bool $descending = true,
     ) {}
 
     /**
@@ -30,6 +32,7 @@ final readonly class LoginEventFilter
             dateFrom: $filter['date_from'] ?? null,
             dateTo: $filter['date_to'] ?? null,
             perPage: (int) ($input['per_page'] ?? 25),
+            descending: ($input['sort'] ?? '-id') !== 'id',
         );
     }
 }
