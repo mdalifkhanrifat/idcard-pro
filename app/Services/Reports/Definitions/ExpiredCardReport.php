@@ -70,6 +70,7 @@ class ExpiredCardReport implements Report
             new ReportFilterField('expiring_days', ReportFilterField::NUMBER, (string) __('reports.filters.expiring_days'), min: 1, max: 365, default: (string) self::EXPIRING_DAYS, when: ['validity' => 'expiring']),
             new ReportFilterField('expiry_from', ReportFilterField::DATE, (string) __('reports.filters.expiry_from')),
             new ReportFilterField('expiry_to', ReportFilterField::DATE, (string) __('reports.filters.expiry_to'), after: 'expiry_from'),
+            $this->reasonFilter(),
             $this->templateFilter(),
             $this->holderFilter(),
             ...$this->lookupFilters(),
@@ -144,6 +145,7 @@ class ExpiredCardReport implements Report
 
         return new CardFilter(
             search: $filter['search'] ?? null,
+            reason: $filter['reason'] ?? null,
             templatePublicId: $filter['template'] ?? null,
             holder: $filter['holder'] ?? null,
             // Only these two: every other card is not this report's business

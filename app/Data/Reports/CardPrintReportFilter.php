@@ -26,6 +26,8 @@ final readonly class CardPrintReportFilter
         /** Public id of the user who printed. */
         public ?string $printedBy = null,
         public ?string $batch = null,
+        /** Why the card was issued (cards.reasons; legacy "Card Type"). */
+        public ?string $reason = null,
         /** cardholder or family (family member cards). */
         public ?string $holder = null,
         public array $lookups = [],
@@ -67,6 +69,7 @@ final readonly class CardPrintReportFilter
             method: $filter['method'] ?? null,
             printedBy: $filter['printed_by'] ?? null,
             batch: $filter['batch'] ?? null,
+            reason: $filter['reason'] ?? null,
             holder: $filter['holder'] ?? null,
             lookups: $lookups,
             sort: ltrim($sort, '-'),

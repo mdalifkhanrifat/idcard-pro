@@ -73,7 +73,7 @@ it('counts the whole last day of a date range in the organization\'s time zone (
     $this->getJson('/api/v1/reports/card-prints?filter[printed_to]=2026-03-31')->assertJsonCount(3, 'data');
 });
 
-it('filters by holder, card, template, method, who printed, batch and any master data', function () {
+it('filters by holder, card, card type, template, method, who printed, batch and any master data', function () {
     ($this->printAt)($this->janeCard, '2026-03-01 10:00');
     ($this->printAt)($this->johnCard, '2026-03-01 11:00', ['method' => 'pdf']);
     ($this->printAt)($this->babyCard, '2026-03-01 12:00');
@@ -92,11 +92,16 @@ it('filters by holder, card, template, method, who printed, batch and any master
     $this->getJson("/api/v1/reports/card-prints?filter[printed_by]={$this->owner->public_id}")->assertJsonCount(5, 'data');
     $this->getJson("/api/v1/reports/card-prints?filter[printed_by]={$operator->public_id}")->assertJsonCount(0, 'data');
     $this->getJson("/api/v1/reports/card-prints?filter[rank]={$this->rank->public_id}")->assertJsonCount(2, 'data')->assertJsonPath('data.0.cardholder.lookups.rank.name', 'Captain');
+
+    // Legacy "Card Type" search: why the card was issued
+    Card::query()->withoutGlobalScopes()->where('public_id', $this->babyCard['id'])->update(['reason' => 'lost']);
+    $this->getJson('/api/v1/reports/card-prints?filter[reason]=lost')->assertJsonCount(1, 'data')->assertJsonPath('data.0.card.reason', 'lost');
+    $this->getJson('/api/v1/reports/card-prints?filter[reason]=new')->assertJsonCount(4, 'data');
 });
 
 it('validates the filter', function () {
-    $this->getJson('/api/v1/reports/card-prints?filter[printed_from]=2026-04-02&filter[printed_to]=2026-04-01&filter[method]=fax&filter[holder]=x&filter[colour]=red&sort=number&per_page=500')
-        ->assertJsonValidationErrors(['filter', 'filter.printed_to', 'filter.method', 'filter.holder', 'sort', 'per_page']);
+    $this->getJson('/api/v1/reports/card-prints?filter[printed_from]=2026-04-02&filter[printed_to]=2026-04-01&filter[method]=fax&filter[holder]=x&filter[reason]=stolen&filter[colour]=red&sort=number&per_page=500')
+        ->assertJsonValidationErrors(['filter', 'filter.printed_to', 'filter.method', 'filter.holder', 'filter.reason', 'sort', 'per_page']);
     $this->getJson('/api/v1/reports/card-prints?filter[printed_from]=01/04/2026')->assertJsonValidationErrors('filter.printed_from');
     $this->getJson('/api/v1/reports/card-prints?filter[method]=import')->assertOk();
 });

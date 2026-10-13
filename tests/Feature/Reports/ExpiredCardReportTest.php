@@ -51,7 +51,7 @@ it('lists current cards past their last day with the legacy columns, longest ove
         ->and($rows[1]['cardholder']['full_name'])->toBe('John Roe');
 });
 
-it('looks ahead at cards expiring soon, and filters by dates, holder, master data and search', function () {
+it('looks ahead at cards expiring soon, and filters by dates, card type, holder, master data and search', function () {
     $this->getJson('/api/v1/reports/expired-cards?filter[validity]=expiring&filter[expiring_days]=15&columns[]=card.days_overdue')
         ->assertJsonCount(1, 'data')
         ->assertJsonPath('data.0.id', $this->expiring['id'])
@@ -60,6 +60,8 @@ it('looks ahead at cards expiring soon, and filters by dates, holder, master dat
     $this->getJson('/api/v1/reports/expired-cards?filter[validity]=expiring&filter[expiring_days]=5')->assertJsonCount(0, 'data');
     $this->getJson('/api/v1/reports/expired-cards?filter[expiry_from]=2026-04-01&filter[expiry_to]=2026-04-30')->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $this->family['id']);
     $this->getJson('/api/v1/reports/expired-cards?filter[holder]=family')->assertJsonCount(1, 'data');
+    $this->getJson('/api/v1/reports/expired-cards?filter[reason]=renewal')->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $this->expired['id']);
+    $this->getJson('/api/v1/reports/expired-cards?filter[reason]=new')->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $this->family['id']);
     $this->getJson("/api/v1/reports/expired-cards?filter[rank]={$this->rank->public_id}")->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $this->expired['id']);
     $this->getJson('/api/v1/reports/expired-cards?filter[search]=S-2')->assertJsonCount(1, 'data')->assertJsonPath('data.0.id', $this->family['id']);
     $this->getJson('/api/v1/reports/expired-cards?sort=-expiry_date')->assertJsonPath('data.0.id', $this->family['id']);
@@ -69,7 +71,10 @@ it('describes its filters, the days only for cards expiring soon', function () {
     $filters = collect(collect($this->getJson('/api/v1/reports')->json('data'))->keyBy('key')['expired_cards']['filters'])->keyBy('key');
 
     expect($filters['validity'])->toMatchArray(['type' => 'select', 'default' => 'expired'])
-        ->and($filters['expiring_days'])->toMatchArray(['type' => 'number', 'min' => 1, 'max' => 365, 'default' => '30', 'when' => ['validity' => 'expiring']]);
+        ->and($filters['expiring_days'])->toMatchArray(['type' => 'number', 'min' => 1, 'max' => 365, 'default' => '30', 'when' => ['validity' => 'expiring']])
+        // Legacy "Card Type": one option per configured reason, labelled like the column
+        ->and($filters['reason'])->toMatchArray(['type' => 'select', 'label' => 'Card type (reason)'])
+        ->and(array_column($filters['reason']['options'], 'value'))->toBe(array_keys(config('cards.reasons')));
 });
 
 it('validates the filter, naming each as the report labels it', function () {

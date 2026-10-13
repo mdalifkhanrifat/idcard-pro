@@ -24,9 +24,17 @@ trait DescribesCards
      */
     protected function column(string $key, string $type, string $group, Closure $value): ReportColumn
     {
+        return new ReportColumn($key, $this->columnLabel($key), $type, $group, $value);
+    }
+
+    /**
+     * reports.columns.<key>, read from the list: the keys hold dots (card.reason) that __() would take as nesting.
+     */
+    protected function columnLabel(string $key): string
+    {
         $labels = (array) __('reports.columns');
 
-        return new ReportColumn($key, (string) ($labels[$key] ?? $key), $type, $group, $value);
+        return (string) ($labels[$key] ?? $key);
     }
 
     protected function timezone(): string
@@ -116,6 +124,17 @@ trait DescribesCards
     protected function templateFilter(): ReportFilterField
     {
         return new ReportFilterField('template', ReportFilterField::TEMPLATE, (string) __('reports.filters.template'));
+    }
+
+    /**
+     * Why the card was issued (legacy "Card Type" search on card_get), one option per configured reason.
+     */
+    protected function reasonFilter(): ReportFilterField
+    {
+        return new ReportFilterField('reason', ReportFilterField::SELECT, $this->columnLabel('card.reason'), array_map(
+            fn (string $reason) => ['value' => $reason, 'label' => (string) __("cards.reasons.{$reason}")],
+            array_keys((array) config('cards.reasons')),
+        ));
     }
 
     protected function holderFilter(): ReportFilterField

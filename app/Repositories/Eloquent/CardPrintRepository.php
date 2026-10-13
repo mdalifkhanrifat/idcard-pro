@@ -81,6 +81,7 @@ class CardPrintRepository extends EloquentRepository implements CardPrintReposit
                     ->orWhere('full_name_local', 'like', "%{$search}%")
                     ->orWhere('employee_no', 'like', "%{$search}%"))
                 ->orWhereHas('familyMember', fn (Builder $f) => $f->where('name', 'like', "%{$search}%")))))
+            ->when($filter->reason, fn (Builder $q, string $reason) => $q->whereHas('card', fn (Builder $c) => $c->where('reason', $reason)))
             ->when($filter->templatePublicId, fn (Builder $q, string $id) => $q->whereHas('card.template', fn (Builder $t) => $t->where('public_id', $id)))
             ->when($filter->holder === 'family', fn (Builder $q) => $q->whereHas('card', fn (Builder $c) => $c->whereNotNull('family_member_id')))
             ->when($filter->holder === 'cardholder', fn (Builder $q) => $q->whereHas('card', fn (Builder $c) => $c->whereNull('family_member_id')));

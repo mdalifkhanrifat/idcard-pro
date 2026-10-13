@@ -78,6 +78,7 @@ class CardPrintReport implements Report
             new ReportFilterField('method', ReportFilterField::SELECT, (string) __('reports.columns.method'), array_map(fn (string $method) => ['value' => $method, 'label' => (string) __("reports.methods.{$method}")], $methods)),
             new ReportFilterField('printed_by', ReportFilterField::USER, (string) __('reports.columns.printed_by')),
             new ReportFilterField('batch', ReportFilterField::SEARCH, (string) __('reports.columns.batch')),
+            $this->reasonFilter(),
             $this->templateFilter(),
             $this->holderFilter(),
             ...$this->lookupFilters(),
