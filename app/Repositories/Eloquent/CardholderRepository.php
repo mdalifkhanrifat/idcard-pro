@@ -8,8 +8,10 @@ use App\Models\Cardholder;
 use App\Models\MasterDataItem;
 use App\Repositories\Contracts\CardholderRepositoryInterface;
 use App\Support\ListPage;
+use Closure;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\LazyCollection;
 
 /**
  * @extends EloquentRepository<Cardholder>
@@ -23,10 +25,52 @@ class CardholderRepository extends EloquentRepository implements CardholderRepos
 
     public function list(CardholderFilter $filter): LengthAwarePaginator
     {
-        $query = $this->query()
+        return $this->filtered($filter)
             ->with(['department', 'unit', 'rank', 'designation', 'bloodGroup', 'photo', 'currentCard:id,public_id,cardholder_id,number,print_count,last_printed_at'])
             // Any card issued to the person or their family: such records cannot be deleted (has_cards)
             ->withExists('cards')
+            ->paginate(ListPage::clamp($filter->perPage))
+            ->withQueryString();
+    }
+
+    public function report(CardholderFilter $filter): LengthAwarePaginator
+    {
+        return $this->withReportRelations($this->filtered($filter))
+            ->paginate(ListPage::clamp($filter->perPage))
+            ->withQueryString();
+    }
+
+    public function reportRows(CardholderFilter $filter): LazyCollection
+    {
+        return $this->withReportRelations($this->filtered($filter))->lazy(500);
+    }
+
+    public function reportTotals(CardholderFilter $filter): array
+    {
+        $count = function (?Closure $card = null) use ($filter): int {
+            $query = $this->filtered($filter)->reorder();
+            // Not through when(): it would call the closure as its condition
+            if ($card !== null) {
+                $query->whereHas('currentCard', $card);
+            }
+
+            return $query->count();
+        };
+        $cardholders = $count();
+        $pending = $count(fn (Builder $c) => $c->where('print_count', 0));
+        $printed = $count(fn (Builder $c) => $c->where('print_count', '>', 0));
+
+        return ['cardholders' => $cardholders, 'no_card' => $cardholders - $pending - $printed, 'pending' => $pending, 'printed' => $printed];
+    }
+
+    /**
+     * The list's criteria and order, shared by the list and the report.
+     *
+     * @return Builder<Cardholder>
+     */
+    private function filtered(CardholderFilter $filter): Builder
+    {
+        $query = $this->query()
             ->when($filter->search, fn (Builder $q, string $search) => $q->where(fn (Builder $w) => $w
                 ->where('full_name', 'like', "%{$search}%")
                 ->orWhere('full_name_local', 'like', "%{$search}%")
@@ -60,9 +104,22 @@ class CardholderRepository extends EloquentRepository implements CardholderRepos
 
         return $query
             ->orderBy($filter->sort, $filter->descending ? 'desc' : 'asc')
-            ->orderBy('id', 'desc')
-            ->paginate(ListPage::clamp($filter->perPage))
-            ->withQueryString();
+            ->orderBy('id', 'desc');
+    }
+
+    /**
+     * Everything a report row reads: every master data list, the current card, who recorded the person.
+     *
+     * @param  Builder<Cardholder>  $query
+     * @return Builder<Cardholder>
+     */
+    private function withReportRelations(Builder $query): Builder
+    {
+        return $query->with([
+            ...Cardholder::lookupRelations(),
+            'currentCard:id,public_id,cardholder_id,number,print_count,last_printed_at',
+            'creator:id,name',
+        ]);
     }
 
     public function usesMasterDataItem(MasterDataItem $item): bool

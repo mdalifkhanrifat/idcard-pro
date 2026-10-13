@@ -2,6 +2,8 @@
 
 namespace App\Data\Cardholders;
 
+use App\Models\Cardholder;
+
 /**
  * Listing criteria for cardholders.
  */
@@ -15,16 +17,14 @@ final readonly class CardholderFilter
     public const CARD_STATES = ['none', 'pending', 'printed'];
 
     /**
-     * Master data filters: filter key => cardholder column.
+     * Master data filters, one per list a cardholder refers to: filter key (the list) => cardholder column.
+     *
+     * @return array<string, string>
      */
-    public const LOOKUP_FILTERS = [
-        'department' => 'department_id',
-        'unit' => 'unit_id',
-        'rank' => 'rank_id',
-        'designation' => 'designation_id',
-        'branch' => 'branch_id',
-        'blood_group' => 'blood_group_id',
-    ];
+    public static function lookupFilters(): array
+    {
+        return array_flip(Cardholder::LOOKUPS);
+    }
 
     /**
      * @param  array<string, string>  $lookups  cardholder column => master data public id
@@ -57,7 +57,7 @@ final readonly class CardholderFilter
         $sort = (string) ($input['sort'] ?? '-created_at');
 
         $lookups = [];
-        foreach (self::LOOKUP_FILTERS as $key => $column) {
+        foreach (self::lookupFilters() as $key => $column) {
             if (filled($filter[$key] ?? null)) {
                 $lookups[$column] = (string) $filter[$key];
             }

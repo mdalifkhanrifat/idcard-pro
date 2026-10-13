@@ -7,11 +7,9 @@ use App\Data\Reports\ReportFilterField;
 use App\Models\Card;
 use App\Models\Cardholder;
 use App\Models\FamilyMember;
-use App\Models\MasterDataItem;
 use App\Support\Tenancy\TenantContext;
 use Carbon\CarbonImmutable;
 use Closure;
-use Illuminate\Support\Str;
 
 /**
  * What reports about cards share: the shape of a card, its holder and family member in a row, and the
@@ -19,28 +17,7 @@ use Illuminate\Support\Str;
  */
 trait DescribesCards
 {
-    /**
-     * A column labelled from reports.columns.<key>.
-     */
-    protected function column(string $key, string $type, string $group, Closure $value): ReportColumn
-    {
-        return new ReportColumn($key, $this->columnLabel($key), $type, $group, $value);
-    }
-
-    /**
-     * reports.columns.<key>, read from the list: the keys hold dots (card.reason) that __() would take as nesting.
-     */
-    protected function columnLabel(string $key): string
-    {
-        $labels = (array) __('reports.columns');
-
-        return (string) ($labels[$key] ?? $key);
-    }
-
-    protected function timezone(): string
-    {
-        return app(TenantContext::class)->get()?->timezone ?: (string) config('app.timezone');
-    }
+    use DescribesCardholders;
 
     /**
      * Columns of a card and of who it is for, read through the row's card.
@@ -99,28 +76,6 @@ trait DescribesCards
         return $member ? ['id' => $member->public_id, 'name' => $member->name, 'relation' => $member->relation->value] : null;
     }
 
-    /**
-     * The cardholder with every master data reference (rank, branch, department...), null when not set: a
-     * stable shape for any client.
-     *
-     * @return array<string, mixed>
-     */
-    protected function presentCardholder(Cardholder $holder): array
-    {
-        return [
-            'id' => $holder->public_id,
-            'full_name' => $holder->full_name,
-            'full_name_local' => $holder->full_name_local,
-            'employee_no' => $holder->employee_no,
-            'lookups' => collect(Cardholder::LOOKUPS)->mapWithKeys(function (string $type) use ($holder) {
-                /** @var MasterDataItem|null $item */
-                $item = $holder->getRelationValue(Str::camel($type));
-
-                return [$type => $item ? ['id' => $item->public_id, 'name' => $item->name, 'code' => $item->code] : null];
-            })->all(),
-        ];
-    }
-
     protected function templateFilter(): ReportFilterField
     {
         return new ReportFilterField('template', ReportFilterField::TEMPLATE, (string) __('reports.filters.template'));
@@ -143,24 +98,5 @@ trait DescribesCards
             ['value' => 'cardholder', 'label' => (string) __('reports.filters.holders.cardholder')],
             ['value' => 'family', 'label' => (string) __('reports.filters.holders.family')],
         ]);
-    }
-
-    /**
-     * A filter for every master data list a cardholder refers to (a child list inside its parent's item).
-     *
-     * @return array<int, ReportFilterField>
-     */
-    protected function lookupFilters(): array
-    {
-        // Labelled like the columns of the same lists
-        $labels = (array) __('reports.fields');
-
-        return array_values(array_map(fn (string $type) => new ReportFilterField(
-            $type,
-            ReportFilterField::MASTER_DATA,
-            (string) ($labels[$type] ?? $type),
-            masterData: $type,
-            parent: config("master_data.types.{$type}.parent"),
-        ), Cardholder::LOOKUPS));
     }
 }

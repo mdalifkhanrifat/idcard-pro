@@ -24,7 +24,7 @@ class ListCardholdersRequest extends FormRequest
     public function rules(): array
     {
         $sorts = collect(CardholderFilter::SORTS)->flatMap(fn (string $s) => [$s, "-{$s}"])->all();
-        $lookupKeys = array_keys(CardholderFilter::LOOKUP_FILTERS);
+        $lookupKeys = array_keys(CardholderFilter::lookupFilters());
         $allowed = implode(',', ['search', 'status', 'employment_type', 'joined_from', 'joined_to', 'card', 'biometrics', 'custom', ...$lookupKeys]);
 
         return [

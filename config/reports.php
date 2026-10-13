@@ -1,5 +1,6 @@
 <?php
 
+use App\Services\Reports\Definitions\CardholderReport;
 use App\Services\Reports\Definitions\CardPrintReport;
 use App\Services\Reports\Definitions\ExpiredCardReport;
 use App\Services\Reports\Export\CsvExporter;
@@ -25,6 +26,8 @@ return [
         'card_prints' => CardPrintReport::class,
         // Legacy "Expired Card": current cards past their last day, or expiring within some days
         'expired_cards' => ExpiredCardReport::class,
+        // Legacy "Personal Info" list with Print / PDF / Excel: cardholders as the list finds them
+        'cardholders' => CardholderReport::class,
     ],
 
     /*

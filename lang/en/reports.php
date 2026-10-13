@@ -4,10 +4,12 @@ return [
     'names' => [
         'card_prints' => 'Card print history',
         'expired_cards' => 'Expired cards',
+        'cardholders' => 'Cardholders',
     ],
     'descriptions' => [
         'card_prints' => 'Every printing of every card: when, by whom, how and how many copies.',
         'expired_cards' => 'Current cards past their last valid day, or expiring soon, to renew in time.',
+        'cardholders' => 'Every cardholder with any of their details, found as the cardholder list finds them.',
     ],
     'groups' => [
         'print' => 'Printing',
@@ -37,6 +39,12 @@ return [
         'card.last_printed_at' => 'Last printed',
         'card.issued_by' => 'Issued by',
         'card.created_at' => 'Created at',
+        'cardholder.status' => 'Record status',
+        'cardholder.created_at' => 'Recorded at',
+        'cardholder.created_by' => 'Recorded by',
+        'cardholder.updated_at' => 'Last changed',
+        'cardholder.card_state' => 'Card',
+        'cardholder.biometric_status' => 'Biometrics',
     ],
     'fields' => [
         'full_name' => 'Full name',
@@ -110,6 +118,10 @@ return [
         'issued_to' => 'Issue date to',
         'created_from' => 'Card created from',
         'created_to' => 'Card created to',
+        'search_cardholders' => 'Name, employee no, NID, phone or email',
+        'search_cardholders_cards' => 'Name, employee no, card or RF no, NID, phone or email',
+        'joined_from' => 'Joined on or after',
+        'joined_to' => 'Joined on or before',
     ],
     'totals' => [
         'prints' => 'Printings',
@@ -117,6 +129,9 @@ return [
         'cards' => 'Cards',
         'cardholders' => 'Cardholders',
         'family_cards' => 'Family members\' cards',
+        'no_card' => 'No card',
+        'pending' => 'Not printed',
+        'printed' => 'Printed',
     ],
     'pdf' => [
         'generated' => 'Made :when by :who',
@@ -129,4 +144,26 @@ return [
         'pdf_unavailable' => 'The PDF could not be made right now. Try again, or download CSV or Excel.',
         'too_many' => 'The report has :count rows; one download may hold at most :max. Narrow the filter (for example by date) and download in parts.',
     ],
+    'values' => [
+        'yes' => 'Yes',
+        'no' => 'No',
+        'cardholder_status' => [
+            'active' => 'Active',
+            'inactive' => 'Inactive',
+            'retired' => 'Retired',
+        ],
+        // Legacy list "Status": the person's own current card
+        'card_state' => [
+            'none' => 'No card',
+            'pending' => 'Not printed',
+            'printed' => 'Printed',
+        ],
+        'biometric_status' => [
+            'complete' => 'Complete',
+            'exceptions' => 'With exceptions',
+            'incomplete' => 'Incomplete',
+            'not_required' => 'Not required',
+        ],
+    ],
+
 ];

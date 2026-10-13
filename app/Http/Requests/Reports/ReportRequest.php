@@ -8,6 +8,7 @@ use App\Services\Reports\Report;
 use App\Services\Reports\ReportRegistry;
 use App\Support\ListPage;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Arr;
 use Illuminate\Validation\Rule;
 
 /**
@@ -40,7 +41,14 @@ class ReportRequest extends FormRequest
         $sorts = collect($report->sorts())->unique()->flatMap(fn (string $field) => [$field, "-{$field}"])->all();
 
         return [
-            'filter' => ['sometimes', 'array:'.implode(',', array_map(fn (ReportFilterField $field) => $field->key, $fields))],
+            // A dotted filter (custom.<field>) arrives nested: filter[custom][<field>]
+            'filter' => ['sometimes', 'array:'.implode(',', array_unique(array_map(fn (ReportFilterField $field) => strtok($field->key, '.'), $fields)))],
+            // Inside a dotted group (custom), only its own filters
+            ...collect($fields)->filter(fn (ReportFilterField $field) => str_contains($field->key, '.'))
+                ->groupBy(fn (ReportFilterField $field) => strtok($field->key, '.'))
+                ->map(fn ($group) => ['nullable', 'array:'.$group->map(fn (ReportFilterField $field) => substr($field->key, strpos($field->key, '.') + 1))->implode(',')])
+                ->mapWithKeys(fn (array $rules, string $prefix) => ["filter.{$prefix}" => $rules])
+                ->all(),
             ...collect($fields)->mapWithKeys(fn (ReportFilterField $field) => ["filter.{$field->key}" => $field->rules()])->all(),
             'sort' => ['sometimes', Rule::in($sorts)],
             'per_page' => ListPage::rule(),
@@ -62,7 +70,8 @@ class ReportRequest extends FormRequest
 
     public function toQuery(): ReportQuery
     {
-        $filter = array_filter(array_map(strval(...), (array) $this->validated('filter', [])), fn (string $value) => $value !== '');
+        // Flat, by the filters' own keys (custom.<field>), as every report reads them
+        $filter = array_filter(array_map(strval(...), Arr::dot((array) $this->validated('filter', []))), fn (string $value) => $value !== '');
 
         return new ReportQuery($filter, (string) $this->validated('sort', $this->report()->defaultSort()), (int) $this->validated('per_page', 15));
     }

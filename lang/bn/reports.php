@@ -4,10 +4,12 @@ return [
     'names' => [
         'card_prints' => 'কার্ড ছাপার ইতিহাস',
         'expired_cards' => 'মেয়াদোত্তীর্ণ কার্ড',
+        'cardholders' => 'কার্ডধারী',
     ],
     'descriptions' => [
         'card_prints' => 'প্রতিটা কার্ডের প্রতিবার ছাপা: কবে, কে, কীভাবে আর কয় কপি।',
         'expired_cards' => 'মেয়াদ পার হওয়া বা শিগগির শেষ হবে এমন চালু কার্ড — সময়মতো নবায়নের জন্য।',
+        'cardholders' => 'কার্ডধারীর তালিকা যেভাবে খোঁজে সেভাবে — প্রত্যেক কার্ডধারী, যেকোনো তথ্যসহ।',
     ],
     'groups' => [
         'print' => 'ছাপা',
@@ -37,6 +39,12 @@ return [
         'card.last_printed_at' => 'শেষ ছাপা',
         'card.issued_by' => 'যিনি ইস্যু করেছেন',
         'card.created_at' => 'তৈরির সময়',
+        'cardholder.status' => 'রেকর্ডের অবস্থা',
+        'cardholder.created_at' => 'যোগ করার সময়',
+        'cardholder.created_by' => 'কে যোগ করেছেন',
+        'cardholder.updated_at' => 'শেষ বদল',
+        'cardholder.card_state' => 'কার্ড',
+        'cardholder.biometric_status' => 'বায়োমেট্রিক',
     ],
     'fields' => [
         'full_name' => 'পূর্ণ নাম',
@@ -110,6 +118,10 @@ return [
         'issued_to' => 'ইস্যুর তারিখ পর্যন্ত',
         'created_from' => 'কার্ড তৈরির তারিখ থেকে',
         'created_to' => 'কার্ড তৈরির তারিখ পর্যন্ত',
+        'search_cardholders' => 'নাম, কর্মী নম্বর, এনআইডি, ফোন বা ইমেইল',
+        'search_cardholders_cards' => 'নাম, কর্মী নম্বর, কার্ড বা RF নম্বর, এনআইডি, ফোন বা ইমেইল',
+        'joined_from' => 'যোগদান (থেকে)',
+        'joined_to' => 'যোগদান (পর্যন্ত)',
     ],
     'totals' => [
         'prints' => 'মোট ছাপা',
@@ -117,6 +129,9 @@ return [
         'cards' => 'কার্ড',
         'cardholders' => 'কার্ডধারী',
         'family_cards' => 'পরিবারের সদস্যের কার্ড',
+        'no_card' => 'কার্ড নেই',
+        'pending' => 'ছাপা বাকি',
+        'printed' => 'ছাপা হয়েছে',
     ],
     'pdf' => [
         'generated' => ':when-এ বানিয়েছেন :who',
@@ -129,4 +144,26 @@ return [
         'pdf_unavailable' => 'এখন PDF বানানো গেল না। আবার চেষ্টা করুন, অথবা CSV বা Excel নামান।',
         'too_many' => 'রিপোর্টে :countটা সারি, এক ডাউনলোডে সর্বোচ্চ :maxটা যায়। ফিল্টার ছোট করুন (যেমন তারিখ দিয়ে) আর ভাগে ভাগে নামান।',
     ],
+    'values' => [
+        'yes' => 'হ্যাঁ',
+        'no' => 'না',
+        'cardholder_status' => [
+            'active' => 'সক্রিয়',
+            'inactive' => 'নিষ্ক্রিয়',
+            'retired' => 'অবসরপ্রাপ্ত',
+        ],
+        // পুরনো তালিকার "Status": ব্যক্তির নিজের চলতি কার্ড
+        'card_state' => [
+            'none' => 'কার্ড নেই',
+            'pending' => 'ছাপা বাকি',
+            'printed' => 'ছাপা হয়েছে',
+        ],
+        'biometric_status' => [
+            'complete' => 'সম্পূর্ণ',
+            'exceptions' => 'ব্যতিক্রমসহ',
+            'incomplete' => 'অসম্পূর্ণ',
+            'not_required' => 'দরকার নেই',
+        ],
+    ],
+
 ];
