@@ -101,6 +101,8 @@ class ReportService
             'name' => (string) __("reports.names.{$report->key()}"),
             'description' => (string) __("reports.descriptions.{$report->key()}"),
             'columns' => array_values(array_map(fn (ReportColumn $column) => $column->toArray(), $columns)),
+            // Names of the column groups in the reader's language (a new group needs no client change)
+            'groups' => collect($columns)->map(fn (ReportColumn $column) => $column->group)->unique()->mapWithKeys(fn (string $group) => [$group => (string) (((array) __('reports.groups'))[$group] ?? $group)])->all(),
             'default_columns' => $this->defaultColumns($report, $columns),
             'standard_columns' => $report->defaultColumns(),
             'filters' => array_map(fn (ReportFilterField $field) => $field->toArray(), $report->filters()),

@@ -33,7 +33,8 @@ watch(open, (isOpen) => {
 });
 
 const byKey = computed(() => new Map(props.report.columns.map((column) => [column.key, column])));
-const groupLabel = (group: string) => (te(`reports.groups.${group}`) ? t(`reports.groups.${group}`) : group);
+/** The server names each group; an older answer falls back to the app's own names. */
+const groupLabel = (group: string) => props.report.groups?.[group] ?? (te(`reports.groups.${group}`) ? t(`reports.groups.${group}`) : group);
 const groups = computed(() => {
     const needle = search.value.trim().toLocaleLowerCase();
     const result = new Map<string, ReportColumn[]>();

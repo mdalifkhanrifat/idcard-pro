@@ -11,6 +11,7 @@ use App\Models\MasterDataItem;
 use App\Repositories\Contracts\CustomFieldRepositoryInterface;
 use App\Support\Tenancy\TenantContext;
 use Closure;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Str;
 
 /**
@@ -35,6 +36,14 @@ trait DescribesCardholders
         $labels = (array) __('reports.columns');
 
         return (string) ($labels[$key] ?? $key);
+    }
+
+    /**
+     * Whether the reader may see something (e.g. cards or biometrics), so a report shows only that to them.
+     */
+    protected function userCan(string $permission): bool
+    {
+        return (bool) Auth::user()?->can($permission);
     }
 
     protected function timezone(): string

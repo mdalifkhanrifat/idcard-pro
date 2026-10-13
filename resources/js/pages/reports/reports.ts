@@ -37,6 +37,8 @@ export interface ReportDefinition {
     name: string;
     description: string;
     columns: ReportColumn[];
+    /** Column group => its name in the reader's language. */
+    groups?: Record<string, string>;
     /** The organization's choice, else the report's own. */
     default_columns: string[];
     /** The report's own default. */

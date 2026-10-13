@@ -4,6 +4,7 @@ use App\Services\Reports\Definitions\CardholderReport;
 use App\Services\Reports\Definitions\CardPrintReport;
 use App\Services\Reports\Definitions\CardReport;
 use App\Services\Reports\Definitions\ExpiredCardReport;
+use App\Services\Reports\Definitions\FamilyMemberReport;
 use App\Services\Reports\Export\CsvExporter;
 use App\Services\Reports\Export\PdfExporter;
 use App\Services\Reports\Export\XlsxExporter;
@@ -31,6 +32,8 @@ return [
         'cardholders' => CardholderReport::class,
         // Issued cards as the card list finds them
         'cards' => CardReport::class,
+        // Legacy "Family Info" list: every family member of every cardholder
+        'family_members' => FamilyMemberReport::class,
     ],
 
     /*

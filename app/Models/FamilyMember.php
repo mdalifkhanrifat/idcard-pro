@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\BiometricStatus;
+use App\Enums\CardStatus;
 use App\Enums\FamilyRelation;
 use App\Enums\Gender;
 use App\Models\Concerns\BelongsToTenant;
@@ -46,6 +47,7 @@ use Spatie\Activitylog\Support\LogOptions;
  * @property Carbon|null $updated_at
  * @property-read Cardholder $cardholder
  * @property-read MasterDataItem|null $bloodGroup
+ * @property-read Card|null $currentCard
  * @property-read CardholderFile|null $photo
  * @property-read CardholderFile|null $signature
  * @property-read Collection<int, CardholderFile> $files
@@ -93,6 +95,16 @@ class FamilyMember extends Model
     public function cardholder(): BelongsTo
     {
         return $this->belongsTo(Cardholder::class);
+    }
+
+    /**
+     * The member's own active card.
+     *
+     * @return HasOne<Card, $this>
+     */
+    public function currentCard(): HasOne
+    {
+        return $this->hasOne(Card::class)->where('status', CardStatus::Active);
     }
 
     /**

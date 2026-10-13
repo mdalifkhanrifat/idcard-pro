@@ -17,7 +17,6 @@ use App\Services\Reports\Concerns\DescribesCardholders;
 use App\Services\Reports\Report;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\LazyCollection;
 
 /**
@@ -172,10 +171,5 @@ class CardholderReport implements Report
             $holder->currentCard->print_count > 0 => 'printed',
             default => 'pending',
         };
-    }
-
-    private function userCan(string $permission): bool
-    {
-        return (bool) Auth::user()?->can($permission);
     }
 }

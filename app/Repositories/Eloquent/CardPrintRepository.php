@@ -6,8 +6,8 @@ use App\Data\Reports\CardPrintReportFilter;
 use App\Models\Card;
 use App\Models\Cardholder;
 use App\Models\CardPrint;
-use App\Models\MasterDataItem;
 use App\Repositories\Contracts\CardPrintRepositoryInterface;
+use App\Repositories\Eloquent\Concerns\FiltersByCardholder;
 use App\Support\ListPage;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -20,6 +20,8 @@ use Illuminate\Support\LazyCollection;
  */
 class CardPrintRepository extends EloquentRepository implements CardPrintRepositoryInterface
 {
+    use FiltersByCardholder;
+
     protected function model(): string
     {
         return CardPrint::class;
@@ -87,12 +89,7 @@ class CardPrintRepository extends EloquentRepository implements CardPrintReposit
             ->when($filter->holder === 'family', fn (Builder $q) => $q->whereHas('card', fn (Builder $c) => $c->whereNotNull('family_member_id')))
             ->when($filter->holder === 'cardholder', fn (Builder $q) => $q->whereHas('card', fn (Builder $c) => $c->whereNull('family_member_id')));
 
-        foreach ($filter->lookups as $column => $publicId) {
-            $query->whereHas('card.cardholder', fn (Builder $c) => $c->whereIn($column, MasterDataItem::query()->where('public_id', $publicId)->select('id')));
-        }
-        if ($filter->custom !== []) {
-            $query->whereHas('card.cardholder', fn (Builder $c) => $c->whereCustomFields($filter->custom));
-        }
+        $this->whereCardholderMatches($query, 'card.cardholder', $filter->lookups, $filter->custom);
 
         return $query;
     }

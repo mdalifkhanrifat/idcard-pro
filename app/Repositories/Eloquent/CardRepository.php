@@ -8,8 +8,8 @@ use App\Models\Card;
 use App\Models\CardAsset;
 use App\Models\Cardholder;
 use App\Models\CardTemplate;
-use App\Models\MasterDataItem;
 use App\Repositories\Contracts\CardRepositoryInterface;
+use App\Repositories\Eloquent\Concerns\FiltersByCardholder;
 use App\Support\ListPage;
 use App\Support\Tenancy\TenantContext;
 use DateTimeInterface;
@@ -23,6 +23,8 @@ use Illuminate\Support\LazyCollection;
  */
 class CardRepository extends EloquentRepository implements CardRepositoryInterface
 {
+    use FiltersByCardholder;
+
     protected function model(): string
     {
         return Card::class;
@@ -119,12 +121,7 @@ class CardRepository extends EloquentRepository implements CardRepositoryInterfa
                 ->when($filter->printedFrom, fn (Builder $w, string $date) => $w->where('printed_at', '>=', app(TenantContext::class)->dayStart($date)))
                 ->when($filter->printedTo, fn (Builder $w, string $date) => $w->where('printed_at', '<', app(TenantContext::class)->dayStart($date)->addDay()))));
 
-        foreach ($filter->lookups as $column => $publicId) {
-            $query->whereHas('cardholder', fn (Builder $c) => $c->whereIn($column, MasterDataItem::query()->where('public_id', $publicId)->select('id')));
-        }
-        if ($filter->custom !== []) {
-            $query->whereHas('cardholder', fn (Builder $c) => $c->whereCustomFields($filter->custom));
-        }
+        $this->whereCardholderMatches($query, 'cardholder', $filter->lookups, $filter->custom);
 
         return $query
             ->orderBy($filter->sort, $filter->descending ? 'desc' : 'asc')
