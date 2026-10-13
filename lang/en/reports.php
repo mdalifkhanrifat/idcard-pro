@@ -5,11 +5,13 @@ return [
         'card_prints' => 'Card print history',
         'expired_cards' => 'Expired cards',
         'cardholders' => 'Cardholders',
+        'cards' => 'Issued cards',
     ],
     'descriptions' => [
         'card_prints' => 'Every printing of every card: when, by whom, how and how many copies.',
         'expired_cards' => 'Current cards past their last valid day, or expiring soon, to renew in time.',
         'cardholders' => 'Every cardholder with any of their details, found as the cardholder list finds them.',
+        'cards' => 'Every issued card as the card list finds it: status, validity, printed or not, reason, template and dates.',
     ],
     'groups' => [
         'print' => 'Printing',
@@ -110,7 +112,9 @@ return [
         'validities' => [
             'expired' => 'Expired',
             'expiring' => 'Expiring soon',
+            'valid' => 'Valid',
         ],
+        'printed' => 'Printed',
         'expiring_days' => 'Expiring within (days)',
         'expiry_from' => 'Expiry date from',
         'expiry_to' => 'Expiry date to',

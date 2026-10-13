@@ -51,6 +51,21 @@ final readonly class CardholderFilter
     /**
      * @param  array<string, mixed>  $input  validated request input
      */
+    /**
+     * Custom field criteria of a request's filter (`custom[<key>]` => exact value), keys checked as field keys.
+     *
+     * @param  array<string, mixed>  $filter
+     * @return array<string, string>
+     */
+    public static function customFrom(array $filter): array
+    {
+        return array_map(strval(...), array_filter(
+            (array) ($filter['custom'] ?? []),
+            fn (mixed $value, mixed $key) => is_string($key) && preg_match('/^[a-z][a-z0-9_]*$/', $key) && is_scalar($value) && filled($value),
+            ARRAY_FILTER_USE_BOTH,
+        ));
+    }
+
     public static function fromArray(array $input, bool $searchCards = false, bool $biometrics = false): self
     {
         $filter = $input['filter'] ?? [];
@@ -68,11 +83,7 @@ final readonly class CardholderFilter
             status: $filter['status'] ?? null,
             employmentType: $filter['employment_type'] ?? null,
             lookups: $lookups,
-            custom: array_filter(
-                (array) ($filter['custom'] ?? []),
-                fn (mixed $value, mixed $key) => is_string($key) && preg_match('/^[a-z][a-z0-9_]*$/', $key) && filled($value),
-                ARRAY_FILTER_USE_BOTH,
-            ),
+            custom: self::customFrom($filter),
             joinedFrom: $filter['joined_from'] ?? null,
             joinedTo: $filter['joined_to'] ?? null,
             card: $filter['card'] ?? null,

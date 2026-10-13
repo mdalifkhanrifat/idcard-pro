@@ -2,6 +2,7 @@
 
 namespace App\Data\Reports;
 
+use App\Data\Cardholders\CardholderFilter;
 use App\Models\Cardholder;
 
 /**
@@ -13,6 +14,7 @@ final readonly class CardPrintReportFilter
 
     /**
      * @param  array<string, string>  $lookups  cardholder column => master data public id (any of Cardholder::LOOKUPS)
+     * @param  array<string, string>  $custom
      */
     public function __construct(
         /** Card number, RF number, cardholder name or number, family member name. */
@@ -34,6 +36,8 @@ final readonly class CardPrintReportFilter
         public string $sort = 'printed_at',
         public bool $descending = true,
         public int $perPage = 15,
+        /** The cardholder's custom fields: key => exact value. */
+        public array $custom = [],
     ) {}
 
     /**
@@ -75,6 +79,7 @@ final readonly class CardPrintReportFilter
             sort: ltrim($sort, '-'),
             descending: str_starts_with($sort, '-'),
             perPage: (int) ($input['per_page'] ?? 15),
+            custom: CardholderFilter::customFrom($filter),
         );
     }
 }

@@ -22,8 +22,8 @@ class ListCardsRequest extends FormRequest
     public function rules(): array
     {
         $sorts = collect(CardFilter::SORTS)->flatMap(fn (string $s) => [$s, "-{$s}"])->all();
-        $lookupKeys = array_keys(CardFilter::LOOKUP_FILTERS);
-        $allowed = implode(',', ['search', 'status', 'reason', 'template', 'holder', 'issued_from', 'issued_to', 'validity', 'expiring_days', 'printed', 'printed_from', 'printed_to', ...$lookupKeys]);
+        $lookupKeys = array_keys(CardFilter::lookupFilters());
+        $allowed = implode(',', ['search', 'status', 'reason', 'template', 'holder', 'issued_from', 'issued_to', 'validity', 'expiring_days', 'printed', 'printed_from', 'printed_to', 'custom', ...$lookupKeys]);
 
         return [
             'filter' => ['sometimes', "array:{$allowed}"],
@@ -39,6 +39,9 @@ class ListCardsRequest extends FormRequest
             'filter.printed' => ['nullable', Rule::in(CardFilter::PRINTED)],
             'filter.printed_from' => ['nullable', 'date_format:Y-m-d'],
             'filter.printed_to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:filter.printed_from'],
+            // The cardholder's custom fields: exact values
+            'filter.custom' => ['nullable', 'array', 'max:10'],
+            'filter.custom.*' => ['nullable', 'string', 'max:100'],
             ...collect($lookupKeys)->mapWithKeys(fn (string $key) => ["filter.{$key}" => ['nullable', 'string', 'size:26']])->all(),
             'sort' => ['sometimes', Rule::in($sorts)],
             'per_page' => ListPage::rule(),

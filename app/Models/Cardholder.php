@@ -298,6 +298,22 @@ class Cardholder extends Model
     }
 
     /**
+     * Cardholders whose custom fields hold these exact values (yes/no fields asked as "true" / "false"): one
+     * reading for every list and report that filters by custom fields.
+     *
+     * @param  Builder<Cardholder>  $query
+     * @param  array<string, string>  $values  custom field key => value
+     */
+    public function scopeWhereCustomFields(Builder $query, array $values): void
+    {
+        foreach ($values as $key => $value) {
+            in_array($value, ['true', 'false'], true)
+                ? $query->where("custom_fields->{$key}", $value === 'true')
+                : $query->where("custom_fields->{$key}", $value);
+        }
+    }
+
+    /**
      * The cardholder's own active card (family cards aside): legacy list "Status" PENDING / PRINTED.
      *
      * @return HasOne<Card, $this>

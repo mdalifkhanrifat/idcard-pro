@@ -2,6 +2,7 @@
 
 use App\Services\Reports\Definitions\CardholderReport;
 use App\Services\Reports\Definitions\CardPrintReport;
+use App\Services\Reports\Definitions\CardReport;
 use App\Services\Reports\Definitions\ExpiredCardReport;
 use App\Services\Reports\Export\CsvExporter;
 use App\Services\Reports\Export\PdfExporter;
@@ -28,6 +29,8 @@ return [
         'expired_cards' => ExpiredCardReport::class,
         // Legacy "Personal Info" list with Print / PDF / Excel: cardholders as the list finds them
         'cardholders' => CardholderReport::class,
+        // Issued cards as the card list finds them
+        'cards' => CardReport::class,
     ],
 
     /*

@@ -82,6 +82,7 @@ class CardPrintReport implements Report
             $this->templateFilter(),
             $this->holderFilter(),
             ...$this->lookupFilters(),
+            ...$this->customFieldFilters(),
         ];
     }
 

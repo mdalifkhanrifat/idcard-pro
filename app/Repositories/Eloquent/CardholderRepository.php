@@ -92,11 +92,7 @@ class CardholderRepository extends EloquentRepository implements CardholderRepos
             ->when($filter->card === 'printed', fn (Builder $q) => $q->whereHas('currentCard', fn (Builder $c) => $c->where('print_count', '>', 0)))
             ->when($filter->biometrics !== null, fn (Builder $q) => $q->where('biometric_status', $filter->biometrics));
 
-        foreach ($filter->custom as $key => $value) {
-            in_array($value, ['true', 'false'], true)
-                ? $query->where("custom_fields->{$key}", $value === 'true')
-                : $query->where("custom_fields->{$key}", $value);
-        }
+        $query->whereCustomFields($filter->custom);
 
         foreach ($filter->lookups as $column => $publicId) {
             $query->whereIn($column, MasterDataItem::query()->where('public_id', $publicId)->select('id'));

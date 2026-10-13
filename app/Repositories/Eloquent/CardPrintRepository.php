@@ -90,6 +90,9 @@ class CardPrintRepository extends EloquentRepository implements CardPrintReposit
         foreach ($filter->lookups as $column => $publicId) {
             $query->whereHas('card.cardholder', fn (Builder $c) => $c->whereIn($column, MasterDataItem::query()->where('public_id', $publicId)->select('id')));
         }
+        if ($filter->custom !== []) {
+            $query->whereHas('card.cardholder', fn (Builder $c) => $c->whereCustomFields($filter->custom));
+        }
 
         return $query;
     }

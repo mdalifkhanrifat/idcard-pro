@@ -2,6 +2,7 @@
 
 namespace App\Services\Reports\Definitions;
 
+use App\Data\Cardholders\CardholderFilter;
 use App\Data\Cards\CardFilter;
 use App\Data\Reports\ReportFilterField;
 use App\Data\Reports\ReportQuery;
@@ -79,6 +80,7 @@ class ExpiredCardReport implements Report
             $this->templateFilter(),
             $this->holderFilter(),
             ...$this->lookupFilters(),
+            ...$this->customFieldFilters(),
         ];
     }
 
@@ -166,6 +168,7 @@ class ExpiredCardReport implements Report
             issuedTo: $filter['issued_to'] ?? null,
             createdFrom: $filter['created_from'] ?? null,
             createdTo: $filter['created_to'] ?? null,
+            custom: CardholderFilter::customFrom($query->input()['filter']),
         );
     }
 }

@@ -122,6 +122,9 @@ class CardRepository extends EloquentRepository implements CardRepositoryInterfa
         foreach ($filter->lookups as $column => $publicId) {
             $query->whereHas('cardholder', fn (Builder $c) => $c->whereIn($column, MasterDataItem::query()->where('public_id', $publicId)->select('id')));
         }
+        if ($filter->custom !== []) {
+            $query->whereHas('cardholder', fn (Builder $c) => $c->whereCustomFields($filter->custom));
+        }
 
         return $query
             ->orderBy($filter->sort, $filter->descending ? 'desc' : 'asc')

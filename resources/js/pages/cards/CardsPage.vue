@@ -2,6 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ListPagination from '@/components/ListPagination.vue';
+import ReportDownloads from '@/pages/reports/ReportDownloads.vue';
 import { FileDown, Printer, RotateCcw, Search, SlidersHorizontal, X } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
@@ -175,7 +176,10 @@ useCardsPrinted(changed);
 
 <template>
     <div>
-        <UiPageHeader :title="t('cards.pageTitle')" :subtitle="t('cards.pageSubtitle')" />
+        <UiPageHeader :title="t('cards.pageTitle')" :subtitle="t('cards.pageSubtitle')">
+            <!-- The list as found now, through the report of the same criteria -->
+            <ReportDownloads v-if="auth.can('reports.view')" report-key="cards" variant="menu" :params="list.queryParams" :total="meta.total" />
+        </UiPageHeader>
 
         <!-- Counts -->
         <div class="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">

@@ -2,6 +2,8 @@
 
 namespace App\Data\Cards;
 
+use App\Data\Cardholders\CardholderFilter;
+
 /**
  * Listing criteria for issued cards (legacy reports: card print history and expired cards).
  */
@@ -21,12 +23,18 @@ final readonly class CardFilter
     public const VALIDITY = ['expired', 'expiring', 'valid'];
 
     /**
-     * Cardholder master data filters: filter key => cardholder column.
+     * Cardholder master data filters, one per list a cardholder refers to: filter key => cardholder column.
+     *
+     * @return array<string, string>
      */
-    public const LOOKUP_FILTERS = ['department' => 'department_id', 'unit' => 'unit_id'];
+    public static function lookupFilters(): array
+    {
+        return CardholderFilter::lookupFilters();
+    }
 
     /**
      * @param  array<string, string>  $lookups  cardholder column => master data public id
+     * @param  array<string, string>  $custom
      */
     public function __construct(
         public ?string $search = null,
@@ -53,6 +61,8 @@ final readonly class CardFilter
         /** Recorded here on or after / on or before these days (the organization's days; legacy "Create Date"). */
         public ?string $createdFrom = null,
         public ?string $createdTo = null,
+        /** The cardholder's custom fields: key => exact value. */
+        public array $custom = [],
     ) {}
 
     /**
@@ -64,7 +74,7 @@ final readonly class CardFilter
         $sort = (string) ($input['sort'] ?? '-created_at');
 
         $lookups = [];
-        foreach (self::LOOKUP_FILTERS as $key => $column) {
+        foreach (self::lookupFilters() as $key => $column) {
             if (filled($filter[$key] ?? null)) {
                 $lookups[$column] = (string) $filter[$key];
             }
@@ -87,6 +97,9 @@ final readonly class CardFilter
             sort: ltrim($sort, '-'),
             descending: str_starts_with($sort, '-'),
             perPage: (int) ($input['per_page'] ?? 15),
+            createdFrom: $filter['created_from'] ?? null,
+            createdTo: $filter['created_to'] ?? null,
+            custom: CardholderFilter::customFrom($filter),
         );
     }
 }
