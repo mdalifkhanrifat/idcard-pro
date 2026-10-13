@@ -5,6 +5,7 @@ namespace App\Repositories\Eloquent;
 use App\Data\Tenants\TenantFilter;
 use App\Models\Tenant;
 use App\Repositories\Contracts\TenantRepositoryInterface;
+use App\Support\ListPage;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -26,7 +27,7 @@ class TenantRepository extends EloquentRepository implements TenantRepositoryInt
             ->when($filter->slug, fn (Builder $q, string $slug) => $q->where('slug', $slug))
             ->when($filter->status, fn (Builder $q, string $status) => $q->where('status', $status))
             ->orderBy($filter->sort, $filter->descending ? 'desc' : 'asc')
-            ->paginate(min($filter->perPage, 100))
+            ->paginate(ListPage::clamp($filter->perPage))
             ->withQueryString();
     }
 

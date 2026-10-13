@@ -3,6 +3,7 @@
 namespace App\Http\Requests\MasterData;
 
 use App\Data\MasterData\MasterDataFilter;
+use App\Support\ListPage;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -29,6 +30,8 @@ class ListMasterDataRequest extends FormRequest
             'per_page' => ['sometimes', function (string $attribute, mixed $value, \Closure $fail): void {
                 if ($value !== 'all' && (! ctype_digit((string) $value) || (int) $value < 1)) {
                     $fail(__('validation.integer', ['attribute' => $attribute]));
+                } elseif ($value !== 'all' && (int) $value > ListPage::max()) {
+                    $fail(__('validation.max.numeric', ['attribute' => $attribute, 'max' => ListPage::max()]));
                 }
             }],
         ];

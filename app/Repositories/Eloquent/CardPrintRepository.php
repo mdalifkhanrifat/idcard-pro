@@ -8,6 +8,7 @@ use App\Models\Cardholder;
 use App\Models\CardPrint;
 use App\Models\MasterDataItem;
 use App\Repositories\Contracts\CardPrintRepositoryInterface;
+use App\Support\ListPage;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -37,7 +38,7 @@ class CardPrintRepository extends EloquentRepository implements CardPrintReposit
     public function report(CardPrintReportFilter $filter): LengthAwarePaginator
     {
         return $this->ordered($this->withReportRelations($this->reportQuery($filter)), $filter)
-            ->paginate(min($filter->perPage, 100))
+            ->paginate(ListPage::clamp($filter->perPage))
             ->withQueryString();
     }
 

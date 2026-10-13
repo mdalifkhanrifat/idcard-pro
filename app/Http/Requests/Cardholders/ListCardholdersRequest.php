@@ -6,6 +6,7 @@ use App\Data\Cardholders\CardholderFilter;
 use App\Enums\BiometricStatus;
 use App\Enums\CardholderStatus;
 use App\Enums\EmploymentType;
+use App\Support\ListPage;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
@@ -39,7 +40,7 @@ class ListCardholdersRequest extends FormRequest
             'filter.custom.*' => ['nullable', 'string', 'max:100'],
             ...collect($lookupKeys)->mapWithKeys(fn (string $key) => ["filter.{$key}" => ['nullable', 'string', 'size:26']])->all(),
             'sort' => ['sometimes', Rule::in($sorts)],
-            'per_page' => ['sometimes', 'integer', 'between:1,100'],
+            'per_page' => ListPage::rule(),
         ];
     }
 

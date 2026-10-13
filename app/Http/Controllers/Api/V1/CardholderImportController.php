@@ -7,6 +7,7 @@ use App\Http\Requests\Cardholders\UploadCardholderImportRequest;
 use App\Http\Resources\CardholderImportResource;
 use App\Models\CardholderImport;
 use App\Services\Cardholders\CardholderImportService;
+use App\Support\ListPage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -21,7 +22,7 @@ class CardholderImportController extends Controller
     {
         Gate::authorize('cardholders.import');
 
-        return CardholderImportResource::collection($this->imports->list((int) $request->integer('per_page', 10)));
+        return CardholderImportResource::collection($this->imports->list(ListPage::clamp($request->integer('per_page', 10))));
     }
 
     /**

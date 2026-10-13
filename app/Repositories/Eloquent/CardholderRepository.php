@@ -7,6 +7,7 @@ use App\Enums\BiometricStatus;
 use App\Models\Cardholder;
 use App\Models\MasterDataItem;
 use App\Repositories\Contracts\CardholderRepositoryInterface;
+use App\Support\ListPage;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -60,7 +61,7 @@ class CardholderRepository extends EloquentRepository implements CardholderRepos
         return $query
             ->orderBy($filter->sort, $filter->descending ? 'desc' : 'asc')
             ->orderBy('id', 'desc')
-            ->paginate(min($filter->perPage, 100))
+            ->paginate(ListPage::clamp($filter->perPage))
             ->withQueryString();
     }
 

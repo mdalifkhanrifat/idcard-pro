@@ -4,6 +4,7 @@ namespace App\Http\Requests\Audit;
 
 use App\Data\Audit\LoginEventFilter;
 use App\Enums\LoginEventType;
+use App\Support\ListPage;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rules\Enum;
 
@@ -26,7 +27,7 @@ class ListLoginEventsRequest extends FormRequest
             'filter.ip_address' => ['nullable', 'ip'],
             'filter.date_from' => ['nullable', 'date_format:Y-m-d'],
             'filter.date_to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:filter.date_from'],
-            'per_page' => ['sometimes', 'integer', 'between:1,100'],
+            'per_page' => ListPage::rule(),
         ];
     }
 

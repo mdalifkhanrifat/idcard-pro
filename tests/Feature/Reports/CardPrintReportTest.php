@@ -100,7 +100,7 @@ it('filters by holder, card, card type, template, method, who printed, batch and
 });
 
 it('validates the filter', function () {
-    $this->getJson('/api/v1/reports/card-prints?filter[printed_from]=2026-04-02&filter[printed_to]=2026-04-01&filter[method]=fax&filter[holder]=x&filter[reason]=stolen&filter[colour]=red&sort=number&per_page=500')
+    $this->getJson('/api/v1/reports/card-prints?filter[printed_from]=2026-04-02&filter[printed_to]=2026-04-01&filter[method]=fax&filter[holder]=x&filter[reason]=stolen&filter[colour]=red&sort=number&per_page=2001')
         ->assertJsonValidationErrors(['filter', 'filter.printed_to', 'filter.method', 'filter.holder', 'filter.reason', 'sort', 'per_page']);
     $this->getJson('/api/v1/reports/card-prints?filter[printed_from]=01/04/2026')->assertJsonValidationErrors('filter.printed_from');
     $this->getJson('/api/v1/reports/card-prints?filter[method]=import')->assertOk();

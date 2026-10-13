@@ -10,6 +10,7 @@ use App\Models\Cardholder;
 use App\Models\CardTemplate;
 use App\Models\MasterDataItem;
 use App\Repositories\Contracts\CardRepositoryInterface;
+use App\Support\ListPage;
 use App\Support\Tenancy\TenantContext;
 use DateTimeInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -31,14 +32,14 @@ class CardRepository extends EloquentRepository implements CardRepositoryInterfa
     {
         return $this->filtered($filter)
             ->with(['template:id,public_id,name,code', 'familyMember:id,public_id,name,relation,biometric_status', 'cardholder:id,public_id,full_name,employee_no,department_id,biometric_status', 'cardholder.department', 'issuer:id,name'])
-            ->paginate(min($filter->perPage, 100))
+            ->paginate(ListPage::clamp($filter->perPage))
             ->withQueryString();
     }
 
     public function report(CardFilter $filter): LengthAwarePaginator
     {
         return $this->withReportRelations($this->filtered($filter))
-            ->paginate(min($filter->perPage, 100))
+            ->paginate(ListPage::clamp($filter->perPage))
             ->withQueryString();
     }
 

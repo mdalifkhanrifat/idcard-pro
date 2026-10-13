@@ -21,7 +21,7 @@ it('answers a Bangla reader in Bangla, field names included', function () {
     $this->getJson('/api/v1/cards?filter[issued_from]=2026-01-02&filter[issued_to]=2026-01-01&per_page=0')
         ->assertJsonPath('errors', [
             'filter.issued_to' => ['ইস্যুর তারিখ (পর্যন্ত) অবশ্যই ইস্যুর তারিখ (থেকে)-এর দিন বা তার পরের তারিখ হতে হবে।'],
-            'per_page' => ['প্রতি পাতায় সারি 1 থেকে 100-এর মধ্যে হতে হবে।'],
+            'per_page' => ['প্রতি পাতায় সারি 1 থেকে 2000-এর মধ্যে হতে হবে।'],
         ]);
 });
 

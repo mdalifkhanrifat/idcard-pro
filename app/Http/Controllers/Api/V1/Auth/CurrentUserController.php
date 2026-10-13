@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Resources\TenantResource;
 use App\Http\Resources\UserResource;
 use App\Services\Account\AccountService;
+use App\Support\ListPage;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -26,6 +27,8 @@ class CurrentUserController extends Controller
                 'user' => new UserResource($user),
                 'tenant' => $tenant ? new TenantResource($tenant) : null,
                 'permissions' => $user->is_platform_admin ? ['*'] : $user->getAllPermissions()->pluck('name'),
+                // What every list offers (rows per page)
+                'lists' => ['page_sizes' => ListPage::sizes(), 'max_per_page' => ListPage::max()],
             ],
         ]);
     }

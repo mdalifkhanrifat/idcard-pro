@@ -6,6 +6,7 @@ use App\Data\Users\UserFilter;
 use App\Enums\UserStatus;
 use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
+use App\Support\ListPage;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -40,7 +41,7 @@ class UserRepository extends EloquentRepository implements UserRepositoryInterfa
             ->when($filter->createdTo, fn (Builder $q, string $date) => $q->whereDate('created_at', '<=', $date))
             ->orderBy($filter->sort, $filter->descending ? 'desc' : 'asc')
             ->orderBy('id', 'desc')
-            ->paginate(min($filter->perPage, 100))
+            ->paginate(ListPage::clamp($filter->perPage))
             ->withQueryString();
     }
 

@@ -4,6 +4,7 @@ namespace App\Http\Requests\Users;
 
 use App\Data\Users\UserFilter;
 use App\Enums\UserStatus;
+use App\Support\ListPage;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
@@ -32,7 +33,7 @@ class ListUsersRequest extends FormRequest
             'filter.created_from' => ['nullable', 'date_format:Y-m-d'],
             'filter.created_to' => ['nullable', 'date_format:Y-m-d'],
             'sort' => ['sometimes', Rule::in($sorts)],
-            'per_page' => ['sometimes', 'integer', 'between:1,100'],
+            'per_page' => ListPage::rule(),
         ];
     }
 

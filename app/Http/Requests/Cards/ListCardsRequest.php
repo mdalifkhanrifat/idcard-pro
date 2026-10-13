@@ -4,6 +4,7 @@ namespace App\Http\Requests\Cards;
 
 use App\Data\Cards\CardFilter;
 use App\Enums\CardStatus;
+use App\Support\ListPage;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
@@ -40,7 +41,7 @@ class ListCardsRequest extends FormRequest
             'filter.printed_to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:filter.printed_from'],
             ...collect($lookupKeys)->mapWithKeys(fn (string $key) => ["filter.{$key}" => ['nullable', 'string', 'size:26']])->all(),
             'sort' => ['sometimes', Rule::in($sorts)],
-            'per_page' => ['sometimes', 'integer', 'between:1,100'],
+            'per_page' => ListPage::rule(),
         ];
     }
 

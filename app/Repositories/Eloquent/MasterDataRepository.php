@@ -5,6 +5,7 @@ namespace App\Repositories\Eloquent;
 use App\Data\MasterData\MasterDataFilter;
 use App\Models\MasterDataItem;
 use App\Repositories\Contracts\MasterDataRepositoryInterface;
+use App\Support\ListPage;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -39,7 +40,7 @@ class MasterDataRepository extends EloquentRepository implements MasterDataRepos
 
         return $filter->perPage === null
             ? $query->get()
-            : $query->paginate(min($filter->perPage, 100))->withQueryString();
+            : $query->paginate(ListPage::clamp($filter->perPage))->withQueryString();
     }
 
     public function countsByType(): array

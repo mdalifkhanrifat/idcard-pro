@@ -6,6 +6,7 @@ use App\Data\Reports\ReportFilterField;
 use App\Data\Reports\ReportQuery;
 use App\Services\Reports\Report;
 use App\Services\Reports\ReportRegistry;
+use App\Support\ListPage;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -42,7 +43,7 @@ class ReportRequest extends FormRequest
             'filter' => ['sometimes', 'array:'.implode(',', array_map(fn (ReportFilterField $field) => $field->key, $fields))],
             ...collect($fields)->mapWithKeys(fn (ReportFilterField $field) => ["filter.{$field->key}" => $field->rules()])->all(),
             'sort' => ['sometimes', Rule::in($sorts)],
-            'per_page' => ['sometimes', 'integer', 'between:1,100'],
+            'per_page' => ListPage::rule(),
             // Columns whose values each row carries (`values`), in this order; any column of GET /reports
             'columns' => ['sometimes', 'array', 'max:100'],
             'columns.*' => ['string', 'distinct', Rule::in(array_keys($report->columns()))],

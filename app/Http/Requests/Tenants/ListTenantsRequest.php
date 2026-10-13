@@ -4,6 +4,7 @@ namespace App\Http\Requests\Tenants;
 
 use App\Data\Tenants\TenantFilter;
 use App\Enums\TenantStatus;
+use App\Support\ListPage;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
@@ -28,7 +29,7 @@ class ListTenantsRequest extends FormRequest
             'filter.slug' => ['nullable', 'string', 'max:63'],
             'filter.status' => ['nullable', new Enum(TenantStatus::class)],
             'sort' => ['sometimes', Rule::in($sorts)],
-            'per_page' => ['sometimes', 'integer', 'between:1,100'],
+            'per_page' => ListPage::rule(),
         ];
     }
 

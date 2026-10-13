@@ -8,6 +8,7 @@ use App\Models\LoginEvent;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Repositories\Contracts\LoginEventRepositoryInterface;
+use App\Support\ListPage;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
@@ -39,7 +40,7 @@ class LoginEventRepository implements LoginEventRepositoryInterface
             ->when($filter->dateFrom, fn (Builder $q, string $v) => $q->where('created_at', '>=', $this->tenantContext->dayStart($v)))
             ->when($filter->dateTo, fn (Builder $q, string $v) => $q->where('created_at', '<', $this->tenantContext->dayStart($v)->addDay()))
             ->orderByDesc('id')
-            ->paginate(min($filter->perPage, 100))
+            ->paginate(ListPage::clamp($filter->perPage))
             ->withQueryString();
     }
 }

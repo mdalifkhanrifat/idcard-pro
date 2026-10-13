@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Audit;
 
 use App\Data\Audit\ActivityFilter;
+use App\Support\ListPage;
 use Illuminate\Foundation\Http\FormRequest;
 
 class ListActivitiesRequest extends FormRequest
@@ -25,7 +26,7 @@ class ListActivitiesRequest extends FormRequest
             'filter.causer' => ['nullable', 'string', 'size:26'],
             'filter.date_from' => ['nullable', 'date_format:Y-m-d'],
             'filter.date_to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:filter.date_from'],
-            'per_page' => ['sometimes', 'integer', 'between:1,100'],
+            'per_page' => ListPage::rule(),
         ];
     }
 
