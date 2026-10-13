@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
+import ListPagination from '@/components/ListPagination.vue';
 import { Lock, Pencil, Plus, RotateCcw, Search, ShieldCheck, SlidersHorizontal, Trash2 } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiEmpty from '@/components/ui/UiEmpty.vue';
 import UiInput from '@/components/ui/UiInput.vue';
 import UiPageHeader from '@/components/ui/UiPageHeader.vue';
-import UiPagination from '@/components/ui/UiPagination.vue';
 import UiSelect from '@/components/ui/UiSelect.vue';
 import UiSortHeader from '@/components/ui/UiSortHeader.vue';
 import UserFormDialog from './UserFormDialog.vue';
@@ -163,7 +163,7 @@ const yesNo = computed(() => [
                 </table>
                 <UiEmpty v-if="!loading && !rows.length" :title="t('common.noResults')" :hint="t('common.noResultsHint')" />
             </div>
-            <UiPagination :page="meta.current_page" :last-page="meta.last_page" :total="meta.total" :from="meta.from" :to="meta.to" @change="page = $event" />
+            <ListPagination :list="list" />
         </div>
 
         <UserFormDialog v-model:open="dialogOpen" :user="editing" :roles="roles" @saved="list.load()" />

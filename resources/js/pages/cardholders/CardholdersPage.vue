@@ -2,13 +2,13 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import ListPagination from '@/components/ListPagination.vue';
 import { FileUp, Pencil, Plus, RotateCcw, Search, SlidersHorizontal, Trash2, UserRound } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiEmpty from '@/components/ui/UiEmpty.vue';
 import UiInput from '@/components/ui/UiInput.vue';
 import UiPageHeader from '@/components/ui/UiPageHeader.vue';
-import UiPagination from '@/components/ui/UiPagination.vue';
 import UiSelect from '@/components/ui/UiSelect.vue';
 import UiSortHeader from '@/components/ui/UiSortHeader.vue';
 import { useConfirm } from '@/composables/useConfirm';
@@ -246,7 +246,7 @@ async function remove(cardholder: Cardholder): Promise<void> {
                 </table>
                 <UiEmpty v-if="!loading && !rows.length" :title="t('common.noResults')" :hint="t('common.noResultsHint')" />
             </div>
-            <UiPagination :page="meta.current_page" :last-page="meta.last_page" :total="meta.total" :from="meta.from" :to="meta.to" @change="page = $event" />
+            <ListPagination :list="list" />
         </div>
     </div>
 </template>

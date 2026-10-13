@@ -182,6 +182,8 @@ export interface Session {
     user: User;
     tenant: Tenant | null;
     permissions: string[];
+    /** What every list offers: rows per page to choose from, and the most one page may hold. */
+    lists?: { page_sizes: number[]; max_per_page: number };
 }
 
 export interface MasterDataType {

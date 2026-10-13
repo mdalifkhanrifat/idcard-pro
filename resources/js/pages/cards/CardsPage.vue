@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import ListPagination from '@/components/ListPagination.vue';
 import { FileDown, Printer, RotateCcw, Search, SlidersHorizontal, X } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiEmpty from '@/components/ui/UiEmpty.vue';
 import UiInput from '@/components/ui/UiInput.vue';
 import UiPageHeader from '@/components/ui/UiPageHeader.vue';
-import UiPagination from '@/components/ui/UiPagination.vue';
 import UiSelect from '@/components/ui/UiSelect.vue';
 import UiSortHeader from '@/components/ui/UiSortHeader.vue';
 import CardDetailDialog from './CardDetailDialog.vue';
@@ -346,7 +346,7 @@ useCardsPrinted(changed);
                 </table>
             </div>
             <UiEmpty v-else-if="!loading" :title="t('cards.listEmpty')" :hint="t('cards.listEmptyHint')" />
-            <UiPagination :page="meta.current_page" :last-page="meta.last_page" :total="meta.total" :from="meta.from" :to="meta.to" @change="page = $event" />
+            <ListPagination :list="list" />
         </div>
 
         <CardDetailDialog v-model:open="detailOpen" :card-id="detailId" @changed="changed" />

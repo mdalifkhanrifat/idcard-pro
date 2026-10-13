@@ -18,23 +18,38 @@ export interface PageMeta {
  */
 export function useListQuery<T, M extends PageMeta = PageMeta>(
     endpoint: string | (() => string),
-    defaults: { filters: Record<string, string>; sort?: string; perPage?: number; extraParams?: () => Record<string, unknown> },
+    defaults: {
+        filters: Record<string, string>;
+        sort?: string;
+        perPage?: number;
+        extraParams?: () => Record<string, unknown>;
+        /** Put before the list's keys in the URL, so two lists on one page (e.g. the audit log's tabs) keep their own. */
+        queryPrefix?: string;
+    },
 ) {
     const route = useRoute();
     const router = useRouter();
     const ui = useUiStore();
+    // The list's own keys in the URL: <prefix>f_<filter>, <prefix>page, <prefix>sort, <prefix>per_page
+    const prefix = defaults.queryPrefix ?? '';
+    const urlKey = (name: string) => `${prefix}${name}`;
+    const isOwnUrlKey = (key: string) => key.startsWith(urlKey('f_')) || [urlKey('page'), urlKey('sort'), urlKey('per_page')].includes(key);
 
     const filters = reactive<Record<string, string>>({ ...defaults.filters });
     for (const key of Object.keys(defaults.filters)) {
-        const value = route.query[`f_${key}`];
+        const value = route.query[urlKey(`f_${key}`)];
         if (typeof value === 'string') {
             filters[key] = value;
         }
     }
 
-    const sort = ref<string>((route.query.sort as string) ?? defaults.sort ?? '');
-    const page = ref<number>(Number(route.query.page ?? 1));
-    const perPage = ref<number>(Number(route.query.per_page ?? defaults.perPage ?? 15));
+    const sort = ref<string>((route.query[urlKey('sort')] as string) ?? defaults.sort ?? '');
+    const page = ref<number>(positive(route.query[urlKey('page')]) ?? 1);
+    // Rows per page: the link's, else this browser's choice for this list, else the list's own
+    const defaultPerPage = defaults.perPage ?? 15;
+    // One choice per list (two lists may share a page, e.g. the audit log's tabs)
+    const perPageKey = `list-per-page:${typeof endpoint === 'string' ? endpoint : route.path}`;
+    const perPage = ref<number>(positive(route.query[urlKey('per_page')]) ?? positive(readStored(perPageKey)) ?? defaultPerPage);
     const rows = ref([]) as Ref<T[]>;
     const meta = ref({ current_page: 1, last_page: 1, total: 0, from: null, to: null } as PageMeta as M) as Ref<M>;
     const loading = ref(false);
@@ -82,18 +97,21 @@ export function useListQuery<T, M extends PageMeta = PageMeta>(
 
         // Only the list's own keys change; others in the URL (e.g. a tab or a redirect) are kept
         const query: Record<string, string | null | (string | null)[]> = Object.fromEntries(
-            Object.entries(route.query).filter(([key]) => !key.startsWith('f_') && key !== 'page' && key !== 'sort'),
+            Object.entries(route.query).filter(([key]) => !isOwnUrlKey(key)),
         );
         for (const [key, value] of Object.entries(filters)) {
             if (value) {
-                query[`f_${key}`] = value;
+                query[urlKey(`f_${key}`)] = value;
             }
         }
         if (page.value > 1) {
-            query.page = String(page.value);
+            query[urlKey('page')] = String(page.value);
         }
         if (sort.value && sort.value !== defaults.sort) {
-            query.sort = sort.value;
+            query[urlKey('sort')] = sort.value;
+        }
+        if (perPage.value !== defaultPerPage) {
+            query[urlKey('per_page')] = String(perPage.value);
         }
         router.replace({ query });
     }
@@ -108,9 +126,24 @@ export function useListQuery<T, M extends PageMeta = PageMeta>(
     function addFilters(keys: string[]): void {
         for (const key of keys) {
             if (!(key in filters)) {
-                const value = route.query[`f_${key}`];
+                const value = route.query[urlKey(`f_${key}`)];
                 filters[key] = typeof value === 'string' ? value : '';
             }
+        }
+    }
+
+    /** Show this many rows per page from the first page, remembered in this browser for this list. */
+    function setPerPage(size: number): void {
+        page.value = 1;
+        perPage.value = size;
+        try {
+            if (size === defaultPerPage) {
+                localStorage.removeItem(perPageKey);
+            } else {
+                localStorage.setItem(perPageKey, String(size));
+            }
+        } catch {
+            // Storage blocked (e.g. private mode): the choice lasts for this page only
         }
     }
 
@@ -134,5 +167,20 @@ export function useListQuery<T, M extends PageMeta = PageMeta>(
         return errors.value[`filter.${key}`]?.[0];
     }
 
-    return { filters, sort, page, perPage, rows, meta, loading, errors, load, queryParams, resetFilters, addFilters, filterError, toggleSort };
+    return { filters, sort, page, perPage, rows, meta, loading, errors, load, queryParams, resetFilters, addFilters, filterError, setPerPage, toggleSort };
+}
+
+/** A whole number above zero, else null. */
+function positive(value: unknown): number | null {
+    const number = Number(value);
+
+    return Number.isInteger(number) && number > 0 ? number : null;
+}
+
+function readStored(key: string): string | null {
+    try {
+        return localStorage.getItem(key);
+    } catch {
+        return null;
+    }
 }

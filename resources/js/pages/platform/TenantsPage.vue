@@ -2,13 +2,13 @@
 import { onMounted, reactive, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
+import ListPagination from '@/components/ListPagination.vue';
 import { ArrowRight, Building2, Plus } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiDialog from '@/components/ui/UiDialog.vue';
 import UiInput from '@/components/ui/UiInput.vue';
 import UiPageHeader from '@/components/ui/UiPageHeader.vue';
-import UiPagination from '@/components/ui/UiPagination.vue';
 import UiSelect from '@/components/ui/UiSelect.vue';
 import { useListQuery } from '@/composables/useListQuery';
 import { http, toApiError } from '@/lib/http';
@@ -87,7 +87,7 @@ async function enter(tenant: Tenant): Promise<void> {
             </article>
         </div>
         <div class="mt-4 rounded-xl border border-line bg-surface">
-            <UiPagination :page="meta.current_page" :last-page="meta.last_page" :total="meta.total" :from="meta.from" :to="meta.to" @change="page = $event" />
+            <ListPagination :list="list" />
         </div>
 
         <UiDialog v-model:open="open" :title="t('platform.new')" size="lg">

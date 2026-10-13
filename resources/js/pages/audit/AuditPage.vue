@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
+import ListPagination from '@/components/ListPagination.vue';
 import { TabsContent, TabsList, TabsRoot, TabsTrigger } from 'reka-ui';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiEmpty from '@/components/ui/UiEmpty.vue';
 import UiInput from '@/components/ui/UiInput.vue';
 import UiPageHeader from '@/components/ui/UiPageHeader.vue';
-import UiPagination from '@/components/ui/UiPagination.vue';
 import UiSelect from '@/components/ui/UiSelect.vue';
 import { useListQuery } from '@/composables/useListQuery';
 import { formatDateTime } from '@/lib/format';
@@ -39,7 +39,8 @@ const auth = useAuthStore();
 const reports = useReports();
 
 const activities = useListQuery<ActivityRow>('/audit/activities', { filters: { log_name: '', event: '', date_from: '', date_to: '' }, perPage: 25 });
-const logins = useListQuery<LoginRow>('/audit/logins', { filters: { event: '', identifier: '', ip_address: '', date_from: '', date_to: '' }, perPage: 25 });
+// Its own keys in the URL (login_page, login_f_event...): the changes tab's page or filters are not the sign-ins'
+const logins = useListQuery<LoginRow>('/audit/logins', { filters: { event: '', identifier: '', ip_address: '', date_from: '', date_to: '' }, perPage: 25, queryPrefix: 'login_' });
 
 onMounted(() => {
     activities.load();
@@ -110,7 +111,7 @@ function browser(ua: string): string {
                     </li>
                 </ul>
                 <UiEmpty v-if="!activities.loading.value && !activities.rows.value.length" :title="t('common.noResults')" />
-                <UiPagination v-bind="{ page: activities.meta.value.current_page, lastPage: activities.meta.value.last_page, total: activities.meta.value.total, from: activities.meta.value.from, to: activities.meta.value.to }" @change="activities.page.value = $event" />
+                <ListPagination :list="activities" />
             </TabsContent>
 
             <TabsContent value="logins" class="rounded-xl border border-line bg-surface">
@@ -144,7 +145,7 @@ function browser(ua: string): string {
                     </table>
                 </div>
                 <UiEmpty v-if="!logins.loading.value && !logins.rows.value.length" :title="t('common.noResults')" />
-                <UiPagination v-bind="{ page: logins.meta.value.current_page, lastPage: logins.meta.value.last_page, total: logins.meta.value.total, from: logins.meta.value.from, to: logins.meta.value.to }" @change="logins.page.value = $event" />
+                <ListPagination :list="logins" />
             </TabsContent>
         </TabsRoot>
     </div>
