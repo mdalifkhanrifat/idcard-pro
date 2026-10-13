@@ -279,7 +279,7 @@ useCardsPrinted(() => list.load());
                 </template>
             </div>
 
-            <ReportTable v-if="rows.length" :columns="chosen.columns.value" :rows="rows" :loading="loading" :sort="currentSort" :sortable="report?.sorts" :time-zone="timeZone" @toggle-sort="toggleSort">
+            <ReportTable v-if="rows.length" :columns="chosen.columns.value" :rows="rows" :loading="loading" :sort="currentSort" :sortable="report?.sorts" :time-zone="timeZone" :first-row="meta.from ?? 1" @toggle-sort="toggleSort">
                 <template #cell="{ column, row, text }">
                     <RouterLink
                         v-if="column.key === 'holder.name' && (row as ReportRow).cardholder && auth.can('cardholders.view')"

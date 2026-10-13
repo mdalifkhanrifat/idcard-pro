@@ -38,6 +38,7 @@
         tbody tr:nth-child(even) td { background: #fafafa; }
         .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
         .day { white-space: nowrap; }
+        .serial { width: 1%; text-align: right; white-space: nowrap; color: #6b7280; font-variant-numeric: tabular-nums; }
         .empty { padding: 24px; text-align: center; color: #6b7280; border: 1px dashed #d1d5db; border-radius: 6px; }
     </style>
 </head>
@@ -84,6 +85,8 @@
         <table>
             <thead>
                 <tr>
+                    {{-- Legacy "#": rows numbered --}}
+                    <th class="serial">#</th>
                     @foreach ($columns as $column)
                         <th @class(['num' => $column->type === 'number'])>{{ $column->label }}</th>
                     @endforeach
@@ -92,6 +95,7 @@
             <tbody>
                 @foreach ($rows as $cells)
                     <tr>
+                        <td class="serial">{{ $text->number($loop->iteration) }}</td>
                         @foreach ($columns as $index => $column)
                             <td @class(['num' => $column->type === 'number', 'day' => in_array($column->type, ['date', 'datetime'], true)])>{{ $cells[$index] }}</td>
                         @endforeach

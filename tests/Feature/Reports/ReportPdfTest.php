@@ -50,7 +50,9 @@ it('makes a document of the report with the logo, the criteria in words, totals 
         ->and($page['footer'])->toContain('class="pageNumber"', 'class="totalPages"', 'Acme · Card print history')
         ->and($page['html'])->toContain('data:image/png;base64,', '>Acme<', 'Card print history', 'Rank / grade: <b>Captain</b>', 'Jane Doe', 'Captain', 'Made ', 'by Owner', '1 rows', 'Copies</span><strong>7</strong>', "font-family:'Noto Sans Bengali'")
         // Values are text, never markup
-        ->and($page['html'])->toContain('&lt;b&gt;not bold&lt;/b&gt;')->not->toContain('<b>not bold</b>');
+        ->and($page['html'])->toContain('&lt;b&gt;not bold&lt;/b&gt;')->not->toContain('<b>not bold</b>')
+        // Legacy "#": rows numbered
+        ->and($page['html'])->toContain('<th class="serial">#</th>', '<td class="serial">1</td>');
     expect(Activity::query()->where('log_name', 'reports')->sole()->properties->only(['format', 'rows'])->all())->toBe(['format' => 'pdf', 'rows' => 1]);
     // Read once: the page is gone after the engine had it
     $this->get(str_replace('http://web', '', $page['url']))->assertNotFound();
@@ -60,7 +62,7 @@ it('writes the document in Bangla with Bangla digits for Bangla readers', functi
     $this->owner->update(['locale' => 'bn']);
     $this->get('/api/v1/reports/card-prints/export?format=pdf&columns[]=copies')->assertOk();
 
-    expect($this->pages[0]['html'])->toContain('lang="bn"', 'কার্ড ছাপার ইতিহাস', 'সব সারি (কোনো ফিল্টার নেই)', '>৭<', '১টা সারি')
+    expect($this->pages[0]['html'])->toContain('lang="bn"', 'কার্ড ছাপার ইতিহাস', 'সব সারি (কোনো ফিল্টার নেই)', '>৭<', '১টা সারি', '<td class="serial">১</td>')
         ->and($this->pages[0]['footer'])->toContain('পাতা');
 });
 
