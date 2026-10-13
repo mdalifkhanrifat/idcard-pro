@@ -5,6 +5,7 @@ use App\Services\Reports\Definitions\CardPrintReport;
 use App\Services\Reports\Definitions\CardReport;
 use App\Services\Reports\Definitions\ExpiredCardReport;
 use App\Services\Reports\Definitions\FamilyMemberReport;
+use App\Services\Reports\Definitions\MasterDataReport;
 use App\Services\Reports\Definitions\QualificationReport;
 use App\Services\Reports\Definitions\RoleReport;
 use App\Services\Reports\Definitions\UserReport;
@@ -43,6 +44,8 @@ return [
         'users' => UserReport::class,
         // Legacy "Role" list
         'roles' => RoleReport::class,
+        // Legacy lists of ranks, branches, units, designations...: one list or every list of master data
+        'master_data' => MasterDataReport::class,
     ],
 
     /*

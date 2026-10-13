@@ -9,6 +9,7 @@ use App\Support\ListPage;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\LazyCollection;
 
 /**
  * @extends EloquentRepository<MasterDataItem>
@@ -41,6 +42,56 @@ class MasterDataRepository extends EloquentRepository implements MasterDataRepos
         return $filter->perPage === null
             ? $query->get()
             : $query->paginate(ListPage::clamp($filter->perPage))->withQueryString();
+    }
+
+    public function report(?string $type, MasterDataFilter $filter): LengthAwarePaginator
+    {
+        return $this->withReportRelations($this->reportQuery($type, $filter))->paginate(ListPage::clamp((int) $filter->perPage))->withQueryString();
+    }
+
+    public function reportRows(?string $type, MasterDataFilter $filter): LazyCollection
+    {
+        return $this->withReportRelations($this->reportQuery($type, $filter))->lazy(500);
+    }
+
+    public function reportTotals(?string $type, MasterDataFilter $filter): array
+    {
+        $totals = $this->reportQuery($type, $filter)->reorder()->toBase()
+            ->selectRaw('count(*) as items, coalesce(sum(case when is_active then 1 else 0 end), 0) as active')
+            ->first();
+
+        return ['items' => (int) ($totals->items ?? 0), 'active' => (int) ($totals->active ?? 0)];
+    }
+
+    /**
+     * The parent and how many items are inside: not in the totals' query (MySQL refuses a count beside them).
+     *
+     * @param  Builder<MasterDataItem>  $query
+     * @return Builder<MasterDataItem>
+     */
+    private function withReportRelations(Builder $query): Builder
+    {
+        return $query->with('parent')->withCount('children');
+    }
+
+    /**
+     * Items of one list, or of every list grouped by list, with the list page's own criteria.
+     *
+     * @return Builder<MasterDataItem>
+     */
+    private function reportQuery(?string $type, MasterDataFilter $filter): Builder
+    {
+        return $this->query()
+            ->when($type, fn (Builder $q, string $value) => $q->where('type', $value), fn (Builder $q) => $q->orderBy('type'))
+            ->when($filter->search, fn (Builder $q, string $search) => $q->where(fn (Builder $w) => $w
+                ->where('name', 'like', "%{$search}%")
+                ->orWhere('name_local', 'like', "%{$search}%")
+                ->orWhere('code', 'like', "%{$search}%")))
+            ->when($filter->parentPublicId, fn (Builder $q, string $parent) => $q->whereIn('parent_id', $this->query()->where('public_id', $parent)->select('id')))
+            ->when($filter->isActive !== null, fn (Builder $q) => $q->where('is_active', $filter->isActive))
+            ->orderBy($filter->sort, $filter->descending ? 'desc' : 'asc')
+            ->orderBy('name')
+            ->orderBy('id');
     }
 
     public function countsByType(): array

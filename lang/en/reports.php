@@ -10,6 +10,7 @@ return [
         'qualifications' => 'Education and training',
         'users' => 'Users',
         'roles' => 'Roles',
+        'master_data' => 'Master data',
     ],
     'descriptions' => [
         'card_prints' => 'Every printing of every card: when, by whom, how and how many copies.',
@@ -20,6 +21,7 @@ return [
         'qualifications' => 'Every education and training record of every cardholder, with the cardholder\'s details.',
         'users' => 'The organization\'s users as the user list finds them: roles, status, two-step sign-in and last sign-in.',
         'roles' => 'The organization\'s roles: how many users have each and what each may do.',
+        'master_data' => 'The items of one master data list (ranks, branches, units…) or of every list, as the master data page finds them.',
     ],
     'groups' => [
         'print' => 'Printing',
@@ -31,6 +33,7 @@ return [
         'qualification' => 'Education / training',
         'user' => 'User',
         'role' => 'Role',
+        'master_data' => 'Master data',
     ],
     'columns' => [
         'printed_at' => 'Printed at',
@@ -98,6 +101,16 @@ return [
         'role.permission_count' => 'Permissions',
         'role.permissions' => 'Permission names',
         'role.created_at' => 'Created at',
+        'master_data.type' => 'List',
+        'master_data.name' => 'Name',
+        'master_data.name_local' => 'Local name',
+        'master_data.code' => 'Code',
+        'master_data.parent' => 'Inside',
+        'master_data.status' => 'Status',
+        'master_data.children' => 'Items inside',
+        'master_data.sort_order' => 'Order',
+        'master_data.created_at' => 'Created at',
+        'master_data.updated_at' => 'Last changed',
     ],
     'fields' => [
         'full_name' => 'Full name',
@@ -184,6 +197,7 @@ return [
         'search_users' => 'Name, email, username or phone',
         'added_from' => 'Added on or after',
         'added_to' => 'Added on or before',
+        'search_master_data' => 'Name, local name or code',
     ],
     'totals' => [
         'prints' => 'Printings',
@@ -202,6 +216,7 @@ return [
         'active' => 'Active',
         'two_factor' => 'With two-step sign-in',
         'roles' => 'Roles',
+        'items' => 'Items',
     ],
     'pdf' => [
         'generated' => 'Made :when by :who',
@@ -243,5 +258,20 @@ return [
             'inactive' => 'Inactive',
         ],
     ],
-
+    // The master data lists (config master_data.types), named as the master data page names them
+    'master_data_types' => [
+        'department' => 'Departments',
+        'unit' => 'Units',
+        'rank' => 'Ranks / grades',
+        'designation' => 'Designations',
+        'branch' => 'Branches',
+        'trade' => 'Trades',
+        'appointment' => 'Appointments',
+        'authority_type' => 'Authority types',
+        'blood_group' => 'Blood groups',
+        'religion' => 'Religions',
+        'region' => 'Regions / districts',
+        'sub_region' => 'Areas / sub-districts',
+        'card_type' => 'Card types',
+    ],
 ];

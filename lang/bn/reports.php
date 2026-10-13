@@ -10,6 +10,7 @@ return [
         'qualifications' => 'শিক্ষা ও প্রশিক্ষণ',
         'users' => 'ইউজার',
         'roles' => 'রোল',
+        'master_data' => 'মাস্টার ডেটা',
     ],
     'descriptions' => [
         'card_prints' => 'প্রতিটা কার্ডের প্রতিবার ছাপা: কবে, কে, কীভাবে আর কয় কপি।',
@@ -20,6 +21,7 @@ return [
         'qualifications' => 'প্রত্যেক কার্ডধারীর শিক্ষাগত যোগ্যতা আর প্রশিক্ষণের প্রতিটা রেকর্ড, কার্ডধারীর তথ্যসহ।',
         'users' => 'ইউজারের তালিকা যেভাবে খোঁজে সেভাবে প্রতিষ্ঠানের ইউজার: রোল, অবস্থা, দুই ধাপের লগইন আর শেষ লগইন।',
         'roles' => 'প্রতিষ্ঠানের রোল: প্রতিটায় কতজন ইউজার আর প্রতিটা কী করতে পারে।',
+        'master_data' => 'মাস্টার ডেটার একটা তালিকার (র‍্যাংক, শাখা, ইউনিট…) বা সব তালিকার আইটেম, মাস্টার ডেটার পাতা যেভাবে খোঁজে।',
     ],
     'groups' => [
         'print' => 'ছাপা',
@@ -31,6 +33,7 @@ return [
         'qualification' => 'শিক্ষা / প্রশিক্ষণ',
         'user' => 'ইউজার',
         'role' => 'রোল',
+        'master_data' => 'মাস্টার ডেটা',
     ],
     'columns' => [
         'printed_at' => 'ছাপার সময়',
@@ -98,6 +101,16 @@ return [
         'role.permission_count' => 'পারমিশন',
         'role.permissions' => 'পারমিশনের নাম',
         'role.created_at' => 'তৈরির সময়',
+        'master_data.type' => 'তালিকা',
+        'master_data.name' => 'নাম',
+        'master_data.name_local' => 'স্থানীয় নাম',
+        'master_data.code' => 'কোড',
+        'master_data.parent' => 'যার অধীনে',
+        'master_data.status' => 'অবস্থা',
+        'master_data.children' => 'অধীনে আইটেম',
+        'master_data.sort_order' => 'ক্রম',
+        'master_data.created_at' => 'তৈরির সময়',
+        'master_data.updated_at' => 'শেষ বদল',
     ],
     'fields' => [
         'full_name' => 'পূর্ণ নাম',
@@ -184,6 +197,7 @@ return [
         'search_users' => 'নাম, ইমেইল, ইউজারনেম বা ফোন',
         'added_from' => 'যোগ করার তারিখ (থেকে)',
         'added_to' => 'যোগ করার তারিখ (পর্যন্ত)',
+        'search_master_data' => 'নাম, স্থানীয় নাম বা কোড',
     ],
     'totals' => [
         'prints' => 'মোট ছাপা',
@@ -202,6 +216,7 @@ return [
         'active' => 'সক্রিয়',
         'two_factor' => 'দুই ধাপের লগইনসহ',
         'roles' => 'রোল',
+        'items' => 'আইটেম',
     ],
     'pdf' => [
         'generated' => ':when-এ বানিয়েছেন :who',
@@ -243,5 +258,20 @@ return [
             'inactive' => 'নিষ্ক্রিয়',
         ],
     ],
-
+    // The master data lists (config master_data.types), named as the master data page names them
+    'master_data_types' => [
+        'department' => 'বিভাগ',
+        'unit' => 'ইউনিট',
+        'rank' => 'র‍্যাংক / গ্রেড',
+        'designation' => 'পদবি',
+        'branch' => 'শাখা',
+        'trade' => 'ট্রেড',
+        'appointment' => 'নিয়োগ',
+        'authority_type' => 'কর্তৃপক্ষের ধরন',
+        'blood_group' => 'রক্তের গ্রুপ',
+        'religion' => 'ধর্ম',
+        'region' => 'অঞ্চল / জেলা',
+        'sub_region' => 'এলাকা / উপজেলা',
+        'card_type' => 'কার্ডের ধরন',
+    ],
 ];

@@ -24,8 +24,10 @@ const props = withDefaults(
         /** The columns to download; the reader's own choice for the report (or the organization's) when left out. */
         columns?: string[];
         variant?: 'buttons' | 'menu';
+        /** The report page's link query when the list keeps its criteria under other names (f_<filter>, sort). */
+        linkQuery?: Record<string, string>;
     }>(),
-    { variant: 'buttons', columns: undefined },
+    { variant: 'buttons', columns: undefined, linkQuery: undefined },
 );
 
 const { t } = useI18n();
@@ -44,11 +46,13 @@ const formats = computed(() => report.value?.formats ?? []);
 const canPrint = computed(() => formats.value.includes('pdf'));
 const downloading = ref<string | null>(null);
 
-/** The same criteria on the report's page: list pages keep them in the link under the same names. */
-const reportLink = computed(() => ({
-    path: `/reports/${reportSlug(props.reportKey)}`,
-    query: Object.fromEntries(Object.entries(route.query).filter(([key]) => key.startsWith('f_') || key === 'sort')),
-}));
+/** The same criteria on the report's page: list pages keep them in the link under the same names; only the report's own filters go. */
+const reportLink = computed(() => {
+    const known = new Set((report.value?.filters ?? []).map((field) => `f_${field.key}`));
+    const query = props.linkQuery ?? Object.fromEntries(Object.entries(route.query).filter(([key]) => key === 'sort' || known.has(key)));
+
+    return { path: `/reports/${reportSlug(props.reportKey)}`, query };
+});
 
 async function download(format: string): Promise<void> {
     downloading.value = format;

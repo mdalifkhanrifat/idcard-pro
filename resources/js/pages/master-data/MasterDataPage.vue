@@ -3,6 +3,7 @@ import { computed, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import ListPagination from '@/components/ListPagination.vue';
+import ReportDownloads from '@/pages/reports/ReportDownloads.vue';
 import { Pencil, Plus, RotateCcw, Search, Trash2 } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
@@ -83,11 +84,31 @@ async function remove(item: MasterDataItem): Promise<void> {
         ui.notify(toApiError(error).message, 'error');
     }
 }
+
+/** The list's criteria as the master data report names them: the list itself, and its parent under the parent list's name. */
+function reportCriteria(): Record<string, string> {
+    const { 'filter[parent]': parent, ...params } = list.queryParams();
+    const parentType = definition.value?.parent;
+
+    return { ...params, 'filter[type]': currentType.value, ...(parent && parentType ? { [`filter[${parentType}]`]: parent } : {}) };
+}
+const reportLinkQuery = computed(() => {
+    const query: Record<string, string> = { f_type: currentType.value };
+    for (const [key, value] of Object.entries(reportCriteria())) {
+        const name = /^filter\[(.+)\]$/.exec(key)?.[1];
+        if (name && name !== 'type') {
+            query[`f_${name}`] = value;
+        }
+    }
+
+    return query;
+});
 </script>
 
 <template>
     <div>
         <UiPageHeader :title="t('masterData.title')" :subtitle="t('masterData.subtitle')">
+            <ReportDownloads v-if="auth.can('reports.view')" report-key="master_data" variant="menu" :params="reportCriteria" :total="meta.total" :link-query="reportLinkQuery" />
             <UiButton v-if="auth.can('master_data.create') && definition" @click="openForm(null)"><Plus class="size-4" />{{ t('masterData.new') }}</UiButton>
         </UiPageHeader>
 

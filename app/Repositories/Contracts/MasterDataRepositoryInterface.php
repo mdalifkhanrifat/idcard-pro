@@ -6,6 +6,7 @@ use App\Data\MasterData\MasterDataFilter;
 use App\Models\MasterDataItem;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Support\LazyCollection;
 
 /**
  * @extends RepositoryInterface<MasterDataItem>
@@ -16,6 +17,23 @@ interface MasterDataRepositoryInterface extends RepositoryInterface
      * @return LengthAwarePaginator<int, MasterDataItem>|Collection<int, MasterDataItem>
      */
     public function list(string $type, MasterDataFilter $filter): LengthAwarePaginator|Collection;
+
+    /**
+     * Items for the report: one list (`type`) or every list, with the list page's criteria.
+     *
+     * @return LengthAwarePaginator<int, MasterDataItem>
+     */
+    public function report(?string $type, MasterDataFilter $filter): LengthAwarePaginator;
+
+    /**
+     * @return LazyCollection<int, MasterDataItem>
+     */
+    public function reportRows(?string $type, MasterDataFilter $filter): LazyCollection;
+
+    /**
+     * @return array{items: int, active: int}
+     */
+    public function reportTotals(?string $type, MasterDataFilter $filter): array;
 
     /**
      * @return array<string, int> type => number of items
