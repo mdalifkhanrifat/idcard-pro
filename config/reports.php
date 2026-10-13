@@ -3,11 +3,13 @@
 use App\Services\Reports\Definitions\CardholderReport;
 use App\Services\Reports\Definitions\CardPrintReport;
 use App\Services\Reports\Definitions\CardReport;
+use App\Services\Reports\Definitions\CardTemplateReport;
 use App\Services\Reports\Definitions\ExpiredCardReport;
 use App\Services\Reports\Definitions\FamilyMemberReport;
 use App\Services\Reports\Definitions\MasterDataReport;
 use App\Services\Reports\Definitions\QualificationReport;
 use App\Services\Reports\Definitions\RoleReport;
+use App\Services\Reports\Definitions\SignatoryReport;
 use App\Services\Reports\Definitions\UserReport;
 use App\Services\Reports\Export\CsvExporter;
 use App\Services\Reports\Export\PdfExporter;
@@ -46,6 +48,10 @@ return [
         'roles' => RoleReport::class,
         // Legacy lists of ranks, branches, units, designations...: one list or every list of master data
         'master_data' => MasterDataReport::class,
+        // Legacy "Authorized Signature" list
+        'signatories' => SignatoryReport::class,
+        // Legacy "Template Setup" list
+        'card_templates' => CardTemplateReport::class,
     ],
 
     /*

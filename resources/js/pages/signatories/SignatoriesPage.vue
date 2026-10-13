@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { watchDebounced } from '@vueuse/core';
 import { useI18n } from 'vue-i18n';
 import { Pencil, Plus, Search, Trash2 } from 'lucide-vue-next';
@@ -7,6 +7,7 @@ import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiEmpty from '@/components/ui/UiEmpty.vue';
 import UiPageHeader from '@/components/ui/UiPageHeader.vue';
+import ReportDownloads from '@/pages/reports/ReportDownloads.vue';
 import UiSelect from '@/components/ui/UiSelect.vue';
 import SignatoryDialog from './SignatoryDialog.vue';
 import { useConfirm } from '@/composables/useConfirm';
@@ -28,17 +29,24 @@ const isActive = ref('');
 const dialogOpen = ref(false);
 const editing = ref<Signatory | null>(null);
 
+/** The page's criteria as request parameters (the list and the signatories report read them alike). */
+function criteria(): Record<string, string> {
+    const params: Record<string, string> = {};
+    if (search.value) {
+        params['filter[search]'] = search.value;
+    }
+    if (isActive.value) {
+        params['filter[is_active]'] = isActive.value;
+    }
+
+    return params;
+}
+const reportLinkQuery = computed(() => Object.fromEntries(Object.entries(criteria()).map(([key, value]) => [`f_${key.slice(7, -1)}`, value])));
+
 async function load(): Promise<void> {
     loading.value = true;
     try {
-        const params: Record<string, string> = {};
-        if (search.value) {
-            params['filter[search]'] = search.value;
-        }
-        if (isActive.value) {
-            params['filter[is_active]'] = isActive.value;
-        }
-        rows.value = (await http.get('/signatories', { params })).data.data;
+        rows.value = (await http.get('/signatories', { params: criteria() })).data.data;
     } finally {
         loading.value = false;
     }
@@ -69,6 +77,7 @@ async function remove(signatory: Signatory): Promise<void> {
 <template>
     <div>
         <UiPageHeader :title="t('signatories.title')" :subtitle="t('signatories.subtitle')">
+            <ReportDownloads v-if="auth.can('reports.view')" report-key="signatories" variant="menu" :params="criteria" :total="rows.length" :link-query="reportLinkQuery" />
             <UiButton v-if="auth.can('signatories.create')" @click="openForm(null)"><Plus class="size-4" />{{ t('signatories.new') }}</UiButton>
         </UiPageHeader>
 

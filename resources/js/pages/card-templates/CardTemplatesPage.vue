@@ -9,6 +9,7 @@ import UiDialog from '@/components/ui/UiDialog.vue';
 import UiInput from '@/components/ui/UiInput.vue';
 import UiEmpty from '@/components/ui/UiEmpty.vue';
 import UiPageHeader from '@/components/ui/UiPageHeader.vue';
+import ReportDownloads from '@/pages/reports/ReportDownloads.vue';
 import UiSelect from '@/components/ui/UiSelect.vue';
 import CardTemplateDialog from './CardTemplateDialog.vue';
 import CardThumbnail from './designer/CardThumbnail.vue';
@@ -112,11 +113,18 @@ async function remove(template: CardTemplate): Promise<void> {
         ui.notify(toApiError(error).message, 'error');
     }
 }
+
+/** The page's criteria as request parameters, as the card templates report reads them. */
+function templateCriteria(): Record<string, string> {
+    return Object.fromEntries(Object.entries(filters).filter(([, value]) => value !== '').map(([key, value]) => [`filter[${key}]`, value]));
+}
+const reportLinkQuery = computed(() => Object.fromEntries(Object.entries(filters).filter(([, value]) => value !== '').map(([key, value]) => [`f_${key}`, value])));
 </script>
 
 <template>
     <div>
         <UiPageHeader :title="t('templates.title')" :subtitle="t('templates.subtitle')">
+            <ReportDownloads v-if="auth.can('reports.view')" report-key="card_templates" variant="menu" :params="templateCriteria" :total="templates.length" :link-query="reportLinkQuery" />
             <UiButton v-if="auth.can('templates.create')" @click="openForm(null)"><Plus class="size-4" />{{ t('templates.new') }}</UiButton>
         </UiPageHeader>
 

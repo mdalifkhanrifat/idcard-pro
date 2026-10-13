@@ -131,6 +131,16 @@ class CardTemplate extends Model
     }
 
     /**
+     * Cards issued from this template.
+     *
+     * @return HasMany<Card, $this>
+     */
+    public function cards(): HasMany
+    {
+        return $this->hasMany(Card::class);
+    }
+
+    /**
      * Designer elements of both sides, bottom layer first.
      *
      * @return HasMany<CardTemplateElement, $this>
