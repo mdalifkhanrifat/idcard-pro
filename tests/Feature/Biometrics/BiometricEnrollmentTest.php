@@ -69,7 +69,12 @@ it('keeps a scanner capture encrypted and shows the image only through a short-l
 
     $capture = BiometricCapture::query()->firstOrFail();
     $disk = Storage::disk(config('biometrics.disk'));
-    expect($disk->get($capture->image_path))->not->toContain('PNG')->and($disk->get($capture->template_path))->not->toContain('FMR');
+    // Stored encrypted: never the file as sent, nor starting as a PNG or an ISO template does (a check for the
+    // letters anywhere could fail by chance, encrypted bytes being random)
+    $image = $disk->get($capture->image_path);
+    $template = $disk->get($capture->template_path);
+    expect($image)->not->toBe(biometricPng())->not->toStartWith("\x89PNG")->not->toContain(substr(biometricPng(), 0, 16))
+        ->and($template)->not->toStartWith('FMR')->not->toContain('FMR'.str_repeat("\x01", 8));
 
     $image = $this->get($response->json('data.image_url'))->assertOk()->assertHeader('Content-Type', 'image/png');
     expect($image->getContent())->toBe(biometricPng())
