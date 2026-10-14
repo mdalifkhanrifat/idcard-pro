@@ -1,8 +1,7 @@
 import { computed, ref, watch, type Ref } from 'vue';
 import { readBlobError, saveDownload } from '@/lib/download';
-import { formatDate, formatNumber } from '@/lib/format';
+import { formatDate, formatDateTime, formatNumber } from '@/lib/format';
 import { http } from '@/lib/http';
-import { i18n } from '@/lib/i18n';
 
 /** A column a report can show (GET /reports): labels come from the server in the reader's language. */
 export interface ReportColumn {
@@ -111,7 +110,7 @@ export function formatReportValue(column: Pick<ReportColumn, 'type'>, value: Rep
         case 'date':
             return formatDate(String(value));
         case 'datetime':
-            return new Intl.DateTimeFormat(i18n.global.locale.value === 'bn' ? 'bn-BD' : 'en-GB', { dateStyle: 'medium', timeStyle: 'short', timeZone }).format(new Date(String(value)));
+            return formatDateTime(String(value), timeZone);
         default:
             return String(value);
     }

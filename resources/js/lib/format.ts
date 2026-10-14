@@ -5,7 +5,11 @@ export function formatNumber(value: number): string {
     return new Intl.NumberFormat(i18n.global.locale.value === 'bn' ? 'bn-BD' : 'en').format(value);
 }
 
-export function formatDateTime(value: string | null | undefined): string {
+/**
+ * A moment in the reader's language, on a 24-hour clock (as documents print it; Bangla would otherwise end
+ * in an English "AM/PM"); in the given time zone, else the browser's.
+ */
+export function formatDateTime(value: string | null | undefined, timeZone?: string): string {
     if (!value) {
         return '—';
     }
@@ -13,6 +17,8 @@ export function formatDateTime(value: string | null | undefined): string {
     return new Intl.DateTimeFormat(i18n.global.locale.value === 'bn' ? 'bn-BD' : 'en-GB', {
         dateStyle: 'medium',
         timeStyle: 'short',
+        hourCycle: 'h23',
+        timeZone,
     }).format(new Date(value));
 }
 
