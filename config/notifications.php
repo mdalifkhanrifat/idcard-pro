@@ -45,6 +45,15 @@ return [
     // A message that could not be handed over is tried again after these many seconds, then marked failed
     'retry' => ['backoff' => [60, 300, 900]],
 
+    /*
+     * Sending by hand (notifications.send), per user and minute: sending a failed or skipped message again, and a
+     * test message to check a channel.
+     */
+    'manual' => [
+        'resend_per_minute' => (int) env('NOTIFICATION_RESEND_PER_MINUTE', 30),
+        'test_per_minute' => (int) env('NOTIFICATION_TEST_PER_MINUTE', 5),
+    ],
+
     // Placed between the languages of one message, in the organization's order
     'separators' => ['subject' => ' / ', 'body' => "\n\n— — —\n\n", 'sms' => "\n"],
 

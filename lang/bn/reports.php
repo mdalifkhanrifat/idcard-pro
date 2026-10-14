@@ -347,6 +347,7 @@ return [
             'cards' => 'কার্ড',
             'biometrics' => 'বায়োমেট্রিক',
             'reports' => 'রিপোর্ট',
+            'notifications' => 'নোটিফিকেশন',
         ],
         'audit_events' => [
             'created' => 'তৈরি',
@@ -362,6 +363,8 @@ return [
             'password_reset' => 'পাসওয়ার্ড রিসেট',
             'requirements_overridden' => 'শর্ত পার করা হয়েছে',
             'exported' => 'ডাউনলোড (রপ্তানি)',
+            'pruned' => 'পুরনো সারি মোছা',
+            'resent' => 'আবার পাঠানো',
         ],
     ],
     // The master data lists (config master_data.types), named as the master data page names them

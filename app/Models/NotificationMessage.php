@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /**
@@ -36,6 +37,7 @@ use Illuminate\Support\Carbon;
  * @property string|null $driver
  * @property string|null $provider_id
  * @property int|null $sent_by
+ * @property int|null $resend_of_id the message this one sends again, by hand
  * @property Carbon|null $sent_at
  * @property Carbon|null $failed_at
  * @property Carbon|null $created_at
@@ -45,10 +47,12 @@ use Illuminate\Support\Carbon;
  * @property-read User|null $user
  * @property-read Card|null $card
  * @property-read User|null $sender
+ * @property-read NotificationMessage|null $resendOf
+ * @property-read NotificationMessage|null $resend
  */
 #[Fillable([
     'event', 'channel', 'address', 'cardholder_id', 'family_member_id', 'user_id', 'card_id', 'languages', 'subject',
-    'body', 'status', 'reason', 'error', 'attempts', 'driver', 'provider_id', 'sent_by', 'sent_at', 'failed_at',
+    'body', 'status', 'reason', 'error', 'attempts', 'driver', 'provider_id', 'sent_by', 'resend_of_id', 'sent_at', 'failed_at',
 ])]
 class NotificationMessage extends Model
 {
@@ -123,5 +127,25 @@ class NotificationMessage extends Model
     public function sender(): BelongsTo
     {
         return $this->belongsTo(User::class, 'sent_by');
+    }
+
+    /**
+     * The message this one sends again (a failed or skipped one).
+     *
+     * @return BelongsTo<NotificationMessage, $this>
+     */
+    public function resendOf(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'resend_of_id');
+    }
+
+    /**
+     * The message that sent this one again, if any (at most one: the next resend repeats that one).
+     *
+     * @return HasOne<NotificationMessage, $this>
+     */
+    public function resend(): HasOne
+    {
+        return $this->hasOne(self::class, 'resend_of_id');
     }
 }

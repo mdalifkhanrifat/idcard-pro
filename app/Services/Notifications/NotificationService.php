@@ -11,6 +11,8 @@ use App\Models\User;
 use App\Repositories\Contracts\NotificationMessageRepositoryInterface;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
 
 /**
@@ -61,7 +63,7 @@ class NotificationService
      * Log one message and hand it to the queue (or log it as skipped when the recipient has no address for the
      * channel). Also for messages that are not an event's, such as a test message.
      *
-     * @param  array{event: string, channel: string, languages: string, subject: string|null, body: string}  $message
+     * @param  array{event: string, channel: string, languages: string, subject: string|null, body: string, card_id?: int|null, resend_of_id?: int|null}  $message
      */
     public function queue(array $message, NotificationRecipient $recipient, ?User $sender = null): NotificationMessage
     {
@@ -80,6 +82,85 @@ class NotificationService
         }
 
         return $logged;
+    }
+
+    /**
+     * Send a failed or skipped message again, by hand: a new message (the old one stays, as history) with the
+     * same words, to the address on the person's record now — a test message to the address it was typed to —,
+     * whatever the organization's settings (like every message sent by hand). Once per message: sending it again
+     * once more repeats the newer one. Noted in the audit log.
+     *
+     * @throws ValidationException when it cannot go (why, under `message`)
+     */
+    public function resend(NotificationMessage $message, User $sender): NotificationMessage
+    {
+        $resent = DB::transaction(function () use ($message, $sender): NotificationMessage {
+            $message = $this->messages->lockForResend($message);
+
+            if (! in_array($message->status, [NotificationStatus::Failed, NotificationStatus::Skipped], true)) {
+                self::refuseResend('not_failed');
+            }
+            if ($message->resend !== null) {
+                self::refuseResend('already');
+            }
+            if (! in_array($message->channel, NotificationSettings::channels(), true)) {
+                self::refuseResend('unknown_channel');
+            }
+            $recipient = $this->recipientNow($message);
+            if ($recipient === null) {
+                self::refuseResend('no_recipient');
+            }
+            if ($recipient->addressFor($message->channel) === null) {
+                self::refuseResend('no_address');
+            }
+
+            return $this->queue([
+                'event' => $message->event,
+                'channel' => $message->channel,
+                'languages' => $message->languages,
+                'subject' => $message->subject,
+                'body' => $message->body,
+                'card_id' => $message->card_id,
+                'resend_of_id' => $message->id,
+            ], $recipient, $sender);
+        });
+
+        activity('notifications')
+            ->performedOn($resent)
+            ->causedBy($sender)
+            ->event('resent')
+            ->withProperties(['message' => $message->public_id, 'event' => $resent->event, 'channel' => $resent->channel, 'address' => $resent->address])
+            ->log('resent');
+
+        return $resent;
+    }
+
+    /**
+     * @param  string  $why  key of lang/<language>/notifications.php → resend
+     */
+    private static function refuseResend(string $why): never
+    {
+        throw ValidationException::withMessages(['message' => __("notifications.resend.{$why}")]);
+    }
+
+    /**
+     * Whom a logged message goes to now: the person's record as it is today, or for a test message the address
+     * it was typed to; null when the record is gone.
+     */
+    private function recipientNow(NotificationMessage $message): ?NotificationRecipient
+    {
+        if ($message->event === NotificationLogService::TEST_EVENT && $message->user !== null) {
+            $byPhone = config("notifications.channels.{$message->channel}.address") === 'phone';
+
+            return new NotificationRecipient($message->user->name, $byPhone ? null : $message->address, $byPhone ? $message->address : null, userId: $message->user->id);
+        }
+
+        return match (true) {
+            $message->cardholder !== null => NotificationRecipient::forCardholder($message->cardholder),
+            $message->familyMember !== null => NotificationRecipient::forFamilyMember($message->familyMember),
+            $message->user !== null => NotificationRecipient::forUser($message->user),
+            default => null,
+        };
     }
 
     /**

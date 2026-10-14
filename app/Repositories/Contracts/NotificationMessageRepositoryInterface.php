@@ -33,6 +33,12 @@ interface NotificationMessageRepositoryInterface extends RepositoryInterface
     public function list(NotificationMessageFilter $filter): LengthAwarePaginator;
 
     /**
+     * A message locked until the transaction ends (two people sending it again at once make one resend), with
+     * whom it went to and its resend, if any.
+     */
+    public function lockForResend(NotificationMessage $message): NotificationMessage;
+
+    /**
      * One message with whom and what it was about, and who sent it.
      */
     public function withDetails(NotificationMessage $message): NotificationMessage;

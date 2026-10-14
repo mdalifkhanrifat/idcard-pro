@@ -38,6 +38,9 @@ class NotificationMessageResource extends JsonResource
             'provider_id' => $this->provider_id,
             // Who sent it by hand; null when the system sent it on an event
             'sent_by' => $this->sender ? ['id' => $this->sender->public_id, 'name' => $this->sender->name] : null,
+            // Sent again by hand: the message this one repeats, and the one that repeated this
+            'resend_of' => $this->resendOf?->public_id,
+            'resent_as' => $this->resend?->public_id,
             'created_at' => $this->created_at,
             'sent_at' => $this->sent_at,
             'failed_at' => $this->failed_at,

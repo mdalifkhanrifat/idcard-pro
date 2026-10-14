@@ -59,3 +59,13 @@ it('needs the audit.view permission, and keeps its own downloads in the log', fu
     $this->getJson('/api/v1/reports/audit-changes')->assertForbidden();
     $this->getJson('/api/v1/reports/audit-logins')->assertForbidden();
 });
+
+it('names in the report every module and event the audit page names, in both languages', function () {
+    foreach (['en', 'bn'] as $locale) {
+        $audit = json_decode(file_get_contents(resource_path("js/locales/{$locale}.json")), true)['audit'];
+        $values = trans('reports.values', locale: $locale);
+
+        expect(array_diff(array_keys($audit['logs']), array_keys($values['audit_logs'])))->toBe([])
+            ->and(array_diff(array_keys($audit['events']), array_keys($values['audit_events'])))->toBe([]);
+    }
+});

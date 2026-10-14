@@ -23,9 +23,7 @@ trait DescribesCards
 
     protected function cardRecipient(Card $card): NotificationRecipient
     {
-        $holder = $card->cardholder;
-
-        return new NotificationRecipient($holder->full_name, $holder->email, $holder->personal_phone, cardholderId: $holder->id);
+        return NotificationRecipient::forCardholder($card->cardholder);
     }
 
     /**

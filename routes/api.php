@@ -116,6 +116,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('audit/logins', [AuditController::class, 'logins'])->name('audit.logins');
             Route::get('notifications/messages', [NotificationMessageController::class, 'index'])->name('notifications.messages.index');
             Route::get('notifications/messages/{message}', [NotificationMessageController::class, 'show'])->name('notifications.messages.show');
+            Route::post('notifications/messages/{message}/resend', [NotificationMessageController::class, 'resend'])
+                ->middleware('throttle:'.(int) config('notifications.manual.resend_per_minute').',1')->name('notifications.messages.resend');
             Route::get('settings', [TenantSettingsController::class, 'show'])->name('settings.show');
             Route::post('settings', [TenantSettingsController::class, 'update'])->name('settings.update');
             Route::get('settings/card-number-preview', [TenantSettingsController::class, 'cardNumberPreview'])->name('settings.card-number-preview');

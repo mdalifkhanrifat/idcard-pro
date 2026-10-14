@@ -7,6 +7,9 @@ use App\Http\Requests\Notifications\ListNotificationMessagesRequest;
 use App\Http\Resources\NotificationMessageResource;
 use App\Models\NotificationMessage;
 use App\Services\Notifications\NotificationLogService;
+use App\Services\Notifications\NotificationService;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
 
@@ -30,5 +33,18 @@ class NotificationMessageController extends Controller
         Gate::authorize('notifications.view');
 
         return new NotificationMessageResource($this->log->details($message));
+    }
+
+    /**
+     * Send a failed or skipped message again: a new message (201) to the person's address on record now; the old
+     * one stays, linked (resent_as). 422 with `errors.message` when it cannot go.
+     */
+    public function resend(Request $request, NotificationMessage $message, NotificationService $notifications): JsonResponse
+    {
+        Gate::authorize('notifications.send');
+
+        $resent = $notifications->resend($message, $request->user());
+
+        return (new NotificationMessageResource($this->log->details($resent)))->response()->setStatusCode(201);
     }
 }

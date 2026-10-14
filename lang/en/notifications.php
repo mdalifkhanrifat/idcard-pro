@@ -60,6 +60,15 @@ return [
         'turned_off' => 'Turned off before it went',
     ],
 
+    // Sending a message again by hand: why it cannot go
+    'resend' => [
+        'not_failed' => 'Only a failed message, or one that was not sent, can be sent again.',
+        'already' => 'This message was already sent again; send the newer one again if needed.',
+        'unknown_channel' => 'This channel is no longer available.',
+        'no_recipient' => 'The person it went to is no longer on record.',
+        'no_address' => 'There is still no address on record for this channel. Add it to the person\'s record first.',
+    ],
+
     'settings' => [
         'unknown_placeholders' => 'This text uses :names, which this message does not offer. Pick from the listed values.',
         'channel_needed' => 'Choose at least one channel to send messages on.',

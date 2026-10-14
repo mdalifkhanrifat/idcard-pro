@@ -21,7 +21,7 @@ interface ActivityRow {
     subject_type: string;
     causer: { name: string; email: string } | null;
     /** Field changes, or what an event recorded (e.g. requirements_overridden: moment, reason, requirements). */
-    changes: { attributes?: Record<string, unknown>; old?: Record<string, unknown>; reason?: string; moment?: string; report?: string; format?: string; rows?: number; print?: boolean; messages?: number; days?: number } | null;
+    changes: { attributes?: Record<string, unknown>; old?: Record<string, unknown>; reason?: string; moment?: string; report?: string; format?: string; rows?: number; print?: boolean; messages?: number; days?: number; address?: string } | null;
     created_at: string;
 }
 interface LoginRow {
@@ -111,6 +111,9 @@ const loginReportQuery = computed(() => Object.fromEntries(Object.entries(logins
                             </p>
                             <p v-if="row.event === 'pruned' && row.changes?.messages" class="text-xs text-muted" data-audit-pruned>
                                 {{ t('audit.prunedDetail', { messages: n(row.changes.messages), days: n(row.changes.days ?? 0) }) }}
+                            </p>
+                            <p v-if="row.event === 'resent' && row.changes?.address" class="break-words text-xs text-muted" data-audit-resent>
+                                {{ t('audit.resentDetail', { address: row.changes.address }) }}
                             </p>
                             <p v-if="row.changes?.reason" class="text-xs text-muted" data-audit-reason>
                                 <template v-if="row.changes.moment && te(`audit.moments.${row.changes.moment}`)">{{ t(`audit.moments.${row.changes.moment}`) }} · </template>{{ t('audit.reason', { reason: row.changes.reason }) }}

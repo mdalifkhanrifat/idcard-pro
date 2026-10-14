@@ -218,7 +218,8 @@
             "password_reset": "Password reset",
             "requirements_overridden": "Requirement overridden",
             "exported": "Downloaded",
-            "pruned": "Old entries deleted"
+            "pruned": "Old entries deleted",
+            "resent": "Sent again"
         },
         "reason": "Reason: {reason}",
         "exportDetail": "{report} · {format} · {rows} rows",
@@ -228,7 +229,8 @@
         },
         "printed": "print",
         "system": "System",
-        "prunedDetail": "{messages} messages older than {days} days deleted (as the organization chose)"
+        "prunedDetail": "{messages} messages older than {days} days deleted (as the organization chose)",
+        "resentDetail": "Message sent again to {address}"
     },
     "settings": {
         "title": "Organization",

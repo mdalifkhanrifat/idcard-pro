@@ -29,6 +29,8 @@ class NotificationMessageRepository extends EloquentRepository implements Notifi
         'user:id,public_id,name',
         'card:id,public_id,number',
         'sender:id,public_id,name',
+        'resendOf:id,public_id',
+        'resend:id,public_id,resend_of_id',
     ];
 
     protected function model(): string
@@ -65,6 +67,11 @@ class NotificationMessageRepository extends EloquentRepository implements Notifi
             ->orderBy('id', 'desc')
             ->paginate(ListPage::clamp($filter->perPage))
             ->withQueryString();
+    }
+
+    public function lockForResend(NotificationMessage $message): NotificationMessage
+    {
+        return $this->query()->whereKey($message->id)->lockForUpdate()->with(['cardholder', 'familyMember', 'user', 'resend:id,resend_of_id'])->firstOrFail();
     }
 
     public function withDetails(NotificationMessage $message): NotificationMessage

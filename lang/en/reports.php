@@ -347,6 +347,7 @@ return [
             'cards' => 'Cards',
             'biometrics' => 'Biometrics',
             'reports' => 'Reports',
+            'notifications' => 'Notifications',
         ],
         'audit_events' => [
             'created' => 'Created',
@@ -362,6 +363,8 @@ return [
             'password_reset' => 'Password reset',
             'requirements_overridden' => 'Requirement overridden',
             'exported' => 'Downloaded',
+            'pruned' => 'Old entries deleted',
+            'resent' => 'Sent again',
         ],
     ],
     // The master data lists (config master_data.types), named as the master data page names them
