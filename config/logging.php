@@ -65,6 +65,15 @@ return [
             'replace_placeholders' => true,
         ],
 
+        // Texts the "log" SMS driver writes instead of sending them (config/notifications.php)
+        'sms' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/sms.log'),
+            'level' => 'info',
+            'days' => env('SMS_LOG_DAYS', 30),
+            'replace_placeholders' => true,
+        ],
+
         'daily' => [
             'driver' => 'daily',
             'path' => storage_path('logs/laravel.log'),

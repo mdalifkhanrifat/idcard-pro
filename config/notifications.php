@@ -1,7 +1,10 @@
 <?php
 
+use App\Services\Notifications\Channels\MailChannel;
+use App\Services\Notifications\Channels\SmsChannel;
 use App\Services\Notifications\Events\CardExpiringEvent;
 use App\Services\Notifications\Events\CardReadyEvent;
+use App\Services\Notifications\Sms\LogSmsDriver;
 
 /*
 |--------------------------------------------------------------------------
@@ -18,12 +21,29 @@ use App\Services\Notifications\Events\CardReadyEvent;
 return [
 
     /*
-     * Ways a message can go: channel => the recipient's detail it goes to (`address`: e-mail or phone).
+     * Ways a message can go: channel => the recipient's detail it goes to (`address`: e-mail or phone) and the
+     * class that sends it (App\Services\Notifications\Channels\NotificationChannel).
      */
     'channels' => [
-        'mail' => ['address' => 'email'],
-        'sms' => ['address' => 'phone'],
+        'mail' => ['address' => 'email', 'class' => MailChannel::class],
+        'sms' => ['address' => 'phone', 'class' => SmsChannel::class],
     ],
+
+    /*
+     * SMS providers: driver => class (App\Services\Notifications\Sms\SmsDriver). Only "log" for now: each SMS
+     * is written to storage/logs/sms.log and nothing leaves the machine; a real provider is added as a driver
+     * with the owner's consent, since its messages leave the machine.
+     */
+    'sms' => [
+        'driver' => env('SMS_DRIVER', 'log'),
+        'drivers' => [
+            'log' => LogSmsDriver::class,
+        ],
+        'log_channel' => env('SMS_LOG_CHANNEL', 'sms'),
+    ],
+
+    // Placed between the languages of one message, in the organization's order
+    'separators' => ['subject' => ' / ', 'body' => "\n\n— — —\n\n", 'sms' => "\n"],
 
     /*
      * Languages messages can be written in; an organization sends in one of them, or in several (one message,
