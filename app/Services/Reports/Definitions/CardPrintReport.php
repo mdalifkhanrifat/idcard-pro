@@ -36,9 +36,12 @@ class CardPrintReport implements Report
         return 'card_prints';
     }
 
+    /**
+     * Card numbers and their holders, as the card list shows them.
+     */
     public function allows(User $user): bool
     {
-        return true;
+        return $user->can('cards.view');
     }
 
     public function columns(): array

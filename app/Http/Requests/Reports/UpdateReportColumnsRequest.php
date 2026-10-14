@@ -11,9 +11,15 @@ use Illuminate\Validation\Rule;
  */
 class UpdateReportColumnsRequest extends FormRequest
 {
+    /**
+     * Changing the organization's settings, on a report the user may see.
+     */
     public function authorize(): bool
     {
-        return $this->user()->can('settings.update');
+        $user = $this->user();
+
+        return $user->can('settings.update') && $user->can('reports.view')
+            && app(ReportRegistry::class)->get(ReportRegistry::keyOf((string) $this->route('report')))->allows($user);
     }
 
     /**

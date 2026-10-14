@@ -41,6 +41,8 @@ const ui = useUiStore();
 const lookups = useMasterDataOptions();
 const registry = useReports();
 const report = computed(() => registry.find(props.reportKey));
+/** Not in the user's registry: an unknown report, or one the user may not see (e.g. an old link). */
+const unavailable = ref(false);
 const chosen = useChosenColumns(report);
 const timeZone = computed(() => auth.tenant?.timezone);
 
@@ -126,6 +128,11 @@ onMounted(async () => {
 
         return;
     }
+    if (!report.value) {
+        unavailable.value = true;
+
+        return;
+    }
     list.addFilters(fields.value.map((field) => field.key));
     list.load();
     const types = fields.value.map((field) => field.type);
@@ -151,18 +158,28 @@ function showCard(id: string): void {
 }
 
 // A card printed or changed in another tab: rows may change
-useCardsPrinted(() => list.load());
+useCardsPrinted(() => {
+    if (report.value) {
+        list.load();
+    }
+});
 </script>
 
 <template>
     <div>
         <UiPageHeader :title="report?.name ?? t('nav.reports')" :subtitle="report?.description">
-            <UiButton variant="secondary" :disabled="!report" data-open-columns @click="columnsOpen = true">
+            <UiButton v-if="!unavailable" variant="secondary" :disabled="!report" data-open-columns @click="columnsOpen = true">
                 <Columns3 class="size-4" />{{ t('reports.columns.button') }}
                 <UiBadge v-if="chosen.isOwn.value" tone="brand">{{ n(chosen.keys.value.length) }}</UiBadge>
             </UiButton>
             <ReportDownloads :report-key="reportKey" :params="list.queryParams" :total="meta.total" :columns="chosen.keys.value" />
         </UiPageHeader>
+
+        <div v-if="unavailable" class="rounded-xl border border-line bg-surface" data-report-unavailable>
+            <UiEmpty :title="t('reports.unavailable')" :hint="t('reports.unavailableHint')">
+                <RouterLink to="/reports" class="text-sm font-medium text-brand-ink hover:underline">{{ t('reports.allReports') }}</RouterLink>
+            </UiEmpty>
+        </div>
 
         <!-- Totals over every page; as many per row as fit, so large counts are never cut on phones -->
         <div v-if="report?.totals.length" class="mb-4 grid grid-cols-[repeat(auto-fit,minmax(9rem,1fr))] gap-3">
@@ -172,7 +189,7 @@ useCardsPrinted(() => list.load());
             </div>
         </div>
 
-        <div class="rounded-xl border border-line bg-surface">
+        <div v-if="!unavailable" class="rounded-xl border border-line bg-surface">
             <!-- Toolbar -->
             <div class="flex flex-col gap-3 border-b border-line p-4 sm:flex-row sm:items-center">
                 <div v-if="searchField" class="relative flex-1">

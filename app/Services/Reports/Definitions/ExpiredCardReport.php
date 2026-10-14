@@ -41,9 +41,12 @@ class ExpiredCardReport implements Report
         return 'expired_cards';
     }
 
+    /**
+     * Card numbers and their holders, as the card list shows them.
+     */
     public function allows(User $user): bool
     {
-        return true;
+        return $user->can('cards.view');
     }
 
     public function columns(): array

@@ -1530,8 +1530,11 @@
     },
     "reports": {
         "title": "Reports",
-        "subtitle": "Lists of cards and printings to see, filter and download.",
+        "subtitle": "Every list of the organization — cardholders, cards, printings, users, master data, audit log — to see, filter and download.",
         "none": "No reports available to you.",
+        "unavailable": "This report is not available",
+        "unavailableHint": "It does not exist, or you do not have permission to see it.",
+        "allReports": "All reports",
         "groups": {
             "print": "Printing",
             "card": "Card",
