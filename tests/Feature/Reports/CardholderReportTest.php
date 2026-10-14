@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\CustomField;
+use App\Services\Reports\ReportRegistry;
+use App\Services\Reports\ReportValueText;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
@@ -110,4 +112,51 @@ it('downloads the cardholders as the list finds them, kept in the audit log', fu
     expect($rows)->toBe([['Full name', 'Locker'], ['Jane Doe', '12']]);
     expect(Activity::query()->where('log_name', 'reports')->latest('id')->first()->properties->all())
         ->toMatchArray(['report' => 'cardholders', 'format' => 'csv', 'rows' => 1, 'filter' => ['custom.vaccinated' => 'true']]);
+});
+
+it('keeps the cardholder\'s days as days and number custom fields as numbers, in every output', function () {
+    app(TenantContext::class)->run($this->tenant, fn () => CustomField::factory()->create(['tenant_id' => $this->tenant->id, 'entity' => 'cardholder', 'is_active' => true, 'key' => 'badge_on', 'label' => 'Badge on', 'type' => 'date']));
+    $this->jane->update(['date_of_birth' => '1980-02-03', 'joining_date' => '2005-07-01', 'custom_fields' => [...$this->jane->custom_fields, 'badge_on' => '2024-12-31']]);
+    // A value that is not a day (e.g. written before the field became a date) is left out rather than misread
+    $this->john->update(['custom_fields' => [...$this->john->custom_fields, 'badge_on' => 'soon', 'locker_no' => 'n/a']]);
+    $keys = ['cardholder.full_name', 'cardholder.date_of_birth', 'cardholder.joining_date', 'cardholder.custom.badge_on', 'cardholder.custom.locker_no'];
+    $query = 'sort=full_name&filter[search]=o&'.collect($keys)->map(fn (string $key) => "columns[]={$key}")->implode('&');
+
+    $types = collect($this->getJson('/api/v1/reports')->json('data'))->firstWhere('key', 'cardholders')['columns'];
+    expect(collect($types)->whereIn('key', $keys)->pluck('type', 'key')->sortKeys()->all())->toBe([
+        'cardholder.custom.badge_on' => 'date', 'cardholder.custom.locker_no' => 'number', 'cardholder.date_of_birth' => 'date',
+        'cardholder.full_name' => 'text', 'cardholder.joining_date' => 'date',
+    ]);
+    $this->getJson("/api/v1/reports/cardholders?{$query}")
+        ->assertJsonPath('data.0.values', ['cardholder.full_name' => 'Jane Doe', 'cardholder.date_of_birth' => '1980-02-03', 'cardholder.joining_date' => '2005-07-01', 'cardholder.custom.badge_on' => '2024-12-31', 'cardholder.custom.locker_no' => 12])
+        ->assertJsonPath('data.1.values.cardholder.custom.badge_on', null)
+        ->assertJsonPath('data.1.values.cardholder.custom.locker_no', null);
+
+    // A spreadsheet gets real dates and numbers
+    $response = $this->get("/api/v1/reports/cardholders/export?format=xlsx&{$query}")->assertOk();
+    $file = tempnam(sys_get_temp_dir(), 'test').'.xlsx';
+    copy($response->baseResponse->getFile()->getPathname(), $file);
+    unlink($response->baseResponse->getFile()->getPathname());
+    $reader = new OpenSpout\Reader\XLSX\Reader;
+    $reader->open($file);
+    $rows = [];
+    foreach ($reader->getSheetIterator() as $sheet) {
+        foreach ($sheet->getRowIterator() as $row) {
+            $rows[] = $row->toArray();
+        }
+    }
+    $reader->close();
+    unlink($file);
+    expect($rows[1][0])->toBe('Jane Doe')
+        ->and($rows[1][1])->toBeInstanceOf(DateTimeImmutable::class)
+        ->and($rows[1][1]->format('Y-m-d'))->toBe('1980-02-03')
+        ->and($rows[1][3]->format('Y-m-d'))->toBe('2024-12-31')
+        ->and($rows[1][4])->toBe(12);
+
+    // Documents write them in the reader's digits, as every other day
+    app()->setLocale('bn');
+    $columns = app(ReportRegistry::class)->get('cardholders')->columns();
+    $text = app(ReportValueText::class);
+    expect($text->of($columns['cardholder.date_of_birth'], $columns['cardholder.date_of_birth']->valueOf($this->jane->fresh())))->toBe('০৩/০২/১৯৮০')
+        ->and($text->of($columns['cardholder.custom.locker_no'], $columns['cardholder.custom.locker_no']->valueOf($this->jane->fresh())))->toBe('১২');
 });

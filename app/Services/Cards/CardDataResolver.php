@@ -38,7 +38,10 @@ class CardDataResolver
         'complexion', 'identification_mark', 'employee_no', 'secondary_no', 'retired_id_no', 'posting', 'company_name',
     ];
 
-    private const DATE_COLUMNS = ['date_of_birth', 'joining_date', 'retirement_date'];
+    /**
+     * Cardholder columns that are calendar days (printed as DATE_FORMAT; reports keep them as days).
+     */
+    public const DATE_COLUMNS = ['date_of_birth', 'joining_date', 'retirement_date'];
 
     private const FAMILY_TEXT_COLUMNS = ['name', 'name_local', 'phone', 'national_id', 'passport_no', 'identification_mark', 'card_no'];
 
