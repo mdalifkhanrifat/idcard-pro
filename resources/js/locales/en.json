@@ -199,7 +199,8 @@
             "images": "Image library",
             "cards": "Cards",
             "biometrics": "Biometrics",
-            "reports": "Reports"
+            "reports": "Reports",
+            "notifications": "Notifications"
         },
         "events": {
             "created": "Created",
@@ -214,7 +215,8 @@
             "logged_out": "Signed out",
             "password_reset": "Password reset",
             "requirements_overridden": "Requirement overridden",
-            "exported": "Downloaded"
+            "exported": "Downloaded",
+            "pruned": "Old entries deleted"
         },
         "reason": "Reason: {reason}",
         "exportDetail": "{report} · {format} · {rows} rows",
@@ -222,7 +224,9 @@
             "issue": "Issue",
             "print": "Print"
         },
-        "printed": "print"
+        "printed": "print",
+        "system": "System",
+        "prunedDetail": "{messages} messages older than {days} days deleted (as the organization chose)"
     },
     "settings": {
         "title": "Organization",

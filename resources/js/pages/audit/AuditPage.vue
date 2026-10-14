@@ -21,7 +21,7 @@ interface ActivityRow {
     subject_type: string;
     causer: { name: string; email: string } | null;
     /** Field changes, or what an event recorded (e.g. requirements_overridden: moment, reason, requirements). */
-    changes: { attributes?: Record<string, unknown>; old?: Record<string, unknown>; reason?: string; moment?: string; report?: string; format?: string; rows?: number; print?: boolean } | null;
+    changes: { attributes?: Record<string, unknown>; old?: Record<string, unknown>; reason?: string; moment?: string; report?: string; format?: string; rows?: number; print?: boolean; messages?: number; days?: number } | null;
     created_at: string;
 }
 interface LoginRow {
@@ -52,10 +52,10 @@ onMounted(() => {
 });
 const reportName = (key: string) => reports.find(key)?.name ?? key.replaceAll('_', ' ');
 
+/** What a row is about in the reader's language (e.g. "Organization"), else as recorded. */
+const logLabel = (name: string, fallback = name) => (te(`audit.logs.${name}`) ? t(`audit.logs.${name}`) : fallback);
 /** Kinds of record with changes in this organization (from the API, so new modules appear by themselves). */
-const logNames = computed(() =>
-    ((activities.meta.value as { log_names?: string[] }).log_names ?? []).map((name) => ({ value: name, label: te(`audit.logs.${name}`) ? t(`audit.logs.${name}`) : name })),
-);
+const logNames = computed(() => ((activities.meta.value as { log_names?: string[] }).log_names ?? []).map((name) => ({ value: name, label: logLabel(name) })));
 /** Events that occurred (from the API, so new kinds such as requirements_overridden appear by themselves). */
 const eventLabel = (event: string) => (te(`audit.events.${event}`) ? t(`audit.events.${event}`) : event);
 const events = computed(() => ((activities.meta.value as { events?: string[] }).events ?? []).map((value) => ({ value, label: eventLabel(value) })));
@@ -104,10 +104,13 @@ const loginReportQuery = computed(() => Object.fromEntries(Object.entries(logins
                     <li v-for="row in activities.rows.value" :key="row.id" class="flex flex-col gap-1 px-5 py-3 text-sm sm:flex-row sm:items-center sm:gap-4">
                         <UiBadge :tone="tone(row.event) ?? 'neutral'" class="w-fit">{{ eventLabel(row.event) }}</UiBadge>
                         <div class="min-w-0 flex-1">
-                            <p class="text-fg"><span class="font-medium">{{ row.causer?.name ?? 'System' }}</span><template v-if="row.subject_type"> · {{ row.subject_type }}</template></p>
+                            <p class="text-fg"><span class="font-medium">{{ row.causer?.name ?? t('audit.system') }}</span><template v-if="row.log_name || row.subject_type"> · {{ logLabel(row.log_name ?? '', row.subject_type) }}</template></p>
                             <p v-if="changedFields(row).length" class="truncate text-xs text-muted">{{ changedFields(row).join(', ') }}</p>
                             <p v-if="row.event === 'exported' && row.changes?.report" class="text-xs text-muted" data-audit-export>
                                 {{ t('audit.exportDetail', { report: reportName(row.changes.report), format: (row.changes.format ?? '').toUpperCase() + (row.changes.print ? ` (${t('audit.printed')})` : ''), rows: n(row.changes.rows ?? 0) }) }}
+                            </p>
+                            <p v-if="row.event === 'pruned' && row.changes?.messages" class="text-xs text-muted" data-audit-pruned>
+                                {{ t('audit.prunedDetail', { messages: n(row.changes.messages), days: n(row.changes.days ?? 0) }) }}
                             </p>
                             <p v-if="row.changes?.reason" class="text-xs text-muted" data-audit-reason>
                                 <template v-if="row.changes.moment && te(`audit.moments.${row.changes.moment}`)">{{ t(`audit.moments.${row.changes.moment}`) }} · </template>{{ t('audit.reason', { reason: row.changes.reason }) }}

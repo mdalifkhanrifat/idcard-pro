@@ -10,3 +10,5 @@ Artisan::command('inspire', function () {
 
 // Old records of prunable models (e.g. card verification checks past their keeping period)
 Schedule::command('model:prune')->daily();
+// Sent messages past the days an organization keeps them, only where it chose to have them deleted
+Schedule::command('app:prune-notification-log')->daily()->withoutOverlapping();

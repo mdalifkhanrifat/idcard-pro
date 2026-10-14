@@ -199,7 +199,8 @@
             "images": "ছবির লাইব্রেরি",
             "cards": "কার্ড",
             "biometrics": "বায়োমেট্রিক",
-            "reports": "রিপোর্ট"
+            "reports": "রিপোর্ট",
+            "notifications": "নোটিফিকেশন"
         },
         "events": {
             "created": "তৈরি",
@@ -214,7 +215,8 @@
             "logged_out": "লগআউট",
             "password_reset": "পাসওয়ার্ড রিসেট",
             "requirements_overridden": "শর্ত পার করা হয়েছে",
-            "exported": "ডাউনলোড (রপ্তানি)"
+            "exported": "ডাউনলোড (রপ্তানি)",
+            "pruned": "পুরনো সারি মোছা"
         },
         "reason": "কারণ: {reason}",
         "exportDetail": "{report} · {format} · {rows}টা সারি",
@@ -222,7 +224,9 @@
             "issue": "ইস্যু",
             "print": "প্রিন্ট"
         },
-        "printed": "প্রিন্ট"
+        "printed": "প্রিন্ট",
+        "system": "সিস্টেম",
+        "prunedDetail": "{days} দিনের বেশি পুরনো {messages}টা বার্তা মোছা হয়েছে (প্রতিষ্ঠানের সেটিং অনুযায়ী)"
     },
     "settings": {
         "title": "প্রতিষ্ঠান",
