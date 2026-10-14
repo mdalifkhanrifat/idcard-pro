@@ -17,15 +17,13 @@ use Symfony\Component\HttpKernel\Exception\ServiceUnavailableHttpException;
 
 /**
  * A report as a document to read, print or file: the organization's logo and name, what was asked for, the
- * totals and the rows, with page numbers; landscape when many columns. Drawn by the local PDF engine from a
+ * totals and the rows, with page numbers; the paper, its orientation and the type size follow the number of
+ * columns (config reports.pdf_layouts). Drawn by the local PDF engine from a
  * page of this app: the page is kept for one read behind a short signed link (the engine may only open the
  * app's own address), never stored as a file.
  */
 class PdfExporter implements ReportExporter
 {
-    /** More columns than this turn the page sideways. */
-    private const PORTRAIT_COLUMNS = 6;
-
     public function __construct(
         private PdfRenderer $renderer,
         private ReportValueText $text,
@@ -39,6 +37,38 @@ class PdfExporter implements ReportExporter
     public function maxRows(): ?int
     {
         return (int) config('reports.pdf_max_rows');
+    }
+
+    public function maxColumns(): ?int
+    {
+        $layouts = $this->layouts();
+
+        return $layouts === [] ? null : (int) end($layouts)['max_columns'];
+    }
+
+    /**
+     * The page for this many columns: the first layout that holds them (the last one past them all).
+     *
+     * @return array{paper: string, orientation: string, font_size: float}
+     */
+    public function layoutFor(int $columns): array
+    {
+        $layouts = $this->layouts();
+        $layout = collect($layouts)->first(fn (array $layout) => $columns <= (int) $layout['max_columns']) ?? end($layouts) ?: [];
+
+        return [
+            'paper' => preg_match('/^[A-Za-z0-9]+$/', (string) ($layout['paper'] ?? '')) ? (string) $layout['paper'] : 'A4',
+            'orientation' => ($layout['orientation'] ?? '') === 'portrait' ? 'portrait' : 'landscape',
+            'font_size' => (float) ($layout['font_size'] ?? 8.5),
+        ];
+    }
+
+    /**
+     * @return array<int, array{max_columns: int, paper: string, orientation: string, font_size: float}>
+     */
+    private function layouts(): array
+    {
+        return collect((array) config('reports.pdf_layouts'))->sortBy('max_columns')->values()->all();
     }
 
     public function extension(): string
@@ -62,7 +92,7 @@ class PdfExporter implements ReportExporter
             'document' => $document,
             'columns' => $columns,
             'rows' => $cells,
-            'landscape' => count($columns) > self::PORTRAIT_COLUMNS,
+            'layout' => $this->layoutFor(count($columns)),
             'fonts' => PdfFonts::css(),
             'text' => $this->text,
         ])->render();

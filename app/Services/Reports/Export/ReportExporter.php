@@ -21,6 +21,11 @@ interface ReportExporter
      */
     public function maxRows(): ?int;
 
+    /**
+     * Columns one file of this format may show (null: any number, as in a spreadsheet).
+     */
+    public function maxColumns(): ?int;
+
     public function extension(): string;
 
     public function contentType(): string;

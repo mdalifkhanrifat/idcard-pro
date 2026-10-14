@@ -34,6 +34,11 @@ class XlsxExporter implements ReportExporter
         return null;
     }
 
+    public function maxColumns(): ?int
+    {
+        return null;
+    }
+
     public function extension(): string
     {
         return 'xlsx';

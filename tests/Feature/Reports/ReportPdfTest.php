@@ -92,3 +92,39 @@ it('offers no PDF without a PDF engine, and the render page only behind its sign
 
     $this->get('/api/v1/report-render/'.str_repeat('a', 48))->assertForbidden();
 });
+
+it('fits the page to the number of columns, and refuses a PDF with more columns than paper can show readably', function () {
+    $keys = collect($this->getJson('/api/v1/reports')->json('data'))->firstWhere('key', 'card_prints')['columns'];
+    $columns = fn (int $count) => collect($keys)->take($count)->map(fn (array $column) => 'columns[]='.$column['key'])->implode('&');
+    $pageOf = function (int $count) use ($columns): string {
+        $this->get("/api/v1/reports/card-prints/export?format=pdf&{$columns($count)}")->assertOk();
+
+        return (string) array_pop($this->pages)['html'];
+    };
+
+    expect($pageOf(6))->toContain('size: A4 portrait', 'font-size: 8.5pt')
+        ->and($pageOf(7))->toContain('size: A4 landscape', 'font-size: 8.5pt')
+        ->and($pageOf(14))->toContain('size: A4 landscape', 'font-size: 7.5pt')
+        ->and($pageOf(20))->toContain('size: A3 landscape', 'font-size: 7.5pt');
+
+    // Past the last layout: refused before any work, with what to do instead; spreadsheets take any number
+    $this->getJson("/api/v1/reports/card-prints/export?format=pdf&{$columns(21)}")
+        ->assertStatus(422)
+        ->assertJsonPath('message', '21 columns are chosen; a PDF can show at most 20 and stay readable on paper. Choose fewer columns, or download Excel or CSV, which hold any number.');
+    $this->getJson("/api/v1/reports/card-prints/export?format=pdf&inline=1&{$columns(21)}")->assertStatus(422);
+    // In the reader's digits
+    $this->owner->update(['locale' => 'bn']);
+    expect($this->getJson("/api/v1/reports/card-prints/export?format=pdf&{$columns(21)}")->json('message'))->toStartWith('২১টা ঘর বাছাই করা; PDF কাগজে পড়ার মতো রাখতে সর্বোচ্চ ২০টা ঘর');
+    config(['reports.pdf_max_rows' => 0]);
+    expect($this->getJson('/api/v1/reports/card-prints/export?format=pdf')->json('message'))->toStartWith('রিপোর্টে ১টা সারি, এক ডাউনলোডে সর্বোচ্চ ০টা যায়।');
+    config(['reports.pdf_max_rows' => 2000]);
+    $this->owner->update(['locale' => 'en']);
+    $this->get("/api/v1/reports/card-prints/export?format=csv&{$columns(40)}")->assertOk();
+    expect(Activity::query()->where('log_name', 'reports')->pluck('properties')->map(fn ($properties) => $properties['format'])->all())->toBe(['pdf', 'pdf', 'pdf', 'pdf', 'csv']);
+
+    // The limit is told to clients, from the layouts in configuration
+    expect(collect($this->getJson('/api/v1/reports')->json('data'))->firstWhere('key', 'card_prints')['format_column_limits'])->toBe(['pdf' => 20]);
+    config(['reports.pdf_layouts' => [['max_columns' => 30, 'paper' => 'A3', 'orientation' => 'landscape', 'font_size' => 6.5]]]);
+    expect(collect($this->getJson('/api/v1/reports')->json('data'))->firstWhere('key', 'card_prints')['format_column_limits'])->toBe(['pdf' => 30])
+        ->and($pageOf(25))->toContain('size: A3 landscape', 'font-size: 6.5pt');
+});

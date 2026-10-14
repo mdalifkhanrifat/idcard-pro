@@ -41,7 +41,25 @@ const columnKeys = computed(() => props.columns ?? chosen.keys.value);
 /** Rows one file of this format may hold (a PDF holds fewer than a spreadsheet). */
 const limitOf = (format: string) => report.value?.format_limits?.[format] ?? report.value?.max_export_rows ?? Infinity;
 const tooMany = (format: string) => props.total > limitOf(format);
-const tooManyText = (format: string) => (tooMany(format) ? t('reports.download.tooMany', { max: formatNumber(limitOf(format)) }) : undefined);
+/** Columns one file of this format may show (a PDF must stay readable on paper; a spreadsheet holds any number). */
+const columnLimitOf = (format: string) => report.value?.format_column_limits?.[format] ?? Infinity;
+const tooManyColumns = (format: string) => columnKeys.value.length > columnLimitOf(format);
+const blocked = (format: string) => tooMany(format) || tooManyColumns(format);
+/** Why a format is off, in full (title) and short (shown beside it, as phones show no titles). */
+function blockedText(format: string): string | undefined {
+    if (tooMany(format)) {
+        return t('reports.download.tooMany', { max: formatNumber(limitOf(format)) });
+    }
+
+    return tooManyColumns(format) ? t('reports.download.tooManyColumns', { max: formatNumber(columnLimitOf(format)) }) : undefined;
+}
+function blockedShort(format: string): string {
+    if (tooMany(format)) {
+        return t('reports.download.atMost', { max: formatNumber(limitOf(format)) });
+    }
+
+    return tooManyColumns(format) ? t('reports.download.atMostColumns', { max: formatNumber(columnLimitOf(format)) }) : '';
+}
 const formats = computed(() => report.value?.formats ?? []);
 const canPrint = computed(() => formats.value.includes('pdf'));
 const downloading = ref<string | null>(null);
@@ -88,15 +106,15 @@ onMounted(() => {
             v-for="format in formats"
             :key="format"
             variant="secondary"
-            :disabled="tooMany(format) || !total"
+            :disabled="blocked(format) || !total"
             :loading="downloading === format"
-            :title="tooManyText(format)"
+            :title="blockedText(format)"
             :data-download="format"
             @click="download(format)"
         >
             <FileDown class="size-4" />{{ t(`reports.download.${format}`) }}
         </UiButton>
-        <UiButton v-if="canPrint" variant="secondary" :disabled="tooMany('pdf') || !total" :loading="downloading === 'print'" :title="tooManyText('pdf')" data-print @click="print">
+        <UiButton v-if="canPrint" variant="secondary" :disabled="blocked('pdf') || !total" :loading="downloading === 'print'" :title="blockedText('pdf')" data-print @click="print">
             <Printer class="size-4" />{{ t('reports.download.print') }}
         </UiButton>
     </template>
@@ -112,25 +130,25 @@ onMounted(() => {
                 <DropdownMenuItem
                     v-for="format in formats"
                     :key="format"
-                    :disabled="tooMany(format) || !total"
+                    :disabled="blocked(format) || !total"
                     class="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm text-fg outline-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[highlighted]:bg-surface-2"
-                    :title="tooManyText(format)"
+                    :title="blockedText(format)"
                     :data-download="format"
                     @select="download(format)"
                 >
                     <FileDown class="size-4 text-muted" />{{ t(`reports.download.${format}`) }}
-                    <span v-if="tooMany(format)" class="ml-auto pl-3 text-xs text-muted">{{ t('reports.download.atMost', { max: formatNumber(limitOf(format)) }) }}</span>
+                    <span v-if="blocked(format)" class="ml-auto pl-3 text-xs text-muted">{{ blockedShort(format) }}</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem
                     v-if="canPrint"
-                    :disabled="tooMany('pdf') || !total"
+                    :disabled="blocked('pdf') || !total"
                     class="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 text-sm text-fg outline-none data-[disabled]:cursor-not-allowed data-[disabled]:opacity-50 data-[highlighted]:bg-surface-2"
-                    :title="tooManyText('pdf')"
+                    :title="blockedText('pdf')"
                     data-print
                     @select="print"
                 >
                     <Printer class="size-4 text-muted" />{{ t('reports.download.print') }}
-                    <span v-if="tooMany('pdf')" class="ml-auto pl-3 text-xs text-muted">{{ t('reports.download.atMost', { max: formatNumber(limitOf('pdf')) }) }}</span>
+                    <span v-if="blocked('pdf')" class="ml-auto pl-3 text-xs text-muted">{{ blockedShort('pdf') }}</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator v-if="formats.length" class="my-1 h-px bg-line" />
                 <DropdownMenuItem as-child>

@@ -291,6 +291,7 @@ return [
     'export' => [
         'pdf_unavailable' => 'The PDF could not be made right now. Try again, or download CSV or Excel.',
         'too_many' => 'The report has :count rows; one download may hold at most :max. Narrow the filter (for example by date) and download in parts.',
+        'too_many_columns' => ':count columns are chosen; a :format can show at most :max and stay readable on paper. Choose fewer columns, or download Excel or CSV, which hold any number.',
     ],
     'values' => [
         'yes' => 'Yes',

@@ -1,4 +1,4 @@
-{{-- A report as a document (PdfExporter): drawn by the PDF engine, A4, landscape with many columns. --}}
+{{-- A report as a document (PdfExporter): drawn by the PDF engine on the page reports.pdf_layouts gives its columns. --}}
 @php
     /** @var \App\Data\Reports\ReportDocument $document */
     $accent = preg_match('/^#[0-9a-fA-F]{6}$/', $document->color) ? $document->color : '#0f766e';
@@ -10,10 +10,10 @@
     <title>{{ $document->title }} · {{ $document->organization }}</title>
     <style>
         {!! $fonts !!}
-        @page { size: A4 {{ $landscape ? 'landscape' : 'portrait' }}; margin: 12mm 10mm 14mm 10mm; }
+        @page { size: {{ $layout['paper'] }} {{ $layout['orientation'] }}; margin: 12mm 10mm 14mm 10mm; }
         * { box-sizing: border-box; }
         html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-        body { margin: 0; font-family: 'Inter', 'Noto Sans Bengali', sans-serif; font-size: 8.5pt; line-height: 1.4; color: #1f2937; }
+        body { margin: 0; font-family: 'Inter', 'Noto Sans Bengali', sans-serif; font-size: {{ $layout['font_size'] }}pt; line-height: 1.4; color: #1f2937; }
         .rule { height: 3px; background: {{ $accent }}; border-radius: 2px; margin-bottom: 10px; }
         .head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
         .org { display: flex; align-items: center; gap: 10px; min-width: 0; }
@@ -33,7 +33,7 @@
         table { width: 100%; border-collapse: collapse; }
         thead { display: table-header-group; }
         tr { break-inside: avoid; }
-        th { text-align: left; font-size: 7.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; color: #374151; background: #f3f4f6; border-bottom: 1.5px solid {{ $accent }}; padding: 5px 6px; }
+        th { text-align: left; font-size: {{ max($layout['font_size'] - 1, 6) }}pt; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; color: #374151; background: #f3f4f6; border-bottom: 1.5px solid {{ $accent }}; padding: 5px 6px; }
         td { padding: 4px 6px; border-bottom: 1px solid #eef0f3; vertical-align: top; overflow-wrap: anywhere; }
         tbody tr:nth-child(even) td { background: #fafafa; }
         .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }

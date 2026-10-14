@@ -49,6 +49,8 @@ const groups = computed(() => {
 });
 const sameAs = (a: string[], b: string[]) => a.length === b.length && a.every((key, index) => key === b[index]);
 const isOrganizationDefault = computed(() => sameAs(draft.value, props.report.default_columns));
+/** More columns than a PDF shows readably: said here, where columns are chosen (PDF and Print are then off). */
+const pdfColumnLimit = computed(() => props.report.format_column_limits?.pdf ?? null);
 
 function toggle(key: string): void {
     draft.value = draft.value.includes(key) ? draft.value.filter((existing) => existing !== key) : [...draft.value, key];
@@ -123,6 +125,9 @@ async function saveDefault(columns: string[] | null): Promise<void> {
                     </li>
                 </ol>
                 <p v-if="!draft.length" class="text-sm text-danger" data-no-columns>{{ t('reports.columns.none') }}</p>
+                <p v-if="pdfColumnLimit !== null && draft.length > pdfColumnLimit" class="mt-2 text-xs text-muted" data-pdf-column-limit>
+                    {{ t('reports.columns.pdfLimit', { max: n(pdfColumnLimit) }) }}
+                </p>
                 <div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-sm">
                     <button v-if="!isOrganizationDefault" type="button" class="font-medium text-fg underline underline-offset-2 hover:no-underline" data-use-default @click="draft = [...report.default_columns]">
                         {{ t('reports.columns.useDefault') }}

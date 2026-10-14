@@ -1553,6 +1553,7 @@
             "moveDown": "Move down",
             "remove": "Remove",
             "none": "Choose at least one column.",
+            "pdfLimit": "PDF and Print show at most {max} columns, to stay readable on paper; Excel and CSV take them all.",
             "useDefault": "Use the organization's columns",
             "resetOrgDefault": "Restore the report's standard columns for everybody",
             "saveOrgDefault": "Save as the organization's default",
@@ -1570,7 +1571,9 @@
             "popupBlocked": "The browser blocked the new tab. Allow pop-ups for this site, or download the PDF.",
             "menu": "Download",
             "openAsReport": "Open as a report",
-            "atMost": "up to {max} rows"
+            "atMost": "up to {max} rows",
+            "atMostColumns": "up to {max} columns",
+            "tooManyColumns": "Too many columns for a PDF to stay readable on paper (at most {max}). Choose fewer columns, or download Excel or CSV."
         },
         "empty": "No rows found.",
         "filterInsideParent": "Choose a {parent} first"

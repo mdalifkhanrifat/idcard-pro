@@ -27,6 +27,7 @@ class ReportExportService
     public function __construct(
         private TenantContext $tenant,
         private ReportFilterSummary $summary,
+        private ReportValueText $text,
     ) {}
 
     /**
@@ -60,19 +61,42 @@ class ReportExportService
     }
 
     /**
+     * Columns one file may show, per format that has a limit (a PDF must stay readable on paper).
+     *
+     * @return array<string, int>
+     */
+    public function columnLimits(): array
+    {
+        $limits = [];
+        foreach ($this->formats() as $format) {
+            $max = $this->exporters()[$format]->maxColumns();
+            if ($max !== null) {
+                $limits[$format] = $max;
+            }
+        }
+
+        return $limits;
+    }
+
+    /**
      * @param  array<int, ReportColumn>  $columns
      *
-     * @throws BusinessRuleException More rows than one file of this format may hold
+     * @throws BusinessRuleException More rows, or columns, than one file of this format may hold
      */
     public function export(Report $report, ReportQuery $query, array $columns, string $format, User $actor, bool $inline = false): ReportFile
     {
         $count = $report->count($query);
         $max = $this->limit($format);
         if ($count > $max) {
-            throw new BusinessRuleException(__('reports.export.too_many', ['count' => $count, 'max' => $max]));
+            // Numbers in the reader's digits, grouped (Bangla digits for Bangla readers)
+            throw new BusinessRuleException(__('reports.export.too_many', ['count' => $this->text->number($count), 'max' => $this->text->number($max)]));
         }
 
         $exporter = $this->exporters()[$format];
+        $maxColumns = $exporter->maxColumns();
+        if ($maxColumns !== null && count($columns) > $maxColumns) {
+            throw new BusinessRuleException(__('reports.export.too_many_columns', ['count' => $this->text->number(count($columns)), 'max' => $this->text->number($maxColumns), 'format' => strtoupper($format)]));
+        }
         $tenant = $this->tenant->get();
         $timezone = $tenant?->timezone ?: (string) config('app.timezone');
         $now = now()->setTimezone($timezone);

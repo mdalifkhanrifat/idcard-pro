@@ -54,6 +54,8 @@ export interface ReportDefinition {
     max_export_rows: number | null;
     /** Rows one file may hold, per format (a PDF holds fewer). */
     format_limits: Record<string, number>;
+    /** Columns one file may show, per format that has a limit (a PDF must stay readable on paper). */
+    format_column_limits?: Record<string, number>;
 }
 
 export type ReportValue = string | number | null;

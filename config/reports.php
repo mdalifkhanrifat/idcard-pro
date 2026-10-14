@@ -76,4 +76,16 @@ return [
     // Rows one PDF may hold (every row is drawn as a page of a document: heavier than a spreadsheet)
     'pdf_max_rows' => (int) env('REPORT_PDF_MAX_ROWS', 2000),
 
+    /*
+     * The PDF's page by how many columns it shows: the first layout whose max_columns holds them (paper: a CSS
+     * page size such as A4, A3, letter, legal; font_size in points). More columns than the last layout holds
+     * cannot be read on paper: such a PDF is refused (a spreadsheet holds any number).
+     */
+    'pdf_layouts' => [
+        ['max_columns' => 6, 'paper' => 'A4', 'orientation' => 'portrait', 'font_size' => 8.5],
+        ['max_columns' => 10, 'paper' => 'A4', 'orientation' => 'landscape', 'font_size' => 8.5],
+        ['max_columns' => 14, 'paper' => 'A4', 'orientation' => 'landscape', 'font_size' => 7.5],
+        ['max_columns' => 20, 'paper' => 'A3', 'orientation' => 'landscape', 'font_size' => 7.5],
+    ],
+
 ];
