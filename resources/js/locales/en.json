@@ -156,7 +156,8 @@
             "images": "Image library",
             "cards": "Issued cards",
             "biometrics": "Biometrics",
-            "reports": "Reports"
+            "reports": "Reports",
+            "notifications": "Notifications"
         },
         "abilities": {
             "view": "View",
@@ -169,7 +170,8 @@
             "revoke": "Revoke",
             "enroll": "Enroll",
             "override_requirements": "Override requirements",
-            "export": "Export"
+            "export": "Export",
+            "send": "Send"
         }
     },
     "audit": {

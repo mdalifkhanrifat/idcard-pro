@@ -136,7 +136,7 @@ async function remove(role: Role): Promise<void> {
                             <tbody>
                                 <tr v-for="(moduleAbilities, module) in registry" :key="module" class="border-t border-line">
                                     <td class="px-4 py-2.5">
-                                        <button type="button" class="font-medium text-fg hover:text-brand-ink" @click="toggleModule(String(module))">{{ label('modules', String(module)) }}</button>
+                                        <button type="button" class="text-left font-medium text-fg hover:text-brand-ink" @click="toggleModule(String(module))">{{ label('modules', String(module)) }}</button>
                                     </td>
                                     <td v-for="a in abilities" :key="a" class="px-3 py-2.5 text-center">
                                         <input

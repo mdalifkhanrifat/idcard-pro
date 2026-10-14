@@ -36,6 +36,9 @@ return [
         'biometrics' => ['view', 'enroll', 'delete'],
         // Reports (Phase 5): see them, and download them as files (each download is kept in the audit log)
         'reports' => ['view', 'export'],
+        // Notifications (Phase 5): see the log of sent messages (full address and text), and send by hand —
+        // resend a failed or skipped message, or a test message to check a channel before turning it on
+        'notifications' => ['view', 'send'],
     ],
 
     'default_roles' => [
@@ -52,10 +55,11 @@ return [
             'cards.view', 'cards.issue', 'cards.print', 'cards.update', 'cards.revoke', 'cards.override_requirements',
             'biometrics.view', 'biometrics.enroll', 'biometrics.delete',
             'reports.view', 'reports.export',
+            'notifications.view', 'notifications.send',
         ],
         // Legacy operators printed cards, so they issue them too
         'Operator' => ['users.view', 'master_data.view', 'cardholders.view', 'cardholders.create', 'cardholders.update', 'templates.view', 'cards.view', 'cards.issue', 'cards.print', 'biometrics.view', 'biometrics.enroll'],
-        'Viewer' => ['users.view', 'audit.view', 'master_data.view', 'cardholders.view', 'cards.view', 'reports.view'],
+        'Viewer' => ['users.view', 'audit.view', 'master_data.view', 'cardholders.view', 'cards.view', 'reports.view', 'notifications.view'],
     ],
 
 ];

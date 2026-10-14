@@ -156,7 +156,8 @@
             "images": "ছবির লাইব্রেরি",
             "cards": "ইস্যু হওয়া কার্ড",
             "biometrics": "বায়োমেট্রিক",
-            "reports": "রিপোর্ট"
+            "reports": "রিপোর্ট",
+            "notifications": "নোটিফিকেশন"
         },
         "abilities": {
             "view": "দেখা",
@@ -169,7 +170,8 @@
             "revoke": "বাতিল",
             "enroll": "নেওয়া",
             "override_requirements": "শর্ত পার করা",
-            "export": "রপ্তানি"
+            "export": "রপ্তানি",
+            "send": "পাঠানো"
         }
     },
     "audit": {
