@@ -31,4 +31,9 @@ class NotificationMessageRepository extends EloquentRepository implements Notifi
 
         return $deleted;
     }
+
+    public function findForDelivery(int $id): ?NotificationMessage
+    {
+        return NotificationMessage::query()->withoutGlobalScopes()->with('tenant')->find($id);
+    }
 }

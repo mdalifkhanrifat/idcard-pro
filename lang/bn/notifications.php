@@ -17,6 +17,12 @@ return [
         'card.issue_date' => 'ইস্যুর তারিখ',
         'card.expiry_date' => 'মেয়াদ শেষের তারিখ',
         'card.days_left' => 'মেয়াদ শেষ হতে বাকি দিন',
+        'card.validity' => 'মেয়াদ (পুরো বাক্য; মেয়াদহীন কার্ডেও ঠিক)',
+    ],
+
+    'validity' => [
+        'until' => 'কার্ডটি :date পর্যন্ত বৈধ।',
+        'none' => 'কার্ডটির মেয়াদ শেষের কোনো তারিখ নেই।',
     ],
 
     'events' => [
@@ -24,8 +30,8 @@ return [
             'name' => 'কার্ড তৈরি',
             'description' => 'কার্ড ইস্যু হয়েছে, নেওয়া যাবে।',
             'subject' => 'আপনার আইডি কার্ড {card.number} তৈরি হয়েছে',
-            'body' => "প্রিয় {holder.name},\n\n{organization.name}-এর আপনার আইডি কার্ড {card.number} তৈরি হয়েছে। কার্ডটি {card.expiry_date} পর্যন্ত বৈধ।\n\nধন্যবাদ।",
-            'sms' => '{organization.name}: আপনার আইডি কার্ড {card.number} তৈরি হয়েছে, {card.expiry_date} পর্যন্ত বৈধ।',
+            'body' => "প্রিয় {holder.name},\n\n{organization.name}-এর আপনার আইডি কার্ড {card.number} তৈরি হয়েছে। {card.validity}\n\nধন্যবাদ।",
+            'sms' => '{organization.name}: আপনার আইডি কার্ড {card.number} তৈরি হয়েছে। {card.validity}',
         ],
         'card_expiring' => [
             'name' => 'কার্ডের মেয়াদ শেষ হচ্ছে',

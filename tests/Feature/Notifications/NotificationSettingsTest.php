@@ -1,5 +1,6 @@
 <?php
 
+use App\Data\Notifications\NotificationRecipient;
 use App\Models\Card;
 use App\Services\Notifications\Events\CardExpiringEvent;
 use App\Services\Notifications\NotificationEvent;
@@ -124,6 +125,16 @@ it('takes a new event from the registry alone: settings, rules and options follo
         public function values(object $subject): array
         {
             return ['holder.name' => 'X'];
+        }
+
+        public function recipient(object $subject): NotificationRecipient
+        {
+            return new NotificationRecipient('X');
+        }
+
+        public function links(object $subject): array
+        {
+            return [];
         }
     };
     app()->instance('test.badge_lost', $event);

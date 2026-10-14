@@ -17,4 +17,9 @@ interface NotificationMessageRepositoryInterface extends RepositoryInterface
      * for long); returns how many were deleted.
      */
     public function deleteOlderThan(int $tenantId, CarbonInterface $before, int $chunk = 1000): int;
+
+    /**
+     * A message by id in any organization (the queue sends outside a request), with its organization.
+     */
+    public function findForDelivery(int $id): ?NotificationMessage;
 }

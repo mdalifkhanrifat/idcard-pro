@@ -34,20 +34,20 @@ it('writes the message in the organization\'s languages only, in its order, its 
     $bangla = ($this->compose)([]);
     expect($bangla['languages'])->toBe(['bn'])
         ->and($bangla['subject'])->toBe("আপনার আইডি কার্ড {$number} তৈরি হয়েছে")
-        ->and($bangla['sms'])->toBe("Acme Ltd: আপনার আইডি কার্ড {$number} তৈরি হয়েছে, ০৪/০১/২০২৮ পর্যন্ত বৈধ।")
+        ->and($bangla['sms'])->toBe("Acme Ltd: আপনার আইডি কার্ড {$number} তৈরি হয়েছে। কার্ডটি ০৪/০১/২০২৮ পর্যন্ত বৈধ।")
         ->and($bangla['body'])->toStartWith('প্রিয় Jane Doe,')->not->toContain('Dear');
 
     // English only
     $english = ($this->compose)(['languages' => ['en']]);
     expect($english['subject'])->toBe("Your ID card {$number} is ready")
-        ->and($english['sms'])->toBe("Acme Ltd: your ID card {$number} is ready. Valid until 04/01/2028.")
+        ->and($english['sms'])->toBe("Acme Ltd: your ID card {$number} is ready. It is valid until 04/01/2028.")
         ->and($english['body'])->not->toContain('প্রিয়');
 
     // Both, English first, with the organization's own Bangla SMS
     $both = ($this->compose)(['languages' => ['en', 'bn'], 'events' => ['card_ready' => ['templates' => ['bn' => ['sms' => '{holder.name}, কার্ড {card.number} নিন।']]]]]);
     expect($both['languages'])->toBe(['en', 'bn'])
         ->and($both['subject'])->toBe("Your ID card {$number} is ready / আপনার আইডি কার্ড {$number} তৈরি হয়েছে")
-        ->and($both['sms'])->toBe("Acme Ltd: your ID card {$number} is ready. Valid until 04/01/2028.\nJane Doe, কার্ড {$number} নিন।")
+        ->and($both['sms'])->toBe("Acme Ltd: your ID card {$number} is ready. It is valid until 04/01/2028.\nJane Doe, কার্ড {$number} নিন।")
         ->and($both['body'])->toContain("Thank you.\n\n— — —\n\nপ্রিয় Jane Doe,");
     // The reader's own language is left as it was
     expect(app()->getLocale())->toBe('en');
@@ -74,7 +74,7 @@ it('e-mails a message from the organization by name, answered to its own address
 });
 
 it('writes an SMS to the SMS log instead of sending it, and refuses a driver that is not set up', function () {
-    $file = storage_path('logs/sms-test-'.uniqid().'.log');
+    $file = sys_get_temp_dir().'/sms-test-'.uniqid().'.log';
     config(['logging.channels.sms' => ['driver' => 'single', 'path' => $file, 'level' => 'info']]);
     $message = ($this->message)(['channel' => 'sms', 'address' => '+8801711000000', 'subject' => null, 'body' => 'Acme Ltd: আপনার কার্ড তৈরি হয়েছে।']);
 

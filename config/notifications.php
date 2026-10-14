@@ -42,6 +42,9 @@ return [
         'log_channel' => env('SMS_LOG_CHANNEL', 'sms'),
     ],
 
+    // A message that could not be handed over is tried again after these many seconds, then marked failed
+    'retry' => ['backoff' => [60, 300, 900]],
+
     // Placed between the languages of one message, in the organization's order
     'separators' => ['subject' => ' / ', 'body' => "\n\n— — —\n\n", 'sms' => "\n"],
 

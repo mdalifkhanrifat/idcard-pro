@@ -17,6 +17,12 @@ return [
         'card.issue_date' => 'Issue date',
         'card.expiry_date' => 'Expiry date',
         'card.days_left' => 'Days until expiry',
+        'card.validity' => 'Validity (a sentence; also for cards without an expiry date)',
+    ],
+
+    'validity' => [
+        'until' => 'It is valid until :date.',
+        'none' => 'It has no expiry date.',
     ],
 
     // Each event: its name and description for the settings, and its default texts
@@ -25,8 +31,8 @@ return [
             'name' => 'Card ready',
             'description' => 'A card was issued and can be collected.',
             'subject' => 'Your ID card {card.number} is ready',
-            'body' => "Dear {holder.name},\n\nYour ID card {card.number} from {organization.name} is ready. It is valid until {card.expiry_date}.\n\nThank you.",
-            'sms' => '{organization.name}: your ID card {card.number} is ready. Valid until {card.expiry_date}.',
+            'body' => "Dear {holder.name},\n\nYour ID card {card.number} from {organization.name} is ready. {card.validity}\n\nThank you.",
+            'sms' => '{organization.name}: your ID card {card.number} is ready. {card.validity}',
         ],
         'card_expiring' => [
             'name' => 'Card expiring',

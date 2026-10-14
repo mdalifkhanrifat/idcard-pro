@@ -2,6 +2,7 @@
 
 namespace App\Services\Notifications\Events;
 
+use App\Data\Notifications\NotificationRecipient;
 use App\Models\Card;
 use App\Services\Notifications\NotificationEvent;
 
@@ -36,5 +37,21 @@ class CardReadyEvent implements NotificationEvent
     {
 
         return $this->cardValues($subject);
+    }
+
+    /**
+     * @param  Card  $subject
+     */
+    public function recipient(object $subject): NotificationRecipient
+    {
+        return $this->cardRecipient($subject);
+    }
+
+    /**
+     * @param  Card  $subject
+     */
+    public function links(object $subject): array
+    {
+        return ['card_id' => $subject->id];
     }
 }
