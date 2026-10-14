@@ -98,7 +98,8 @@ async function saveDefault(columns: string[] | null): Promise<void> {
                         data-column-search
                     />
                 </div>
-                <div class="max-h-[50vh] space-y-4 overflow-y-auto pr-1" data-column-groups>
+                <!-- Side by side, each list scrolls on its own; on phones the dialog scrolls once (no scroll inside scroll) -->
+                <div class="space-y-4 md:max-h-[50vh] md:overflow-y-auto md:pr-1" data-column-groups>
                     <section v-for="{ group, columns } in groups" :key="group">
                         <h3 class="mb-1.5 text-xs font-semibold tracking-wide text-muted uppercase">{{ groupLabel(group) }}</h3>
                         <label v-for="column in columns" :key="column.key" class="flex cursor-pointer items-center gap-2.5 rounded-md px-2 py-1.5 text-sm text-fg hover:bg-surface-2" :data-column-option="column.key">
@@ -113,7 +114,7 @@ async function saveDefault(columns: string[] | null): Promise<void> {
             <!-- Chosen, in order -->
             <div class="min-w-0">
                 <h3 class="mb-2 text-sm font-medium text-fg">{{ t('reports.columns.chosen', { count: n(draft.length) }) }}</h3>
-                <ol class="max-h-[50vh] space-y-1 overflow-y-auto" data-chosen-columns>
+                <ol class="space-y-1 md:max-h-[50vh] md:overflow-y-auto" data-chosen-columns>
                     <li v-for="(key, index) in draft" :key="key" class="flex items-center gap-1 rounded-md border border-line bg-surface-2/50 py-1 pr-1 pl-3 text-sm" :data-chosen-column="key">
                         <span class="min-w-0 flex-1 truncate text-fg">{{ byKey.get(key)?.label ?? key }}</span>
                         <button type="button" class="rounded p-1 text-muted hover:bg-surface hover:text-fg disabled:opacity-30" :disabled="index === 0" :aria-label="t('reports.columns.moveUp')" :title="t('reports.columns.moveUp')" @click="move(index, -1)"><ArrowUp class="size-4" /></button>

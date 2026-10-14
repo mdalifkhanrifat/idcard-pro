@@ -48,8 +48,9 @@ const emit = defineEmits<{ toggleSort: [field: string] }>();
                             'text-muted': (row.values?.[column.key] ?? null) === null,
                         }"
                     >
-                        <!-- Text as wide as it needs up to a limit (cells ignore max-width): short text on one line, long text wraps, the table scrolls -->
-                        <div :class="column.type === 'text' && 'w-max max-w-xs'">
+                        <!-- Text as wide as it needs up to a limit (cells ignore max-width): short text on one line, long text wraps,
+                             a long unbroken word (e-mail, link, code) breaks inside it instead of running over the next columns -->
+                        <div :class="column.type === 'text' && 'w-max max-w-xs break-words'">
                             <slot name="cell" :column="column" :row="row" :value="row.values?.[column.key] ?? null" :text="formatReportValue(column, row.values?.[column.key], timeZone)">
                                 {{ formatReportValue(column, row.values?.[column.key], timeZone) }}
                             </slot>
