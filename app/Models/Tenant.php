@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\TenantStatus;
 use App\Services\Biometrics\BiometricSettings;
 use App\Services\Cards\CardNumberFormat;
+use App\Services\Notifications\NotificationSettings;
 use App\Support\Audit\JsonChanges;
 use Database\Factories\TenantFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -106,6 +107,7 @@ class Tenant extends Model
             'default_card_size' => $this->defaultCardSize(),
             'verification' => $this->verificationSettings(),
             'biometrics' => $this->biometricSettings(),
+            'notifications' => $this->notificationSettings(),
         ];
     }
 
@@ -172,6 +174,17 @@ class Tenant extends Model
     public function biometricSettings(): array
     {
         return BiometricSettings::normalize((array) ($this->settings['biometrics'] ?? []));
+    }
+
+    /**
+     * Notification settings (5.2), complete with the configured defaults: whether messages go out, on which
+     * channels, in which languages, how long the log is kept, and each event's channels and own texts.
+     *
+     * @return array{enabled: bool, channels: array<int, string>, languages: array<int, string>, log_days: int, events: array<string, array{enabled: bool, channels: array<int, string>, templates: array<string, array{subject: string|null, body: string|null, sms: string|null}>}>}
+     */
+    public function notificationSettings(): array
+    {
+        return NotificationSettings::normalize((array) ($this->settings['notifications'] ?? []));
     }
 
     /**

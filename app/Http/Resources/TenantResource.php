@@ -5,6 +5,8 @@ namespace App\Http\Resources;
 use App\Models\Tenant;
 use App\Services\Biometrics\BiometricSettings;
 use App\Services\Cards\CardNumberFormat;
+use App\Services\Notifications\NotificationEvent;
+use App\Services\Notifications\NotificationSettings;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -63,6 +65,25 @@ class TenantResource extends JsonResource
                 'image_types' => config('biometrics.image_types'),
                 'max_image_kb' => (int) config('biometrics.max_image_kb'),
                 'max_template_kb' => (int) config('biometrics.max_template_kb'),
+            ],
+            'notifications' => $this->resource->notificationSettings(),
+            // What this installation can send and about what, for the settings form: every event with the
+            // placeholders its texts may use and its default texts in each language
+            'notification_options' => [
+                'channels' => NotificationSettings::channels(),
+                'languages' => NotificationSettings::languages(),
+                'log_days' => config('notifications.log_days'),
+                'max_length' => config('notifications.max_length'),
+                'events' => collect(NotificationSettings::events())->map(fn (NotificationEvent $event, string $key): array => [
+                    'name' => (string) __("notifications.events.{$key}.name"),
+                    'description' => (string) __("notifications.events.{$key}.description"),
+                    // Read as a list: placeholder names hold dots, which __() would take as nesting
+                    'placeholders' => array_map(fn (string $placeholder): array => ['key' => $placeholder, 'label' => (string) (((array) __('notifications.placeholders'))[$placeholder] ?? $placeholder)], $event->placeholders()),
+                    'default_channels' => $event->defaultChannels(),
+                    'default_templates' => collect(NotificationSettings::languages())->mapWithKeys(fn (string $language): array => [$language => collect(NotificationSettings::PARTS)->mapWithKeys(
+                        fn (string $part): array => [$part => (string) __("notifications.events.{$key}.{$part}", locale: $language)],
+                    )->all()])->all(),
+                ])->all(),
             ],
             'status' => $this->status,
             'users_count' => $this->whenCounted('users'),

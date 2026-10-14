@@ -4,6 +4,7 @@ namespace App\Http\Requests\Tenants;
 
 use App\Services\Biometrics\BiometricSettings;
 use App\Services\Cards\CardNumberFormat;
+use App\Services\Notifications\NotificationSettings;
 use App\Support\Tenancy\TenantContext;
 use DateTimeZone;
 use Illuminate\Foundation\Http\FormRequest;
@@ -59,7 +60,50 @@ class UpdateTenantSettingsRequest extends FormRequest
                     $fail($problem);
                 }
             }],
-        ], ...$this->biometricRules()];
+        ], ...$this->biometricRules(), ...$this->notificationRules()];
+    }
+
+    /**
+     * Notifications (5.2): on or off, channels, languages, how long the log is kept, and per event whether it
+     * goes out, on which channels and in whose words (an empty text = the event's default). Lists that are
+     * missing mean none.
+     *
+     * @return array<string, array<int, mixed>>
+     */
+    private function notificationRules(): array
+    {
+        $channels = NotificationSettings::channels();
+        $languages = NotificationSettings::languages();
+        $days = (array) config('notifications.log_days');
+        $length = (array) config('notifications.max_length');
+        $rules = [
+            'notifications' => ['sometimes', 'array:enabled,channels,languages,log_days,events'],
+            'notifications.enabled' => ['required_with:notifications', 'boolean'],
+            'notifications.channels' => ['sometimes', 'array'],
+            'notifications.channels.*' => ['distinct', Rule::in($channels)],
+            'notifications.languages' => ['sometimes', 'array', 'min:1'],
+            'notifications.languages.*' => ['distinct', Rule::in($languages)],
+            'notifications.log_days' => ['sometimes', 'integer', 'between:'.(int) $days['min'].','.(int) $days['max']],
+            'notifications.events' => ['sometimes', 'array:'.implode(',', array_keys(NotificationSettings::events()))],
+        ];
+        foreach (array_keys(NotificationSettings::events()) as $event) {
+            $key = "notifications.events.{$event}";
+            $rules += [
+                $key => ['sometimes', 'array:enabled,channels,templates'],
+                "{$key}.enabled" => ["required_with:{$key}", 'boolean'],
+                "{$key}.channels" => ['sometimes', 'array'],
+                "{$key}.channels.*" => ['distinct', Rule::in($channels)],
+                "{$key}.templates" => ['sometimes', 'array:'.implode(',', $languages)],
+            ];
+            foreach ($languages as $language) {
+                $rules["{$key}.templates.{$language}"] = ['sometimes', 'array:'.implode(',', NotificationSettings::PARTS)];
+                foreach (NotificationSettings::PARTS as $part) {
+                    $rules["{$key}.templates.{$language}.{$part}"] = ['nullable', 'string', 'max:'.(int) $length[$part]];
+                }
+            }
+        }
+
+        return $rules;
     }
 
     /**
@@ -109,7 +153,7 @@ class UpdateTenantSettingsRequest extends FormRequest
      */
     public function after(): array
     {
-        return [function (ValidationValidator $validator): void {
+        return [$this->checkNotifications(...), function (ValidationValidator $validator): void {
             $change = $this->input('biometrics');
             if (! is_array($change) || $validator->errors()->has('biometrics*')) {
                 return;
@@ -142,6 +186,35 @@ class UpdateTenantSettingsRequest extends FormRequest
                 $validator->errors()->add('biometrics.modalities', __('biometrics.settings.nothing_on'));
             }
         }];
+    }
+
+    /**
+     * Notifications: a text may only use its event's placeholders (a misspelt one would reach people as is);
+     * turned on, they need a channel to go on.
+     */
+    private function checkNotifications(ValidationValidator $validator): void
+    {
+        $change = $this->input('notifications');
+        if (! is_array($change) || $validator->errors()->has('notifications*')) {
+            return;
+        }
+        $events = NotificationSettings::events();
+        foreach ((array) ($change['events'] ?? []) as $key => $event) {
+            foreach ((array) ($event['templates'] ?? []) as $language => $parts) {
+                foreach ((array) $parts as $part => $text) {
+                    $unknown = is_string($text) ? NotificationSettings::unknownPlaceholders($text, $events[$key]) : [];
+                    if ($unknown !== []) {
+                        $validator->errors()->add("notifications.events.{$key}.templates.{$language}.{$part}", __('notifications.settings.unknown_placeholders', [
+                            'names' => implode(', ', array_map(fn (string $name) => '{'.$name.'}', $unknown)),
+                        ]));
+                    }
+                }
+            }
+        }
+        $settings = NotificationSettings::normalize(NotificationSettings::merge((array) ($this->tenantContext()->get()->settings['notifications'] ?? []), $change));
+        if ($settings['enabled'] && $settings['channels'] === []) {
+            $validator->errors()->add('notifications.channels', __('notifications.settings.channel_needed'));
+        }
     }
 
     private function tenantContext(): TenantContext

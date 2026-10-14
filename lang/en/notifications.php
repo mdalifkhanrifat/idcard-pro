@@ -1,0 +1,45 @@
+<?php
+
+return [
+
+    'channels' => [
+        'mail' => 'E-mail',
+        'sms' => 'SMS',
+    ],
+
+    // Values a message's text may use: {holder.name} and so on
+    'placeholders' => [
+        'organization.name' => 'Organization name',
+        'holder.name' => 'Card holder\'s name',
+        'holder.employee_no' => 'Employee no',
+        'card.number' => 'Card number',
+        'card.template' => 'Card template',
+        'card.issue_date' => 'Issue date',
+        'card.expiry_date' => 'Expiry date',
+        'card.days_left' => 'Days until expiry',
+    ],
+
+    // Each event: its name and description for the settings, and its default texts
+    'events' => [
+        'card_ready' => [
+            'name' => 'Card ready',
+            'description' => 'A card was issued and can be collected.',
+            'subject' => 'Your ID card {card.number} is ready',
+            'body' => "Dear {holder.name},\n\nYour ID card {card.number} from {organization.name} is ready. It is valid until {card.expiry_date}.\n\nThank you.",
+            'sms' => '{organization.name}: your ID card {card.number} is ready. Valid until {card.expiry_date}.',
+        ],
+        'card_expiring' => [
+            'name' => 'Card expiring',
+            'description' => 'A card\'s last day is near: time to renew it.',
+            'subject' => 'Your ID card {card.number} expires on {card.expiry_date}',
+            'body' => "Dear {holder.name},\n\nYour ID card {card.number} from {organization.name} expires on {card.expiry_date} ({card.days_left} days from today). Please arrange its renewal in time.\n\nThank you.",
+            'sms' => '{organization.name}: your ID card {card.number} expires on {card.expiry_date}. Please arrange its renewal.',
+        ],
+    ],
+
+    'settings' => [
+        'unknown_placeholders' => 'This text uses :names, which this message does not offer. Pick from the listed values.',
+        'channel_needed' => 'Choose at least one channel to send messages on.',
+    ],
+
+];

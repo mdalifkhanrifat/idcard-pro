@@ -11,6 +11,7 @@ use App\Repositories\Contracts\TenantRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Services\Biometrics\BiometricSettings;
 use App\Services\MasterData\MasterDataService;
+use App\Services\Notifications\NotificationSettings;
 use App\Support\Permissions\PermissionRegistry;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -136,6 +137,12 @@ class TenantService
                 'log_checks' => (bool) ($verification['log_checks'] ?? true),
             ]];
             unset($data['verification']);
+        }
+
+        if (array_key_exists('notifications', $data)) {
+            $current = (array) ($tenant->settings['notifications'] ?? []);
+            $data['settings'] = [...($data['settings'] ?? $tenant->settings ?? []), 'notifications' => NotificationSettings::normalize(NotificationSettings::merge($current, (array) $data['notifications']))];
+            unset($data['notifications']);
         }
 
         $biometricsChanged = false;
