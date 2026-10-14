@@ -24,6 +24,7 @@ use App\Http\Controllers\Api\V1\CardVerificationController;
 use App\Http\Controllers\Api\V1\CustomFieldController;
 use App\Http\Controllers\Api\V1\FamilyMemberController;
 use App\Http\Controllers\Api\V1\MasterDataController;
+use App\Http\Controllers\Api\V1\NotificationMessageController;
 use App\Http\Controllers\Api\V1\PermissionController;
 use App\Http\Controllers\Api\V1\Platform\TenantController;
 use App\Http\Controllers\Api\V1\QualificationController;
@@ -113,6 +114,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('permissions', [PermissionController::class, 'index'])->name('permissions.index');
             Route::get('audit/activities', [AuditController::class, 'activities'])->name('audit.activities');
             Route::get('audit/logins', [AuditController::class, 'logins'])->name('audit.logins');
+            Route::get('notifications/messages', [NotificationMessageController::class, 'index'])->name('notifications.messages.index');
+            Route::get('notifications/messages/{message}', [NotificationMessageController::class, 'show'])->name('notifications.messages.show');
             Route::get('settings', [TenantSettingsController::class, 'show'])->name('settings.show');
             Route::post('settings', [TenantSettingsController::class, 'update'])->name('settings.update');
             Route::get('settings/card-number-preview', [TenantSettingsController::class, 'cardNumberPreview'])->name('settings.card-number-preview');

@@ -43,6 +43,23 @@ return [
         ],
     ],
 
+    // A message sent by hand to check a channel (not an event of the registry)
+    'test' => [
+        'name' => 'Test message',
+    ],
+
+    // The log of messages: how each went, and why one was not sent
+    'statuses' => [
+        'queued' => 'Waiting',
+        'sent' => 'Sent',
+        'failed' => 'Failed',
+        'skipped' => 'Not sent',
+    ],
+    'reasons' => [
+        'no_address' => 'No address on record',
+        'turned_off' => 'Turned off before it went',
+    ],
+
     'settings' => [
         'unknown_placeholders' => 'This text uses :names, which this message does not offer. Pick from the listed values.',
         'channel_needed' => 'Choose at least one channel to send messages on.',
