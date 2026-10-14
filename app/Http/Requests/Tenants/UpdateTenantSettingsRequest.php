@@ -64,7 +64,8 @@ class UpdateTenantSettingsRequest extends FormRequest
     }
 
     /**
-     * Notifications (5.2): on or off, channels, languages, how long the log is kept, and per event whether it
+     * Notifications (5.2): on or off, channels, languages, whether old messages leave the log and after how
+     * many days, and per event whether it
      * goes out, on which channels and in whose words (an empty text = the event's default). Lists that are
      * missing mean none.
      *
@@ -77,12 +78,13 @@ class UpdateTenantSettingsRequest extends FormRequest
         $days = (array) config('notifications.log_days');
         $length = (array) config('notifications.max_length');
         $rules = [
-            'notifications' => ['sometimes', 'array:enabled,channels,languages,log_days,events'],
+            'notifications' => ['sometimes', 'array:enabled,channels,languages,prune_log,log_days,events'],
             'notifications.enabled' => ['required_with:notifications', 'boolean'],
             'notifications.channels' => ['sometimes', 'array'],
             'notifications.channels.*' => ['distinct', Rule::in($channels)],
             'notifications.languages' => ['sometimes', 'array', 'min:1'],
             'notifications.languages.*' => ['distinct', Rule::in($languages)],
+            'notifications.prune_log' => ['sometimes', 'boolean'],
             'notifications.log_days' => ['sometimes', 'integer', 'between:'.(int) $days['min'].','.(int) $days['max']],
             'notifications.events' => ['sometimes', 'array:'.implode(',', array_keys(NotificationSettings::events()))],
         ];

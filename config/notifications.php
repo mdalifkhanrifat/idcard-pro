@@ -34,14 +34,16 @@ return [
     // Longest texts an organization may write (an SMS of 480 characters is about three Bangla parts)
     'max_length' => ['subject' => 150, 'body' => 5000, 'sms' => 480],
 
-    // Days a sent message stays in the log (each organization chooses within these; pruned daily)
+    // Days a sent message stays in the log when the organization has old messages deleted (within these)
     'log_days' => ['min' => 7, 'max' => 3650],
 
-    // What an organization starts with: off until it turns notifications on
+    // What an organization starts with: off until it turns notifications on; the log is kept for good unless
+    // the organization chooses to have messages older than `log_days` deleted (daily, app:prune-notification-log)
     'defaults' => [
         'enabled' => false,
         'channels' => ['mail'],
         'languages' => ['bn'],
+        'prune_log' => false,
         'log_days' => 365,
     ],
 

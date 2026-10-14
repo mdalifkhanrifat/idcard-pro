@@ -178,9 +178,10 @@ class Tenant extends Model
 
     /**
      * Notification settings (5.2), complete with the configured defaults: whether messages go out, on which
-     * channels, in which languages, how long the log is kept, and each event's channels and own texts.
+     * channels, in which languages, whether (and after how many days) old messages leave the log, and each
+     * event's channels and own texts.
      *
-     * @return array{enabled: bool, channels: array<int, string>, languages: array<int, string>, log_days: int, events: array<string, array{enabled: bool, channels: array<int, string>, templates: array<string, array{subject: string|null, body: string|null, sms: string|null}>}>}
+     * @return array{enabled: bool, channels: array<int, string>, languages: array<int, string>, prune_log: bool, log_days: int, events: array<string, array{enabled: bool, channels: array<int, string>, templates: array<string, array{subject: string|null, body: string|null, sms: string|null}>}>}
      */
     public function notificationSettings(): array
     {

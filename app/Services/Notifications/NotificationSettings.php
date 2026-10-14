@@ -69,7 +69,7 @@ class NotificationSettings
 
     /**
      * @param  array<string, mixed>  $saved
-     * @return array{enabled: bool, channels: array<int, string>, languages: array<int, string>, log_days: int, events: array<string, array{enabled: bool, channels: array<int, string>, templates: array<string, array{subject: string|null, body: string|null, sms: string|null}>}>}
+     * @return array{enabled: bool, channels: array<int, string>, languages: array<int, string>, prune_log: bool, log_days: int, events: array<string, array{enabled: bool, channels: array<int, string>, templates: array<string, array{subject: string|null, body: string|null, sms: string|null}>}>}
      */
     public static function normalize(array $saved): array
     {
@@ -103,6 +103,8 @@ class NotificationSettings
             'channels' => $list($saved['channels'] ?? null, $channels, (array) $defaults['channels']),
             // In the organization's order; at least one
             'languages' => $chosenLanguages !== [] ? $chosenLanguages : [$languages[0] ?? 'en'],
+            // Old messages are deleted only when the organization chose so; the days are kept either way
+            'prune_log' => (bool) ($saved['prune_log'] ?? $defaults['prune_log']),
             'log_days' => max((int) $days['min'], min((int) $days['max'], (int) ($saved['log_days'] ?? $defaults['log_days']))),
             'events' => $events,
         ];

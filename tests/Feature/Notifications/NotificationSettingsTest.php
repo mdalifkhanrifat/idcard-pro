@@ -24,7 +24,8 @@ beforeEach(function () {
 it('keeps notifications off until the organization turns them on, and offers every event with its values and default texts', function () {
     $response = $this->getJson('/api/v1/settings')->assertOk();
 
-    expect($response->json('data.notifications'))->toMatchArray(['enabled' => false, 'channels' => ['mail'], 'languages' => ['bn'], 'log_days' => 365])
+    // The log is kept for good unless the organization chooses to have old messages deleted
+    expect($response->json('data.notifications'))->toMatchArray(['enabled' => false, 'channels' => ['mail'], 'languages' => ['bn'], 'prune_log' => false, 'log_days' => 365])
         ->and($response->json('data.notifications.events.card_ready'))->toBe([
             'enabled' => false, 'channels' => ['mail', 'sms'],
             'templates' => ['bn' => ['subject' => null, 'body' => null, 'sms' => null], 'en' => ['subject' => null, 'body' => null, 'sms' => null]],
@@ -67,6 +68,21 @@ it('saves the organization\'s choices and its own texts, one event without touch
         'settings.notifications.events.card_ready.templates.bn.sms' => '{holder.name}, কার্ড {card.number} নিন।',
     ])->and($changes['old'])->toMatchArray(['settings.notifications.enabled' => false, 'settings.notifications.log_days' => 365])
         ->and($changes['attributes'])->not->toHaveKey('settings.notifications.events.card_expiring.enabled');
+});
+
+it('deletes old messages only when the organization chooses so, keeping its number of days either way', function () {
+    ($this->save)(['enabled' => '0', 'prune_log' => '1', 'log_days' => '90'])->assertOk()
+        ->assertJsonPath('data.notifications.prune_log', true)
+        ->assertJsonPath('data.notifications.log_days', 90);
+    // Turned off again: kept for good, the 90 days remembered for the next time
+    ($this->save)(['enabled' => '0', 'prune_log' => '0'])->assertOk()
+        ->assertJsonPath('data.notifications.prune_log', false)
+        ->assertJsonPath('data.notifications.log_days', 90);
+    ($this->save)(['enabled' => '0', 'prune_log' => 'sometimes'])->assertJsonValidationErrors('notifications.prune_log');
+
+    expect($this->getJson('/api/v1/audit/activities?filter[log_name]=tenant')->json('data.0.changes'))->toMatchArray([
+        'attributes' => ['settings.notifications.prune_log' => false], 'old' => ['settings.notifications.prune_log' => true],
+    ]);
 });
 
 it('refuses texts with values the message does not offer, unknown choices, and sending on no channel', function () {
