@@ -1617,7 +1617,14 @@
             "on": "On",
             "off": "Off",
             "ownTexts": "Own text",
-            "defaultTexts": "Default text"
+            "defaultTexts": "Default text",
+            "send": "Send on this event",
+            "channels": "Channels",
+            "offInOrganization": "off for the organization",
+            "noChannel": "Turned on, but none of its channels is on for the organization: nothing would be sent. Tick a channel the organization uses.",
+            "textErrors": "Its texts have a mistake: open the texts to see it.",
+            "edit": "Edit texts",
+            "view": "View texts"
         },
         "general": {
             "title": "General",
@@ -1642,6 +1649,35 @@
             "leaveConfirm": "Leave without saving?",
             "leaveHint": "Your changes to the notification settings will be lost.",
             "leave": "Leave"
+        },
+        "editor": {
+            "parts": {
+                "subject": "E-mail subject",
+                "body": "E-mail text",
+                "sms": "SMS"
+            },
+            "off": "not used",
+            "notInOrganization": "The organization does not send in this language now. Its texts are kept and go out once the language is turned on.",
+            "insert": "Insert a value",
+            "insertHint": "Goes where the cursor is in: {part}.",
+            "reset": "Back to the default",
+            "startFromDefault": "Start from the default text",
+            "own": "The organization's own text",
+            "default": "Empty: the default text (shown greyed) goes",
+            "unknown": "Not a value of this message: {names}",
+            "smsCount": "{length} characters · {parts} SMS",
+            "encoding": {
+                "gsm7": "plain (160 a part)",
+                "unicode": "Unicode (70 a part)"
+            },
+            "preview": "Preview",
+            "previewHint": "As it will go: the organization's languages in order, with made-up values.",
+            "previewLanguage": "This language alone, with made-up values.",
+            "mail": "E-mail",
+            "sms": "SMS",
+            "samples": "Sample values are made up (no real person's details); dates and numbers are written as in a real message.",
+            "fixUnknown": "Fix the values marked red first.",
+            "apply": "Apply"
         }
     }
 }

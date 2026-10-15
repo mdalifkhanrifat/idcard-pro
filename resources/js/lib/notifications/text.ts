@@ -74,3 +74,27 @@ export function smsParts(text: string): SmsParts {
 
     return { encoding, length, parts, perPart: limits.multi, remaining: limits.multi - used };
 }
+
+export interface MessageWords {
+    subject: string;
+    body: string;
+    sms: string;
+}
+
+/**
+ * A message as it will go, like the server's NotificationComposer: each language's texts with that language's
+ * values filled in and trimmed, in the given order, joined by the separators; the SMS only in its languages.
+ */
+export function composeMessage(
+    textsIn: Record<string, MessageWords>,
+    valuesIn: Record<string, Record<string, string>>,
+    languages: readonly string[],
+    smsLanguages: readonly string[],
+    separators: MessageWords,
+): MessageWords {
+    const parts = (part: keyof MessageWords, inLanguages: readonly string[]) =>
+        inLanguages.map((language) => fillPlaceholders(textsIn[language]?.[part] ?? '', valuesIn[language] ?? {}).trim()).join(separators[part]);
+
+    // Always in the message's order: the SMS languages are those of its languages it keeps
+    return { subject: parts('subject', languages), body: parts('body', languages), sms: parts('sms', languages.filter((language) => smsLanguages.includes(language))) };
+}

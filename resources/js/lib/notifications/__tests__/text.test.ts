@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { fillPlaceholders, smsParts, unknownPlaceholders } from '../text';
+import { composeMessage, fillPlaceholders, smsParts, unknownPlaceholders } from '../text';
 
 describe('fillPlaceholders', () => {
     it('fills known placeholders and leaves unknown ones as written, like the server', () => {
@@ -44,5 +44,27 @@ describe('smsParts', () => {
         // An emoji takes two units and is not split
         expect(smsParts(`${'a'.repeat(66)}😀`)).toMatchObject({ encoding: 'unicode', length: 68, parts: 1 });
         expect(smsParts(`${'a'.repeat(66)}😀${'a'.repeat(3)}`)).toMatchObject({ length: 71, parts: 2, remaining: 67 - 5 });
+    });
+});
+
+describe('composeMessage', () => {
+    const texts = {
+        bn: { subject: 'কার্ড {card.number}', body: ' প্রিয় {holder.name} ', sms: '{holder.name}, কার্ড নিন।' },
+        en: { subject: 'Card {card.number}', body: 'Dear {holder.name}', sms: '{holder.name}, collect it.' },
+    };
+    const values = { bn: { 'holder.name': 'রহিম', 'card.number': 'E/১' }, en: { 'holder.name': 'Rahim', 'card.number': 'E/1' } };
+    const separators = { subject: ' / ', body: '\n\n— — —\n\n', sms: '\n' };
+
+    it('joins each language in the organization\'s order, filled with that language\'s values and trimmed', () => {
+        expect(composeMessage(texts, values, ['en', 'bn'], ['en', 'bn'], separators)).toEqual({
+            subject: 'Card E/1 / কার্ড E/১',
+            body: 'Dear Rahim\n\n— — —\n\nপ্রিয় রহিম',
+            sms: 'Rahim, collect it.\nরহিম, কার্ড নিন।',
+        });
+    });
+
+    it('writes the SMS only in its languages, and only languages the message has', () => {
+        expect(composeMessage(texts, values, ['bn', 'en'], ['bn'], separators).sms).toBe('রহিম, কার্ড নিন।');
+        expect(composeMessage(texts, values, ['bn'], ['bn', 'en'], separators)).toEqual({ subject: 'কার্ড E/১', body: 'প্রিয় রহিম', sms: 'রহিম, কার্ড নিন।' });
     });
 });

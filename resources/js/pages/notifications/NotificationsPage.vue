@@ -3,14 +3,14 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
 import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { Eye } from 'lucide-vue-next';
-import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiCard from '@/components/ui/UiCard.vue';
 import UiEmpty from '@/components/ui/UiEmpty.vue';
 import UiPageHeader from '@/components/ui/UiPageHeader.vue';
 import { useConfirm } from '@/composables/useConfirm';
 import { toApiError } from '@/lib/http';
-import { fetchNotificationSettings, labelsOf, saveNotificationSettings, type NotificationSettings, type NotificationSettingsResponse } from '@/lib/notifications/api';
+import { fetchNotificationSettings, saveNotificationSettings, type NotificationSettings, type NotificationSettingsResponse } from '@/lib/notifications/api';
+import NotificationEventsCard from '@/pages/notifications/NotificationEventsCard.vue';
 import NotificationGeneralCard from '@/pages/notifications/NotificationGeneralCard.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
@@ -101,28 +101,6 @@ function warnOnUnload(event: BeforeUnloadEvent): void {
 }
 window.addEventListener('beforeunload', warnOnUnload);
 onBeforeUnmount(() => window.removeEventListener('beforeunload', warnOnUnload));
-
-/** Every event of the registry, as being set on the page. */
-const events = computed(() => {
-    const current = data.value;
-    if (!current || !draft.value) {
-        return [];
-    }
-
-    return Object.entries(current.options.events).map(([key, option]) => {
-        const settings = draft.value?.events[key];
-        const templates = Object.values(settings?.templates ?? {});
-
-        return {
-            key,
-            name: option.name,
-            description: option.description,
-            enabled: !!settings?.enabled,
-            channels: labelsOf(settings?.channels ?? [], current.options.labels.channels),
-            ownTexts: templates.some((texts) => Object.values(texts).some((text) => text !== null)),
-        };
-    });
-});
 </script>
 
 <template>
@@ -133,14 +111,14 @@ const events = computed(() => {
             <Eye class="mt-0.5 size-4 shrink-0" />{{ t('notifications.readOnly') }}
         </p>
 
-        <div v-if="TABS.length > 1" role="tablist" class="mb-6 flex gap-1 overflow-x-auto border-b border-line">
+        <div v-if="TABS.length > 1" role="tablist" class="mb-6 flex gap-1 overflow-x-auto shadow-[inset_0_-1px_0_var(--color-line)]">
             <button
                 v-for="key in TABS"
                 :key="key"
                 type="button"
                 role="tab"
                 :aria-selected="tab === key"
-                class="-mb-px border-b-2 px-3 py-2 text-sm whitespace-nowrap"
+                class="border-b-2 px-3 py-2 text-sm whitespace-nowrap"
                 :class="tab === key ? 'border-brand-ink font-medium text-brand-ink' : 'border-transparent text-muted hover:text-fg'"
                 @click="tab = key"
             >
@@ -158,21 +136,7 @@ const events = computed(() => {
         <div v-else-if="data && draft && tab === 'settings'" class="space-y-6" :class="dirty && canEdit && 'pb-20'" data-tab="settings">
             <NotificationGeneralCard v-model="draft" :options="data.options" :errors="errors" :disabled="!canEdit || saving" />
 
-            <UiCard :title="t('notifications.events.title')" :description="t('notifications.events.description')" :padded="false">
-                <ul class="divide-y divide-line">
-                    <li v-for="event in events" :key="event.key" class="flex flex-col gap-2 px-5 py-4 sm:flex-row sm:items-start sm:justify-between" :data-event="event.key">
-                        <div class="min-w-0">
-                            <p class="font-medium text-fg">{{ event.name }}</p>
-                            <p class="mt-0.5 text-sm text-muted">{{ event.description }}</p>
-                            <p v-if="event.channels.length" class="mt-1 text-xs text-muted">{{ event.channels.join(', ') }}</p>
-                        </div>
-                        <div class="flex shrink-0 flex-wrap gap-1.5">
-                            <UiBadge :tone="event.enabled ? 'success' : 'neutral'">{{ event.enabled ? t('notifications.events.on') : t('notifications.events.off') }}</UiBadge>
-                            <UiBadge :tone="event.ownTexts ? 'brand' : 'neutral'">{{ event.ownTexts ? t('notifications.events.ownTexts') : t('notifications.events.defaultTexts') }}</UiBadge>
-                        </div>
-                    </li>
-                </ul>
-            </UiCard>
+            <NotificationEventsCard v-model="draft" :options="data.options" :samples="data.samples" :errors="errors" :disabled="!canEdit || saving" />
         </div>
 
         <!-- Stays at the bottom while there are unsaved changes -->
