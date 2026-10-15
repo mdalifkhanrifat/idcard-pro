@@ -111,6 +111,39 @@ class NotificationSettings
     }
 
     /**
+     * What this installation can send and about what, for a settings form, named in the reader's language: the
+     * channels and languages (keys, with their names under `labels`), limits, and every event with the
+     * placeholders its texts may use (named), its default channels and its default texts in every language.
+     *
+     * @return array<string, mixed>
+     */
+    public static function options(): array
+    {
+        $languages = self::languages();
+
+        return [
+            'channels' => self::channels(),
+            'languages' => $languages,
+            'labels' => [
+                'channels' => collect(self::channels())->mapWithKeys(fn (string $key): array => [$key => NotificationLogService::label('channels', $key)])->all(),
+                'languages' => collect($languages)->mapWithKeys(fn (string $key): array => [$key => NotificationLogService::label('languages', $key)])->all(),
+            ],
+            'log_days' => config('notifications.log_days'),
+            'max_length' => config('notifications.max_length'),
+            'events' => collect(self::events())->map(fn (NotificationEvent $event, string $key): array => [
+                'name' => (string) __("notifications.events.{$key}.name"),
+                'description' => (string) __("notifications.events.{$key}.description"),
+                // Read as a list: placeholder names hold dots, which __() would take as nesting
+                'placeholders' => array_map(fn (string $placeholder): array => ['key' => $placeholder, 'label' => (string) (((array) __('notifications.placeholders'))[$placeholder] ?? $placeholder)], $event->placeholders()),
+                'default_channels' => $event->defaultChannels(),
+                'default_templates' => collect($languages)->mapWithKeys(fn (string $language): array => [$language => collect(self::PARTS)->mapWithKeys(
+                    fn (string $part): array => [$part => (string) __("notifications.events.{$key}.{$part}", locale: $language)],
+                )->all()])->all(),
+            ])->all(),
+        ];
+    }
+
+    /**
      * Placeholders a text uses that its event does not offer (e.g. a misspelt {card.numbr}).
      *
      * @return array<int, string>

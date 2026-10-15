@@ -7,6 +7,12 @@ return [
         'sms' => 'SMS',
     ],
 
+    // Languages a message can be written in (config notifications.languages)
+    'languages' => [
+        'bn' => 'Bangla (বাংলা)',
+        'en' => 'English',
+    ],
+
     // Values a message's text may use: {holder.name} and so on
     'placeholders' => [
         'organization.name' => 'Organization name',

@@ -7,6 +7,12 @@ return [
         'sms' => 'এসএমএস',
     ],
 
+    // বার্তা যেসব ভাষায় লেখা যায় (config notifications.languages)
+    'languages' => [
+        'bn' => 'বাংলা',
+        'en' => 'ইংরেজি (English)',
+    ],
+
     // বার্তার লেখায় যেসব মান বসানো যায়: {holder.name} ইত্যাদি
     'placeholders' => [
         'organization.name' => 'প্রতিষ্ঠানের নাম',
