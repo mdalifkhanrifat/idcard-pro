@@ -84,18 +84,45 @@ export function labelsOf(keys: readonly string[], labels: Record<string, string>
     return keys.map((key) => labels[key] ?? key);
 }
 
-/** A logged message (GET /notifications/messages/{id}), as far as a page showing its progress needs it. */
+/** A name the server gives with its key (an event, channel, status or reason in the reader's language). */
+export interface Named {
+    key: string;
+    name: string;
+}
+
+/** A logged message (NotificationMessageResource): to whom, about what, the words as sent, and how it went. */
 export interface NotificationMessage {
     id: string;
-    channel: { key: string; name: string };
+    event: Named;
+    channel: Named;
     address: string | null;
+    /** Null once the person's record is gone (the address stays). */
+    recipient: { type: 'cardholder' | 'family_member' | 'user'; id: string; name: string; cardholder_id?: string } | null;
+    card: { id: string; number: string } | null;
+    languages: string[];
+    subject: string | null;
+    body: string;
     status: { key: 'queued' | 'sent' | 'failed' | 'skipped'; name: string };
-    reason: { key: string; name: string } | null;
+    reason: Named | null;
     error: string | null;
     attempts: number;
     driver: string | null;
+    provider_id: string | null;
+    /** Who sent it by hand; null = the system on an event. */
+    sent_by: { id: string; name: string } | null;
+    /** The message this one sends again, and the one that sent this one again. */
+    resend_of: string | null;
+    resent_as: string | null;
     created_at: string;
     sent_at: string | null;
+    failed_at: string | null;
+}
+
+/** What the log can be filtered by (GET /notifications/messages → meta), named by the server. */
+export interface NotificationLogOptions {
+    events: Named[];
+    channels: Named[];
+    statuses: Named[];
 }
 
 /** POST /notifications/test (notifications.send): fixed words to the address typed, whatever the settings. */
@@ -108,6 +135,13 @@ export async function sendTestMessage(channel: string, address: string): Promise
 /** GET /notifications/messages/{id} (notifications.view). */
 export async function fetchMessage(id: string): Promise<NotificationMessage> {
     const { data } = await http.get<{ data: NotificationMessage }>(`/notifications/messages/${id}`);
+
+    return data.data;
+}
+
+/** POST /notifications/messages/{id}/resend (notifications.send): a failed or skipped message again, as a new one. */
+export async function resendMessage(id: string): Promise<NotificationMessage> {
+    const { data } = await http.post<{ data: NotificationMessage }>(`/notifications/messages/${id}/resend`);
 
     return data.data;
 }

@@ -1693,6 +1693,45 @@
             "stalled": "Still waiting after 30 seconds: is the queue worker running? It sends the messages.",
             "unseen": "Handed over for sending. Following its progress needs permission to see sent messages.",
             "tooMany": "Too many test messages in a minute. Wait a moment and try again."
+        },
+        "messages": {
+            "searchHint": "Address, subject, name, employee or card number",
+            "status": "Status",
+            "channel": "Channel",
+            "event": "About",
+            "sort": "Order",
+            "sorts": {
+                "newest": "Newest first",
+                "oldest": "Oldest first",
+                "sent": "By sending time"
+            },
+            "refresh": "Refresh",
+            "none": "No messages yet",
+            "noneHint": "Messages appear here once notifications are on and something happens, or a test message is sent.",
+            "wasResent": "sent again later",
+            "isResend": "a resend",
+            "recordGone": "(record deleted)",
+            "details": "Message",
+            "recipient": "To",
+            "recipients": {
+                "cardholder": "Cardholder",
+                "family_member": "Family member",
+                "user": "User"
+            },
+            "card": "Card",
+            "address": "Address",
+            "languages": "Languages",
+            "created": "Logged",
+            "sentAt": "Sent",
+            "failedAt": "Failed",
+            "attempts": "Attempts",
+            "driver": "Sent through",
+            "sentBy": "Sent by",
+            "system": "The system, on the event",
+            "openOriginal": "Open the message this one sent again",
+            "openResent": "Open the message that sent this one again",
+            "resend": "Send again",
+            "resent": "Sent again as a new message."
         }
     }
 }

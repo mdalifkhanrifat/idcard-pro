@@ -12,6 +12,7 @@ import { toApiError } from '@/lib/http';
 import { fetchNotificationSettings, saveNotificationSettings, type NotificationSettings, type NotificationSettingsResponse } from '@/lib/notifications/api';
 import NotificationEventsCard from '@/pages/notifications/NotificationEventsCard.vue';
 import NotificationGeneralCard from '@/pages/notifications/NotificationGeneralCard.vue';
+import NotificationMessageList from '@/pages/notifications/NotificationMessageList.vue';
 import NotificationTestCard from '@/pages/notifications/NotificationTestCard.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
@@ -28,13 +29,15 @@ const canEdit = computed(() => auth.can('settings.update'));
 /** A test message is sent by hand. */
 const canSend = computed(() => auth.can('notifications.send'));
 
-/** The sent messages' tab joins in 5.2f; a single tab draws no tab bar. */
-const TABS = ['settings'] as const;
-type TabKey = (typeof TABS)[number];
-const tabFromUrl = (): TabKey => ((TABS as readonly string[]).includes(String(route.query.tab)) ? (route.query.tab as TabKey) : 'settings');
+/** The sent messages for those who may see them; a single tab draws no tab bar. */
+type TabKey = 'settings' | 'messages';
+const TABS = computed<TabKey[]>(() => ['settings', ...(auth.can('notifications.view') ? (['messages'] as const) : [])]);
+const tabFromUrl = (): TabKey => (TABS.value.includes(route.query.tab as TabKey) ? (route.query.tab as TabKey) : 'settings');
 const tab = ref<TabKey>(tabFromUrl());
-// The tab is in the URL (?tab=), so a link or a reload opens it; the first tab keeps the URL plain
-watch(tab, (value) => router.replace({ query: { ...route.query, tab: value === TABS[0] ? undefined : value } }));
+// The tab is in the URL (?tab=), so a link or a reload opens it; the first tab keeps the URL plain, without the
+// message list's filters
+const listKeys = (key: string) => key.startsWith('f_') || ['page', 'sort', 'per_page'].includes(key);
+watch(tab, (value) => router.replace({ query: { ...Object.fromEntries(Object.entries(route.query).filter(([key]) => value !== 'settings' || !listKeys(key))), tab: value === 'settings' ? undefined : value } }));
 watch(() => route.query.tab, () => (tab.value = tabFromUrl()));
 
 const data = ref<NotificationSettingsResponse | null>(null);
@@ -135,6 +138,8 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warnOnUnload));
                 <UiButton variant="secondary" :loading="loading" @click="load">{{ t('notifications.retry') }}</UiButton>
             </UiEmpty>
         </UiCard>
+
+        <NotificationMessageList v-else-if="data && tab === 'messages'" :language-names="data.options.labels.languages" :class="dirty && canEdit && 'mb-20'" data-tab="messages" />
 
         <div v-else-if="data && draft && tab === 'settings'" class="space-y-6" :class="dirty && canEdit && 'pb-20'" data-tab="settings">
             <NotificationGeneralCard v-model="draft" :options="data.options" :errors="errors" :disabled="!canEdit || saving" />
