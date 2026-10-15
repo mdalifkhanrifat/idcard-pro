@@ -112,8 +112,9 @@ class NotificationSettings
 
     /**
      * What this installation can send and about what, for a settings form, named in the reader's language: the
-     * channels and languages (keys, with their names under `labels`), limits, and every event with the
-     * placeholders its texts may use (named), its default channels and its default texts in every language.
+     * channels and languages (keys, with their names under `labels`), limits, what joins the languages of one
+     * message, and every event with the placeholders its texts may use (named), its default channels and its
+     * default texts in every language.
      *
      * @return array<string, mixed>
      */
@@ -130,6 +131,8 @@ class NotificationSettings
             ],
             'log_days' => config('notifications.log_days'),
             'max_length' => config('notifications.max_length'),
+            // Between the languages of one message, in the organization's order (to preview it whole)
+            'separators' => config('notifications.separators'),
             'events' => collect(self::events())->map(fn (NotificationEvent $event, string $key): array => [
                 'name' => (string) __("notifications.events.{$key}.name"),
                 'description' => (string) __("notifications.events.{$key}.description"),

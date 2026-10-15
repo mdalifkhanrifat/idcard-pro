@@ -3,6 +3,7 @@
 namespace App\Services\Notifications;
 
 use App\Data\Notifications\NotificationRecipient;
+use App\Models\Tenant;
 
 /**
  * Something that happened which people may be told about (config('notifications.events')): the values its
@@ -37,6 +38,15 @@ interface NotificationEvent
      * @return array<string, string>
      */
     public function values(object $subject): array;
+
+    /**
+     * A made-up occurrence for previews of the texts, e.g. a card of an invented holder: built in memory and
+     * never saved, with no real person's details, its names in the current language. Its values are those a
+     * real one would have (the organization's name, today in its days, its card number format).
+     *
+     * @return TSubject
+     */
+    public function sample(Tenant $tenant): object;
 
     /**
      * Whom to tell about this occurrence.

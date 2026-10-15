@@ -26,6 +26,13 @@ return [
         'card.validity' => 'Validity (a sentence; also for cards without an expiry date)',
     ],
 
+    // Made-up details for previews of the texts (never a real person's)
+    'samples' => [
+        'holder_name' => 'Rahim Uddin',
+        'employee_no' => 'EMP-1024',
+        'template' => 'Employee card',
+    ],
+
     'validity' => [
         'until' => 'It is valid until :date.',
         'none' => 'It has no expiry date.',

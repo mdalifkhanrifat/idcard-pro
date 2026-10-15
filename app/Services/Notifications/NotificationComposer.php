@@ -2,6 +2,8 @@
 
 namespace App\Services\Notifications;
 
+use App\Models\Tenant;
+use App\Support\Tenancy\TenantContext;
 use Closure;
 
 /**
@@ -50,6 +52,23 @@ class NotificationComposer
     }
 
     /**
+     * Every event's values for a made-up occurrence (NotificationEvent::sample()) in every language messages can
+     * be written in, written as a real message's would be (that language's digits and dates, the organization's
+     * name, today and card number format), for previews of the texts. Nothing is read from or saved to the
+     * database.
+     *
+     * @return array<string, array<string, array<string, string>>> event => language => placeholder => value
+     */
+    public function samples(Tenant $tenant): array
+    {
+        return app(TenantContext::class)->run($tenant, fn (): array => collect(NotificationSettings::events())->map(
+            fn (NotificationEvent $event): array => collect(NotificationSettings::languages())->mapWithKeys(
+                fn (string $language): array => [$language => $this->inLanguage($language, fn (): array => $event->values($event->sample($tenant)))],
+            )->all(),
+        )->all());
+    }
+
+    /**
      * One message of each language's parts in turn (config('notifications.separators') between them), each
      * language's written with it as the app's language (its digits and dates).
      *
@@ -60,16 +79,10 @@ class NotificationComposer
     private function assemble(array $languages, Closure $partsIn): array
     {
         $parts = ['subject' => [], 'body' => [], 'sms' => []];
-        $previous = app()->getLocale();
-        try {
-            foreach ($languages as $language) {
-                app()->setLocale($language);
-                foreach ($partsIn($language) as $part => $text) {
-                    $parts[$part][] = trim($text);
-                }
+        foreach ($languages as $language) {
+            foreach ($this->inLanguage($language, fn (): array => $partsIn($language)) as $part => $text) {
+                $parts[$part][] = trim($text);
             }
-        } finally {
-            app()->setLocale($previous);
         }
 
         $separators = (array) config('notifications.separators');
@@ -80,5 +93,24 @@ class NotificationComposer
             'body' => implode((string) $separators['body'], $parts['body']),
             'sms' => implode((string) $separators['sms'], $parts['sms']),
         ];
+    }
+
+    /**
+     * Run the callback with the language as the app's (its digits, dates and texts), then go back.
+     *
+     * @template TResult
+     *
+     * @param  Closure(): TResult  $callback
+     * @return TResult
+     */
+    private function inLanguage(string $language, Closure $callback): mixed
+    {
+        $previous = app()->getLocale();
+        app()->setLocale($language);
+        try {
+            return $callback();
+        } finally {
+            app()->setLocale($previous);
+        }
     }
 }

@@ -2,6 +2,7 @@
 
 use App\Data\Notifications\NotificationRecipient;
 use App\Models\Card;
+use App\Models\Tenant;
 use App\Services\Notifications\Events\CardExpiringEvent;
 use App\Services\Notifications\NotificationEvent;
 use App\Services\Notifications\NotificationSettings;
@@ -124,7 +125,12 @@ it('takes a new event from the registry alone: settings, rules and options follo
 
         public function values(object $subject): array
         {
-            return ['holder.name' => 'X'];
+            return ['holder.name' => $subject->name ?? 'X'];
+        }
+
+        public function sample(Tenant $tenant): object
+        {
+            return (object) ['name' => __('notifications.channels.sms').' '.$tenant->name];
         }
 
         public function recipient(object $subject): NotificationRecipient
@@ -143,6 +149,9 @@ it('takes a new event from the registry alone: settings, rules and options follo
     $this->getJson('/api/v1/settings')
         ->assertJsonPath('data.notifications.events.badge_lost.channels', ['sms'])
         ->assertJsonPath('data.notification_options.events.badge_lost.placeholders', [['key' => 'holder.name', 'label' => 'Card holder\'s name']]);
+    // Its sample comes by itself, in every language
+    $this->getJson('/api/v1/notifications/settings')
+        ->assertJsonPath('data.samples.badge_lost', ['bn' => ['holder.name' => 'এসএমএস Acme'], 'en' => ['holder.name' => 'SMS Acme']]);
     ($this->save)(['enabled' => '1', 'channels' => ['sms'], 'events' => ['badge_lost' => ['enabled' => '1', 'channels' => ['sms'], 'templates' => ['en' => ['sms' => '{holder.name} {card.number}']]]]])
         ->assertJsonValidationErrors('notifications.events.badge_lost.templates.en.sms');
 });

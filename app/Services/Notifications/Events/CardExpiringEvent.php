@@ -4,6 +4,7 @@ namespace App\Services\Notifications\Events;
 
 use App\Data\Notifications\NotificationRecipient;
 use App\Models\Card;
+use App\Models\Tenant;
 use App\Services\Notifications\NotificationEvent;
 use App\Services\Reports\ReportValueText;
 use App\Support\Tenancy\TenantContext;
@@ -46,6 +47,16 @@ class CardExpiringEvent implements NotificationEvent
             ...$this->cardValues($subject),
             'card.days_left' => $daysLeft === null ? '' : app(ReportValueText::class)->number($daysLeft),
         ];
+    }
+
+    /**
+     * A five-year card with 30 days left.
+     */
+    public function sample(Tenant $tenant): Card
+    {
+        $expires = app(TenantContext::class)->today()->addDays(30);
+
+        return $this->sampleCard($tenant, $expires->subYears(5)->addDay(), $expires);
     }
 
     /**

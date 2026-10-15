@@ -1,12 +1,18 @@
 <?php
 
+use App\Models\Card;
+use App\Models\Cardholder;
 use App\Services\Notifications\Channels\MailChannel;
+use App\Services\Notifications\NotificationComposer;
+use Illuminate\Support\Facades\Date;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\Sanctum;
 
 /*
 | The notification settings on their own (5.2e-1): GET /notifications/settings (notifications.view or
 | settings.update) and PUT (settings.update) with {notifications: {...}} — checked and saved exactly as in the
-| organization's settings, the rest of them untouched, every change in the audit log.
+| organization's settings, the rest of them untouched, every change in the audit log. With them each event's
+| values for a made-up occurrence in every language (5.2e-2), for previews of the texts.
 */
 
 beforeEach(function () {
@@ -93,4 +99,52 @@ it('checks them as the organization\'s settings do, in the reader\'s language', 
         ->assertJsonPath('errors', ['notifications.events.card_ready.templates.bn.sms' => ['এই লেখায় {x} আছে, যা এই বার্তায় বসানো যায় না। তালিকার মান থেকে বেছে নিন।']]);
 
     expect($this->tenant->fresh()->notificationSettings()['enabled'])->toBeFalse();
+});
+
+it('gives each event\'s values for a made-up card in every language, as a real message would write them', function () {
+    Sanctum::actingAs($this->owner);
+    $this->tenant->update(['timezone' => 'Asia/Dhaka']);
+    $this->owner->unsetRelation('tenant');
+    // 00:30 on 4 February in Dhaka is still 3 February in UTC: the sample card is issued on the 4th
+    Date::setTestNow('2026-02-03 18:30:00');
+
+    $response = $this->getJson('/api/v1/notifications/settings')->assertOk()
+        ->assertJsonPath('data.options.separators', config('notifications.separators'));
+
+    expect($response->json('data.samples.card_ready.en'))->toBe([
+        'organization.name' => 'Acme', 'holder.name' => 'Rahim Uddin', 'holder.employee_no' => 'EMP-1024',
+        'card.number' => 'EMP/26000123', 'card.template' => 'Employee card', 'card.issue_date' => '04/02/2026',
+        'card.expiry_date' => '03/02/2031', 'card.validity' => 'It is valid until 03/02/2031.',
+    ])->and($response->json('data.samples.card_ready.bn'))->toMatchArray([
+        'holder.name' => 'রহিম উদ্দিন', 'holder.employee_no' => 'EMP-১০২৪', 'card.number' => 'EMP/26000123',
+        'card.template' => 'কর্মী কার্ড', 'card.issue_date' => '০৪/০২/২০২৬', 'card.validity' => 'কার্ডটি ০৩/০২/২০৩১ পর্যন্ত বৈধ।',
+    ])->and($response->json('data.samples.card_expiring.en'))->toMatchArray(['card.expiry_date' => '06/03/2026', 'card.days_left' => '30'])
+        ->and($response->json('data.samples.card_expiring.bn'))->toMatchArray(['card.expiry_date' => '০৬/০৩/২০২৬', 'card.days_left' => '৩০'])
+        // Every placeholder an event offers has a sample value, in every language
+        ->and(array_keys($response->json('data.samples.card_expiring.bn')))->toBe(array_column($response->json('data.options.events.card_expiring.placeholders'), 'key'))
+        // Still the reader's language afterwards
+        ->and($response->json('data.options.events.card_ready.name'))->toBe('Card ready');
+
+    // The organization's own card number format
+    $this->tenant->update(['settings' => ['card_number_format' => '{YYYY}-{CODE}-{SEQ:4}']]);
+    $this->owner->unsetRelation('tenant');
+    // (placeholder names hold dots, so read as a list)
+    expect($this->getJson('/api/v1/notifications/settings')->json('data.samples.card_ready.en')['card.number'])->toBe('2026-EMP-0123');
+    Date::setTestNow();
+});
+
+it('makes the samples up in memory: nothing is read from or saved to the database', function () {
+    $queries = 0;
+    DB::listen(function () use (&$queries) {
+        $queries++;
+    });
+
+    $samples = app(NotificationComposer::class)->samples($this->tenant);
+
+    expect($queries)->toBe(0)
+        ->and(array_keys($samples))->toBe(['card_ready', 'card_expiring'])
+        ->and(array_keys($samples['card_ready']))->toBe(['bn', 'en'])
+        ->and(Card::query()->withoutGlobalScopes()->count())->toBe(0)
+        ->and(Cardholder::query()->withoutGlobalScopes()->count())->toBe(0)
+        ->and(app()->getLocale())->toBe('en');
 });

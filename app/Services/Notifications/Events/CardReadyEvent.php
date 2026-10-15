@@ -4,7 +4,9 @@ namespace App\Services\Notifications\Events;
 
 use App\Data\Notifications\NotificationRecipient;
 use App\Models\Card;
+use App\Models\Tenant;
 use App\Services\Notifications\NotificationEvent;
+use App\Support\Tenancy\TenantContext;
 
 /**
  * A card was issued and can be collected.
@@ -35,8 +37,17 @@ class CardReadyEvent implements NotificationEvent
      */
     public function values(object $subject): array
     {
-
         return $this->cardValues($subject);
+    }
+
+    /**
+     * A card issued today, valid for five years.
+     */
+    public function sample(Tenant $tenant): Card
+    {
+        $today = app(TenantContext::class)->today();
+
+        return $this->sampleCard($tenant, $today, $today->addYears(5)->subDay());
     }
 
     /**
