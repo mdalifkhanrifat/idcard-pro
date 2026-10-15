@@ -4,6 +4,7 @@ use App\Models\Card;
 use App\Models\Cardholder;
 use App\Services\Notifications\Channels\MailChannel;
 use App\Services\Notifications\NotificationComposer;
+use App\Services\Notifications\NotificationSettings;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\Sanctum;
@@ -147,4 +148,20 @@ it('makes the samples up in memory: nothing is read from or saved to the databas
         ->and(Card::query()->withoutGlobalScopes()->count())->toBe(0)
         ->and(Cardholder::query()->withoutGlobalScopes()->count())->toBe(0)
         ->and(app()->getLocale())->toBe('en');
+});
+
+it('keeps each default SMS to one part with the sample values, in every language', function () {
+    Sanctum::actingAs($this->owner);
+    $this->tenant->update(['name' => 'Acme Corporation']);
+    $this->owner->unsetRelation('tenant');
+    $data = $this->getJson('/api/v1/notifications/settings')->json('data');
+
+    foreach ($data['samples'] as $event => $languages) {
+        foreach ($languages as $language => $values) {
+            $sms = NotificationSettings::fill($data['options']['events'][$event]['default_templates'][$language]['sms'], $values);
+            // Plain ASCII goes as GSM-7 (160 a part), anything else as Unicode (70 UTF-16 units a part)
+            $oneSms = preg_match('/^[\x20-\x7E]*$/', $sms) === 1 ? strlen($sms) <= 160 : strlen((string) mb_convert_encoding($sms, 'UTF-16LE', 'UTF-8')) / 2 <= 70;
+            expect($oneSms)->toBeTrue("{$event} ({$language}) takes more than one SMS: {$sms}");
+        }
+    }
 });

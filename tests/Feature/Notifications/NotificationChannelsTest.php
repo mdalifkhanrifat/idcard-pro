@@ -34,7 +34,7 @@ it('writes the message in the organization\'s languages only, in its order, its 
     $bangla = ($this->compose)([]);
     expect($bangla['languages'])->toBe(['bn'])
         ->and($bangla['subject'])->toBe("আপনার আইডি কার্ড {$number} তৈরি হয়েছে")
-        ->and($bangla['sms'])->toBe("Acme Ltd: আপনার আইডি কার্ড {$number} তৈরি হয়েছে। কার্ডটি ০৪/০১/২০২৮ পর্যন্ত বৈধ।")
+        ->and($bangla['sms'])->toBe("Acme Ltd: আপনার কার্ড {$number} তৈরি, সংগ্রহ করুন।")
         ->and($bangla['body'])->toStartWith('প্রিয় Jane Doe,')->not->toContain('Dear');
 
     // English only
