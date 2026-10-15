@@ -118,6 +118,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('notifications/messages/{message}', [NotificationMessageController::class, 'show'])->name('notifications.messages.show');
             Route::post('notifications/messages/{message}/resend', [NotificationMessageController::class, 'resend'])
                 ->middleware('throttle:'.(int) config('notifications.manual.resend_per_minute').',1')->name('notifications.messages.resend');
+            Route::post('notifications/test', [NotificationMessageController::class, 'sendTest'])
+                ->middleware('throttle:'.(int) config('notifications.manual.test_per_minute').',1')->name('notifications.test');
             Route::get('settings', [TenantSettingsController::class, 'show'])->name('settings.show');
             Route::post('settings', [TenantSettingsController::class, 'update'])->name('settings.update');
             Route::get('settings/card-number-preview', [TenantSettingsController::class, 'cardNumberPreview'])->name('settings.card-number-preview');

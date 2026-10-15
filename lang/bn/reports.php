@@ -365,6 +365,7 @@ return [
             'exported' => 'ডাউনলোড (রপ্তানি)',
             'pruned' => 'পুরনো সারি মোছা',
             'resent' => 'আবার পাঠানো',
+            'test_sent' => 'পরীক্ষার বার্তা',
         ],
     ],
     // The master data lists (config master_data.types), named as the master data page names them

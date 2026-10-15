@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Notifications\ListNotificationMessagesRequest;
+use App\Http\Requests\Notifications\SendTestNotificationRequest;
 use App\Http\Resources\NotificationMessageResource;
 use App\Models\NotificationMessage;
 use App\Services\Notifications\NotificationLogService;
@@ -46,5 +47,16 @@ class NotificationMessageController extends Controller
         $resent = $notifications->resend($message, $request->user());
 
         return (new NotificationMessageResource($this->log->details($resent)))->response()->setStatusCode(201);
+    }
+
+    /**
+     * Send a test message on a channel (`channel`) to `address` (default: the sender's own): 201 with the new
+     * message, whose status can then be followed with show().
+     */
+    public function sendTest(SendTestNotificationRequest $request, NotificationService $notifications): JsonResponse
+    {
+        $message = $notifications->sendTest($request->user(), (string) $request->validated('channel'), (string) $request->validated('address'));
+
+        return (new NotificationMessageResource($this->log->details($message)))->response()->setStatusCode(201);
     }
 }

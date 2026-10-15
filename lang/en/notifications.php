@@ -46,6 +46,15 @@ return [
     // A message sent by hand to check a channel (not an event of the registry)
     'test' => [
         'name' => 'Test message',
+        'subject' => '{organization.name}: test message',
+        'body' => "This is a test message from {organization.name}.\n\nIt reached you, so messages on this channel are getting through. No reply is needed.",
+        'sms' => '{organization.name}: this is a test message. Messages on this channel are getting through.',
+        'address_needed' => 'Type the address to send the test message to; your own profile has none for this channel.',
+    ],
+
+    // A typed address that does not look like its kind (config notifications.addresses, checked by pattern)
+    'addresses' => [
+        'phone' => 'Type a phone number: 6 to 15 digits, optionally starting with +.',
     ],
 
     // The log of messages: how each went, and why one was not sent

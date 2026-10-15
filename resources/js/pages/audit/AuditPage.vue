@@ -115,6 +115,9 @@ const loginReportQuery = computed(() => Object.fromEntries(Object.entries(logins
                             <p v-if="row.event === 'resent' && row.changes?.address" class="break-words text-xs text-muted" data-audit-resent>
                                 {{ t('audit.resentDetail', { address: row.changes.address }) }}
                             </p>
+                            <p v-if="row.event === 'test_sent' && row.changes?.address" class="break-words text-xs text-muted" data-audit-test-sent>
+                                {{ t('audit.testSentDetail', { address: row.changes.address }) }}
+                            </p>
                             <p v-if="row.changes?.reason" class="text-xs text-muted" data-audit-reason>
                                 <template v-if="row.changes.moment && te(`audit.moments.${row.changes.moment}`)">{{ t(`audit.moments.${row.changes.moment}`) }} · </template>{{ t('audit.reason', { reason: row.changes.reason }) }}
                             </p>

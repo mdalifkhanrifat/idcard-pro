@@ -219,7 +219,8 @@
             "requirements_overridden": "Requirement overridden",
             "exported": "Downloaded",
             "pruned": "Old entries deleted",
-            "resent": "Sent again"
+            "resent": "Sent again",
+            "test_sent": "Test message"
         },
         "reason": "Reason: {reason}",
         "exportDetail": "{report} · {format} · {rows} rows",
@@ -230,7 +231,8 @@
         "printed": "print",
         "system": "System",
         "prunedDetail": "{messages} messages older than {days} days deleted (as the organization chose)",
-        "resentDetail": "Message sent again to {address}"
+        "resentDetail": "Message sent again to {address}",
+        "testSentDetail": "Test message sent to {address}"
     },
     "settings": {
         "title": "Organization",

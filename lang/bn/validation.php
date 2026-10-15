@@ -181,6 +181,8 @@ return [
         'filter.status' => 'অবস্থা',
         'filter.date_from' => 'তারিখ (থেকে)',
         'filter.date_to' => 'তারিখ (পর্যন্ত)',
+        'channel' => 'চ্যানেল',
+        'address' => 'ঠিকানা',
         'filter.channel' => 'চ্যানেল',
         'filter.event' => 'ঘটনা',
         'filter.cardholder' => 'কার্ডধারী',

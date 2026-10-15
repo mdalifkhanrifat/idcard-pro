@@ -53,8 +53,7 @@ class NotificationService
             'event' => $eventKey,
             'channel' => $channel,
             'languages' => implode(',', $words['languages']),
-            'subject' => $channel === 'mail' ? $words['subject'] : null,
-            'body' => $channel === 'mail' ? $words['body'] : $words['sms'],
+            ...self::wordsFor($channel, $words),
             ...$event->links($subject),
         ], $recipient, $sender));
     }
@@ -133,6 +132,53 @@ class NotificationService
             ->log('resent');
 
         return $resent;
+    }
+
+    /**
+     * A test message, by hand, to check that a channel gets through — before turning it on, too: fixed words
+     * (lang/<language>/notifications.php → test) in the organization's languages and order, to the address typed,
+     * logged as the sender's own message (event "test"), whatever the settings. Noted in the audit log.
+     *
+     * @param  string  $channel  a config('notifications.channels') key
+     */
+    public function sendTest(User $sender, string $channel, string $address): NotificationMessage
+    {
+        $words = $this->composer->composeText(
+            'notifications.test',
+            ['organization.name' => (string) $this->tenant()->name],
+            $this->tenant()->notificationSettings()['languages'],
+        );
+        $byPhone = config("notifications.channels.{$channel}.address") === 'phone';
+
+        $message = $this->queue([
+            'event' => NotificationLogService::TEST_EVENT,
+            'channel' => $channel,
+            'languages' => implode(',', $words['languages']),
+            ...self::wordsFor($channel, $words),
+        ], new NotificationRecipient($sender->name, $byPhone ? null : $address, $byPhone ? $address : null, userId: $sender->id), $sender);
+
+        activity('notifications')
+            ->performedOn($message)
+            ->causedBy($sender)
+            ->event('test_sent')
+            ->withProperties(['channel' => $channel, 'address' => $message->address])
+            ->log('test_sent');
+
+        return $message;
+    }
+
+    /**
+     * The words a channel carries: by e-mail the subject and the full text, by phone the short text (no subject) —
+     * by the kind of address the channel goes to (config('notifications.channels').<channel>.address).
+     *
+     * @param  array{subject: string, body: string, sms: string}  $words
+     * @return array{subject: string|null, body: string}
+     */
+    private static function wordsFor(string $channel, array $words): array
+    {
+        $byEmail = config("notifications.channels.{$channel}.address") === 'email';
+
+        return ['subject' => $byEmail ? $words['subject'] : null, 'body' => $byEmail ? $words['body'] : $words['sms']];
     }
 
     /**

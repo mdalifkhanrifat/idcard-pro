@@ -30,6 +30,16 @@ return [
     ],
 
     /*
+     * What a typed address of each kind must look like (validation rules), e.g. for a test message: an e-mail
+     * address by its form only (no DNS lookup — nothing leaves the machine); a phone number of 6 to 15 digits,
+     * an optional leading +, and spaces, dashes, dots or brackets between them.
+     */
+    'addresses' => [
+        'email' => ['email:rfc', 'max:255'],
+        'phone' => ['max:32', 'regex:/^\+?(?:[\s().\-]*\d){6,15}[\s().\-]*$/'],
+    ],
+
+    /*
      * SMS providers: driver => class (App\Services\Notifications\Sms\SmsDriver). Only "log" for now: each SMS
      * is written to storage/logs/sms.log and nothing leaves the machine; a real provider is added as a driver
      * with the owner's consent, since its messages leave the machine.

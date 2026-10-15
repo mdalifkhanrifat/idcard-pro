@@ -365,6 +365,7 @@ return [
             'exported' => 'Downloaded',
             'pruned' => 'Old entries deleted',
             'resent' => 'Sent again',
+            'test_sent' => 'Test message',
         ],
     ],
     // The master data lists (config master_data.types), named as the master data page names them

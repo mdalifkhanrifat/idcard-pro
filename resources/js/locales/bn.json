@@ -219,6 +219,7 @@
             "requirements_overridden": "শর্ত পার করা হয়েছে",
             "exported": "ডাউনলোড (রপ্তানি)",
             "resent": "আবার পাঠানো",
+            "test_sent": "পরীক্ষার বার্তা",
             "pruned": "পুরনো সারি মোছা"
         },
         "reason": "কারণ: {reason}",
@@ -230,7 +231,8 @@
         "printed": "প্রিন্ট",
         "system": "সিস্টেম",
         "prunedDetail": "{days} দিনের বেশি পুরনো {messages}টা বার্তা মোছা হয়েছে (প্রতিষ্ঠানের সেটিং অনুযায়ী)",
-        "resentDetail": "{address} ঠিকানায় বার্তা আবার পাঠানো হয়েছে"
+        "resentDetail": "{address} ঠিকানায় বার্তা আবার পাঠানো হয়েছে",
+        "testSentDetail": "{address} ঠিকানায় পরীক্ষার বার্তা পাঠানো হয়েছে"
     },
     "settings": {
         "title": "প্রতিষ্ঠান",

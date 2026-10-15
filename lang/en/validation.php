@@ -204,6 +204,8 @@ return [
         'filter.status' => 'status',
         'filter.date_from' => 'from date',
         'filter.date_to' => 'to date',
+        'channel' => 'channel',
+        'address' => 'address',
         'filter.channel' => 'channel',
         'filter.event' => 'event',
         'filter.cardholder' => 'cardholder',
