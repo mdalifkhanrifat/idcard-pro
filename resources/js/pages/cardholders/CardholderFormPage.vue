@@ -137,14 +137,14 @@ async function submit(): Promise<void> {
 
         <form v-else id="cardholder-form" class="rounded-xl border border-line bg-surface" novalidate @submit.prevent="submit">
             <!-- Tabs -->
-            <div class="flex gap-1 overflow-x-auto border-b border-line px-3" role="tablist">
+            <div class="flex gap-1 overflow-x-auto px-3 shadow-[inset_0_-1px_0_var(--color-line)]" role="tablist">
                 <button
                     v-for="tab in visibleTabs"
                     :key="tab.key"
                     type="button"
                     role="tab"
                     :aria-selected="activeTab === tab.key"
-                    class="relative -mb-px flex items-center gap-2 border-b-2 px-3 py-3 text-sm whitespace-nowrap transition-colors"
+                    class="relative flex items-center gap-2 border-b-2 px-3 py-3 text-sm whitespace-nowrap transition-colors"
                     :class="activeTab === tab.key ? 'border-brand-ink font-medium text-brand-ink' : 'border-transparent text-muted hover:text-fg'"
                     @click="activeTab = tab.key"
                 >

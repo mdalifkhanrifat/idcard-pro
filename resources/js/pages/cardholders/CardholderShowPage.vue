@@ -193,14 +193,14 @@ onMounted(load);
         </div>
 
         <!-- Tabs -->
-        <div class="mb-5 flex gap-1 overflow-x-auto border-b border-line" role="tablist">
+        <div class="mb-5 flex gap-1 overflow-x-auto shadow-[inset_0_-1px_0_var(--color-line)]" role="tablist">
             <button
                 v-for="key in TABS"
                 :key="key"
                 type="button"
                 role="tab"
                 :aria-selected="tab === key"
-                class="-mb-px border-b-2 px-3 py-2.5 text-sm whitespace-nowrap"
+                class="border-b-2 px-3 py-2.5 text-sm whitespace-nowrap"
                 :class="tab === key ? 'border-brand-ink font-medium text-brand-ink' : 'border-transparent text-muted hover:text-fg'"
                 @click="tab = key"
             >
