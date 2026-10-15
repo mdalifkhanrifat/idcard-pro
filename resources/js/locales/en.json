@@ -1678,6 +1678,21 @@
             "samples": "Sample values are made up (no real person's details); dates and numbers are written as in a real message.",
             "fixUnknown": "Fix the values marked red first.",
             "apply": "Apply"
+        },
+        "test": {
+            "title": "Test message",
+            "description": "Check that a channel gets through — also before turning it on. Fixed words, in the saved languages; sent whatever the settings, and kept in the log and the audit log.",
+            "channel": "Channel",
+            "offChannel": "{channel} (off for the organization — check it before turning it on)",
+            "email": "E-mail address",
+            "phone": "Phone number",
+            "send": "Send test",
+            "hint": "Your own address is filled in; type another to check it. Unsaved changes on this page do not apply to it.",
+            "queued": "Waiting to be sent to {address}…",
+            "sent": "Sent to {address}. Check that it arrived.",
+            "stalled": "Still waiting after 30 seconds: is the queue worker running? It sends the messages.",
+            "unseen": "Handed over for sending. Following its progress needs permission to see sent messages.",
+            "tooMany": "Too many test messages in a minute. Wait a moment and try again."
         }
     }
 }

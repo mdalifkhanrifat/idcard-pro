@@ -149,6 +149,8 @@ class NotificationSettings
 
         return [
             'channels' => self::channels(),
+            // The kind of address each channel goes to (e-mail or phone), e.g. for a test message's address field
+            'channel_addresses' => collect((array) config('notifications.channels'))->map(fn (array $channel): string => (string) $channel['address'])->all(),
             'languages' => $languages,
             'sms_languages' => self::smsLanguageModes(),
             'labels' => [

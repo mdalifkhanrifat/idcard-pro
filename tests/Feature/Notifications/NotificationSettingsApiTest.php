@@ -52,9 +52,13 @@ it('gives the same settings and options as the organization\'s, with channels an
         ])
         ->and($this->getJson('/api/v1/notifications/settings', ['Accept-Language' => 'bn'])->json('data.options.labels.languages'))->toBe(['bn' => 'বাংলা', 'en' => 'ইংরেজি (English)']);
 
-    // A channel added to the registry appears by itself (named by its key until it has a name)
+    expect($response->json('data.options.channel_addresses'))->toBe(['mail' => 'email', 'sms' => 'phone']);
+
+    // A channel added to the registry appears by itself (named by its key until it has a name), with its kind of address
     config(['notifications.channels.office_mail' => ['address' => 'email', 'class' => MailChannel::class]]);
-    expect($this->getJson('/api/v1/notifications/settings')->json('data.options.labels.channels'))->toMatchArray(['office_mail' => 'office_mail']);
+    $options = $this->getJson('/api/v1/notifications/settings')->json('data.options');
+    expect($options['labels']['channels'])->toMatchArray(['office_mail' => 'office_mail'])
+        ->and($options['channel_addresses'])->toMatchArray(['office_mail' => 'email']);
 });
 
 it('saves only what is sent, leaving the rest of the organization\'s settings, and notes each change in the audit log', function () {

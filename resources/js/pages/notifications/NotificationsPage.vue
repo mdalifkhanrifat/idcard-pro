@@ -12,6 +12,7 @@ import { toApiError } from '@/lib/http';
 import { fetchNotificationSettings, saveNotificationSettings, type NotificationSettings, type NotificationSettingsResponse } from '@/lib/notifications/api';
 import NotificationEventsCard from '@/pages/notifications/NotificationEventsCard.vue';
 import NotificationGeneralCard from '@/pages/notifications/NotificationGeneralCard.vue';
+import NotificationTestCard from '@/pages/notifications/NotificationTestCard.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
 
@@ -24,6 +25,8 @@ const router = useRouter();
 
 /** Read only for those who see the sent messages but may not change the organization's settings. */
 const canEdit = computed(() => auth.can('settings.update'));
+/** A test message is sent by hand. */
+const canSend = computed(() => auth.can('notifications.send'));
 
 /** The sent messages' tab joins in 5.2f; a single tab draws no tab bar. */
 const TABS = ['settings'] as const;
@@ -137,6 +140,9 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warnOnUnload));
             <NotificationGeneralCard v-model="draft" :options="data.options" :errors="errors" :disabled="!canEdit || saving" />
 
             <NotificationEventsCard v-model="draft" :options="data.options" :samples="data.samples" :errors="errors" :disabled="!canEdit || saving" />
+
+            <!-- With the saved settings (its words are in the saved languages); for those who may send by hand -->
+            <NotificationTestCard v-if="canSend" :options="data.options" :organization-channels="data.notifications.channels" />
         </div>
 
         <!-- Stays at the bottom while there are unsaved changes -->

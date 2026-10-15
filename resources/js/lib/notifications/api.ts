@@ -43,6 +43,8 @@ export interface NotificationEventOption {
 /** What this installation can send and about what (the registry): the page is drawn from this alone. */
 export interface NotificationOptions {
     channels: string[];
+    /** Channel => the kind of address it goes to. */
+    channel_addresses: Record<string, 'email' | 'phone' | string>;
     languages: string[];
     /** Choices for NotificationSettings.sms_languages. */
     sms_languages: string[];
@@ -80,4 +82,32 @@ export async function saveNotificationSettings(notifications: Partial<Notificati
 /** Names of keys from the registry's labels, the key itself until it has a name. */
 export function labelsOf(keys: readonly string[], labels: Record<string, string>): string[] {
     return keys.map((key) => labels[key] ?? key);
+}
+
+/** A logged message (GET /notifications/messages/{id}), as far as a page showing its progress needs it. */
+export interface NotificationMessage {
+    id: string;
+    channel: { key: string; name: string };
+    address: string | null;
+    status: { key: 'queued' | 'sent' | 'failed' | 'skipped'; name: string };
+    reason: { key: string; name: string } | null;
+    error: string | null;
+    attempts: number;
+    driver: string | null;
+    created_at: string;
+    sent_at: string | null;
+}
+
+/** POST /notifications/test (notifications.send): fixed words to the address typed, whatever the settings. */
+export async function sendTestMessage(channel: string, address: string): Promise<NotificationMessage> {
+    const { data } = await http.post<{ data: NotificationMessage }>('/notifications/test', { channel, address });
+
+    return data.data;
+}
+
+/** GET /notifications/messages/{id} (notifications.view). */
+export async function fetchMessage(id: string): Promise<NotificationMessage> {
+    const { data } = await http.get<{ data: NotificationMessage }>(`/notifications/messages/${id}`);
+
+    return data.data;
 }
