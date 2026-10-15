@@ -13,7 +13,7 @@ use Illuminate\Validation\Validator;
 final class NotificationSettingsRules
 {
     /**
-     * On or off, channels, languages, whether old messages leave the log and after how many days, and per event
+     * On or off, channels, languages (and whether an SMS takes them all or only the first), whether old messages leave the log and after how many days, and per event
      * whether it goes out, on which channels and in whose words (an empty text = the event's default).
      *
      * @return array<string, array<int, mixed>>
@@ -25,12 +25,13 @@ final class NotificationSettingsRules
         $days = (array) config('notifications.log_days');
         $length = (array) config('notifications.max_length');
         $rules = [
-            'notifications' => ['sometimes', 'array:enabled,channels,languages,prune_log,log_days,events'],
+            'notifications' => ['sometimes', 'array:enabled,channels,languages,sms_languages,prune_log,log_days,events'],
             'notifications.enabled' => ['required_with:notifications', 'boolean'],
             'notifications.channels' => ['sometimes', 'array'],
             'notifications.channels.*' => ['distinct', Rule::in($channels)],
             'notifications.languages' => ['sometimes', 'array', 'min:1'],
             'notifications.languages.*' => ['distinct', Rule::in($languages)],
+            'notifications.sms_languages' => ['sometimes', Rule::in(NotificationSettings::smsLanguageModes())],
             'notifications.prune_log' => ['sometimes', 'boolean'],
             'notifications.log_days' => ['sometimes', 'integer', 'between:'.(int) $days['min'].','.(int) $days['max']],
             'notifications.events' => ['sometimes', 'array:'.implode(',', array_keys(NotificationSettings::events()))],

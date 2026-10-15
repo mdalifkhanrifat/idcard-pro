@@ -13,6 +13,12 @@ return [
         'en' => 'ইংরেজি (English)',
     ],
 
+    // SMS কোন ভাষায় লেখা হবে (config notifications.sms_languages)
+    'sms_languages' => [
+        'all' => 'সব ভাষা, ক্রমে',
+        'first' => 'শুধু প্রথম ভাষা (ছোট, কম SMS ভাগ)',
+    ],
+
     // বার্তার লেখায় যেসব মান বসানো যায়: {holder.name} ইত্যাদি
     'placeholders' => [
         'organization.name' => 'প্রতিষ্ঠানের নাম',

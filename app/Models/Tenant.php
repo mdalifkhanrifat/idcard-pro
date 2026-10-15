@@ -181,7 +181,7 @@ class Tenant extends Model
      * channels, in which languages, whether (and after how many days) old messages leave the log, and each
      * event's channels and own texts.
      *
-     * @return array{enabled: bool, channels: array<int, string>, languages: array<int, string>, prune_log: bool, log_days: int, events: array<string, array{enabled: bool, channels: array<int, string>, templates: array<string, array{subject: string|null, body: string|null, sms: string|null}>}>}
+     * @return array{enabled: bool, channels: array<int, string>, languages: array<int, string>, sms_languages: string, prune_log: bool, log_days: int, events: array<string, array{enabled: bool, channels: array<int, string>, templates: array<string, array{subject: string|null, body: string|null, sms: string|null}>}>}
      */
     public function notificationSettings(): array
     {

@@ -22,6 +22,8 @@ export interface NotificationSettings {
     channels: string[];
     /** Languages a message is written in, in order (at least one); several make one message. */
     languages: string[];
+    /** An SMS in all the languages (`all`) or only the first (`first`): shorter, fewer parts. */
+    sms_languages: string;
     /** Whether messages older than log_days are deleted daily (off by default). */
     prune_log: boolean;
     log_days: number;
@@ -42,7 +44,9 @@ export interface NotificationEventOption {
 export interface NotificationOptions {
     channels: string[];
     languages: string[];
-    labels: { channels: Record<string, string>; languages: Record<string, string> };
+    /** Choices for NotificationSettings.sms_languages. */
+    sms_languages: string[];
+    labels: { channels: Record<string, string>; languages: Record<string, string>; sms_languages: Record<string, string> };
     log_days: { min: number; max: number };
     max_length: Record<NotificationPart, number>;
     /** Between the languages of one message. */

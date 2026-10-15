@@ -32,6 +32,27 @@ class NotificationSettings
     }
 
     /**
+     * Choices for the languages of an SMS (config('notifications.sms_languages')): all, or only the first.
+     *
+     * @return array<int, string>
+     */
+    public static function smsLanguageModes(): array
+    {
+        return array_values((array) config('notifications.sms_languages'));
+    }
+
+    /**
+     * The languages an SMS is written in, in order: the organization's, or only its first.
+     *
+     * @param  array{languages: array<int, string>, sms_languages: string}  $settings  normalized
+     * @return array<int, string>
+     */
+    public static function smsLanguagesOf(array $settings): array
+    {
+        return $settings['sms_languages'] === 'first' ? array_slice($settings['languages'], 0, 1) : $settings['languages'];
+    }
+
+    /**
      * Every event of the registry, by key.
      *
      * @return array<string, NotificationEvent<object>>
@@ -69,7 +90,7 @@ class NotificationSettings
 
     /**
      * @param  array<string, mixed>  $saved
-     * @return array{enabled: bool, channels: array<int, string>, languages: array<int, string>, prune_log: bool, log_days: int, events: array<string, array{enabled: bool, channels: array<int, string>, templates: array<string, array{subject: string|null, body: string|null, sms: string|null}>}>}
+     * @return array{enabled: bool, channels: array<int, string>, languages: array<int, string>, sms_languages: string, prune_log: bool, log_days: int, events: array<string, array{enabled: bool, channels: array<int, string>, templates: array<string, array{subject: string|null, body: string|null, sms: string|null}>}>}
      */
     public static function normalize(array $saved): array
     {
@@ -97,12 +118,15 @@ class NotificationSettings
         }
 
         $chosenLanguages = $list($saved['languages'] ?? null, $languages, (array) $defaults['languages']);
+        $smsLanguages = $saved['sms_languages'] ?? null;
 
         return [
             'enabled' => (bool) ($saved['enabled'] ?? $defaults['enabled']),
             'channels' => $list($saved['channels'] ?? null, $channels, (array) $defaults['channels']),
             // In the organization's order; at least one
             'languages' => $chosenLanguages !== [] ? $chosenLanguages : [$languages[0] ?? 'en'],
+            // An SMS in all of them, or only the first (shorter, cheaper)
+            'sms_languages' => in_array($smsLanguages, self::smsLanguageModes(), true) ? $smsLanguages : (string) $defaults['sms_languages'],
             // Old messages are deleted only when the organization chose so; the days are kept either way
             'prune_log' => (bool) ($saved['prune_log'] ?? $defaults['prune_log']),
             'log_days' => max((int) $days['min'], min((int) $days['max'], (int) ($saved['log_days'] ?? $defaults['log_days']))),
@@ -112,7 +136,8 @@ class NotificationSettings
 
     /**
      * What this installation can send and about what, for a settings form, named in the reader's language: the
-     * channels and languages (keys, with their names under `labels`), limits, what joins the languages of one
+     * channels and languages (keys, with their names under `labels`), the choices for an SMS's languages (named
+     * too), limits, what joins the languages of one
      * message, and every event with the placeholders its texts may use (named), its default channels and its
      * default texts in every language.
      *
@@ -125,9 +150,11 @@ class NotificationSettings
         return [
             'channels' => self::channels(),
             'languages' => $languages,
+            'sms_languages' => self::smsLanguageModes(),
             'labels' => [
                 'channels' => collect(self::channels())->mapWithKeys(fn (string $key): array => [$key => NotificationLogService::label('channels', $key)])->all(),
                 'languages' => collect($languages)->mapWithKeys(fn (string $key): array => [$key => NotificationLogService::label('languages', $key)])->all(),
+                'sms_languages' => collect(self::smsLanguageModes())->mapWithKeys(fn (string $key): array => [$key => NotificationLogService::label('sms_languages', $key)])->all(),
             ],
             'log_days' => config('notifications.log_days'),
             'max_length' => config('notifications.max_length'),

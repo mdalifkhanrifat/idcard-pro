@@ -13,6 +13,12 @@ return [
         'en' => 'English',
     ],
 
+    // Which languages an SMS is written in (config notifications.sms_languages)
+    'sms_languages' => [
+        'all' => 'All languages, in order',
+        'first' => 'Only the first language (shorter, fewer SMS parts)',
+    ],
+
     // Values a message's text may use: {holder.name} and so on
     'placeholders' => [
         'organization.name' => 'Organization name',

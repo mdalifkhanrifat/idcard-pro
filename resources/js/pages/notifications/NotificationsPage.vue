@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
+import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { Eye } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
@@ -8,12 +8,17 @@ import UiButton from '@/components/ui/UiButton.vue';
 import UiCard from '@/components/ui/UiCard.vue';
 import UiEmpty from '@/components/ui/UiEmpty.vue';
 import UiPageHeader from '@/components/ui/UiPageHeader.vue';
-import { fetchNotificationSettings, labelsOf, type NotificationSettingsResponse } from '@/lib/notifications/api';
-import NotificationSummary from '@/pages/notifications/NotificationSummary.vue';
+import { useConfirm } from '@/composables/useConfirm';
+import { toApiError } from '@/lib/http';
+import { fetchNotificationSettings, labelsOf, saveNotificationSettings, type NotificationSettings, type NotificationSettingsResponse } from '@/lib/notifications/api';
+import NotificationGeneralCard from '@/pages/notifications/NotificationGeneralCard.vue';
 import { useAuthStore } from '@/stores/auth';
+import { useUiStore } from '@/stores/ui';
 
 const { t } = useI18n();
 const auth = useAuthStore();
+const ui = useUiStore();
+const { confirm } = useConfirm();
 const route = useRoute();
 const router = useRouter();
 
@@ -30,14 +35,25 @@ watch(tab, (value) => router.replace({ query: { ...route.query, tab: value === T
 watch(() => route.query.tab, () => (tab.value = tabFromUrl()));
 
 const data = ref<NotificationSettingsResponse | null>(null);
+/** The settings as being changed on the page; saved as a whole. */
+const draft = ref<NotificationSettings | null>(null);
 const loading = ref(false);
 const failed = ref(false);
+const saving = ref(false);
+const errors = ref<Record<string, string[]>>({});
+
+function show(response: NotificationSettingsResponse): void {
+    data.value = response;
+    // A plain copy (a reactive object cannot be structured-cloned)
+    draft.value = JSON.parse(JSON.stringify(response.notifications)) as NotificationSettings;
+    errors.value = {};
+}
 
 async function load(): Promise<void> {
     loading.value = true;
     failed.value = false;
     try {
-        data.value = await fetchNotificationSettings();
+        show(await fetchNotificationSettings());
     } catch {
         failed.value = true;
     } finally {
@@ -47,15 +63,54 @@ async function load(): Promise<void> {
 
 onMounted(load);
 
-/** Every event of the registry, as the organization set it. */
+const dirty = computed(() => !!data.value && !!draft.value && JSON.stringify(draft.value) !== JSON.stringify(data.value.notifications));
+
+async function save(): Promise<void> {
+    if (!draft.value) {
+        return;
+    }
+    saving.value = true;
+    errors.value = {};
+    try {
+        // The settings as the server saved them come back: the form shows exactly those
+        show(await saveNotificationSettings(draft.value));
+        ui.notify(t('common.saved'));
+    } catch (error) {
+        const apiError = toApiError(error);
+        errors.value = apiError.errors;
+        if (!Object.keys(apiError.errors).length) {
+            ui.notify(apiError.message, 'error');
+        }
+    } finally {
+        saving.value = false;
+    }
+}
+
+function discard(): void {
+    if (data.value) {
+        show(data.value);
+    }
+}
+
+// Unsaved changes are not lost by leaving: asked first, in the app and when closing or reloading the tab
+onBeforeRouteLeave(async () => !dirty.value || (await confirm({ title: t('notifications.save.leaveConfirm'), message: t('notifications.save.leaveHint'), confirmLabel: t('notifications.save.leave'), danger: true })));
+function warnOnUnload(event: BeforeUnloadEvent): void {
+    if (dirty.value) {
+        event.preventDefault();
+    }
+}
+window.addEventListener('beforeunload', warnOnUnload);
+onBeforeUnmount(() => window.removeEventListener('beforeunload', warnOnUnload));
+
+/** Every event of the registry, as being set on the page. */
 const events = computed(() => {
     const current = data.value;
-    if (!current) {
+    if (!current || !draft.value) {
         return [];
     }
 
     return Object.entries(current.options.events).map(([key, option]) => {
-        const settings = current.notifications.events[key];
+        const settings = draft.value?.events[key];
         const templates = Object.values(settings?.templates ?? {});
 
         return {
@@ -100,10 +155,8 @@ const events = computed(() => {
             </UiEmpty>
         </UiCard>
 
-        <div v-else-if="data && tab === 'settings'" class="space-y-6" data-tab="settings">
-            <UiCard :title="t('notifications.summary.title')" :description="t('notifications.summary.description')">
-                <NotificationSummary :settings="data.notifications" :options="data.options" />
-            </UiCard>
+        <div v-else-if="data && draft && tab === 'settings'" class="space-y-6" :class="dirty && canEdit && 'pb-20'" data-tab="settings">
+            <NotificationGeneralCard v-model="draft" :options="data.options" :errors="errors" :disabled="!canEdit || saving" />
 
             <UiCard :title="t('notifications.events.title')" :description="t('notifications.events.description')" :padded="false">
                 <ul class="divide-y divide-line">
@@ -120,6 +173,17 @@ const events = computed(() => {
                     </li>
                 </ul>
             </UiCard>
+        </div>
+
+        <!-- Stays at the bottom while there are unsaved changes -->
+        <div v-if="dirty && canEdit" class="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 shadow-[0_-4px_12px_rgba(16,24,40,0.08)] backdrop-blur lg:left-64" data-save-bar>
+            <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-3 sm:px-6">
+                <p class="text-sm text-fg">{{ t('notifications.save.unsaved') }}</p>
+                <div class="flex gap-2">
+                    <UiButton variant="secondary" :disabled="saving" data-discard @click="discard">{{ t('notifications.save.discard') }}</UiButton>
+                    <UiButton :loading="saving" data-save @click="save">{{ t('common.save') }}</UiButton>
+                </div>
+            </div>
         </div>
     </div>
 </template>

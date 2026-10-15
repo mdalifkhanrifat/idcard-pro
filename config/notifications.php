@@ -73,6 +73,12 @@ return [
      */
     'languages' => ['bn', 'en'],
 
+    /*
+     * Which of the organization's languages an SMS (any channel to a phone) is written in: all of them, in order,
+     * like an e-mail, or only the first, since several languages make an SMS Unicode and long (each part charged).
+     */
+    'sms_languages' => ['all', 'first'],
+
     // Longest texts an organization may write (an SMS of 480 characters is about three Bangla parts)
     'max_length' => ['subject' => 150, 'body' => 5000, 'sms' => 480],
 
@@ -85,6 +91,7 @@ return [
         'enabled' => false,
         'channels' => ['mail'],
         'languages' => ['bn'],
+        'sms_languages' => 'all',
         'prune_log' => false,
         'log_days' => 365,
     ],

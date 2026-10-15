@@ -1618,6 +1618,30 @@
             "off": "Off",
             "ownTexts": "Own text",
             "defaultTexts": "Default text"
+        },
+        "general": {
+            "title": "General",
+            "description": "Whether messages go out, on which channels and in which languages, and how long the log keeps them.",
+            "enabled": "Send notifications",
+            "enabledHint": "While off, no message goes out on any event (test messages sent by hand still do).",
+            "channels": "Channels",
+            "channelsHint": "Messages go on the ticked channels, in this order. Each event picks its own from these.",
+            "languages": "Languages",
+            "languagesHint": "Several languages make one message, each in turn, in this order. At least one.",
+            "smsLanguages": "Languages of an SMS",
+            "smsLanguagesHint": "Several languages make an SMS longer (Bangla also makes it Unicode, 70 characters a part), and each part is charged. E-mails always carry every language.",
+            "prune": "Delete old messages from the log",
+            "keepHint": "Off: every sent message stays in the log (the default).",
+            "pruneHint": "Each day, messages older than {days} days are deleted from the log for good; they cannot be brought back.",
+            "days": "Days to keep",
+            "daysHint": "From {min} to {max} days."
+        },
+        "save": {
+            "unsaved": "You have unsaved changes.",
+            "discard": "Discard",
+            "leaveConfirm": "Leave without saving?",
+            "leaveHint": "Your changes to the notification settings will be lost.",
+            "leave": "Leave"
         }
     }
 }

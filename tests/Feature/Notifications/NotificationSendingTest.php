@@ -169,3 +169,18 @@ it('never sends a message twice, and skips an event\'s message the organization 
     expect($byHand->fresh()->only(['status', 'user_id', 'sent_by']))->toBe(['status' => NotificationStatus::Sent, 'user_id' => $this->owner->id, 'sent_by' => $this->owner->id])
         ->and(($this->texts)())->toBe(1);
 });
+
+it('writes an SMS in the first language only when the organization chooses so, an e-mail still in all of them', function () {
+    ($this->choose)(['enabled' => true, 'channels' => ['mail', 'sms'], 'languages' => ['bn', 'en'], 'sms_languages' => 'first', 'events' => ['card_ready' => ['enabled' => true, 'channels' => ['mail', 'sms']]]]);
+
+    [$mail, $sms] = ($this->notify)()->map->fresh()->all();
+
+    expect($mail->languages)->toBe('bn,en')
+        ->and($mail->body)->toContain('প্রিয় Jane Doe,')->toContain('Dear Jane Doe,')
+        ->and($sms->languages)->toBe('bn')
+        ->and($sms->body)->toBe("Acme Ltd: আপনার কার্ড {$this->card->number} তৈরি, সংগ্রহ করুন।");
+
+    // All languages (the default): the SMS has both, in order
+    ($this->choose)(['enabled' => true, 'channels' => ['sms'], 'languages' => ['en', 'bn'], 'events' => ['card_ready' => ['enabled' => true, 'channels' => ['sms']]]]);
+    expect(($this->notify)()->sole()->fresh()->languages)->toBe('en,bn');
+});

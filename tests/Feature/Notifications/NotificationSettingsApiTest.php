@@ -48,6 +48,7 @@ it('gives the same settings and options as the organization\'s, with channels an
         ->and($response->json('data.options.labels'))->toBe([
             'channels' => ['mail' => 'E-mail', 'sms' => 'SMS'],
             'languages' => ['bn' => 'Bangla (বাংলা)', 'en' => 'English'],
+            'sms_languages' => ['all' => 'All languages, in order', 'first' => 'Only the first language (shorter, fewer SMS parts)'],
         ])
         ->and($this->getJson('/api/v1/notifications/settings', ['Accept-Language' => 'bn'])->json('data.options.labels.languages'))->toBe(['bn' => 'বাংলা', 'en' => 'ইংরেজি (English)']);
 
@@ -164,4 +165,22 @@ it('keeps each default SMS to one part with the sample values, in every language
             expect($oneSms)->toBeTrue("{$event} ({$language}) takes more than one SMS: {$sms}");
         }
     }
+});
+
+it('lets an SMS take all the organization\'s languages or only the first, all by default, named and audited', function () {
+    Sanctum::actingAs($this->owner);
+
+    $this->getJson('/api/v1/notifications/settings', ['Accept-Language' => 'bn'])
+        ->assertJsonPath('data.notifications.sms_languages', 'all')
+        ->assertJsonPath('data.options.sms_languages', ['all', 'first'])
+        ->assertJsonPath('data.options.labels.sms_languages.first', 'শুধু প্রথম ভাষা (ছোট, কম SMS ভাগ)');
+
+    ($this->put)(['enabled' => false, 'sms_languages' => 'first'])->assertOk()->assertJsonPath('data.notifications.sms_languages', 'first');
+    // Not sent: kept
+    ($this->put)(['enabled' => false])->assertOk()->assertJsonPath('data.notifications.sms_languages', 'first');
+    ($this->put)(['enabled' => false, 'sms_languages' => 'some'])->assertJsonValidationErrors('notifications.sms_languages');
+
+    $changes = $this->getJson('/api/v1/audit/activities?filter[log_name]=tenant')->json('data.0.changes');
+    expect($changes['old'])->toMatchArray(['settings.notifications.sms_languages' => 'all'])
+        ->and($changes['attributes'])->toMatchArray(['settings.notifications.sms_languages' => 'first']);
 });

@@ -52,7 +52,6 @@ class NotificationService
         return collect($channels)->map(fn (string $channel) => $this->queue([
             'event' => $eventKey,
             'channel' => $channel,
-            'languages' => implode(',', $words['languages']),
             ...self::wordsFor($channel, $words),
             ...$event->links($subject),
         ], $recipient, $sender));
@@ -143,17 +142,18 @@ class NotificationService
      */
     public function sendTest(User $sender, string $channel, string $address): NotificationMessage
     {
+        $settings = $this->tenant()->notificationSettings();
         $words = $this->composer->composeText(
             'notifications.test',
             ['organization.name' => (string) $this->tenant()->name],
-            $this->tenant()->notificationSettings()['languages'],
+            $settings['languages'],
+            NotificationSettings::smsLanguagesOf($settings),
         );
         $byPhone = config("notifications.channels.{$channel}.address") === 'phone';
 
         $message = $this->queue([
             'event' => NotificationLogService::TEST_EVENT,
             'channel' => $channel,
-            'languages' => implode(',', $words['languages']),
             ...self::wordsFor($channel, $words),
         ], new NotificationRecipient($sender->name, $byPhone ? null : $address, $byPhone ? $address : null, userId: $sender->id), $sender);
 
@@ -168,17 +168,22 @@ class NotificationService
     }
 
     /**
-     * The words a channel carries: by e-mail the subject and the full text, by phone the short text (no subject) —
-     * by the kind of address the channel goes to (config('notifications.channels').<channel>.address).
+     * The words a channel carries and their languages: by e-mail the subject and the full text, by phone the short
+     * text (no subject, in the SMS languages) — by the kind of address the channel goes to
+     * (config('notifications.channels').<channel>.address).
      *
-     * @param  array{subject: string, body: string, sms: string}  $words
-     * @return array{subject: string|null, body: string}
+     * @param  array{languages: array<int, string>, sms_languages: array<int, string>, subject: string, body: string, sms: string}  $words
+     * @return array{languages: string, subject: string|null, body: string}
      */
     private static function wordsFor(string $channel, array $words): array
     {
         $byEmail = config("notifications.channels.{$channel}.address") === 'email';
 
-        return ['subject' => $byEmail ? $words['subject'] : null, 'body' => $byEmail ? $words['body'] : $words['sms']];
+        return [
+            'languages' => implode(',', $byEmail ? $words['languages'] : $words['sms_languages']),
+            'subject' => $byEmail ? $words['subject'] : null,
+            'body' => $byEmail ? $words['body'] : $words['sms'],
+        ];
     }
 
     /**
