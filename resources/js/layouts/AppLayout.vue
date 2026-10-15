@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuRoot, DropdownMenuSeparator, DropdownMenuTrigger } from 'reka-ui';
 import {
-    BadgeCheck, Building2, CalendarClock, Database, ChevronDown, ContactRound, CreditCard, FileBarChart, Images, LayoutDashboard, LayoutTemplate, ListPlus,
+    BadgeCheck, BellRing, Building2, CalendarClock, Database, ChevronDown, ContactRound, CreditCard, FileBarChart, Images, LayoutDashboard, LayoutTemplate, ListPlus,
     LogOut, Menu, ScrollText, Settings, ShieldCheck, Signature, Type, UserCog, Users, X,
 } from 'lucide-vue-next';
 import LocaleThemeSwitch from '@/components/LocaleThemeSwitch.vue';
@@ -21,7 +21,8 @@ interface NavItem {
     to?: string;
     label: string;
     icon: unknown;
-    permission?: string;
+    /** Any one of them. */
+    permission?: string | string[];
     soon?: boolean;
 }
 
@@ -66,6 +67,7 @@ const sections = computed<{ title?: string; items: NavItem[] }[]>(() => {
                 { to: '/users', label: t('nav.users'), icon: Users, permission: 'users.view' },
                 { to: '/roles', label: t('nav.roles'), icon: ShieldCheck, permission: 'roles.view' },
                 { to: '/audit', label: t('nav.audit'), icon: ScrollText, permission: 'audit.view' },
+                { to: '/notifications', label: t('nav.notifications'), icon: BellRing, permission: ['notifications.view', 'settings.update'] },
                 { to: '/settings', label: t('nav.settings'), icon: Settings, permission: 'settings.view' },
             ].filter((item) => auth.can(item.permission)),
         });

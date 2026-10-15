@@ -1,3 +1,5 @@
+import type { NotificationOptions, NotificationSettings } from '@/lib/notifications/api';
+
 export type UserStatus = 'active' | 'inactive';
 
 export interface Tenant {
@@ -25,6 +27,10 @@ export interface Tenant {
     biometrics?: TenantBiometrics;
     /** What this installation can capture and with what (registry). */
     biometric_options?: BiometricOptions;
+    /** Notifications (5.2), chosen by the organization. */
+    notifications?: NotificationSettings;
+    /** What this installation can send and about what (registry). */
+    notification_options?: NotificationOptions;
     status: 'active' | 'suspended';
     users_count?: number;
     created_at: string;

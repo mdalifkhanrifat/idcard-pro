@@ -81,6 +81,7 @@
         "users": "Users",
         "roles": "Roles & permissions",
         "audit": "Audit log",
+        "notifications": "Notifications",
         "settings": "Organization",
         "account": "My account",
         "platform": "Platform",
@@ -1587,5 +1588,36 @@
         },
         "empty": "No rows found.",
         "filterInsideParent": "Choose a {parent} first"
+    },
+    "notifications": {
+        "subtitle": "Messages sent by e-mail and SMS when something happens, such as a card being ready: on which channels, in which languages and in what words.",
+        "tabs": {
+            "settings": "Settings",
+            "messages": "Sent messages"
+        },
+        "readOnly": "You can see these settings but not change them; that needs permission to change the organization's settings.",
+        "loadFailed": "The notification settings could not be loaded.",
+        "retry": "Try again",
+        "summary": {
+            "title": "Notifications",
+            "description": "E-mail and SMS messages to cardholders, such as when a card is ready.",
+            "on": "On",
+            "off": "Off",
+            "channels": "Channels",
+            "languages": "Languages",
+            "events": "Events on",
+            "eventsCount": "{on} of {total}",
+            "none": "None",
+            "open": "Open notifications",
+            "offHint": "No messages are sent while notifications are off."
+        },
+        "events": {
+            "title": "Events",
+            "description": "What people are told about. Each one can be turned on, sent on its own channels and written in the organization's own words.",
+            "on": "On",
+            "off": "Off",
+            "ownTexts": "Own text",
+            "defaultTexts": "Default text"
+        }
     }
 }

@@ -2,7 +2,7 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { watchDebounced } from '@vueuse/core';
 import { useI18n } from 'vue-i18n';
-import { ArrowDown, ArrowUp, BadgeCheck, Upload } from 'lucide-vue-next';
+import { ArrowDown, ArrowRight, ArrowUp, BadgeCheck, Upload } from 'lucide-vue-next';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiCard from '@/components/ui/UiCard.vue';
 import UiCheckbox from '@/components/ui/UiCheckbox.vue';
@@ -17,6 +17,8 @@ import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
 import { SAMPLE_VERIFY_CODE, verificationFieldLabel, verifyUrlFor } from '@/pages/cards/cards';
 import BiometricSettingsCard from '@/pages/settings/BiometricSettingsCard.vue';
+import NotificationSummary from '@/pages/notifications/NotificationSummary.vue';
+import type { NotificationOptions, NotificationSettings } from '@/lib/notifications/api';
 import type { BiometricOptions, Tenant, TenantBiometrics, TenantVerification } from '@/types';
 
 const { t, te } = useI18n();
@@ -45,6 +47,10 @@ function moveField(index: number, step: -1 | 1): void {
 /** Biometric capture (Phase 4): the organization's choices and what the registry offers. */
 const biometrics = ref<TenantBiometrics | null>(null);
 const biometricOptions = ref<BiometricOptions | null>(null);
+/** Notifications (5.2) are set on their own page; here only how they stand, with the way there. */
+const notifications = ref<NotificationSettings | null>(null);
+const notificationOptions = ref<NotificationOptions | null>(null);
+const canOpenNotifications = computed(() => auth.can(['notifications.view', 'settings.update']));
 
 const sampleCode = ref('EMP');
 const numberPreview = ref('');
@@ -67,6 +73,8 @@ onMounted(async () => {
     verificationFields.value = data.data.verification_fields ?? [];
     biometrics.value = data.data.biometrics ?? null;
     biometricOptions.value = data.data.biometric_options ?? null;
+    notifications.value = data.data.notifications ?? null;
+    notificationOptions.value = data.data.notification_options ?? null;
     logoPreview.value = data.data.logo_url;
     Object.assign(cardSize, data.data.default_card_size ?? {});
 });
@@ -238,6 +246,14 @@ async function save(): Promise<void> {
                     </fieldset>
                 </UiCard>
                 <BiometricSettingsCard v-if="biometrics && biometricOptions" v-model="biometrics" :options="biometricOptions" :errors="errors" :disabled="!canEdit" />
+                <UiCard v-if="notifications && notificationOptions" :title="t('notifications.summary.title')" :description="t('notifications.summary.description')" data-notification-card>
+                    <template v-if="canOpenNotifications" #actions>
+                        <RouterLink to="/notifications" class="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-brand-ink hover:underline" data-open-notifications>
+                            {{ t('notifications.summary.open') }}<ArrowRight class="size-4" />
+                        </RouterLink>
+                    </template>
+                    <NotificationSummary :settings="notifications" :options="notificationOptions" />
+                </UiCard>
             </div>
 
             <UiCard :title="t('settings.preview')">
