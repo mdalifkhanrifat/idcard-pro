@@ -164,6 +164,7 @@ function apply(): void {
                         :id="`text-${part}`"
                         :ref="(el) => (fields[part] = el as HTMLInputElement | null)"
                         v-model="texts[language][part]"
+                        dir="auto"
                         :placeholder="defaultText(part)"
                         :maxlength="options.max_length[part]"
                         :readonly="disabled"
@@ -178,6 +179,7 @@ function apply(): void {
                         :ref="(el) => (fields[part] = el as HTMLTextAreaElement | null)"
                         v-model="texts[language][part]"
                         :rows="part === 'body' ? 7 : 3"
+                        dir="auto"
                         :placeholder="defaultText(part)"
                         :maxlength="options.max_length[part]"
                         :readonly="disabled"
@@ -206,14 +208,14 @@ function apply(): void {
                 <div class="overflow-hidden rounded-xl border border-line" data-preview-mail>
                     <p class="flex items-center gap-1.5 border-b border-line bg-surface-2 px-3 py-2 text-xs text-muted"><Mail class="size-3.5" />{{ t('notifications.editor.mail') }}</p>
                     <div class="space-y-2 p-3 text-sm">
-                        <p class="font-semibold break-words text-fg" data-preview-subject>{{ preview.subject }}</p>
-                        <p class="break-words whitespace-pre-line text-fg" data-preview-body>{{ preview.body }}</p>
+                        <p class="font-semibold break-words text-fg" dir="auto" data-preview-subject>{{ preview.subject }}</p>
+                        <p class="break-words whitespace-pre-line text-fg" dir="auto" data-preview-body>{{ preview.body }}</p>
                     </div>
                 </div>
                 <div class="rounded-xl border border-line" data-preview-sms>
                     <p class="flex items-center gap-1.5 border-b border-line bg-surface-2 px-3 py-2 text-xs text-muted"><MessageSquareText class="size-3.5" />{{ t('notifications.editor.sms') }}</p>
                     <div class="p-3">
-                        <p class="max-w-[85%] rounded-2xl rounded-bl-sm bg-brand/12 px-3 py-2 text-sm break-words whitespace-pre-line text-fg" data-preview-sms-text>{{ preview.sms }}</p>
+                        <p class="max-w-[85%] rounded-2xl rounded-bl-sm bg-brand/12 px-3 py-2 text-sm break-words whitespace-pre-line text-fg" dir="auto" data-preview-sms-text>{{ preview.sms }}</p>
                         <p class="mt-2 text-xs" :class="sms.parts > 1 ? 'text-warning' : 'text-muted'" data-preview-sms-count>
                             {{ t('notifications.editor.smsCount', { length: formatNumber(sms.length), parts: formatNumber(sms.parts) }) }} · {{ t(`notifications.editor.encoding.${sms.encoding}`) }}
                         </p>
