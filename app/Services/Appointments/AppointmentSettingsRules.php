@@ -53,7 +53,9 @@ final class AppointmentSettingsRules
             'appointments.reminders.*' => ['integer', 'distinct', $between('reminder_hours')],
             'appointments.services' => ['sometimes', 'array'],
             // null removes an organization's own kind of visit
-            'appointments.services.*' => ['nullable', 'array:enabled,name,slots,public'],
+            // `custom` is what GET answers (the registry's or the organization's own): taken back, never stored
+            'appointments.services.*' => ['nullable', 'array:enabled,custom,name,slots,public'],
+            'appointments.services.*.custom' => ['sometimes', 'boolean'],
             'appointments.services.*.enabled' => ['sometimes', 'boolean'],
             'appointments.services.*.name' => ['sometimes', 'array:'.$languages],
             'appointments.services.*.name.*' => ['nullable', 'string', "max:{$maxName}"],

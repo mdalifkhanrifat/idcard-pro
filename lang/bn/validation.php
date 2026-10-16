@@ -226,6 +226,7 @@ return [
         'appointments.reminders.*' => 'রিমাইন্ডারের ঘণ্টা',
         'appointments.services' => 'কাজের ধরন',
         'appointments.services.*' => 'কাজের ধরন',
+        'appointments.services.*.custom' => 'প্রতিষ্ঠানের নিজের ধরন',
         'appointments.services.*.enabled' => 'কাজের ধরন চালু',
         'appointments.services.*.name' => 'নাম',
         'appointments.services.*.name.*' => 'নাম',

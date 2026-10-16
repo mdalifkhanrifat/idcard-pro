@@ -163,3 +163,17 @@ it('takes a new kind of visit or choice from the registry alone', function () {
         ->assertJsonPath('data.options.labels.scheduling.week', 'week');
     ($this->put)(['scheduling' => 'week'])->assertOk()->assertJsonPath('data.appointments.scheduling', 'week');
 });
+
+it('takes back the whole settings as it answered them, changing nothing, a wrong `custom` mark not taken', function () {
+    Sanctum::actingAs($this->owner);
+    ($this->put)(['services' => ['vehicle_pass' => ['name' => ['en' => 'Vehicle pass']]]])->assertOk();
+    $answered = $this->getJson('/api/v1/appointments/settings')->assertOk()->json('data.appointments');
+    $audit = $this->tenant->fresh()->settings;
+
+    // A client sending back what it read (a settings page, an integration) — even with a wrong `custom` mark
+    $answered['services']['renewal']['custom'] = true;
+    ($this->put)($answered)->assertOk()->assertJsonPath('data.appointments.services.renewal.custom', false)->assertJsonPath('data.appointments.services.vehicle_pass.custom', true);
+
+    expect($this->tenant->fresh()->settings)->toBe($audit)
+        ->and($this->tenant->fresh()->settings['appointments']['services']['renewal']['custom'] ?? false)->toBeFalse();
+});

@@ -108,7 +108,8 @@ final class AppointmentSettings
 
                 continue;
             }
-            $service = [...(array) ($services[$key] ?? []), ...array_diff_key((array) $serviceChange, ['name' => true])];
+            // Whether a kind is the organization's own follows from the registry, not from what is sent
+            $service = [...(array) ($services[$key] ?? []), ...array_diff_key((array) $serviceChange, ['name' => true, 'custom' => true])];
             if (array_key_exists('name', (array) $serviceChange)) {
                 $service['name'] = [...(array) ($services[$key]['name'] ?? []), ...(array) $serviceChange['name']];
             }

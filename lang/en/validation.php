@@ -249,6 +249,7 @@ return [
         'appointments.reminders.*' => 'hours before a reminder',
         'appointments.services' => 'kinds of visit',
         'appointments.services.*' => 'kind of visit',
+        'appointments.services.*.custom' => 'the organization\'s own kind',
         'appointments.services.*.enabled' => 'kind of visit on',
         'appointments.services.*.name' => 'name',
         'appointments.services.*.name.*' => 'name',
