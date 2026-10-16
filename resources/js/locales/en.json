@@ -1751,7 +1751,8 @@
         "loadFailed": "The appointment settings could not be loaded.",
         "retry": "Try again",
         "tabs": {
-            "general": "General"
+            "general": "General",
+            "services": "Kinds of visit"
         },
         "save": {
             "leaveHint": "Your changes to the appointment settings will be lost."
@@ -1808,6 +1809,29 @@
                 "none": "No reminders.",
                 "hint": "{range} At most {max} reminders."
             }
+        },
+        "services": {
+            "title": "Kinds of visit",
+            "description": "What people come in for. The built-in kinds can be renamed or turned off; the organization may add its own.",
+            "builtIn": "Built-in",
+            "own": "Own",
+            "off": "Off",
+            "keyHint": "Its key, for integrations (e.g. an HR system)",
+            "enabled": "Offered",
+            "name": "Name — {language}",
+            "defaultHint": "Empty: the default name (greyed) is used.",
+            "slots": "Time slots it takes",
+            "slotsHint": "{minutes} minutes with the current slot length.",
+            "slotsDay": "Used when people book a time of the day.",
+            "public": "Offered on the public link",
+            "publicHint": "Staff can always book it.",
+            "publicOff": "People do not book through the public link now.",
+            "remove": "Remove this kind of visit",
+            "addTitle": "Add a kind of visit",
+            "addDescription": "A kind of the organization’s own, named in one language or more (at most {max}).",
+            "add": "Add",
+            "newKey": "Its key will be {key}.",
+            "full": "The organization has its {max} kinds of visit of its own; remove one to add another."
         }
     }
 }

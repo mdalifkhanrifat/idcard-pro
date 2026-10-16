@@ -11,7 +11,9 @@ import SettingsSaveBar from '@/components/SettingsSaveBar.vue';
 import { useSettingsDraft } from '@/composables/useSettingsDraft';
 import { useUrlTab } from '@/composables/useUrlTab';
 import { fetchAppointmentSettings, saveAppointmentSettings, type AppointmentSettings, type AppointmentSettingsResponse } from '@/lib/appointments/api';
+import { withRemovedServices } from '@/lib/appointments/services';
 import AppointmentGeneralTab from '@/pages/appointments/AppointmentGeneralTab.vue';
+import AppointmentServicesTab from '@/pages/appointments/AppointmentServicesTab.vue';
 import { useAuthStore } from '@/stores/auth';
 
 /**
@@ -23,13 +25,17 @@ const { t } = useI18n();
 const auth = useAuthStore();
 const canEdit = computed(() => auth.can('settings.update'));
 
-type TabKey = 'general';
-const TABS = computed<TabKey[]>(() => ['general']);
+type TabKey = 'general' | 'services';
+const TABS = computed<TabKey[]>(() => ['general', 'services']);
 const tab = useUrlTab(TABS);
+/** Where a refused save's mistakes are: the kinds of visit have a tab of their own. */
+const tabOf = (field: string): TabKey => (field.startsWith('appointments.services') ? 'services' : 'general');
+const marked = computed(() => [...new Set(Object.keys(errors.value).map(tabOf))]);
 
 const { data, draft, loading, failed, saving, errors, dirty, load, save, discard } = useSettingsDraft<AppointmentSettingsResponse, AppointmentSettings>({
     fetch: fetchAppointmentSettings,
-    store: saveAppointmentSettings,
+    // A kind of visit removed from the draft goes as null
+    store: (changes, saved) => saveAppointmentSettings(saved ? withRemovedServices(changes, saved) : changes),
     settingsOf: (response) => response.appointments,
     leaveHint: () => t('appointments.save.leaveHint'),
 });
@@ -44,7 +50,7 @@ onMounted(load);
             <Eye class="mt-0.5 size-4 shrink-0" />{{ t('appointments.readOnly') }}
         </p>
 
-        <PageTabs v-model="tab" :tabs="TABS" :label="(key) => t(`appointments.tabs.${key}`)" />
+        <PageTabs v-model="tab" :tabs="TABS" :label="(key) => t(`appointments.tabs.${key}`)" :marked="marked" />
 
         <p v-if="loading && !data" class="py-10 text-center text-sm text-muted">{{ t('common.loading') }}</p>
         <UiCard v-else-if="failed" :padded="false">
@@ -53,8 +59,9 @@ onMounted(load);
             </UiEmpty>
         </UiCard>
 
-        <div v-else-if="data && draft && tab === 'general'" :class="dirty && canEdit && 'pb-20'" data-tab="general">
-            <AppointmentGeneralTab v-model="draft" :options="data.options" :errors="errors" :disabled="!canEdit || saving" />
+        <div v-else-if="data && draft" :class="dirty && canEdit && 'pb-20'" :data-tab="tab">
+            <AppointmentGeneralTab v-if="tab === 'general'" v-model="draft" :options="data.options" :errors="errors" :disabled="!canEdit || saving" />
+            <AppointmentServicesTab v-else-if="tab === 'services'" v-model="draft" :options="data.options" :errors="errors" :disabled="!canEdit || saving" />
         </div>
 
         <SettingsSaveBar v-if="dirty && canEdit" :saving="saving" @save="save" @discard="discard" />

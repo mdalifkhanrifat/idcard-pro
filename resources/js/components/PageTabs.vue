@@ -1,6 +1,9 @@
 <script setup lang="ts" generic="T extends string">
-/** A page's tabs as a line under the header; one tab draws nothing. Names come from the page. */
-defineProps<{ tabs: T[]; label: (key: T) => string }>();
+/**
+ * A page's tabs as a line under the header; one tab draws nothing. Names come from the page; `marked` tabs carry
+ * a dot (e.g. a refused save's mistakes are there).
+ */
+defineProps<{ tabs: T[]; label: (key: T) => string; marked?: T[] }>();
 const model = defineModel<T>({ required: true });
 </script>
 
@@ -17,7 +20,7 @@ const model = defineModel<T>({ required: true });
             :data-tab-button="key"
             @click="model = key"
         >
-            {{ label(key) }}
+            {{ label(key) }}<span v-if="marked?.includes(key)" class="ml-1.5 inline-block size-1.5 rounded-full bg-danger align-middle" data-tab-marked />
         </button>
     </div>
 </template>

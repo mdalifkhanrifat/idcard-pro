@@ -16,8 +16,8 @@ import { useUiStore } from '@/stores/ui';
  */
 export function useSettingsDraft<TResponse, TSettings>(config: {
     fetch: () => Promise<TResponse>;
-    /** Saves the changed parts. */
-    store: (changes: Partial<TSettings>) => Promise<TResponse>;
+    /** Saves the changed parts (the saved settings beside them, e.g. to tell what was removed). */
+    store: (changes: Partial<TSettings>, saved: TSettings | null) => Promise<TResponse>;
     /** The settings inside the server's answer. */
     settingsOf: (response: TResponse) => TSettings;
     /** What is lost by leaving, e.g. "Your changes to the notification settings will be lost." */
@@ -62,7 +62,8 @@ export function useSettingsDraft<TResponse, TSettings>(config: {
         saving.value = true;
         errors.value = {};
         try {
-            show(await config.store(data.value ? changedParts(draft.value as object, config.settingsOf(data.value) as object) as Partial<TSettings> : draft.value));
+            const saved = data.value ? config.settingsOf(data.value) : null;
+            show(await config.store(saved ? (changedParts(draft.value as object, saved as object) as Partial<TSettings>) : draft.value, saved));
             ui.notify(t('common.saved'));
         } catch (error) {
             const apiError = toApiError(error);
