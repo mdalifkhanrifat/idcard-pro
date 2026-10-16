@@ -30,6 +30,19 @@ return [
         'periods_overlap' => 'Two periods of this day overlap; let one end before the next starts.',
         'too_many' => 'An organization may have at most :max places.',
     ],
+    'availability' => [
+        'too_many_days' => 'Ask for at most :max days at a time.',
+        'unavailable' => [
+            'off' => 'Appointments are turned off for the organization.',
+            'not_staff' => 'The organization\'s staff do not book appointments.',
+            'not_public' => 'Appointments are not booked through the public link.',
+            'place_off' => 'This place is turned off.',
+            'unknown_service' => 'There is no such kind of visit.',
+            'service_off' => 'This kind of visit is turned off.',
+            'service_not_public' => 'This kind of visit is not offered on the public link.',
+            'not_at_place' => 'This place does not take this kind of visit.',
+        ],
+    ],
     'closures' => [
         'order' => 'The last day must be the first day or after it.',
         'too_long' => 'A closure may last at most :max days in a row.',

@@ -71,6 +71,10 @@ return [
         // Days in a row one closure may last (both days whole); a yearly one is shorter than a year
         'max_days' => 366,
     ],
+    'availability' => [
+        // Days one question about free times may cover (a month's calendar with its edges)
+        'max_days' => 62,
+    ],
 
     // Limits of what an organization may set: [min, max]
     'limits' => [

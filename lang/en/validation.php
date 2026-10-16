@@ -218,6 +218,11 @@ return [
         'filter.from' => 'from',
         'filter.to' => 'to',
         'filter.past' => 'past ones too',
+        // Appointment availability (5.3d)
+        'service' => 'kind of visit',
+        'from' => 'from',
+        'to' => 'to',
+        'audience' => 'for whom',
         // Appointment settings (5.3): named as the settings page labels them
         'appointments' => 'appointment settings',
         'appointments.enabled' => 'appointments on',

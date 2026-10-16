@@ -195,6 +195,11 @@ return [
         'filter.from' => 'থেকে',
         'filter.to' => 'পর্যন্ত',
         'filter.past' => 'পুরনোগুলোও',
+        // Appointment availability (5.3d)
+        'service' => 'কাজের ধরন',
+        'from' => 'থেকে',
+        'to' => 'পর্যন্ত',
+        'audience' => 'কার জন্য',
         // Appointment settings (5.3)
         'appointments' => 'অ্যাপয়েন্টমেন্টের সেটিং',
         'appointments.enabled' => 'অ্যাপয়েন্টমেন্ট চালু',

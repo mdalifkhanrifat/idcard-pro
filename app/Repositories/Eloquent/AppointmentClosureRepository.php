@@ -10,6 +10,7 @@ use App\Support\ListPage;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 
 /**
  * @extends EloquentRepository<AppointmentClosure>
@@ -29,6 +30,15 @@ class AppointmentClosureRepository extends EloquentRepository implements Appoint
             ->orderBy('id')
             ->paginate(ListPage::clamp($filter->perPage))
             ->withQueryString();
+    }
+
+    public function affecting(AppointmentLocation $location, string $from, string $to): Collection
+    {
+        return $this->query()
+            ->where(fn (Builder $w) => $w->whereNull('location_id')->orWhere('location_id', $location->id))
+            ->where(fn (Builder $w) => $w->where('yearly', true)->orWhere(fn (Builder $d) => $d->where('date_to', '>=', $from)->where('date_from', '<=', $to)))
+            ->orderBy('date_from')
+            ->get();
     }
 
     /**
