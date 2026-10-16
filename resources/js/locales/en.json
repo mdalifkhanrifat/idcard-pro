@@ -537,7 +537,8 @@
         "tabErrors": "This tab has errors",
         "back": "Back to cardholders",
         "tabs": {
-            "details": "Details"
+            "details": "Details",
+            "messages": "Messages"
         },
         "family": {
             "imagesHint": "Their own photo and signature are printed on family cards. Without them the card prints no photo (not the cardholder's).",
@@ -1587,7 +1588,9 @@
             "tooManyColumns": "Too many columns for a PDF to stay readable on paper (at most {max}). Choose fewer columns, or download Excel or CSV."
         },
         "empty": "No rows found.",
-        "filterInsideParent": "Choose a {parent} first"
+        "filterInsideParent": "Choose a {parent} first",
+        "oneCardholder": "A cardholder",
+        "removeFilter": "Remove the filter: {name}"
     },
     "notifications": {
         "subtitle": "Messages sent by e-mail and SMS when something happens, such as a card being ready: on which channels, in which languages and in what words.",

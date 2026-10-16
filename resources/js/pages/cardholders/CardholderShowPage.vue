@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, nextTick, onMounted, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { ArrowLeft, Loader2, Pencil, Trash2, UserRound } from 'lucide-vue-next';
@@ -11,6 +11,7 @@ import CardholderCards from './CardholderCards.vue';
 import CardholderDocuments from './CardholderDocuments.vue';
 import CardholderFamily from './CardholderFamily.vue';
 import CardholderQualifications from './CardholderQualifications.vue';
+import NotificationMessageList from '@/pages/notifications/NotificationMessageList.vue';
 import { useCustomFields } from '@/composables/useCustomFields';
 import { useConfirm } from '@/composables/useConfirm';
 import { http, toApiError } from '@/lib/http';
@@ -32,11 +33,42 @@ const cardholder = ref<Cardholder | null>(null);
 const earlierImages = ref<CardholderFile[]>([]);
 /** Biometrics only for those who may see them, while the organization captures them. */
 const showBiometrics = computed(() => auth.can('biometrics.view') && !!auth.tenant?.biometrics?.enabled);
-const TABS = computed(() => ['details', ...(auth.can('cards.view') ? (['cards'] as const) : []), ...(showBiometrics.value ? (['biometrics'] as const) : []), 'family', 'qualifications', 'documents'] as const);
-type TabKey = 'details' | 'cards' | 'biometrics' | 'family' | 'qualifications' | 'documents';
-const tab = ref<TabKey>((TABS.value as readonly string[]).includes(String(route.query.tab)) ? (route.query.tab as TabKey) : 'details');
+/** Messages to the cardholder and their family members, for those who may read the log. */
+const showMessages = computed(() => auth.can('notifications.view'));
+type TabKey = 'details' | 'cards' | 'biometrics' | 'family' | 'qualifications' | 'documents' | 'messages';
+const TABS = computed<TabKey[]>(() => [
+    'details',
+    ...(auth.can('cards.view') ? (['cards'] as const) : []),
+    ...(showBiometrics.value ? (['biometrics'] as const) : []),
+    'family',
+    'qualifications',
+    'documents',
+    ...(showMessages.value ? (['messages'] as const) : []),
+]);
+const tabFromUrl = (): TabKey => (TABS.value.includes(route.query.tab as TabKey) ? (route.query.tab as TabKey) : 'details');
+const tab = ref<TabKey>(tabFromUrl());
+// The tab is in the URL (?tab=), so a link or a reload opens it; the details keep the URL plain. The messages
+// list keeps its criteria under msg_*, dropped on leaving it.
+watch(tab, (value) => router.replace({ query: { ...Object.fromEntries(Object.entries(route.query).filter(([key]) => value === 'messages' || !key.startsWith('msg_'))), tab: value === 'details' ? undefined : value } }));
+watch(() => route.query.tab, () => (tab.value = tabFromUrl()));
 const tabLabel = (key: TabKey) =>
-    ({ details: t('cardholders.tabs.details'), cards: t('cards.tab'), biometrics: t('biometrics.tab.title'), family: t('cardholders.family.title'), qualifications: t('cardholders.qualifications.title'), documents: t('cardholders.files.document') })[key];
+    ({
+        details: t('cardholders.tabs.details'),
+        cards: t('cards.tab'),
+        biometrics: t('biometrics.tab.title'),
+        family: t('cardholders.family.title'),
+        qualifications: t('cardholders.qualifications.title'),
+        documents: t('cardholders.files.document'),
+        messages: t('cardholders.tabs.messages'),
+    })[key];
+// On a phone the tab bar scrolls sideways: the open tab is brought into it (e.g. the last one, from a link)
+const tabList = ref<HTMLElement | null>(null);
+watch([tab, () => !!cardholder.value], async () => {
+    await nextTick();
+    tabList.value?.querySelector('[aria-selected=true]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+});
+/** Languages named as the organization's notification settings name them. */
+const languageNames = computed(() => auth.tenant?.notification_options?.labels?.languages ?? {});
 
 type Row = [label: string, value: string | null | undefined];
 
@@ -193,7 +225,7 @@ onMounted(load);
         </div>
 
         <!-- Tabs -->
-        <div class="mb-5 flex gap-1 overflow-x-auto shadow-[inset_0_-1px_0_var(--color-line)]" role="tablist">
+        <div ref="tabList" class="mb-5 flex gap-1 overflow-x-auto shadow-[inset_0_-1px_0_var(--color-line)]" role="tablist">
             <button
                 v-for="key in TABS"
                 :key="key"
@@ -241,6 +273,7 @@ onMounted(load);
         <CardholderBiometrics v-else-if="tab === 'biometrics'" :cardholder-id="cardholder.id" />
         <CardholderFamily v-else-if="tab === 'family'" :cardholder-id="cardholder.id" />
         <CardholderQualifications v-else-if="tab === 'qualifications'" :cardholder-id="cardholder.id" />
+        <NotificationMessageList v-else-if="tab === 'messages'" :fixed="{ cardholder: cardholder.id }" query-prefix="msg_" :language-names="languageNames" data-tab="messages" />
         <CardholderDocuments v-else :cardholder-id="cardholder.id" />
     </div>
 </template>

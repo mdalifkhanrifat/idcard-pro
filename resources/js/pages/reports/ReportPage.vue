@@ -2,7 +2,7 @@
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ListPagination from '@/components/ListPagination.vue';
-import { Columns3, RotateCcw, Search, SlidersHorizontal } from 'lucide-vue-next';
+import { Columns3, RotateCcw, Search, SlidersHorizontal, X } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiEmpty from '@/components/ui/UiEmpty.vue';
@@ -20,7 +20,7 @@ import { useMasterDataOptions } from '@/composables/useMasterDataOptions';
 import { http, toApiError } from '@/lib/http';
 import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
-import type { CardTemplate } from '@/types';
+import type { Cardholder, CardTemplate } from '@/types';
 
 /**
  * Any report of the server's registry: its filters, totals, sortable columns and download formats all come
@@ -72,7 +72,31 @@ const panelFields = computed(() =>
     }),
 );
 const showFilters = ref(false);
-const activeFilterCount = computed(() => Object.entries(filters).filter(([key, value]) => key !== 'search' && value !== '').length);
+/** Criteria that came with a link (e.g. one cardholder's messages): shown as chips, not among the filters. */
+const linkedFields = computed(() => fields.value.filter((field) => field.type === 'cardholder' && filters[field.key]));
+const isLinked = (key: string) => fields.value.some((field) => field.key === key && field.type === 'cardholder');
+const activeFilterCount = computed(() => Object.entries(filters).filter(([key, value]) => key !== 'search' && !isLinked(key) && value !== '').length);
+const anyFilter = computed(() => activeFilterCount.value > 0 || !!filters.search || linkedFields.value.length > 0);
+/** A linked cardholder's name and employee number, for those who may see cardholders. */
+const cardholderNames = ref<Record<string, string>>({});
+watch(
+    () => linkedFields.value.map((field) => filters[field.key]),
+    async (ids) => {
+        if (!auth.can('cardholders.view')) {
+            return;
+        }
+        for (const id of ids.filter((id) => id && !(id in cardholderNames.value))) {
+            try {
+                const { data } = await http.get(`/cardholders/${id}`);
+                const holder = data.data as Pick<Cardholder, 'full_name' | 'employee_no'>;
+                cardholderNames.value = { ...cardholderNames.value, [id]: holder.employee_no ? `${holder.full_name} (${holder.employee_no})` : holder.full_name };
+            } catch {
+                // Not found (e.g. deleted): the chip says "a cardholder"
+            }
+        }
+    },
+    { immediate: true },
+);
 const templates = ref<CardTemplate[]>([]);
 const users = ref<{ id: string; name: string }[]>([]);
 
@@ -208,7 +232,23 @@ useCardsPrinted(() => {
                     <SlidersHorizontal class="size-4" />{{ t('common.filters') }}
                     <UiBadge v-if="activeFilterCount" tone="brand">{{ activeFilterCount }}</UiBadge>
                 </UiButton>
-                <UiButton v-if="activeFilterCount || filters.search" variant="ghost" @click="list.resetFilters()"><RotateCcw class="size-4" />{{ t('common.reset') }}</UiButton>
+                <UiButton v-if="anyFilter" variant="ghost" @click="list.resetFilters()"><RotateCcw class="size-4" />{{ t('common.reset') }}</UiButton>
+            </div>
+            <div v-if="linkedFields.length" class="flex flex-wrap gap-2 border-b border-line px-4 py-3" data-linked-filters>
+                <span v-for="field in linkedFields" :key="field.key" class="inline-flex max-w-full items-center gap-1.5 rounded-full border border-line bg-surface-2 py-1 pr-1 pl-3 text-sm" :data-linked-filter="field.key">
+                    <span class="min-w-0 break-words">
+                        <span class="text-muted">{{ field.label }}:</span> <span class="font-medium text-fg">{{ cardholderNames[filters[field.key]] ?? t('reports.oneCardholder') }}</span>
+                    </span>
+                    <button
+                        type="button"
+                        class="grid size-6 shrink-0 place-items-center rounded-full text-muted hover:bg-surface hover:text-fg"
+                        :aria-label="t('reports.removeFilter', { name: field.label })"
+                        :title="t('reports.removeFilter', { name: field.label })"
+                        @click="filters[field.key] = ''"
+                    >
+                        <X class="size-3.5" />
+                    </button>
+                </span>
             </div>
             <div v-if="showFilters" class="grid gap-4 border-b border-line bg-surface-2/50 p-4 sm:grid-cols-2 lg:grid-cols-4" data-report-filters>
                 <template v-for="field in panelFields" :key="field.key">
@@ -267,7 +307,7 @@ useCardsPrinted(() => {
                     <template v-else>{{ text }}</template>
                 </template>
             </ReportTable>
-            <UiEmpty v-else-if="!loading && report" :title="t('reports.empty')" :hint="activeFilterCount || filters.search ? t('common.noResultsHint') : undefined" />
+            <UiEmpty v-else-if="!loading && report" :title="t('reports.empty')" :hint="anyFilter ? t('common.noResultsHint') : undefined" />
             <ListPagination :list="list" />
         </div>
 
