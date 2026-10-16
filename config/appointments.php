@@ -67,6 +67,10 @@ return [
         // Opening periods in one day (e.g. 9–1 and 2–5)
         'periods_per_day' => 4,
     ],
+    'closures' => [
+        // Days in a row one closure may last (both days whole); a yearly one is shorter than a year
+        'max_days' => 366,
+    ],
 
     // Limits of what an organization may set: [min, max]
     'limits' => [

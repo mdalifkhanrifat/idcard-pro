@@ -185,6 +185,16 @@ return [
         'hours.*.*' => 'সময়ের ভাগ',
         'hours.*.*.*' => 'সময়',
         'sort_order' => 'ক্রম',
+        // Appointment closures (5.3c)
+        'location' => 'জায়গা',
+        'date_from' => 'প্রথম দিন',
+        'date_to' => 'শেষ দিন',
+        'yearly' => 'প্রতি বছর',
+        'reason_local' => 'কারণ (অন্য ভাষায়)',
+        'filter.location' => 'জায়গা',
+        'filter.from' => 'থেকে',
+        'filter.to' => 'পর্যন্ত',
+        'filter.past' => 'পুরনোগুলোও',
         // Appointment settings (5.3)
         'appointments' => 'অ্যাপয়েন্টমেন্টের সেটিং',
         'appointments.enabled' => 'অ্যাপয়েন্টমেন্ট চালু',

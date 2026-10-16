@@ -385,6 +385,7 @@ return [
             'reports' => 'রিপোর্ট',
             'notifications' => 'নোটিফিকেশন',
             'appointment_locations' => 'অ্যাপয়েন্টমেন্টের জায়গা',
+            'appointment_closures' => 'অ্যাপয়েন্টমেন্টের ছুটি',
         ],
         'audit_events' => [
             'created' => 'তৈরি',

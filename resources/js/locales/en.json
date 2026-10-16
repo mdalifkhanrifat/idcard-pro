@@ -207,7 +207,8 @@
             "biometrics": "Biometrics",
             "reports": "Reports",
             "notifications": "Notifications",
-            "appointment_locations": "Appointment places"
+            "appointment_locations": "Appointment places",
+            "appointment_closures": "Appointment closures"
         },
         "events": {
             "created": "Created",

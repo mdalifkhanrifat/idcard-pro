@@ -385,6 +385,7 @@ return [
             'reports' => 'Reports',
             'notifications' => 'Notifications',
             'appointment_locations' => 'Appointment places',
+            'appointment_closures' => 'Appointment closures',
         ],
         'audit_events' => [
             'created' => 'Created',

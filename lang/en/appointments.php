@@ -30,6 +30,11 @@ return [
         'periods_overlap' => 'Two periods of this day overlap; let one end before the next starts.',
         'too_many' => 'An organization may have at most :max places.',
     ],
+    'closures' => [
+        'order' => 'The last day must be the first day or after it.',
+        'too_long' => 'A closure may last at most :max days in a row.',
+        'yearly_too_long' => 'A closure that comes every year must be shorter than a year.',
+    ],
     'settings' => [
         'booking_needed' => 'Choose who books before turning appointments on.',
         'service_needed' => 'Turn on at least one kind of visit before turning appointments on.',

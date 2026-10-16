@@ -208,6 +208,16 @@ return [
         'hours.*.*' => 'opening period',
         'hours.*.*.*' => 'time',
         'sort_order' => 'order',
+        // Appointment closures (5.3c)
+        'location' => 'place',
+        'date_from' => 'first day',
+        'date_to' => 'last day',
+        'yearly' => 'every year',
+        'reason_local' => 'reason (other language)',
+        'filter.location' => 'place',
+        'filter.from' => 'from',
+        'filter.to' => 'to',
+        'filter.past' => 'past ones too',
         // Appointment settings (5.3): named as the settings page labels them
         'appointments' => 'appointment settings',
         'appointments.enabled' => 'appointments on',
