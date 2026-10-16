@@ -8,11 +8,13 @@ use App\Support\Pdf\DisabledPdfRenderer;
 use App\Support\Pdf\GotenbergPdfRenderer;
 use App\Support\Pdf\PdfRenderer;
 use App\Support\Tenancy\TenantContext;
+use App\Support\Validation\LocalizedValidator;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -39,6 +41,9 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Model::shouldBeStrict(! $this->app->isProduction());
+
+        // Numbers in validation messages in the reader's digits
+        Validator::resolver(fn ($translator, array $data, array $rules, array $messages, array $attributes) => new LocalizedValidator($translator, $data, $rules, $messages, $attributes));
 
         // Platform administrators may do anything inside the tenant they are acting on.
         Gate::before(fn (User $user) => $user->is_platform_admin ? true : null);

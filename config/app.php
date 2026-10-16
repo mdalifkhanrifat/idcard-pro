@@ -85,6 +85,15 @@ return [
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
 
     /*
+    | Languages that write numbers with their own digits, 0 to 9 in order (App\Support\Localization\LocalDigits).
+    | Reports, messages and validation errors show numbers in the reader's digits; a new language is one line.
+    */
+
+    'digits' => [
+        'bn' => '০১২৩৪৫৬৭৮৯',
+    ],
+
+    /*
     |--------------------------------------------------------------------------
     | Encryption Key
     |--------------------------------------------------------------------------

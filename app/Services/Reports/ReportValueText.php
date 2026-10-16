@@ -3,6 +3,7 @@
 namespace App\Services\Reports;
 
 use App\Data\Reports\ReportColumn;
+use App\Support\Localization\LocalDigits;
 use DateTimeInterface;
 
 /**
@@ -11,8 +12,6 @@ use DateTimeInterface;
  */
 class ReportValueText
 {
-    private const BANGLA_DIGITS = ['0' => '০', '1' => '১', '2' => '২', '3' => '৩', '4' => '৪', '5' => '৫', '6' => '৬', '7' => '৭', '8' => '৮', '9' => '৯'];
-
     public function of(ReportColumn $column, string|int|float|DateTimeInterface|null $value): string
     {
         return match (true) {
@@ -43,6 +42,6 @@ class ReportValueText
      */
     public function digits(string $text): string
     {
-        return app()->getLocale() === 'bn' ? strtr($text, self::BANGLA_DIGITS) : $text;
+        return app(LocalDigits::class)->convert($text);
     }
 }
