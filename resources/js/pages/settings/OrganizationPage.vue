@@ -18,6 +18,8 @@ import { useUiStore } from '@/stores/ui';
 import { SAMPLE_VERIFY_CODE, verificationFieldLabel, verifyUrlFor } from '@/pages/cards/cards';
 import BiometricSettingsCard from '@/pages/settings/BiometricSettingsCard.vue';
 import NotificationSummary from '@/pages/notifications/NotificationSummary.vue';
+import AppointmentSummary from '@/pages/appointments/AppointmentSummary.vue';
+import { fetchAppointmentSettings, type AppointmentSettingsResponse } from '@/lib/appointments/api';
 import type { NotificationOptions, NotificationSettings } from '@/lib/notifications/api';
 import type { BiometricOptions, Tenant, TenantBiometrics, TenantVerification } from '@/types';
 
@@ -51,6 +53,9 @@ const biometricOptions = ref<BiometricOptions | null>(null);
 const notifications = ref<NotificationSettings | null>(null);
 const notificationOptions = ref<NotificationOptions | null>(null);
 const canOpenNotifications = computed(() => auth.can(['notifications.view', 'settings.update']));
+/** Appointments (5.3) likewise, for those who may see them: asked on their own (not in every /auth/me). */
+const appointments = ref<AppointmentSettingsResponse | null>(null);
+const canSeeAppointments = computed(() => auth.can(['appointments.view', 'settings.update']));
 
 const sampleCode = ref('EMP');
 const numberPreview = ref('');
@@ -75,6 +80,10 @@ onMounted(async () => {
     biometricOptions.value = data.data.biometric_options ?? null;
     notifications.value = data.data.notifications ?? null;
     notificationOptions.value = data.data.notification_options ?? null;
+    if (canSeeAppointments.value) {
+        // A summary only: without it the page is complete
+        fetchAppointmentSettings().then((answer) => (appointments.value = answer), () => (appointments.value = null));
+    }
     logoPreview.value = data.data.logo_url;
     Object.assign(cardSize, data.data.default_card_size ?? {});
 });
@@ -253,6 +262,14 @@ async function save(): Promise<void> {
                         </RouterLink>
                     </template>
                     <NotificationSummary :settings="notifications" :options="notificationOptions" />
+                </UiCard>
+                <UiCard v-if="appointments" :title="t('appointments.summary.title')" :description="t('appointments.summary.description')" data-appointment-card>
+                    <template #actions>
+                        <RouterLink to="/appointments/settings" class="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-brand-ink hover:underline" data-open-appointments>
+                            {{ t('appointments.summary.open') }}<ArrowRight class="size-4" />
+                        </RouterLink>
+                    </template>
+                    <AppointmentSummary :settings="appointments.appointments" :options="appointments.options" :places="appointments.places" />
                 </UiCard>
             </div>
 

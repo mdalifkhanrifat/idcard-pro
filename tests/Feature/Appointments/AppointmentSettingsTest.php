@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\AppointmentLocation;
 use App\Models\Role;
 use App\Services\Appointments\AppointmentSettings;
 use App\Support\Permissions\PermissionRegistry;
@@ -48,6 +49,14 @@ it('starts off, booked by staff at a time and confirmed at once, with every choi
         ->and($response->json('data.options.services.biometrics'))->toBe(['slots' => 1, 'names' => ['bn' => 'বায়োমেট্রিক নেওয়া', 'en' => 'Biometrics capture']])
         ->and($response->json('data.options.locations'))->toMatchArray(['weekdays' => ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'], 'slot_capacity' => 1, 'day_capacity' => 50, 'periods_per_day' => 4, 'max' => 100])
         ->and($response->json('data.options.locations.hours.sun'))->toBe([['09:00', '17:00']]);
+
+    // How many places there are and are on (read only)
+    expect($response->json('data.places'))->toBe(['total' => 0, 'active' => 0]);
+    app(TenantContext::class)->run($this->tenant, function () {
+        AppointmentLocation::factory()->create(['tenant_id' => $this->tenant->id]);
+        AppointmentLocation::factory()->inactive()->create(['tenant_id' => $this->tenant->id]);
+    });
+    $this->getJson('/api/v1/appointments/settings')->assertJsonPath('data.places', ['total' => 2, 'active' => 1]);
 
     // In Bangla, and in the organization as /auth/me gives it (so pages know whether to show appointments)
     $this->getJson('/api/v1/appointments/settings', ['Accept-Language' => 'bn'])->assertJsonPath('data.options.labels.confirmation.approval', 'প্রতিটা বুকিং কর্মী অনুমোদন করেন');

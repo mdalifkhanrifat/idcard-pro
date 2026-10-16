@@ -63,10 +63,10 @@ onMounted(load);
         </UiCard>
 
         <div v-else-if="data && draft" :class="dirty && canEdit && 'pb-20'" :data-tab="tab">
-            <AppointmentGeneralTab v-if="tab === 'general'" v-model="draft" :options="data.options" :errors="errors" :disabled="!canEdit || saving" />
+            <AppointmentGeneralTab v-if="tab === 'general'" v-model="draft" :options="data.options" :errors="errors" :disabled="!canEdit || saving" :places="data.places" />
             <AppointmentServicesTab v-else-if="tab === 'services'" v-model="draft" :options="data.options" :errors="errors" :disabled="!canEdit || saving" />
             <!-- Saved on their own; named by the saved settings -->
-            <AppointmentPlacesTab v-else-if="tab === 'places'" :options="data.options" :settings="data.appointments" :can-edit="canEdit" :unsaved="dirty" />
+            <AppointmentPlacesTab v-else-if="tab === 'places'" :options="data.options" :settings="data.appointments" :can-edit="canEdit" :unsaved="dirty" @counts="data.places = $event" />
             <AppointmentClosuresTab v-else-if="tab === 'closures'" :can-edit="canEdit" />
         </div>
 

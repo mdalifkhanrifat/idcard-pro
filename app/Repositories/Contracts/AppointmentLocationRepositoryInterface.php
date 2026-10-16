@@ -24,4 +24,11 @@ interface AppointmentLocationRepositoryInterface extends RepositoryInterface
      * How many places the organization has.
      */
     public function countAll(): int;
+
+    /**
+     * How many places the organization has, and how many of them are on.
+     *
+     * @return array{total: int, active: int}
+     */
+    public function counts(): array;
 }

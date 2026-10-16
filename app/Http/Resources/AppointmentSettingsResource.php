@@ -9,12 +9,20 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 /**
  * An organization's appointment settings (always complete) and what they can be set to, named in the reader's
- * language.
+ * language; with how many places it has and has on (read only — not part of the settings, not taken back).
  *
  * @mixin Tenant
  */
 class AppointmentSettingsResource extends JsonResource
 {
+    /**
+     * @param  array{total: int, active: int}  $places
+     */
+    public function __construct(Tenant $tenant, private array $places)
+    {
+        parent::__construct($tenant);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -23,6 +31,7 @@ class AppointmentSettingsResource extends JsonResource
         return [
             'appointments' => $this->resource->appointmentSettings(),
             'options' => AppointmentSettings::options(),
+            'places' => $this->places,
         ];
     }
 }

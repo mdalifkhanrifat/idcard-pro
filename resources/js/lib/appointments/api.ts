@@ -55,9 +55,16 @@ export interface AppointmentOptions {
     locations: { weekdays: string[]; hours: Record<string, [string, string][]>; slot_capacity: number; day_capacity: number; periods_per_day: number; max: number };
 }
 
+/** How many places the organization has, and has on (read only; appointments need one on). */
+export interface PlaceCounts {
+    total: number;
+    active: number;
+}
+
 export interface AppointmentSettingsResponse {
     appointments: AppointmentSettings;
     options: AppointmentOptions;
+    places: PlaceCounts;
 }
 
 /** GET /appointments/settings (appointments.view or settings.update). */

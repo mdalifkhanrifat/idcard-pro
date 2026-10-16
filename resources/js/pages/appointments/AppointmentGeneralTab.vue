@@ -8,7 +8,7 @@ import UiCheckbox from '@/components/ui/UiCheckbox.vue';
 import UiInput from '@/components/ui/UiInput.vue';
 import UiRadioGroup from '@/components/ui/UiRadioGroup.vue';
 import { formatNumber } from '@/lib/format';
-import type { AppointmentOptions, AppointmentSettings } from '@/lib/appointments/api';
+import type { AppointmentOptions, AppointmentSettings, PlaceCounts } from '@/lib/appointments/api';
 import AppointmentSummary from '@/pages/appointments/AppointmentSummary.vue';
 
 /**
@@ -16,7 +16,7 @@ import AppointmentSummary from '@/pages/appointments/AppointmentSummary.vue';
  * link and how they prove who they are, and the reminders. Every choice and its name come from the server
  * (options), the limits too.
  */
-const props = defineProps<{ options: AppointmentOptions; errors: Record<string, string[]>; disabled?: boolean }>();
+const props = defineProps<{ options: AppointmentOptions; errors: Record<string, string[]>; disabled?: boolean; places?: PlaceCounts }>();
 const settings = defineModel<AppointmentSettings>({ required: true });
 const { t } = useI18n();
 
@@ -58,7 +58,7 @@ function setReminder(index: number, value: number | string | null | undefined): 
 <template>
     <div class="space-y-6">
         <UiCard :title="t('appointments.general.title')" :description="t('appointments.general.description')" data-general-card>
-            <AppointmentSummary :settings="settings" :options="options" />
+            <AppointmentSummary :settings="settings" :options="options" :places="places" />
             <fieldset :disabled="disabled" class="mt-5 border-t border-line pt-5">
                 <UiCheckbox v-model="settings.enabled" :label="t('appointments.general.enabled')" :description="t('appointments.general.enabledHint')" data-setting="enabled" />
             </fieldset>

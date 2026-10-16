@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { AlertTriangle, ArrowDown, ArrowUp, CalendarSearch, MapPin, Pencil, Plus, Trash2 } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
@@ -9,7 +9,7 @@ import UiEmpty from '@/components/ui/UiEmpty.vue';
 import { useConfirm } from '@/composables/useConfirm';
 import { formatNumber, localDigits } from '@/lib/format';
 import { toApiError } from '@/lib/http';
-import type { AppointmentOptions, AppointmentSettings } from '@/lib/appointments/api';
+import type { AppointmentOptions, AppointmentSettings, PlaceCounts } from '@/lib/appointments/api';
 import { deletePlace, fetchPlaces, savePlace, type AppointmentPlace } from '@/lib/appointments/places';
 import { serviceName } from '@/lib/appointments/services';
 import AppointmentPlaceDialog from '@/pages/appointments/AppointmentPlaceDialog.vue';
@@ -23,6 +23,8 @@ import { useUiStore } from '@/stores/ui';
  * settings not yet saved (the preview goes by the saved ones).
  */
 const props = defineProps<{ options: AppointmentOptions; settings: AppointmentSettings; canEdit: boolean; unsaved: boolean }>();
+/** The places counted again after any change, so the page's summary stays right without asking the server. */
+const emit = defineEmits<{ counts: [counts: PlaceCounts] }>();
 const { t, locale } = useI18n();
 const ui = useUiStore();
 const { confirm } = useConfirm();
@@ -52,6 +54,7 @@ async function load(): Promise<void> {
     }
 }
 onMounted(load);
+watch(places, (list) => emit('counts', { total: list.length, active: list.filter((place) => place.is_active).length }));
 
 const noneActive = computed(() => props.settings.enabled && !loading.value && !failed.value && !places.value.some((place) => place.is_active));
 const full = computed(() => places.value.length >= props.options.locations.max);

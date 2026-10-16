@@ -25,6 +25,16 @@ class AppointmentLocationService
     }
 
     /**
+     * How many places there are and how many are on (a settings summary: appointments need one on).
+     *
+     * @return array{total: int, active: int}
+     */
+    public function counts(): array
+    {
+        return $this->locations->counts();
+    }
+
+    /**
      * A new place; what is not given starts from config('appointments.locations') (e.g. the week's hours).
      *
      * @param  array<string, mixed>  $data  validated input

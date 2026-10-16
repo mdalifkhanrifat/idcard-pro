@@ -1766,7 +1766,13 @@
             "bookedBy": "Who books",
             "booked": "What is booked",
             "slot": "{label}, {minutes} minutes",
-            "confirmation": "Confirmation"
+            "confirmation": "Confirmation",
+            "title": "Appointments",
+            "description": "Booking a time or a day to come in: who books, the places and their closed days.",
+            "open": "Open appointment settings",
+            "places": "Places",
+            "placesCount": "{active} of {total} on",
+            "noPlaces": "None yet"
         },
         "general": {
             "title": "Appointments",
