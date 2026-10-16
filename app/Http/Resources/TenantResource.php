@@ -68,6 +68,8 @@ class TenantResource extends JsonResource
             'notifications' => $this->resource->notificationSettings(),
             // What this installation can send and about what (also GET /notifications/settings)
             'notification_options' => NotificationSettings::options(),
+            // Whether and how the organization uses appointments (what they can be set to: GET /appointments/settings)
+            'appointments' => $this->resource->appointmentSettings(),
             'status' => $this->status,
             'users_count' => $this->whenCounted('users'),
             'created_at' => $this->created_at,

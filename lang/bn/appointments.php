@@ -1,0 +1,37 @@
+<?php
+
+return [
+    // Kinds of visit of the registry (config appointments.services); an organization may rename them and add its own
+    'services' => [
+        'new_card' => 'নতুন কার্ড',
+        'renewal' => 'কার্ড নবায়ন',
+        'biometrics' => 'বায়োমেট্রিক নেওয়া',
+        'card_collection' => 'কার্ড সংগ্রহ',
+    ],
+    'booking' => [
+        'staff' => 'কর্মীরা বুক করে দেন',
+        'public' => 'পাবলিক লিংকে নিজে বুক করেন',
+    ],
+    'scheduling' => [
+        'slot' => 'দিনের নির্দিষ্ট সময়',
+        'day' => 'শুধু দিন (আসার ক্রমে)',
+    ],
+    'confirmation' => [
+        'auto' => 'সাথে সাথে নিশ্চিত',
+        'approval' => 'প্রতিটা বুকিং কর্মী অনুমোদন করেন',
+    ],
+    'verification' => [
+        'code' => 'কর্মী নম্বর আর এককালীন কোড',
+        'date_of_birth' => 'কর্মী নম্বর আর জন্মতারিখ',
+        'national_id' => 'কর্মী নম্বর আর জাতীয় পরিচয়পত্র নম্বর',
+    ],
+    'settings' => [
+        'booking_needed' => 'অ্যাপয়েন্টমেন্ট চালুর আগে কে বুক করবেন তা বেছে নিন।',
+        'service_needed' => 'অ্যাপয়েন্টমেন্ট চালুর আগে অন্তত একটা কাজের ধরন চালু করুন।',
+        'code_channel_needed' => 'এককালীন কোড কোন পথে যাবে, অন্তত একটা বেছে নিন।',
+        'service_name' => 'এই কাজের ধরনের একটা নাম দিন।',
+        'service_key' => 'কাজের ধরনের key ২ থেকে ৪০টা ছোট ইংরেজি অক্ষর, অঙ্ক বা আন্ডারস্কোর, শুরুতে অক্ষর।',
+        'registry_service_kept' => 'সিস্টেমের দেওয়া কাজের ধরন সরানো যায় না; বন্ধ করে দিন।',
+        'too_many_services' => 'প্রতিষ্ঠান নিজের সর্বোচ্চ :maxটা কাজের ধরন যোগ করতে পারে।',
+    ],
+];

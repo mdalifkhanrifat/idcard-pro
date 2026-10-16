@@ -412,7 +412,7 @@ return [
         'designation' => 'Designations',
         'branch' => 'Branches',
         'trade' => 'Trades',
-        'appointment' => 'Appointments',
+        'appointment' => 'Appointments (posts)',
         'authority_type' => 'Authority types',
         'blood_group' => 'Blood groups',
         'religion' => 'Religions',

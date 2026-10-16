@@ -158,7 +158,8 @@
             "cards": "Issued cards",
             "biometrics": "Biometrics",
             "reports": "Reports",
-            "notifications": "Notifications"
+            "notifications": "Notifications",
+            "appointments": "Appointments"
         },
         "abilities": {
             "view": "View",
@@ -172,7 +173,9 @@
             "enroll": "Enroll",
             "override_requirements": "Override requirements",
             "export": "Export",
-            "send": "Send"
+            "send": "Send",
+            "book": "Book",
+            "manage": "Manage"
         }
     },
     "audit": {
@@ -408,7 +411,7 @@
             "designation": "Designations",
             "branch": "Branches",
             "trade": "Trades",
-            "appointment": "Appointments",
+            "appointment": "Appointments (posts)",
             "authority_type": "Authority types",
             "blood_group": "Blood groups",
             "religion": "Religions",

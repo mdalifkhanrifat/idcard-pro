@@ -158,7 +158,8 @@
             "cards": "ইস্যু হওয়া কার্ড",
             "biometrics": "বায়োমেট্রিক",
             "reports": "রিপোর্ট",
-            "notifications": "নোটিফিকেশন"
+            "notifications": "নোটিফিকেশন",
+            "appointments": "অ্যাপয়েন্টমেন্ট"
         },
         "abilities": {
             "view": "দেখা",
@@ -172,7 +173,9 @@
             "enroll": "নেওয়া",
             "override_requirements": "শর্ত পার করা",
             "export": "রপ্তানি",
-            "send": "পাঠানো"
+            "send": "পাঠানো",
+            "book": "বুক করা",
+            "manage": "পরিচালনা"
         }
     },
     "audit": {

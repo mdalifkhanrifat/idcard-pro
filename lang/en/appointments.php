@@ -1,0 +1,37 @@
+<?php
+
+return [
+    // Kinds of visit of the registry (config appointments.services); an organization may rename them and add its own
+    'services' => [
+        'new_card' => 'New card',
+        'renewal' => 'Card renewal',
+        'biometrics' => 'Biometrics capture',
+        'card_collection' => 'Card collection',
+    ],
+    'booking' => [
+        'staff' => 'Staff book for people',
+        'public' => 'People book through the public link',
+    ],
+    'scheduling' => [
+        'slot' => 'A time of the day',
+        'day' => 'A day (served in turn)',
+    ],
+    'confirmation' => [
+        'auto' => 'Confirmed at once',
+        'approval' => 'Staff approve each booking',
+    ],
+    'verification' => [
+        'code' => 'Employee number and a one-time code',
+        'date_of_birth' => 'Employee number and date of birth',
+        'national_id' => 'Employee number and national ID',
+    ],
+    'settings' => [
+        'booking_needed' => 'Choose who books before turning appointments on.',
+        'service_needed' => 'Turn on at least one kind of visit before turning appointments on.',
+        'code_channel_needed' => 'Choose at least one way a one-time code can be sent.',
+        'service_name' => 'Give this kind of visit a name.',
+        'service_key' => 'A kind of visit\'s key is 2 to 40 small letters, digits or underscores, starting with a letter.',
+        'registry_service_kept' => 'A built-in kind of visit cannot be removed; turn it off instead.',
+        'too_many_services' => 'An organization may add at most :max kinds of visit of its own.',
+    ],
+];

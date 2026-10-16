@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\TenantStatus;
+use App\Services\Appointments\AppointmentSettings;
 use App\Services\Biometrics\BiometricSettings;
 use App\Services\Cards\CardNumberFormat;
 use App\Services\Notifications\NotificationSettings;
@@ -108,6 +109,7 @@ class Tenant extends Model
             'verification' => $this->verificationSettings(),
             'biometrics' => $this->biometricSettings(),
             'notifications' => $this->notificationSettings(),
+            'appointments' => $this->appointmentSettings(),
         ];
     }
 
@@ -186,6 +188,17 @@ class Tenant extends Model
     public function notificationSettings(): array
     {
         return NotificationSettings::normalize((array) ($this->settings['notifications'] ?? []));
+    }
+
+    /**
+     * Appointment settings (5.3), complete with the configured defaults: off until the organization uses them;
+     * then who books, a time or a day, confirmation, limits, changes, verification, reminders, kinds of visit.
+     *
+     * @return array{enabled: bool, booking: array<int, string>, scheduling: string, slot_minutes: int, confirmation: string, family_members: bool, open_per_service: int, notice_hours: int, days_ahead: int, changes: array{cancel: bool, reschedule: bool, until_hours: int}, verification: array{method: string, code_channels: array<int, string>, code_minutes: int, code_attempts: int}, reminders: array<int, int>, services: array<string, array{enabled: bool, custom: bool, name: array<string, string|null>, slots: int, public: bool}>}
+     */
+    public function appointmentSettings(): array
+    {
+        return AppointmentSettings::normalize((array) ($this->settings['appointments'] ?? []));
     }
 
     /**

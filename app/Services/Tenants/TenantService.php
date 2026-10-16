@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Repositories\Contracts\RoleRepositoryInterface;
 use App\Repositories\Contracts\TenantRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
+use App\Services\Appointments\AppointmentSettings;
 use App\Services\Biometrics\BiometricSettings;
 use App\Services\MasterData\MasterDataService;
 use App\Services\Notifications\NotificationSettings;
@@ -176,6 +177,19 @@ class TenantService
         $current = (array) ($tenant->settings['notifications'] ?? []);
 
         return $this->updateSettings($tenant, ['settings' => [...($tenant->settings ?? []), 'notifications' => NotificationSettings::normalize(NotificationSettings::patch($current, $change))]]);
+    }
+
+    /**
+     * A partial change to the organization's appointment settings: what is not sent stays. Saved as any setting,
+     * so the audit log notes each changed one.
+     *
+     * @param  array<string, mixed>  $change
+     */
+    public function updateAppointmentSettings(Tenant $tenant, array $change): Tenant
+    {
+        $current = (array) ($tenant->settings['appointments'] ?? []);
+
+        return $this->updateSettings($tenant, ['settings' => [...($tenant->settings ?? []), 'appointments' => AppointmentSettings::normalize(AppointmentSettings::patch($current, $change))]]);
     }
 
     /**

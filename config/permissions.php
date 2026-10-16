@@ -39,6 +39,9 @@ return [
         // Notifications (Phase 5): see the log of sent messages (full address and text), and send by hand —
         // resend a failed or skipped message, or a test message to check a channel before turning it on
         'notifications' => ['view', 'send'],
+        // Appointments (Phase 5): see them, book (and change or cancel) one for a person, and manage the day —
+        // approve, check in, no-show, done. Their settings, places and closed days: settings.update
+        'appointments' => ['view', 'book', 'manage'],
     ],
 
     'default_roles' => [
@@ -56,10 +59,11 @@ return [
             'biometrics.view', 'biometrics.enroll', 'biometrics.delete',
             'reports.view', 'reports.export',
             'notifications.view', 'notifications.send',
+            'appointments.view', 'appointments.book', 'appointments.manage',
         ],
         // Legacy operators printed cards, so they issue them too
-        'Operator' => ['users.view', 'master_data.view', 'cardholders.view', 'cardholders.create', 'cardholders.update', 'templates.view', 'cards.view', 'cards.issue', 'cards.print', 'biometrics.view', 'biometrics.enroll'],
-        'Viewer' => ['users.view', 'audit.view', 'master_data.view', 'cardholders.view', 'cards.view', 'reports.view', 'notifications.view'],
+        'Operator' => ['users.view', 'master_data.view', 'cardholders.view', 'cardholders.create', 'cardholders.update', 'templates.view', 'cards.view', 'cards.issue', 'cards.print', 'biometrics.view', 'biometrics.enroll', 'appointments.view', 'appointments.book'],
+        'Viewer' => ['users.view', 'audit.view', 'master_data.view', 'cardholders.view', 'cards.view', 'reports.view', 'notifications.view', 'appointments.view'],
     ],
 
 ];
