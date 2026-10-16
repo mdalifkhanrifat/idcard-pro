@@ -5,6 +5,7 @@ namespace App\Services\Cardholders;
 use App\Exceptions\BusinessRuleException;
 use App\Models\Cardholder;
 use App\Models\FamilyMember;
+use App\Repositories\Contracts\AppointmentRepositoryInterface;
 use App\Repositories\Contracts\CardRepositoryInterface;
 use App\Repositories\Contracts\FamilyMemberRepositoryInterface;
 use App\Repositories\Contracts\MasterDataRepositoryInterface;
@@ -25,6 +26,7 @@ class FamilyMemberService
         private CardRepositoryInterface $cards,
         private CardholderFileService $files,
         private BiometricService $biometrics,
+        private AppointmentRepositoryInterface $appointments,
     ) {}
 
     /**
@@ -61,6 +63,9 @@ class FamilyMemberService
     {
         if ($this->cards->existsForFamilyMember($member->id)) {
             throw new BusinessRuleException(__('cards.in_use.family_member'));
+        }
+        if ($this->appointments->existsFor(familyMemberId: $member->id)) {
+            throw new BusinessRuleException(__('appointments.in_use.family_member'));
         }
         // File and biometric records go with the member (foreign key cascade); the stored files are removed afterwards
         $locations = $this->files->storedLocationsOfMember($member);

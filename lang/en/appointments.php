@@ -78,6 +78,11 @@ return [
         'family_off' => 'Family members do not have appointments in this organization.',
         'family_not_theirs' => 'This family member is not this cardholder\'s.',
     ],
+    'in_use' => [
+        'cardholder' => 'This person has appointments, which are kept as records (cancelled ones too). Mark the person inactive instead of deleting.',
+        'family_member' => 'This family member has appointments, which are kept as records (cancelled ones too).',
+        'location' => 'This place has appointments, which are kept as records. Turn it off instead of deleting.',
+    ],
     'number_format' => [
         'unknown_token' => 'Use only {YYYY}, {YY}, {MM} and {SEQ:n}.',
     ],

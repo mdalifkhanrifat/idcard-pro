@@ -6,6 +6,7 @@ use App\Data\Cardholders\CardholderFilter;
 use App\Exceptions\BusinessRuleException;
 use App\Models\Cardholder;
 use App\Models\User;
+use App\Repositories\Contracts\AppointmentRepositoryInterface;
 use App\Repositories\Contracts\CardholderRepositoryInterface;
 use App\Repositories\Contracts\CardRepositoryInterface;
 use App\Repositories\Contracts\MasterDataRepositoryInterface;
@@ -25,6 +26,7 @@ class CardholderService
         private CustomFieldService $customFields,
         private CardRepositoryInterface $cards,
         private BiometricService $biometrics,
+        private AppointmentRepositoryInterface $appointments,
     ) {}
 
     /**
@@ -69,6 +71,10 @@ class CardholderService
     {
         if ($this->cards->existsForCardholder($cardholder->id)) {
             throw new BusinessRuleException(__('cards.in_use.cardholder'));
+        }
+        // Appointments are never deleted (cancelled instead): the person stays with them
+        if ($this->appointments->existsFor(cardholderId: $cardholder->id)) {
+            throw new BusinessRuleException(__('appointments.in_use.cardholder'));
         }
         $locations = $this->files->storedLocations($cardholder);
         $biometricLocations = $this->biometrics->storedLocations($cardholder);

@@ -152,3 +152,21 @@ it('lets only those who book appointments book, within the organization', functi
     Sanctum::actingAs($this->owner);
     ($this->book)(['cardholder' => app(TenantContext::class)->run($other, fn () => Cardholder::factory()->create(['tenant_id' => $other->id]))->public_id])->assertUnprocessable()->assertJsonValidationErrors('cardholder');
 });
+
+it('keeps a booked cardholder, family member and place from deletion, with a message instead of a database error', function () {
+    $member = ($this->inTenant)(fn () => FamilyMember::factory()->create(['tenant_id' => $this->tenant->id, 'cardholder_id' => $this->holder->id]));
+    Sanctum::actingAs($this->owner);
+    ($this->book)(['family_member' => $member->public_id])->assertCreated();
+
+    $this->deleteJson("/api/v1/cardholders/{$this->holder->public_id}", [], ['Accept-Language' => 'bn'])->assertUnprocessable()
+        ->assertJsonPath('message', 'এই ব্যক্তির অ্যাপয়েন্টমেন্ট আছে, সেগুলো রেকর্ড হিসেবে থাকে (বাতিলগুলোও)। মোছার বদলে নিষ্ক্রিয় করুন।');
+    $this->deleteJson("/api/v1/cardholders/{$this->holder->public_id}/family-members/{$member->public_id}")->assertUnprocessable()
+        ->assertJsonPath('message', 'This family member has appointments, which are kept as records (cancelled ones too).');
+    $this->deleteJson("/api/v1/appointment-locations/{$this->place->public_id}")->assertUnprocessable()
+        ->assertJsonPath('message', 'This place has appointments, which are kept as records. Turn it off instead of deleting.');
+    expect($this->holder->fresh())->not->toBeNull()->and($member->fresh())->not->toBeNull()->and($this->place->fresh())->not->toBeNull();
+
+    // Without bookings they go as before
+    $free = ($this->inTenant)(fn () => AppointmentLocation::factory()->create(['tenant_id' => $this->tenant->id]));
+    $this->deleteJson("/api/v1/appointment-locations/{$free->public_id}")->assertNoContent();
+});

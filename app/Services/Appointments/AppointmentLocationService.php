@@ -5,6 +5,7 @@ namespace App\Services\Appointments;
 use App\Exceptions\BusinessRuleException;
 use App\Models\AppointmentLocation;
 use App\Repositories\Contracts\AppointmentLocationRepositoryInterface;
+use App\Repositories\Contracts\AppointmentRepositoryInterface;
 use App\Services\Reports\ReportValueText;
 use Illuminate\Support\Collection;
 
@@ -14,7 +15,10 @@ use Illuminate\Support\Collection;
  */
 class AppointmentLocationService
 {
-    public function __construct(private AppointmentLocationRepositoryInterface $locations) {}
+    public function __construct(
+        private AppointmentLocationRepositoryInterface $locations,
+        private AppointmentRepositoryInterface $appointments,
+    ) {}
 
     /**
      * @return Collection<int, AppointmentLocation>
@@ -64,7 +68,10 @@ class AppointmentLocationService
 
     public function delete(AppointmentLocation $location): void
     {
-        // Booked places are kept from deletion once bookings exist (5.4); turning one off keeps its history
+        // A place with bookings is kept (bookings are never deleted); turning it off keeps its history
+        if ($this->appointments->existsFor(locationId: $location->id)) {
+            throw new BusinessRuleException(__('appointments.in_use.location'));
+        }
         $this->locations->delete($location);
     }
 

@@ -40,6 +40,15 @@ class AppointmentRepository extends EloquentRepository implements AppointmentRep
             ->get();
     }
 
+    public function existsFor(?int $cardholderId = null, ?int $familyMemberId = null, ?int $locationId = null): bool
+    {
+        return $this->query()
+            ->when($cardholderId !== null, fn ($q) => $q->where('cardholder_id', $cardholderId))
+            ->when($familyMemberId !== null, fn ($q) => $q->where('family_member_id', $familyMemberId))
+            ->when($locationId !== null, fn ($q) => $q->where('location_id', $locationId))
+            ->exists();
+    }
+
     public function heldDays(int $locationId, string $from, string $to): array
     {
         return $this->query()

@@ -33,4 +33,10 @@ interface AppointmentRepositoryInterface extends RepositoryInterface
      * @return array<string, int>
      */
     public function heldDays(int $locationId, string $from, string $to): array;
+
+    /**
+     * Whether any appointment (of any status — bookings are never deleted) is of this cardholder (theirs or a
+     * family member's), this family member, or at this place: such records are kept.
+     */
+    public function existsFor(?int $cardholderId = null, ?int $familyMemberId = null, ?int $locationId = null): bool;
 }
