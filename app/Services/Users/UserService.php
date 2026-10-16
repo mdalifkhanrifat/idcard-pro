@@ -7,6 +7,7 @@ use App\Enums\UserStatus;
 use App\Exceptions\BusinessRuleException;
 use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
+use App\Support\Audit\RecordedChanges;
 use App\Support\Permissions\PermissionRegistry;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
@@ -35,6 +36,7 @@ class UserService
             $user = $this->users->create([...$this->attributes($data), 'password' => $data['password']]);
             $user->forceFill(['password_changed_at' => now()])->save();
             $user->syncRoles($data['roles'] ?? []);
+            $this->noteRoles($user, []);
 
             return $user->load('roles');
         });
@@ -59,11 +61,24 @@ class UserService
             $user->save();
 
             if (array_key_exists('roles', $data)) {
+                $before = $user->roles()->pluck('name')->all();
                 $user->syncRoles($data['roles']);
+                $this->noteRoles($user, $before);
             }
 
             return $user->load('roles');
         });
+    }
+
+    /**
+     * A user's roles given or taken, in the audit log (roles live in a pivot table the model's own logging does
+     * not see).
+     *
+     * @param  array<int, string>  $before
+     */
+    private function noteRoles(User $user, array $before): void
+    {
+        RecordedChanges::log('user', $user, 'updated', ['roles' => $before], ['roles' => $user->roles()->pluck('name')->all()]);
     }
 
     public function delete(User $user, User $actor): void

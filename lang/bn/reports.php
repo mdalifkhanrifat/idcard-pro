@@ -369,6 +369,7 @@ return [
         // The audit page's names of modules and events
         'audit_logs' => [
             'user' => 'ইউজার',
+            'roles' => 'রোল ও পারমিশন',
             'tenant' => 'প্রতিষ্ঠান',
             'cardholders' => 'কার্ডধারী',
             'cardholder_files' => 'কার্ডধারীর ফাইল',

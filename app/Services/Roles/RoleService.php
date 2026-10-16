@@ -5,13 +5,15 @@ namespace App\Services\Roles;
 use App\Exceptions\BusinessRuleException;
 use App\Models\Role;
 use App\Repositories\Contracts\RoleRepositoryInterface;
+use App\Support\Audit\RecordedChanges;
 use App\Support\Permissions\PermissionRegistry;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 /**
- * Tenant roles and their permissions.
+ * Tenant roles and their permissions. Every role made, renamed, given or taken permissions, or deleted is in the
+ * audit log (log "roles"; permissions live in a pivot table the model's own logging does not see).
  */
 class RoleService
 {
@@ -38,8 +40,9 @@ class RoleService
         return DB::transaction(function () use ($name, $permissions): Role {
             $role = $this->roles->create($name);
             $role->syncPermissions($permissions);
+            RecordedChanges::log('roles', $role, 'created', [], $this->described($role->load('permissions')));
 
-            return $role->load('permissions');
+            return $role;
         });
     }
 
@@ -51,10 +54,12 @@ class RoleService
         $this->ensureEditable($role);
 
         return DB::transaction(function () use ($role, $name, $permissions): Role {
+            $before = $this->described($role->load('permissions'));
             $this->roles->rename($role, $name);
             $role->syncPermissions($permissions);
+            RecordedChanges::log('roles', $role, 'updated', $before, $this->described($role->load('permissions')));
 
-            return $role->load('permissions');
+            return $role;
         });
     }
 
@@ -66,7 +71,17 @@ class RoleService
             throw new BusinessRuleException(__('roles.in_use'));
         }
 
+        $before = $this->described($role->load('permissions'));
         $this->roles->delete($role);
+        RecordedChanges::log('roles', $role, 'deleted', $before, []);
+    }
+
+    /**
+     * @return array{name: string, permissions: array<int, string>}
+     */
+    private function described(Role $role): array
+    {
+        return ['name' => $role->name, 'permissions' => $role->permissions->pluck('name')->all()];
     }
 
     private function ensureEditable(Role $role): void
