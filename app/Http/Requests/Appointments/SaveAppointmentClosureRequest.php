@@ -22,6 +22,18 @@ class SaveAppointmentClosureRequest extends FormRequest
     }
 
     /**
+     * The place as the API answers it ({id, name, name_local}) is taken back by its id, so a client may send
+     * back what it read.
+     */
+    protected function prepareForValidation(): void
+    {
+        $location = $this->input('location');
+        if (is_array($location) && array_key_exists('id', $location)) {
+            $this->merge(['location' => $location['id']]);
+        }
+    }
+
+    /**
      * @return array<string, array<int, mixed>>
      */
     public function rules(): array
