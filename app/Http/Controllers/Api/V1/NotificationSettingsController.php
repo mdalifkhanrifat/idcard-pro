@@ -32,7 +32,7 @@ class NotificationSettingsController extends Controller
 
     public function update(UpdateNotificationSettingsRequest $request): NotificationSettingsResource
     {
-        $tenant = $this->tenants->updateSettings($this->tenantContext->get(), ['notifications' => $request->validated('notifications')]);
+        $tenant = $this->tenants->updateNotificationSettings($this->tenantContext->get(), (array) $request->validated('notifications'));
 
         return new NotificationSettingsResource($tenant);
     }

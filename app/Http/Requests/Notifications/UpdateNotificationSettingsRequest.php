@@ -8,8 +8,8 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
 /**
- * The organization's notification settings alone ({notifications: {...}}), checked exactly as in the organization's
- * settings: what is sent changes, the rest stays.
+ * The organization's notification settings alone ({notifications: {...}}), checked by the same rules as in the
+ * organization's settings, as a partial change: what is sent changes, the rest stays (e.g. only log_days).
  */
 class UpdateNotificationSettingsRequest extends FormRequest
 {
@@ -23,7 +23,7 @@ class UpdateNotificationSettingsRequest extends FormRequest
      */
     public function rules(): array
     {
-        $rules = NotificationSettingsRules::rules();
+        $rules = NotificationSettingsRules::rules(partial: true);
         $rules['notifications'] = ['required', ...array_diff($rules['notifications'], ['sometimes'])];
 
         return $rules;
@@ -38,6 +38,7 @@ class UpdateNotificationSettingsRequest extends FormRequest
             $validator,
             $this->input('notifications'),
             (array) (app(TenantContext::class)->get()->settings['notifications'] ?? []),
+            partial: true,
         )];
     }
 }

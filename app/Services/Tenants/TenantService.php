@@ -166,6 +166,19 @@ class TenantService
     }
 
     /**
+     * A partial change to the organization's notification settings (JSON clients): what is not sent stays. Saved
+     * as any setting, so the audit log notes each changed one.
+     *
+     * @param  array<string, mixed>  $change
+     */
+    public function updateNotificationSettings(Tenant $tenant, array $change): Tenant
+    {
+        $current = (array) ($tenant->settings['notifications'] ?? []);
+
+        return $this->updateSettings($tenant, ['settings' => [...($tenant->settings ?? []), 'notifications' => NotificationSettings::normalize(NotificationSettings::patch($current, $change))]]);
+    }
+
+    /**
      * Platform-level changes (name, status).
      *
      * @param  array<string, mixed>  $data

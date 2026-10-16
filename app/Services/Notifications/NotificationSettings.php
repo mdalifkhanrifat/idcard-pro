@@ -89,6 +89,29 @@ class NotificationSettings
     }
 
     /**
+     * The saved settings with a partial change applied, for clients that send JSON (the notifications page, an
+     * integration): what is not sent stays as it was, a list that is sent replaces the old one (an empty list is
+     * none), an event changes only in what is sent for it, and its texts by language and part.
+     *
+     * @param  array<string, mixed>  $current
+     * @param  array<string, mixed>  $change
+     * @return array<string, mixed>
+     */
+    public static function patch(array $current, array $change): array
+    {
+        $events = (array) ($current['events'] ?? []);
+        foreach ((array) ($change['events'] ?? []) as $key => $eventChange) {
+            $event = [...(array) ($events[$key] ?? []), ...array_diff_key((array) $eventChange, ['templates' => true])];
+            foreach ((array) (((array) $eventChange)['templates'] ?? []) as $language => $parts) {
+                $event['templates'][$language] = [...(array) ($event['templates'][$language] ?? []), ...(array) $parts];
+            }
+            $events[$key] = $event;
+        }
+
+        return [...$current, ...$change, 'events' => $events];
+    }
+
+    /**
      * @param  array<string, mixed>  $saved
      * @return array{enabled: bool, channels: array<int, string>, languages: array<int, string>, sms_languages: string, prune_log: bool, log_days: int, events: array<string, array{enabled: bool, channels: array<int, string>, templates: array<string, array{subject: string|null, body: string|null, sms: string|null}>}>}
      */

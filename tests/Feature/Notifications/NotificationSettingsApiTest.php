@@ -93,12 +93,44 @@ it('saves only what is sent, leaving the rest of the organization\'s settings, a
     ])->and($changes['attributes'])->not->toHaveKey('settings.card_number_on_reissue');
 });
 
+it('takes a partial change, as an integration sends it: what is not sent stays, an empty list is none', function () {
+    Sanctum::actingAs($this->owner);
+    ($this->put)([
+        'enabled' => true, 'channels' => ['mail', 'sms'], 'languages' => ['bn', 'en'],
+        'events' => ['card_ready' => ['enabled' => true, 'channels' => ['mail', 'sms'], 'templates' => ['bn' => ['subject' => 'কার্ড', 'sms' => '{holder.name}, কার্ড নিন।'], 'en' => ['sms' => 'Card for {holder.name}.']]]],
+    ])->assertOk();
+    $saved = fn () => $this->tenant->fresh()->notificationSettings();
+    $audited = fn () => $this->getJson('/api/v1/audit/activities?filter[log_name]=tenant')->json('data.0.changes.attributes');
+
+    // One value alone: nothing else moves, and only it is noted
+    ($this->put)(['log_days' => 200])->assertOk()->assertJsonPath('data.notifications.log_days', 200);
+    expect($saved())->toMatchArray(['enabled' => true, 'channels' => ['mail', 'sms'], 'languages' => ['bn', 'en']])
+        ->and($audited())->toBe(['settings.notifications.log_days' => 200]);
+
+    // Part of an event: its other channels, its on/off and its other texts stay
+    ($this->put)(['events' => ['card_ready' => ['templates' => ['bn' => ['sms' => '{holder.name}: কার্ড তৈরি।']]]]])->assertOk();
+    expect($saved()['events']['card_ready'])->toMatchArray(['enabled' => true, 'channels' => ['mail', 'sms']])
+        ->and($saved()['events']['card_ready']['templates']['bn'])->toBe(['subject' => 'কার্ড', 'body' => null, 'sms' => '{holder.name}: কার্ড তৈরি।'])
+        ->and($saved()['events']['card_ready']['templates']['en']['sms'])->toBe('Card for {holder.name}.');
+
+    // An empty list is none; a text sent empty is the default again
+    ($this->put)(['events' => ['card_ready' => ['channels' => [], 'templates' => ['bn' => ['subject' => null]]]]])->assertOk();
+    expect($saved()['events']['card_ready']['channels'])->toBe([])
+        ->and($saved()['events']['card_ready']['templates']['bn']['subject'])->toBeNull()
+        ->and($saved()['channels'])->toBe(['mail', 'sms']);
+
+    // Turned off and on again alone, the channels stay
+    ($this->put)(['enabled' => false])->assertOk();
+    ($this->put)(['enabled' => true])->assertOk();
+    expect($saved())->toMatchArray(['enabled' => true, 'channels' => ['mail', 'sms']]);
+});
+
 it('checks them as the organization\'s settings do, in the reader\'s language', function () {
     Sanctum::actingAs($this->owner);
 
     $this->putJson('/api/v1/notifications/settings', [])->assertUnprocessable()->assertJsonValidationErrors('notifications');
     ($this->put)(['enabled' => true, 'colour' => 'red'])->assertJsonValidationErrors('notifications');
-    ($this->put)(['enabled' => true])->assertJsonValidationErrors(['notifications.channels' => 'Choose at least one channel to send messages on.']);
+    ($this->put)(['enabled' => true, 'channels' => []])->assertJsonValidationErrors(['notifications.channels' => 'Choose at least one channel to send messages on.']);
     ($this->put)(['enabled' => true, 'channels' => ['fax'], 'languages' => [], 'log_days' => 1])
         ->assertJsonValidationErrors(['notifications.channels.0', 'notifications.languages', 'notifications.log_days']);
     ($this->put)(['enabled' => true, 'channels' => ['mail'], 'events' => ['card_ready' => ['enabled' => true, 'templates' => ['bn' => ['sms' => '{x}']]]]], ['Accept-Language' => 'bn'])

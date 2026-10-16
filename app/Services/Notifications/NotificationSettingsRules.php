@@ -15,18 +15,21 @@ final class NotificationSettingsRules
     /**
      * On or off, channels, languages (and whether an SMS takes them all or only the first), whether old messages leave the log and after how many days, and per event
      * whether it goes out, on which channels and in whose words (an empty text = the event's default).
+     * Partial (JSON clients): any part may be sent alone, the rest stays; otherwise (a form, which cannot send an
+     * empty list) a section is sent whole, its on/off included.
      *
      * @return array<string, array<int, mixed>>
      */
-    public static function rules(): array
+    public static function rules(bool $partial = false): array
     {
+        $whole = fn (string $key): string => $partial ? 'sometimes' : "required_with:{$key}";
         $channels = NotificationSettings::channels();
         $languages = NotificationSettings::languages();
         $days = (array) config('notifications.log_days');
         $length = (array) config('notifications.max_length');
         $rules = [
             'notifications' => ['sometimes', 'array:enabled,channels,languages,sms_languages,prune_log,log_days,events'],
-            'notifications.enabled' => ['required_with:notifications', 'boolean'],
+            'notifications.enabled' => [$whole('notifications'), 'boolean'],
             'notifications.channels' => ['sometimes', 'array'],
             'notifications.channels.*' => ['distinct', Rule::in($channels)],
             'notifications.languages' => ['sometimes', 'array', 'min:1'],
@@ -40,7 +43,7 @@ final class NotificationSettingsRules
             $key = "notifications.events.{$event}";
             $rules += [
                 $key => ['sometimes', 'array:enabled,channels,templates'],
-                "{$key}.enabled" => ["required_with:{$key}", 'boolean'],
+                "{$key}.enabled" => [$whole($key), 'boolean'],
                 "{$key}.channels" => ['sometimes', 'array'],
                 "{$key}.channels.*" => ['distinct', Rule::in($channels)],
                 "{$key}.templates" => ['sometimes', 'array:'.implode(',', $languages)],
@@ -63,8 +66,9 @@ final class NotificationSettingsRules
      *
      * @param  mixed  $change  the `notifications` input
      * @param  array<string, mixed>  $current  the organization's saved settings.notifications
+     * @param  bool  $partial  the change is partial (see rules())
      */
-    public static function check(Validator $validator, mixed $change, array $current): void
+    public static function check(Validator $validator, mixed $change, array $current, bool $partial = false): void
     {
         if (! is_array($change) || $validator->errors()->has('notifications*')) {
             return;
@@ -82,7 +86,7 @@ final class NotificationSettingsRules
                 }
             }
         }
-        $settings = NotificationSettings::normalize(NotificationSettings::merge($current, $change));
+        $settings = NotificationSettings::normalize($partial ? NotificationSettings::patch($current, $change) : NotificationSettings::merge($current, $change));
         if ($settings['enabled'] && $settings['channels'] === []) {
             $validator->errors()->add('notifications.channels', __('notifications.settings.channel_needed'));
         }
