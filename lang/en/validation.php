@@ -214,6 +214,8 @@ return [
         'date_to' => 'last day',
         'yearly' => 'every year',
         'reason_local' => 'reason (other language)',
+        'keys' => 'holidays',
+        'keys.*' => 'holiday',
         'filter.location' => 'place',
         'filter.from' => 'from',
         'filter.to' => 'to',

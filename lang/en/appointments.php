@@ -43,6 +43,17 @@ return [
             'not_at_place' => 'This place does not take this kind of visit.',
         ],
     ],
+    'holidays' => [
+        'BD' => [
+            'language_martyrs_day' => 'Shaheed Day and International Mother Language Day',
+            'independence_day' => 'Independence Day',
+            'bengali_new_year' => 'Bengali New Year',
+            'may_day' => 'May Day',
+            'victory_day' => 'Victory Day',
+            'christmas' => 'Christmas Day',
+        ],
+        'none' => 'There are no holidays to offer for the organization\'s country.',
+    ],
     'closures' => [
         'order' => 'The last day must be the first day or after it.',
         'too_long' => 'A closure may last at most :max days in a row.',

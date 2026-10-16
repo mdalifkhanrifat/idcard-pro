@@ -116,3 +116,27 @@ function ymd(day: string): [number, number, number] {
 
     return [year, month - 1, date];
 }
+/** A public holiday on a fixed date of the organization's country (config appointments.holiday_presets). */
+export interface HolidayPreset {
+    key: string;
+    /** Day of the year, 'MM-DD'. */
+    date: string;
+    /** In the reader's language. */
+    name: string;
+    /** Every place is already closed on it every year. */
+    added: boolean;
+}
+
+/** GET /appointment-closures/presets: the country's holidays (none without a country or a list for it). */
+export async function fetchHolidayPresets(): Promise<{ country: string | null; presets: HolidayPreset[] }> {
+    const { data } = await http.get<{ data: { country: string | null; presets: HolidayPreset[] } }>('/appointment-closures/presets');
+
+    return data.data;
+}
+
+/** POST /appointment-closures/presets: adds the chosen ones as yearly closures of every place (those there are left out). */
+export async function addHolidayPresets(keys: string[]): Promise<{ added: number; skipped: number }> {
+    const { data } = await http.post<{ meta: { added: number; skipped: number } }>('/appointment-closures/presets', { keys });
+
+    return data.meta;
+}

@@ -1953,6 +1953,16 @@
             "dayFree": "{free} of {capacity} places free",
             "slotHint": "Each time shows how many can still book it (in brackets); a crossed-out time is full.",
             "beyond": "These days cannot be booked yet: booking opens {days} days ahead."
+        },
+        "holidays": {
+            "open": "Add the country's holidays",
+            "title": "The country's public holidays",
+            "description": "Holidays on a fixed date, added as yearly closures of every place.",
+            "there": "Added",
+            "allAdded": "Every holiday on the list is added already.",
+            "hint": "Holidays that follow the moon, like Eid or Puja, move every year: add them each year by hand. An added holiday can be changed or deleted like any closure.",
+            "add": "Add ({count})",
+            "added": "{count} holidays added."
         }
     }
 }

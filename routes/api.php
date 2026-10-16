@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\AppointmentAvailabilityController;
 use App\Http\Controllers\Api\V1\AppointmentClosureController;
+use App\Http\Controllers\Api\V1\AppointmentHolidayPresetController;
 use App\Http\Controllers\Api\V1\AppointmentLocationController;
 use App\Http\Controllers\Api\V1\AppointmentSettingsController;
 use App\Http\Controllers\Api\V1\AuditController;
@@ -122,6 +123,9 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('appointments/settings', [AppointmentSettingsController::class, 'show'])->name('appointments.settings.show');
             Route::apiResource('appointment-locations', AppointmentLocationController::class);
             Route::get('appointment-locations/{appointment_location}/availability', [AppointmentAvailabilityController::class, 'show'])->name('appointment-locations.availability');
+            // Before the resource, so "presets" is not read as a closure's id
+            Route::get('appointment-closures/presets', [AppointmentHolidayPresetController::class, 'index'])->name('appointment-closures.presets.index');
+            Route::post('appointment-closures/presets', [AppointmentHolidayPresetController::class, 'store'])->name('appointment-closures.presets.store');
             Route::apiResource('appointment-closures', AppointmentClosureController::class);
             Route::put('appointments/settings', [AppointmentSettingsController::class, 'update'])->name('appointments.settings.update');
             Route::get('notifications/settings', [NotificationSettingsController::class, 'show'])->name('notifications.settings.show');

@@ -71,6 +71,23 @@ return [
         // Days in a row one closure may last (both days whole); a yearly one is shorter than a year
         'max_days' => 366,
     ],
+
+    /*
+     * Public holidays on a fixed date of the year, by country (the organization's ISO 3166-1 country code):
+     * key => 'MM-DD'. Offered on the settings page to add at once, as yearly closures of every place; names in
+     * lang appointments.holidays.<country>.<key>. A new country is one line. Holidays that follow the moon (Eid,
+     * Puja) move every year and are added by hand; so are dates whose observance has changed lately.
+     */
+    'holiday_presets' => [
+        'BD' => [
+            'language_martyrs_day' => '02-21',
+            'independence_day' => '03-26',
+            'bengali_new_year' => '04-14',
+            'may_day' => '05-01',
+            'victory_day' => '12-16',
+            'christmas' => '12-25',
+        ],
+    ],
     'availability' => [
         // Days one question about free times may cover (a month's calendar with its edges)
         'max_days' => 62,

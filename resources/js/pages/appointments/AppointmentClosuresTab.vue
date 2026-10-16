@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Plus } from 'lucide-vue-next';
+import { CalendarPlus, Plus } from 'lucide-vue-next';
 import ListPagination from '@/components/ListPagination.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiCard from '@/components/ui/UiCard.vue';
@@ -12,10 +12,11 @@ import { useConfirm } from '@/composables/useConfirm';
 import { useListQuery } from '@/composables/useListQuery';
 import { toApiError } from '@/lib/http';
 import { todayIn } from '@/lib/appointments/availability';
-import { closureDates, deleteClosure, fetchYearlyClosures, type AppointmentClosure } from '@/lib/appointments/closures';
+import { closureDates, deleteClosure, fetchHolidayPresets, fetchYearlyClosures, type AppointmentClosure, type HolidayPreset } from '@/lib/appointments/closures';
 import { fetchPlaces, type AppointmentPlace } from '@/lib/appointments/places';
 import AppointmentClosureDialog from '@/pages/appointments/AppointmentClosureDialog.vue';
 import AppointmentClosureRow from '@/pages/appointments/AppointmentClosureRow.vue';
+import AppointmentHolidayPresetsDialog from '@/pages/appointments/AppointmentHolidayPresetsDialog.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
 
@@ -24,7 +25,7 @@ import { useUiStore } from '@/stores/ui';
  * yearly holidays in the order of the year, and the closed days of given days from the organization's today on
  * (those over too, on request), in pages; of every place or one place. Added, changed and deleted here.
  */
-defineProps<{ canEdit: boolean }>();
+const props = defineProps<{ canEdit: boolean }>();
 const { t, locale } = useI18n();
 const auth = useAuthStore();
 const ui = useUiStore();
@@ -55,9 +56,23 @@ async function loadYearly(): Promise<void> {
         yearlyFailed.value = true;
     }
 }
+// The country's public holidays to add at once (only for those who may add them; none without a list)
+const presets = ref<HolidayPreset[]>([]);
+const presetsOpen = ref(false);
+async function loadPresets(): Promise<void> {
+    if (!props.canEdit) {
+        return;
+    }
+    try {
+        presets.value = (await fetchHolidayPresets()).presets;
+    } catch {
+        presets.value = [];
+    }
+}
 function reload(): void {
     list.load();
     loadYearly();
+    loadPresets();
 }
 onMounted(reload);
 watch(() => list.filters.location, loadYearly);
@@ -101,6 +116,9 @@ async function remove(closure: AppointmentClosure): Promise<void> {
         </div>
 
         <UiCard :title="t('appointments.closures.yearlyTitle')" :description="t('appointments.closures.yearlyDescription')" :padded="false" data-yearly-card>
+            <template v-if="canEdit && presets.length" #actions>
+                <UiButton variant="secondary" size="sm" data-open-holidays @click="presetsOpen = true"><CalendarPlus class="size-4" />{{ t('appointments.holidays.open') }}</UiButton>
+            </template>
             <UiEmpty v-if="yearlyFailed" :title="t('appointments.closures.loadFailed')" :hint="t('common.error')">
                 <UiButton variant="secondary" @click="loadYearly">{{ t('appointments.retry') }}</UiButton>
             </UiEmpty>
@@ -130,6 +148,7 @@ async function remove(closure: AppointmentClosure): Promise<void> {
             </template>
         </UiCard>
 
+        <AppointmentHolidayPresetsDialog v-model:open="presetsOpen" :presets="presets" @added="reload" />
         <AppointmentClosureDialog v-model:open="dialog" :closure="editing" :places="places" :can-edit="canEdit" @saved="reload" />
     </div>
 </template>

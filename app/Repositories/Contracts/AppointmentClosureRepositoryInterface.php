@@ -29,4 +29,11 @@ interface AppointmentClosureRepositoryInterface extends RepositoryInterface
      * @return Collection<int, AppointmentClosure>
      */
     public function affecting(AppointmentLocation $location, string $from, string $to): Collection;
+
+    /**
+     * The days of the year ('MM-DD') already closing every place every year, as one-day closures.
+     *
+     * @return array<int, string>
+     */
+    public function yearlyEveryPlaceDays(): array;
 }

@@ -191,6 +191,8 @@ return [
         'date_to' => 'শেষ দিন',
         'yearly' => 'প্রতি বছর',
         'reason_local' => 'কারণ (অন্য ভাষায়)',
+        'keys' => 'ছুটি',
+        'keys.*' => 'ছুটি',
         'filter.location' => 'জায়গা',
         'filter.from' => 'থেকে',
         'filter.to' => 'পর্যন্ত',

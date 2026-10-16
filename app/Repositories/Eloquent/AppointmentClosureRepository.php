@@ -41,6 +41,19 @@ class AppointmentClosureRepository extends EloquentRepository implements Appoint
             ->get();
     }
 
+    public function yearlyEveryPlaceDays(): array
+    {
+        return $this->query()
+            ->whereNull('location_id')
+            ->where('yearly', true)
+            ->whereColumn('date_from', 'date_to')
+            ->pluck('date_from')
+            ->map(fn ($day) => substr((string) $day, 5, 5))
+            ->unique()
+            ->values()
+            ->all();
+    }
+
     /**
      * @return Builder<AppointmentClosure>
      */
