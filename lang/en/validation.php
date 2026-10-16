@@ -223,6 +223,12 @@ return [
         'filter.yearly' => 'every year',
         // Appointment availability (5.3d)
         'service' => 'kind of visit',
+        // Booking an appointment (5.4)
+        'cardholder' => 'cardholder',
+        'family_member' => 'family member',
+        'date' => 'day',
+        'time' => 'time',
+        'note' => 'note',
         'from' => 'from',
         'to' => 'to',
         'audience' => 'for whom',

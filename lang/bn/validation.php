@@ -200,6 +200,12 @@ return [
         'filter.yearly' => 'প্রতি বছর',
         // Appointment availability (5.3d)
         'service' => 'কাজের ধরন',
+        // Booking an appointment (5.4)
+        'cardholder' => 'কার্ডধারী',
+        'family_member' => 'পরিবারের সদস্য',
+        'date' => 'দিন',
+        'time' => 'সময়',
+        'note' => 'নোট',
         'from' => 'থেকে',
         'to' => 'পর্যন্ত',
         'audience' => 'কার জন্য',

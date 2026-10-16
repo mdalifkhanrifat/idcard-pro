@@ -31,4 +31,10 @@ interface AppointmentLocationRepositoryInterface extends RepositoryInterface
      * @return array{total: int, active: int}
      */
     public function counts(): array;
+
+    /**
+     * The place read again under a row lock, so bookings at one place are made one after another (two at once
+     * never both take its last place). Call inside a database transaction.
+     */
+    public function lockForBooking(AppointmentLocation $location): AppointmentLocation;
 }

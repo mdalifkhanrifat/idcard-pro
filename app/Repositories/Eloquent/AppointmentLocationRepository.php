@@ -35,6 +35,11 @@ class AppointmentLocationRepository extends EloquentRepository implements Appoin
         return $this->query()->count();
     }
 
+    public function lockForBooking(AppointmentLocation $location): AppointmentLocation
+    {
+        return $this->query()->whereKey($location->id)->lockForUpdate()->firstOrFail();
+    }
+
     public function counts(): array
     {
         return ['total' => $this->countAll(), 'active' => $this->query()->where('is_active', true)->count()];

@@ -4,7 +4,7 @@ namespace App\Providers;
 
 use App\Models\User;
 use App\Services\Appointments\AppointmentLoad;
-use App\Services\Appointments\NoAppointmentLoad;
+use App\Services\Appointments\BookedAppointmentLoad;
 use App\Services\Cards\CardRequirements;
 use App\Support\Pdf\DisabledPdfRenderer;
 use App\Support\Pdf\GotenbergPdfRenderer;
@@ -31,7 +31,7 @@ class AppServiceProvider extends ServiceProvider
         // One per request or job: requirements read the organization's settings once
         $this->app->scoped(CardRequirements::class);
         // What is already booked at a place (bookings come with 5.4)
-        $this->app->bind(AppointmentLoad::class, NoAppointmentLoad::class);
+        $this->app->bind(AppointmentLoad::class, BookedAppointmentLoad::class);
 
         $this->app->bind(PdfRenderer::class, fn () => match (config('pdf.driver')) {
             'gotenberg' => new GotenbergPdfRenderer((string) config('pdf.gotenberg.url'), (int) config('pdf.gotenberg.timeout')),
