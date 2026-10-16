@@ -11,6 +11,7 @@ import UiSelect from '@/components/ui/UiSelect.vue';
 import { useConfirm } from '@/composables/useConfirm';
 import { useListQuery } from '@/composables/useListQuery';
 import { toApiError } from '@/lib/http';
+import { todayIn } from '@/lib/appointments/availability';
 import { closureDates, deleteClosure, fetchYearlyClosures, type AppointmentClosure } from '@/lib/appointments/closures';
 import { fetchPlaces, type AppointmentPlace } from '@/lib/appointments/places';
 import AppointmentClosureDialog from '@/pages/appointments/AppointmentClosureDialog.vue';
@@ -69,7 +70,7 @@ function edit(closure: AppointmentClosure | null): void {
 }
 
 /** The organization's today (its own time zone), to mark closures already over. */
-const today = computed(() => new Intl.DateTimeFormat('en-CA', { timeZone: auth.tenant?.timezone }).format(new Date()));
+const today = computed(() => todayIn(auth.tenant?.timezone));
 const days = (closure: AppointmentClosure) => closureDates(closure, locale.value);
 
 async function remove(closure: AppointmentClosure): Promise<void> {

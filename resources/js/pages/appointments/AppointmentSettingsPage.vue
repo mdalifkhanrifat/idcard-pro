@@ -66,7 +66,7 @@ onMounted(load);
             <AppointmentGeneralTab v-if="tab === 'general'" v-model="draft" :options="data.options" :errors="errors" :disabled="!canEdit || saving" />
             <AppointmentServicesTab v-else-if="tab === 'services'" v-model="draft" :options="data.options" :errors="errors" :disabled="!canEdit || saving" />
             <!-- Saved on their own; named by the saved settings -->
-            <AppointmentPlacesTab v-else-if="tab === 'places'" :options="data.options" :settings="data.appointments" :can-edit="canEdit" />
+            <AppointmentPlacesTab v-else-if="tab === 'places'" :options="data.options" :settings="data.appointments" :can-edit="canEdit" :unsaved="dirty" />
             <AppointmentClosuresTab v-else-if="tab === 'closures'" :can-edit="canEdit" />
         </div>
 

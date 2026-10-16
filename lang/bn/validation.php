@@ -201,6 +201,7 @@ return [
         'from' => 'থেকে',
         'to' => 'পর্যন্ত',
         'audience' => 'কার জন্য',
+        'preview' => 'চালু হলে কেমন দেখাবে',
         // Appointment settings (5.3)
         'appointments' => 'অ্যাপয়েন্টমেন্টের সেটিং',
         'appointments.enabled' => 'অ্যাপয়েন্টমেন্ট চালু',
@@ -343,7 +344,6 @@ return [
         'designation_local' => 'পদবি (বাংলায়)',
         'effective_from' => 'কার্যকর শুরু',
         'effective_to' => 'কার্যকর শেষ',
-        'audience' => 'কার জন্য',
         'orientation' => 'দিক',
         'width' => 'প্রস্থ',
         'height' => 'উচ্চতা',

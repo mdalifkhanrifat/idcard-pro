@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { AlertTriangle, ArrowDown, ArrowUp, MapPin, Pencil, Plus, Trash2 } from 'lucide-vue-next';
+import { AlertTriangle, ArrowDown, ArrowUp, CalendarSearch, MapPin, Pencil, Plus, Trash2 } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiCard from '@/components/ui/UiCard.vue';
@@ -13,14 +13,16 @@ import type { AppointmentOptions, AppointmentSettings } from '@/lib/appointments
 import { deletePlace, fetchPlaces, savePlace, type AppointmentPlace } from '@/lib/appointments/places';
 import { serviceName } from '@/lib/appointments/services';
 import AppointmentPlaceDialog from '@/pages/appointments/AppointmentPlaceDialog.vue';
+import AppointmentPlacePreviewDialog from '@/pages/appointments/AppointmentPlacePreviewDialog.vue';
 import { useUiStore } from '@/stores/ui';
 
 /**
  * The places people come to (a branch, an office, a counter), each saved on its own (its own API — apart from
- * the page's save bar): the list in its order, added, changed, moved, turned off or deleted. Warns while
- * appointments are on and no place is.
+ * the page's save bar): the list in its order, added, changed, moved, turned off or deleted, and previewed as
+ * people booking will see it. Warns while appointments are on and no place is. `unsaved`: the page has
+ * settings not yet saved (the preview goes by the saved ones).
  */
-const props = defineProps<{ options: AppointmentOptions; settings: AppointmentSettings; canEdit: boolean }>();
+const props = defineProps<{ options: AppointmentOptions; settings: AppointmentSettings; canEdit: boolean; unsaved: boolean }>();
 const { t, locale } = useI18n();
 const ui = useUiStore();
 const { confirm } = useConfirm();
@@ -31,6 +33,12 @@ const failed = ref(false);
 const busy = ref(false);
 const dialog = ref(false);
 const editing = ref<AppointmentPlace | null>(null);
+const previewing = ref<AppointmentPlace | null>(null);
+const preview = ref(false);
+function show(place: AppointmentPlace): void {
+    previewing.value = place;
+    preview.value = true;
+}
 
 async function load(): Promise<void> {
     loading.value = true;
@@ -139,6 +147,7 @@ async function remove(place: AppointmentPlace): Promise<void> {
                             <button type="button" class="rounded p-1.5 text-muted hover:bg-surface-2 hover:text-fg disabled:opacity-30" :disabled="busy || index === 0" :aria-label="t('settings.verification.up')" data-move-up @click="move(index, -1)"><ArrowUp class="size-4" /></button>
                             <button type="button" class="rounded p-1.5 text-muted hover:bg-surface-2 hover:text-fg disabled:opacity-30" :disabled="busy || index === places.length - 1" :aria-label="t('settings.verification.down')" data-move-down @click="move(index, 1)"><ArrowDown class="size-4" /></button>
                         </template>
+                        <UiButton variant="ghost" size="sm" data-preview-place @click="show(place)"><CalendarSearch class="size-4" />{{ t('appointments.preview.show') }}</UiButton>
                         <UiButton variant="ghost" size="sm" data-edit-place @click="edit(place)"><Pencil class="size-4" />{{ canEdit ? t('appointments.places.edit') : t('appointments.places.view') }}</UiButton>
                         <UiButton v-if="canEdit" variant="ghost" size="sm" :aria-label="t('appointments.places.delete')" data-delete-place @click="remove(place)"><Trash2 class="size-4 text-danger" /></UiButton>
                     </div>
@@ -146,6 +155,7 @@ async function remove(place: AppointmentPlace): Promise<void> {
             </ul>
         </UiCard>
 
+        <AppointmentPlacePreviewDialog v-model:open="preview" :place="previewing" :options="options" :settings="settings" :unsaved="unsaved" />
         <AppointmentPlaceDialog v-model:open="dialog" :place="editing" :options="options" :settings="settings" :can-edit="canEdit" :next-order="nextOrder" @saved="saved" />
     </div>
 </template>

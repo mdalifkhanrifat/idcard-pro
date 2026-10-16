@@ -28,16 +28,17 @@ class AvailabilityService
     /**
      * Days from one to another (Y-m-d, both whole) within what may be booked: from today (the organization's)
      * to `days_ahead` on; earlier and later days are left out. Staff may book up to now, the public link at
-     * least `notice_hours` ahead and only kinds offered there.
+     * least `notice_hours` ahead and only kinds offered there. A preview shows it as it will be once
+     * appointments and the place are turned on (setting up before turning them on); every other rule holds.
      */
-    public function for(AppointmentLocation $location, string $service, string $from, string $to, BookingAudience $audience = BookingAudience::Staff, ?CarbonImmutable $now = null): Availability
+    public function for(AppointmentLocation $location, string $service, string $from, string $to, BookingAudience $audience = BookingAudience::Staff, ?CarbonImmutable $now = null, bool $preview = false): Availability
     {
         $tenant = $this->tenant->get();
         $settings = $tenant->appointmentSettings();
         $scheduling = $settings['scheduling'];
         $kind = $settings['services'][$service] ?? null;
         $named = ['key' => $service, 'name' => $kind === null ? $service : AppointmentSettings::serviceName($service, $kind), 'slots' => $kind['slots'] ?? null];
-        $unavailable = $this->unavailable($settings, $location, $service, $audience);
+        $unavailable = $this->unavailable($settings, $location, $service, $audience, $preview);
         if ($unavailable !== null) {
             return new Availability($scheduling, $named, $unavailable, []);
         }
@@ -87,14 +88,14 @@ class AvailabilityService
      *
      * @param  array<string, mixed>  $settings  the organization's appointment settings
      */
-    private function unavailable(array $settings, AppointmentLocation $location, string $service, BookingAudience $audience): ?string
+    private function unavailable(array $settings, AppointmentLocation $location, string $service, BookingAudience $audience, bool $preview): ?string
     {
         $kind = $settings['services'][$service] ?? null;
 
         return match (true) {
-            ! $settings['enabled'] => 'off',
+            ! $preview && ! $settings['enabled'] => 'off',
             ! in_array($audience->value, $settings['booking'], true) => "not_{$audience->value}",
-            ! $location->is_active => 'place_off',
+            ! $preview && ! $location->is_active => 'place_off',
             $kind === null => 'unknown_service',
             ! $kind['enabled'] => 'service_off',
             $audience === BookingAudience::Public && ! $kind['public'] => 'service_not_public',

@@ -1924,6 +1924,29 @@
             "reason": "Reason",
             "reasonLocal": "Reason in the other language",
             "reasonHint": "Shown where people book, in their language."
+        },
+        "preview": {
+            "show": "Preview",
+            "title": "How “{name}” will look",
+            "description": "A week of this place as people booking see it, by the saved settings.",
+            "moduleOff": "Appointments are off for now: this is how it will look once they are turned on.",
+            "placeOff": "This place is off for now: this is how it will look once it is turned on.",
+            "unsaved": "Changes not yet saved on this page are not shown here. Save them first to see them.",
+            "noService": "This place takes no kind of visit that is on.",
+            "service": "Kind of visit",
+            "audience": "As seen by",
+            "earlier": "Earlier week",
+            "later": "Later week",
+            "today": "today",
+            "closed": "Closed",
+            "closure": "Closed (holiday)",
+            "closedFor": "Closed: {reason}",
+            "noneLeftToday": "No times left today",
+            "noneLeft": "Nothing free",
+            "slotFree": "{free} of {capacity} free",
+            "dayFree": "{free} of {capacity} places free",
+            "slotHint": "Each time shows how many can still book it (in brackets); a crossed-out time is full.",
+            "beyond": "These days cannot be booked yet: booking opens {days} days ahead."
         }
     }
 }

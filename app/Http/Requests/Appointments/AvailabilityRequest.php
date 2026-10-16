@@ -14,7 +14,7 @@ use Illuminate\Validation\Validator;
 /**
  * What a place has free: a kind of visit, the days (the organization's, both whole; from today and a week by
  * default, at most config('appointments.availability.max_days')), and for whom (staff by default; `public`
- * shows the public link's view).
+ * shows the public link's view); `preview` shows it as it will be once appointments and the place are on.
  */
 class AvailabilityRequest extends FormRequest
 {
@@ -33,6 +33,7 @@ class AvailabilityRequest extends FormRequest
             'from' => ['sometimes', 'date_format:Y-m-d'],
             'to' => ['sometimes', 'date_format:Y-m-d', 'after_or_equal:from'],
             'audience' => ['sometimes', new Enum(BookingAudience::class)],
+            'preview' => ['sometimes', 'boolean'],
         ];
     }
 

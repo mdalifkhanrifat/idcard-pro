@@ -174,6 +174,17 @@ it('says why nothing can be booked', function () {
     expect($why()->unavailable)->toBe('not_staff');
     ($this->settings)(['enabled' => false]);
     expect($why()->unavailable)->toBe('off');
+
+    // A preview: as it will be once appointments and the place are on; the other rules hold
+    $preview = fn (string $service = 'renewal', ?AppointmentLocation $at = null) => app(TenantContext::class)->run(
+        $this->tenant->fresh(),
+        fn () => app(AvailabilityService::class)->for($at ?? $place, $service, '2026-10-18', '2026-10-19', BookingAudience::Staff, CarbonImmutable::parse('2026-10-16 03:00:00'), preview: true),
+    );
+    expect($preview()->unavailable)->toBeNull()->and($preview()->days)->toHaveCount(2)
+        ->and($preview('renewal', ($this->place)(['is_active' => false, 'services' => ['renewal']]))->unavailable)->toBeNull()
+        ->and($preview('new_card')->unavailable)->toBe('not_at_place');
+    ($this->settings)(['enabled' => false, 'services' => ['renewal' => ['enabled' => false]]]);
+    expect($preview()->unavailable)->toBe('service_off');
 });
 
 it('answers on the API for those who see appointments or may change the settings, in the reader\'s language', function () {
@@ -199,6 +210,8 @@ it('answers on the API for those who see appointments or may change the settings
     ($this->settings)(['enabled' => false]);
     $this->getJson("{$url}?service=new_card", ['Accept-Language' => 'bn'])->assertOk()
         ->assertJsonPath('data.unavailable', ['key' => 'off', 'message' => 'প্রতিষ্ঠানে অ্যাপয়েন্টমেন্ট বন্ধ।'])->assertJsonPath('data.days', []);
+    $this->getJson("{$url}?service=new_card&preview=1")->assertOk()->assertJsonPath('data.unavailable', null)->assertJsonCount(7, 'data.days');
+    $this->getJson("{$url}?service=new_card&preview=maybe", ['Accept-Language' => 'bn'])->assertUnprocessable()->assertJsonValidationErrors('preview');
 
     $this->getJson("{$url}?from=2026-10-01&to=2026-12-31&audience=everyone", ['Accept-Language' => 'bn'])->assertUnprocessable()
         ->assertJsonPath('errors.service', ['কাজের ধরন দিতে হবে।'])->assertJsonPath('errors.audience', ['বাছাই করা কার জন্য সঠিক নয়।']);

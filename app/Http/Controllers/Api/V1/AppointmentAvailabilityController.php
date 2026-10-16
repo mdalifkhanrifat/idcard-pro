@@ -20,6 +20,6 @@ class AppointmentAvailabilityController extends Controller
     {
         [$from, $to] = $request->days();
 
-        return new AvailabilityResource($this->availability->for($appointmentLocation, (string) $request->validated('service'), $from, $to, $request->audience()));
+        return new AvailabilityResource($this->availability->for($appointmentLocation, (string) $request->validated('service'), $from, $to, $request->audience(), preview: $request->boolean('preview')));
     }
 }

@@ -224,6 +224,7 @@ return [
         'from' => 'from',
         'to' => 'to',
         'audience' => 'for whom',
+        'preview' => 'preview as if on',
         // Appointment settings (5.3): named as the settings page labels them
         'appointments' => 'appointment settings',
         'appointments.enabled' => 'appointments on',
