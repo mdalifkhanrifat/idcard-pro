@@ -13,6 +13,7 @@ import { useUrlTab } from '@/composables/useUrlTab';
 import { fetchAppointmentSettings, saveAppointmentSettings, type AppointmentSettings, type AppointmentSettingsResponse } from '@/lib/appointments/api';
 import { withRemovedServices } from '@/lib/appointments/services';
 import AppointmentGeneralTab from '@/pages/appointments/AppointmentGeneralTab.vue';
+import AppointmentPlacesTab from '@/pages/appointments/AppointmentPlacesTab.vue';
 import AppointmentServicesTab from '@/pages/appointments/AppointmentServicesTab.vue';
 import { useAuthStore } from '@/stores/auth';
 
@@ -25,8 +26,8 @@ const { t } = useI18n();
 const auth = useAuthStore();
 const canEdit = computed(() => auth.can('settings.update'));
 
-type TabKey = 'general' | 'services';
-const TABS = computed<TabKey[]>(() => ['general', 'services']);
+type TabKey = 'general' | 'services' | 'places';
+const TABS = computed<TabKey[]>(() => ['general', 'services', 'places']);
 const tab = useUrlTab(TABS);
 /** Where a refused save's mistakes are: the kinds of visit have a tab of their own. */
 const tabOf = (field: string): TabKey => (field.startsWith('appointments.services') ? 'services' : 'general');
@@ -62,6 +63,8 @@ onMounted(load);
         <div v-else-if="data && draft" :class="dirty && canEdit && 'pb-20'" :data-tab="tab">
             <AppointmentGeneralTab v-if="tab === 'general'" v-model="draft" :options="data.options" :errors="errors" :disabled="!canEdit || saving" />
             <AppointmentServicesTab v-else-if="tab === 'services'" v-model="draft" :options="data.options" :errors="errors" :disabled="!canEdit || saving" />
+            <!-- Saved on their own; named by the saved settings -->
+            <AppointmentPlacesTab v-else-if="tab === 'places'" :options="data.options" :settings="data.appointments" :can-edit="canEdit" />
         </div>
 
         <SettingsSaveBar v-if="dirty && canEdit" :saving="saving" @save="save" @discard="discard" />

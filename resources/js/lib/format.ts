@@ -1,6 +1,16 @@
 import { i18n } from './i18n';
 
 /** A count in the reader's digits (e.g. ১০ in Bangla). */
+/**
+ * Digits of a text (e.g. a time "09:30") in the reader's script, as formatNumber writes numbers: the browser's
+ * own digits for the language (Bangla ০–৯), so a new language needs nothing here.
+ */
+export function localDigits(text: string): string {
+    const digits = new Intl.NumberFormat(i18n.global.locale.value === 'bn' ? 'bn-BD' : 'en', { useGrouping: false });
+
+    return text.replace(/\d/g, (digit) => digits.format(Number(digit)));
+}
+
 export function formatNumber(value: number): string {
     return new Intl.NumberFormat(i18n.global.locale.value === 'bn' ? 'bn-BD' : 'en').format(value);
 }

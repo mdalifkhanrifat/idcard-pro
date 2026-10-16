@@ -264,6 +264,15 @@ final class AppointmentSettings
             ],
             'limits' => config('appointments.limits'),
             'custom_services' => ['max' => (int) config('appointments.custom_services.max'), 'key' => trim((string) config('appointments.custom_services.key'), '/')],
+            // Places (their own API): a new one's week and capacities, how many opening periods a day, how many places
+            'locations' => [
+                'weekdays' => WeeklyHours::weekdays(),
+                'hours' => WeeklyHours::normalize((array) config('appointments.locations.hours')),
+                'slot_capacity' => (int) config('appointments.locations.slot_capacity'),
+                'day_capacity' => (int) config('appointments.locations.day_capacity'),
+                'periods_per_day' => (int) config('appointments.locations.periods_per_day'),
+                'max' => (int) config('appointments.locations.max'),
+            ],
             'services' => collect(self::registryServices())->map(fn (int $slots, string $key): array => [
                 'slots' => $slots,
                 'names' => collect(self::languages())->mapWithKeys(fn (string $language): array => [$language => (string) __("appointments.services.{$key}", locale: $language)])->all(),

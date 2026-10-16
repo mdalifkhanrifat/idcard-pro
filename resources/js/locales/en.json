@@ -1752,7 +1752,8 @@
         "retry": "Try again",
         "tabs": {
             "general": "General",
-            "services": "Kinds of visit"
+            "services": "Kinds of visit",
+            "places": "Places"
         },
         "save": {
             "leaveHint": "Your changes to the appointment settings will be lost."
@@ -1832,6 +1833,55 @@
             "add": "Add",
             "newKey": "Its key will be {key}.",
             "full": "The organization has its {max} kinds of visit of its own; remove one to add another."
+        },
+        "places": {
+            "title": "Places",
+            "description": "Where people come: a branch, an office or a counter, each with its own week and capacity. Each is saved on its own.",
+            "count": "{count} of at most {max} places",
+            "add": "Add a place",
+            "edit": "Edit",
+            "view": "View",
+            "delete": "Delete",
+            "off": "Off",
+            "empty": "No places yet",
+            "emptyHint": "Add the places people come to; appointments need at least one that is on.",
+            "loadFailed": "The places could not be loaded.",
+            "noneActive": "Appointments are on, but no place is: nothing can be booked. Add a place or turn one on.",
+            "neverOpen": "Closed every day",
+            "perSlot": "{count} at once",
+            "perDay": "{count} a day",
+            "deleteConfirm": "Delete “{name}”?",
+            "deleteHint": "Its closures go with it. To keep its history, turn it off instead.",
+            "deleted": "The place was deleted.",
+            "newTitle": "New place",
+            "editTitle": "Edit place",
+            "name": "Name",
+            "nameLocal": "Name in the other language",
+            "address": "Address",
+            "slotCapacity": "People at once",
+            "slotCapacityHint": "Counters side by side, in one time slot.",
+            "dayCapacity": "People a day",
+            "dayCapacityHint": "Served in turn, when a day is booked.",
+            "unusedNow": "Not used with the current way of booking.",
+            "services": "Kinds of visit it takes",
+            "allServices": "Every kind",
+            "allServicesHint": "Those added later too.",
+            "someServices": "Only these",
+            "serviceOff": "Turned off for the organization",
+            "week": "Opening hours",
+            "active": "Open for appointments",
+            "activeHint": "Off: kept with its history, but not offered.",
+            "hours": {
+                "closed": "Closed",
+                "from": "From",
+                "to": "To",
+                "addPeriod": "Add a period",
+                "removePeriod": "Remove the period",
+                "copy": "Copy to the other open days",
+                "midnight": "An end of 00:00 (12:00 AM) means midnight.",
+                "period_order": "A period must end after it starts.",
+                "periods_overlap": "Two periods of this day overlap; let one end before the next starts."
+            }
         }
     }
 }

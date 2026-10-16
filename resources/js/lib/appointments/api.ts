@@ -51,6 +51,8 @@ export interface AppointmentOptions {
     custom_services: { max: number; key: string };
     /** The registry's kinds of visit: slots and default names in every language. */
     services: Record<string, { slots: number; names: Record<string, string> }>;
+    /** Places: weekdays (ISO keys, in order), a new place's week and capacities, periods a day, places at most. */
+    locations: { weekdays: string[]; hours: Record<string, [string, string][]>; slot_capacity: number; day_capacity: number; periods_per_day: number; max: number };
 }
 
 export interface AppointmentSettingsResponse {
