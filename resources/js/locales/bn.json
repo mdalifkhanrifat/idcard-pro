@@ -216,7 +216,8 @@
             "reports": "রিপোর্ট",
             "notifications": "নোটিফিকেশন",
             "appointment_locations": "অ্যাপয়েন্টমেন্টের জায়গা",
-            "appointment_closures": "অ্যাপয়েন্টমেন্টের ছুটি"
+            "appointment_closures": "অ্যাপয়েন্টমেন্টের ছুটি",
+            "appointments": "অ্যাপয়েন্টমেন্ট"
         },
         "events": {
             "created": "তৈরি",
@@ -1794,7 +1795,10 @@
                 "openPerService": "প্রতি জন, প্রতি কাজের ধরনে খোলা বুকিং",
                 "noticeHours": "অন্তত কত ঘণ্টা আগে",
                 "noticeHoursHint": "পাবলিক লিংকে; কর্মী এখনই বুক করতে পারেন। {range}",
-                "daysAhead": "সর্বোচ্চ কত দিন আগে"
+                "daysAhead": "সর্বোচ্চ কত দিন আগে",
+                "numberFormat": "বুকিংয়ের নম্বর",
+                "numberSample": "যেমন {number}",
+                "numberTokens": "{'{'}YYYY{'}'}, {'{'}YY{'}'}, {'{'}MM{'}'}: বুকিংয়ের বছর আর মাস; {'{'}SEQ:5{'}'}: ৫ অঙ্কের ক্রমিক নম্বর (একবারই)।"
             },
             "public": {
                 "title": "পাবলিক লিংক",

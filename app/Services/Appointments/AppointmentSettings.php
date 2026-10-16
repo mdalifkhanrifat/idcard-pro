@@ -129,7 +129,7 @@ final class AppointmentSettings
      * The settings, complete and within their limits, whatever is saved.
      *
      * @param  array<string, mixed>  $saved
-     * @return array{enabled: bool, booking: array<int, string>, scheduling: string, slot_minutes: int, confirmation: string, family_members: bool, open_per_service: int, notice_hours: int, days_ahead: int, changes: array{cancel: bool, reschedule: bool, until_hours: int}, verification: array{method: string, code_channels: array<int, string>, code_minutes: int, code_attempts: int}, reminders: array<int, int>, services: array<string, array{enabled: bool, custom: bool, name: array<string, string|null>, slots: int, public: bool, position?: int}>}
+     * @return array{enabled: bool, booking: array<int, string>, scheduling: string, slot_minutes: int, confirmation: string, family_members: bool, open_per_service: int, notice_hours: int, days_ahead: int, changes: array{cancel: bool, reschedule: bool, until_hours: int}, verification: array{method: string, code_channels: array<int, string>, code_minutes: int, code_attempts: int}, reminders: array<int, int>, number_format: string, services: array<string, array{enabled: bool, custom: bool, name: array<string, string|null>, slots: int, public: bool, position?: int}>}
      */
     public static function normalize(array $saved): array
     {
@@ -170,6 +170,7 @@ final class AppointmentSettings
                 'code_attempts' => $number($verification['code_attempts'] ?? null, 'code_attempts', (int) $defaults['verification']['code_attempts']),
             ],
             'reminders' => $reminders,
+            'number_format' => is_string($saved['number_format'] ?? null) && AppointmentNumbers::problem($saved['number_format']) === null ? $saved['number_format'] : (string) $defaults['number_format'],
             'services' => self::normalizeServices((array) ($saved['services'] ?? [])),
         ];
     }

@@ -250,6 +250,7 @@ return [
         'appointments.verification.code_minutes' => 'minutes a code lasts',
         'appointments.verification.code_attempts' => 'tries for a code',
         'appointments.reminders' => 'reminders',
+        'appointments.number_format' => 'booking number format',
         'appointments.reminders.*' => 'hours before a reminder',
         'appointments.services' => 'kinds of visit',
         'appointments.services.*' => 'kind of visit',

@@ -227,6 +227,7 @@ return [
         'appointments.verification.code_minutes' => 'কোডের মেয়াদ (মিনিট)',
         'appointments.verification.code_attempts' => 'কোডের চেষ্টা',
         'appointments.reminders' => 'রিমাইন্ডার',
+        'appointments.number_format' => 'বুকিং নম্বরের ধাঁচ',
         'appointments.reminders.*' => 'রিমাইন্ডারের ঘণ্টা',
         'appointments.services' => 'কাজের ধরন',
         'appointments.services.*' => 'কাজের ধরন',

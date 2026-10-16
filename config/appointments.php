@@ -129,6 +129,8 @@ return [
         'verification' => ['method' => 'code', 'code_channels' => ['mail', 'sms'], 'code_minutes' => 10, 'code_attempts' => 5],
         // Reminders this many hours before (sent as notifications, when those are on)
         'reminders' => [24],
+        // A booking's short number: {YYYY}, {YY}, {MM} of the day it was booked and one running {SEQ:n}
+        'number_format' => 'A-{YY}-{SEQ:5}',
     ],
 
 ];

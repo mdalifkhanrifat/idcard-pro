@@ -54,6 +54,9 @@ return [
         ],
         'none' => 'There are no holidays to offer for the organization\'s country.',
     ],
+    'number_format' => [
+        'unknown_token' => 'Use only {YYYY}, {YY}, {MM} and {SEQ:n}.',
+    ],
     'closures' => [
         'order' => 'The last day must be the first day or after it.',
         'too_long' => 'A closure may last at most :max days in a row.',

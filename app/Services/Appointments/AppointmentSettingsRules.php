@@ -28,7 +28,7 @@ final class AppointmentSettingsRules
         $languages = implode(',', AppointmentSettings::languages());
 
         return [
-            'appointments' => ['required', 'array:enabled,booking,scheduling,slot_minutes,confirmation,family_members,open_per_service,notice_hours,days_ahead,changes,verification,reminders,services'],
+            'appointments' => ['required', 'array:enabled,booking,scheduling,slot_minutes,confirmation,family_members,open_per_service,notice_hours,days_ahead,changes,verification,reminders,number_format,services'],
             'appointments.enabled' => ['sometimes', 'boolean'],
             'appointments.booking' => ['sometimes', 'array'],
             'appointments.booking.*' => ['distinct', Rule::in(AppointmentSettings::bookingModes())],
@@ -51,6 +51,7 @@ final class AppointmentSettingsRules
             'appointments.verification.code_attempts' => ['sometimes', 'integer', $between('code_attempts')],
             'appointments.reminders' => ['sometimes', 'array', "max:{$maxReminders}"],
             'appointments.reminders.*' => ['integer', 'distinct', $between('reminder_hours')],
+            'appointments.number_format' => ['sometimes', 'string', 'max:40'],
             'appointments.services' => ['sometimes', 'array'],
             // null removes an organization's own kind of visit
             // `custom` and `position` are what GET answers (the registry's or the organization's own, in which order):
@@ -90,6 +91,9 @@ final class AppointmentSettingsRules
             } elseif (! preg_match((string) config('appointments.custom_services.key'), (string) $key)) {
                 $validator->errors()->add($field, __('appointments.settings.service_key'));
             }
+        }
+        if (is_string($change['number_format'] ?? null) && ($problem = AppointmentNumbers::problem($change['number_format'])) !== null) {
+            $validator->errors()->add('appointments.number_format', $problem);
         }
         if ($validator->errors()->has('appointments*')) {
             return;

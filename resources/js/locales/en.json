@@ -216,7 +216,8 @@
             "reports": "Reports",
             "notifications": "Notifications",
             "appointment_locations": "Appointment places",
-            "appointment_closures": "Appointment closures"
+            "appointment_closures": "Appointment closures",
+            "appointments": "Appointments"
         },
         "events": {
             "created": "Created",
@@ -1794,7 +1795,10 @@
                 "openPerService": "Open bookings per person and kind of visit",
                 "noticeHours": "Hours ahead at least",
                 "noticeHoursHint": "On the public link; staff may book up to the moment. {range}",
-                "daysAhead": "Days ahead at most"
+                "daysAhead": "Days ahead at most",
+                "numberFormat": "Booking number",
+                "numberSample": "e.g. {number}",
+                "numberTokens": "{'{'}YYYY{'}'}, {'{'}YY{'}'}, {'{'}MM{'}'}: the year and month booked; {'{'}SEQ:5{'}'}: a running number of 5 digits (once per format)."
             },
             "public": {
                 "title": "Public link",

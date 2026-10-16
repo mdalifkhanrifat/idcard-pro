@@ -34,6 +34,8 @@ export interface AppointmentSettings {
     verification: { method: string; code_channels: string[]; code_minutes: number; code_attempts: number };
     /** Hours before an appointment a reminder goes, largest first (at most three). */
     reminders: number[];
+    /** A booking's short number: {YYYY}, {YY}, {MM} and one running {SEQ:n}. */
+    number_format: string;
     services: Record<string, AppointmentService>;
 }
 

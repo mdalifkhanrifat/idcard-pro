@@ -9,6 +9,7 @@ import UiInput from '@/components/ui/UiInput.vue';
 import UiRadioGroup from '@/components/ui/UiRadioGroup.vue';
 import { formatNumber } from '@/lib/format';
 import type { AppointmentOptions, AppointmentSettings, PlaceCounts } from '@/lib/appointments/api';
+import { numberSample } from '@/lib/appointments/numbers';
 import AppointmentSummary from '@/pages/appointments/AppointmentSummary.vue';
 
 /**
@@ -40,6 +41,8 @@ const codeMinutes = numberOf(() => settings.value.verification.code_minutes, (va
 const codeAttempts = numberOf(() => settings.value.verification.code_attempts, (value) => (settings.value.verification.code_attempts = value));
 
 const publicLink = computed(() => settings.value.booking.includes('public'));
+/** The format at work today, as the 42nd booking (an identifier: its digits stay as stored, like card numbers). */
+const sample = computed(() => numberSample(settings.value.number_format, new Date(), 42));
 
 function toggleIn(list: string[], value: string, on: boolean): string[] {
     return on ? [...list.filter((item) => item !== value), value] : list.filter((item) => item !== value);
@@ -98,6 +101,13 @@ function setReminder(index: number, value: number | string | null | undefined): 
                     <UiInput v-model="openPerService" type="number" :min="String(limit('open_per_service')[0])" :max="String(limit('open_per_service')[1])" :label="t('appointments.general.booking.openPerService')" :hint="range('open_per_service')" :error="error('open_per_service')" data-setting="open_per_service" />
                     <UiInput v-model="noticeHours" type="number" :min="String(limit('notice_hours')[0])" :max="String(limit('notice_hours')[1])" :label="t('appointments.general.booking.noticeHours')" :hint="t('appointments.general.booking.noticeHoursHint', { range: range('notice_hours') })" :error="error('notice_hours')" data-setting="notice_hours" />
                     <UiInput v-model="daysAhead" type="number" :min="String(limit('days_ahead')[0])" :max="String(limit('days_ahead')[1])" :label="t('appointments.general.booking.daysAhead')" :hint="range('days_ahead')" :error="error('days_ahead')" data-setting="days_ahead" />
+                </div>
+
+                <div class="max-w-md space-y-1.5" data-setting="number_format">
+                    <UiInput v-model="settings.number_format" :label="t('appointments.general.booking.numberFormat')" :maxlength="40" :error="error('number_format')" class="font-mono" />
+                    <p class="text-xs text-muted">
+                        <span v-if="sample" data-number-sample>{{ t('appointments.general.booking.numberSample', { number: sample }) }} · </span>{{ t('appointments.general.booking.numberTokens') }}
+                    </p>
                 </div>
             </fieldset>
         </UiCard>
