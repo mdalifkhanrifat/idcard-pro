@@ -53,6 +53,8 @@ export function useListQuery<T, M extends PageMeta = PageMeta>(
     const rows = ref([]) as Ref<T[]>;
     const meta = ref({ current_page: 1, last_page: 1, total: 0, from: null, to: null } as PageMeta as M) as Ref<M>;
     const loading = ref(false);
+    /** The last load failed for another reason than its criteria (e.g. the server or the network): offer a retry. */
+    const failed = ref(false);
     /** The server's validation messages for the last load, by field (e.g. "filter.printed_to"). */
     const errors = ref<Record<string, string[]>>({});
 
@@ -82,9 +84,11 @@ export function useListQuery<T, M extends PageMeta = PageMeta>(
             rows.value = data.data;
             meta.value = data.meta ?? data;
             errors.value = {};
+            failed.value = false;
         } catch (error) {
             const apiError = toApiError(error);
             errors.value = apiError.errors;
+            failed.value = apiError.status !== 422;
             if (apiError.status === 422) {
                 // The rows shown no longer match the criteria
                 rows.value = [];
@@ -167,7 +171,7 @@ export function useListQuery<T, M extends PageMeta = PageMeta>(
         return errors.value[`filter.${key}`]?.[0];
     }
 
-    return { filters, sort, page, perPage, rows, meta, loading, errors, load, queryParams, resetFilters, addFilters, filterError, setPerPage, toggleSort };
+    return { filters, sort, page, perPage, rows, meta, loading, failed, errors, load, queryParams, resetFilters, addFilters, filterError, setPerPage, toggleSort };
 }
 
 /** A whole number above zero, else null. */

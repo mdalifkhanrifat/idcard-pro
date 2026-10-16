@@ -22,12 +22,13 @@ class ListAppointmentClosuresRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'filter' => ['sometimes', 'array:location,from,to,past'],
+            'filter' => ['sometimes', 'array:location,from,to,past,yearly'],
             'filter.location' => ['nullable', 'string', 'size:26',
                 Rule::exists('appointment_locations', 'public_id')->where('tenant_id', app(TenantContext::class)->id())],
             'filter.from' => ['nullable', 'date_format:Y-m-d'],
             'filter.to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:filter.from'],
             'filter.past' => ['nullable', 'boolean'],
+            'filter.yearly' => ['nullable', 'boolean'],
             'per_page' => ListPage::rule(),
         ];
     }

@@ -1753,7 +1753,8 @@
         "tabs": {
             "general": "General",
             "services": "Kinds of visit",
-            "places": "Places"
+            "places": "Places",
+            "closures": "Closures"
         },
         "save": {
             "leaveHint": "Your changes to the appointment settings will be lost."
@@ -1882,6 +1883,47 @@
                 "period_order": "A period must end after it starts.",
                 "periods_overlap": "Two periods of this day overlap; let one end before the next starts."
             }
+        },
+        "closures": {
+            "yearlyTitle": "Every year",
+            "yearlyDescription": "Holidays on fixed dates, such as 21 February: written once, they come back every year.",
+            "datedTitle": "Closed days",
+            "datedDescription": "Holidays and days the office is closed, on given days. Each closure is saved on its own.",
+            "place": "Place",
+            "allPlaces": "Every place",
+            "filterPlace": "Show for",
+            "filterPlaceAll": "Every place (all closures)",
+            "past": "Show those already over too",
+            "add": "Add a closure",
+            "edit": "Edit",
+            "view": "View",
+            "delete": "Delete",
+            "yearlyBadge": "Every year",
+            "since": "since {year}",
+            "days": "{count} days",
+            "over": "Over",
+            "noReason": "No reason written",
+            "empty": "No closed days ahead",
+            "emptyHint": "Add public holidays or days the office is closed; nothing can be booked on them.",
+            "emptyPast": "No closed days",
+            "yearlyEmpty": "No yearly holidays yet. Holidays on fixed dates (21 February, 26 March, 16 December…) can be added once, as every year.",
+            "loadFailed": "The closures could not be loaded.",
+            "deleteConfirm": "Delete the closure of {days}?",
+            "deleteHint": "Appointments can be booked on these days again.",
+            "deleted": "The closure was deleted.",
+            "newTitle": "New closure",
+            "editTitle": "Edit closure",
+            "viewTitle": "Closure",
+            "placeHint": "Every place: the organization is closed. A place: only that place.",
+            "dateFrom": "First day",
+            "dateTo": "Last day",
+            "dateToHint": "Empty: one day.",
+            "span": "{count} days, both counted.",
+            "yearly": "Every year",
+            "yearlyHint": "For holidays on a fixed date, like 21 February. Holidays that follow the moon, like Eid, move every year: add them each year.",
+            "reason": "Reason",
+            "reasonLocal": "Reason in the other language",
+            "reasonHint": "Shown where people book, in their language."
         }
     }
 }

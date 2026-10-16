@@ -12,6 +12,7 @@ import { useSettingsDraft } from '@/composables/useSettingsDraft';
 import { useUrlTab } from '@/composables/useUrlTab';
 import { fetchAppointmentSettings, saveAppointmentSettings, type AppointmentSettings, type AppointmentSettingsResponse } from '@/lib/appointments/api';
 import { withRemovedServices } from '@/lib/appointments/services';
+import AppointmentClosuresTab from '@/pages/appointments/AppointmentClosuresTab.vue';
 import AppointmentGeneralTab from '@/pages/appointments/AppointmentGeneralTab.vue';
 import AppointmentPlacesTab from '@/pages/appointments/AppointmentPlacesTab.vue';
 import AppointmentServicesTab from '@/pages/appointments/AppointmentServicesTab.vue';
@@ -26,9 +27,10 @@ const { t } = useI18n();
 const auth = useAuthStore();
 const canEdit = computed(() => auth.can('settings.update'));
 
-type TabKey = 'general' | 'services' | 'places';
-const TABS = computed<TabKey[]>(() => ['general', 'services', 'places']);
-const tab = useUrlTab(TABS);
+type TabKey = 'general' | 'services' | 'places' | 'closures';
+const TABS = computed<TabKey[]>(() => ['general', 'services', 'places', 'closures']);
+// The closures list keeps its filters and page in the URL (cl_…) while its tab is open
+const tab = useUrlTab(TABS, (key) => (key.startsWith('cl_') ? 'closures' : undefined));
 /** Where a refused save's mistakes are: the kinds of visit have a tab of their own. */
 const tabOf = (field: string): TabKey => (field.startsWith('appointments.services') ? 'services' : 'general');
 const marked = computed(() => [...new Set(Object.keys(errors.value).map(tabOf))]);
@@ -65,6 +67,7 @@ onMounted(load);
             <AppointmentServicesTab v-else-if="tab === 'services'" v-model="draft" :options="data.options" :errors="errors" :disabled="!canEdit || saving" />
             <!-- Saved on their own; named by the saved settings -->
             <AppointmentPlacesTab v-else-if="tab === 'places'" :options="data.options" :settings="data.appointments" :can-edit="canEdit" />
+            <AppointmentClosuresTab v-else-if="tab === 'closures'" :can-edit="canEdit" />
         </div>
 
         <SettingsSaveBar v-if="dirty && canEdit" :saving="saving" @save="save" @discard="discard" />

@@ -218,6 +218,7 @@ return [
         'filter.from' => 'from',
         'filter.to' => 'to',
         'filter.past' => 'past ones too',
+        'filter.yearly' => 'every year',
         // Appointment availability (5.3d)
         'service' => 'kind of visit',
         'from' => 'from',

@@ -29,7 +29,7 @@ const canSend = computed(() => auth.can('notifications.send'));
 type TabKey = 'settings' | 'messages';
 const TABS = computed<TabKey[]>(() => ['settings', ...(auth.can('notifications.view') ? (['messages'] as const) : [])]);
 // Leaving for the settings, the message list's filters leave the URL
-const tab = useUrlTab(TABS, (key) => key.startsWith('f_') || ['page', 'sort', 'per_page'].includes(key));
+const tab = useUrlTab(TABS, (key) => (key.startsWith('f_') || ['page', 'sort', 'per_page'].includes(key) ? 'messages' : undefined));
 
 const { data, draft, loading, failed, saving, errors, dirty, load, save, discard } = useSettingsDraft<NotificationSettingsResponse, NotificationSettings>({
     fetch: fetchNotificationSettings,

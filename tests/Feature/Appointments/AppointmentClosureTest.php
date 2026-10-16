@@ -85,7 +85,11 @@ it('lists from the organization\'s today on, by place, by days or with those ove
         ->and($reasons("filter[location]={$head->public_id}"))->toBe(['Language Day', 'All places', 'Head office'])
         ->and($reasons('filter[from]=2026-10-16&filter[to]=2026-11-01'))->toBe(['Language Day', 'Ended on the 16th', 'All places', 'Head office'])
         ->and($reasons('filter[from]=2026-11-03'))->toBe(['Language Day', 'Gate'])
-        ->and($reasons('filter[to]=2026-10-12'))->toBe(['Language Day', 'Ended on the 16th']);
+        ->and($reasons('filter[to]=2026-10-12'))->toBe(['Language Day', 'Ended on the 16th'])
+        ->and($reasons('filter[yearly]=1'))->toBe(['Language Day'])
+        ->and($reasons('filter[yearly]=0'))->toBe(['All places', 'Head office', 'Gate'])
+        ->and($reasons('filter[yearly]=0&filter[past]=1'))->toBe(['Ended on the 16th', 'All places', 'Head office', 'Gate'])
+        ->and($reasons("filter[yearly]=1&filter[location]={$gate->public_id}"))->toBe(['Language Day']);
 
     // 23:30 on 16 October in Dhaka: it is not over yet
     Carbon::setTestNow('2026-10-16 17:30:00');

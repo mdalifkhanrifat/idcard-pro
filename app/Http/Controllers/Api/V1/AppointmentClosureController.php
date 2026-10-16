@@ -23,7 +23,8 @@ class AppointmentClosureController extends Controller
     /**
      * Filters: filter[location] (a place's public id: its closures and those of every place), filter[from],
      * filter[to] (overlapping days; yearly ones always), filter[past]=1 (without a range: those over too —
-     * otherwise from the organization's today on); per_page.
+     * otherwise from the organization's today on), filter[yearly]=1|0 (only those that come every year, or only
+     * those of given days); per_page.
      */
     public function index(ListAppointmentClosuresRequest $request): AnonymousResourceCollection
     {

@@ -15,6 +15,8 @@ final readonly class AppointmentClosureFilter
         public ?string $to = null,
         /** Without a range: also those already over (otherwise from the organization's today on) */
         public bool $past = false,
+        /** Only those that come every year (true) or only those of given days (false); null: both */
+        public ?bool $yearly = null,
         public int $perPage = 25,
     ) {}
 
@@ -30,6 +32,7 @@ final readonly class AppointmentClosureFilter
             from: $filter['from'] ?? null,
             to: $filter['to'] ?? null,
             past: filter_var($filter['past'] ?? false, FILTER_VALIDATE_BOOL),
+            yearly: isset($filter['yearly']) ? filter_var($filter['yearly'], FILTER_VALIDATE_BOOL) : null,
             perPage: (int) ($input['per_page'] ?? 25),
         );
     }

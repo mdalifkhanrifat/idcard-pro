@@ -49,6 +49,7 @@ class AppointmentClosureRepository extends EloquentRepository implements Appoint
         $ranged = $filter->from !== null || $filter->to !== null;
 
         return $this->query()
+            ->when($filter->yearly !== null, fn (Builder $q) => $q->where('yearly', $filter->yearly))
             ->when($filter->locationPublicId, fn (Builder $q, string $publicId) => $q->where(fn (Builder $w) => $w
                 ->whereNull('location_id')
                 ->orWhereIn('location_id', AppointmentLocation::query()->select('id')->where('public_id', $publicId))))

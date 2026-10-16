@@ -195,6 +195,7 @@ return [
         'filter.from' => 'থেকে',
         'filter.to' => 'পর্যন্ত',
         'filter.past' => 'পুরনোগুলোও',
+        'filter.yearly' => 'প্রতি বছর',
         // Appointment availability (5.3d)
         'service' => 'কাজের ধরন',
         'from' => 'থেকে',
