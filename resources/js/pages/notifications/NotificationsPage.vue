@@ -1,28 +1,24 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue';
-import { onBeforeRouteLeave, useRoute, useRouter } from 'vue-router';
+import { computed, onMounted } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Eye } from 'lucide-vue-next';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiCard from '@/components/ui/UiCard.vue';
 import UiEmpty from '@/components/ui/UiEmpty.vue';
 import UiPageHeader from '@/components/ui/UiPageHeader.vue';
-import { useConfirm } from '@/composables/useConfirm';
-import { toApiError } from '@/lib/http';
+import PageTabs from '@/components/PageTabs.vue';
+import SettingsSaveBar from '@/components/SettingsSaveBar.vue';
+import { useSettingsDraft } from '@/composables/useSettingsDraft';
+import { useUrlTab } from '@/composables/useUrlTab';
 import { fetchNotificationSettings, saveNotificationSettings, type NotificationSettings, type NotificationSettingsResponse } from '@/lib/notifications/api';
 import NotificationEventsCard from '@/pages/notifications/NotificationEventsCard.vue';
 import NotificationGeneralCard from '@/pages/notifications/NotificationGeneralCard.vue';
 import NotificationMessageList from '@/pages/notifications/NotificationMessageList.vue';
 import NotificationTestCard from '@/pages/notifications/NotificationTestCard.vue';
 import { useAuthStore } from '@/stores/auth';
-import { useUiStore } from '@/stores/ui';
 
 const { t } = useI18n();
 const auth = useAuthStore();
-const ui = useUiStore();
-const { confirm } = useConfirm();
-const route = useRoute();
-const router = useRouter();
 
 /** Read only for those who see the sent messages but may not change the organization's settings. */
 const canEdit = computed(() => auth.can('settings.update'));
@@ -32,81 +28,16 @@ const canSend = computed(() => auth.can('notifications.send'));
 /** The sent messages for those who may see them; a single tab draws no tab bar. */
 type TabKey = 'settings' | 'messages';
 const TABS = computed<TabKey[]>(() => ['settings', ...(auth.can('notifications.view') ? (['messages'] as const) : [])]);
-const tabFromUrl = (): TabKey => (TABS.value.includes(route.query.tab as TabKey) ? (route.query.tab as TabKey) : 'settings');
-const tab = ref<TabKey>(tabFromUrl());
-// The tab is in the URL (?tab=), so a link or a reload opens it; the first tab keeps the URL plain, without the
-// message list's filters
-const listKeys = (key: string) => key.startsWith('f_') || ['page', 'sort', 'per_page'].includes(key);
-watch(tab, (value) => router.replace({ query: { ...Object.fromEntries(Object.entries(route.query).filter(([key]) => value !== 'settings' || !listKeys(key))), tab: value === 'settings' ? undefined : value } }));
-watch(() => route.query.tab, () => (tab.value = tabFromUrl()));
+// Leaving for the settings, the message list's filters leave the URL
+const tab = useUrlTab(TABS, (key) => key.startsWith('f_') || ['page', 'sort', 'per_page'].includes(key));
 
-const data = ref<NotificationSettingsResponse | null>(null);
-/** The settings as being changed on the page; saved as a whole. */
-const draft = ref<NotificationSettings | null>(null);
-const loading = ref(false);
-const failed = ref(false);
-const saving = ref(false);
-const errors = ref<Record<string, string[]>>({});
-
-function show(response: NotificationSettingsResponse): void {
-    data.value = response;
-    // A plain copy (a reactive object cannot be structured-cloned)
-    draft.value = JSON.parse(JSON.stringify(response.notifications)) as NotificationSettings;
-    errors.value = {};
-}
-
-async function load(): Promise<void> {
-    loading.value = true;
-    failed.value = false;
-    try {
-        show(await fetchNotificationSettings());
-    } catch {
-        failed.value = true;
-    } finally {
-        loading.value = false;
-    }
-}
-
+const { data, draft, loading, failed, saving, errors, dirty, load, save, discard } = useSettingsDraft<NotificationSettingsResponse, NotificationSettings>({
+    fetch: fetchNotificationSettings,
+    store: saveNotificationSettings,
+    settingsOf: (response) => response.notifications,
+    leaveHint: () => t('notifications.save.leaveHint'),
+});
 onMounted(load);
-
-const dirty = computed(() => !!data.value && !!draft.value && JSON.stringify(draft.value) !== JSON.stringify(data.value.notifications));
-
-async function save(): Promise<void> {
-    if (!draft.value) {
-        return;
-    }
-    saving.value = true;
-    errors.value = {};
-    try {
-        // The settings as the server saved them come back: the form shows exactly those
-        show(await saveNotificationSettings(draft.value));
-        ui.notify(t('common.saved'));
-    } catch (error) {
-        const apiError = toApiError(error);
-        errors.value = apiError.errors;
-        if (!Object.keys(apiError.errors).length) {
-            ui.notify(apiError.message, 'error');
-        }
-    } finally {
-        saving.value = false;
-    }
-}
-
-function discard(): void {
-    if (data.value) {
-        show(data.value);
-    }
-}
-
-// Unsaved changes are not lost by leaving: asked first, in the app and when closing or reloading the tab
-onBeforeRouteLeave(async () => !dirty.value || (await confirm({ title: t('notifications.save.leaveConfirm'), message: t('notifications.save.leaveHint'), confirmLabel: t('notifications.save.leave'), danger: true })));
-function warnOnUnload(event: BeforeUnloadEvent): void {
-    if (dirty.value) {
-        event.preventDefault();
-    }
-}
-window.addEventListener('beforeunload', warnOnUnload);
-onBeforeUnmount(() => window.removeEventListener('beforeunload', warnOnUnload));
 </script>
 
 <template>
@@ -117,20 +48,7 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warnOnUnload));
             <Eye class="mt-0.5 size-4 shrink-0" />{{ t('notifications.readOnly') }}
         </p>
 
-        <div v-if="TABS.length > 1" role="tablist" class="mb-6 flex gap-1 overflow-x-auto shadow-[inset_0_-1px_0_var(--color-line)]">
-            <button
-                v-for="key in TABS"
-                :key="key"
-                type="button"
-                role="tab"
-                :aria-selected="tab === key"
-                class="border-b-2 px-3 py-2 text-sm whitespace-nowrap"
-                :class="tab === key ? 'border-brand-ink font-medium text-brand-ink' : 'border-transparent text-muted hover:text-fg'"
-                @click="tab = key"
-            >
-                {{ t(`notifications.tabs.${key}`) }}
-            </button>
-        </div>
+        <PageTabs v-model="tab" :tabs="TABS" :label="(key) => t(`notifications.tabs.${key}`)" />
 
         <p v-if="loading && !data" class="py-10 text-center text-sm text-muted">{{ t('common.loading') }}</p>
         <UiCard v-else-if="failed" :padded="false">
@@ -150,15 +68,6 @@ onBeforeUnmount(() => window.removeEventListener('beforeunload', warnOnUnload));
             <NotificationTestCard v-if="canSend" :options="data.options" :organization-channels="data.notifications.channels" />
         </div>
 
-        <!-- Stays at the bottom while there are unsaved changes -->
-        <div v-if="dirty && canEdit" class="fixed inset-x-0 bottom-0 z-30 border-t border-line bg-surface/95 shadow-[0_-4px_12px_rgba(16,24,40,0.08)] backdrop-blur lg:left-64" data-save-bar>
-            <div class="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-2 px-4 py-3 sm:px-6">
-                <p class="text-sm text-fg">{{ t('notifications.save.unsaved') }}</p>
-                <div class="flex gap-2">
-                    <UiButton variant="secondary" :disabled="saving" data-discard @click="discard">{{ t('notifications.save.discard') }}</UiButton>
-                    <UiButton :loading="saving" data-save @click="save">{{ t('common.save') }}</UiButton>
-                </div>
-            </div>
-        </div>
+        <SettingsSaveBar v-if="dirty && canEdit" :saving="saving" @save="save" @discard="discard" />
     </div>
 </template>

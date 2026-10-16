@@ -45,7 +45,13 @@
         "dark": "Dark",
         "areYouSure": "Are you sure?",
         "irreversible": "This action cannot be undone.",
-        "back": "Back"
+        "back": "Back",
+        "unsaved": {
+            "bar": "You have unsaved changes.",
+            "discard": "Discard",
+            "leaveConfirm": "Leave without saving?",
+            "leave": "Leave"
+        }
     },
     "auth": {
         "signIn": "Sign in",
@@ -99,7 +105,8 @@
         "signatories": "Signatories",
         "cardsSection": "Cards",
         "fonts": "Fonts",
-        "imageLibrary": "Image library"
+        "imageLibrary": "Image library",
+        "appointmentSettings": "Appointment settings"
     },
     "dashboard": {
         "welcome": "Welcome, {name}",
@@ -1652,11 +1659,7 @@
             "daysHint": "From {min} to {max} days."
         },
         "save": {
-            "unsaved": "You have unsaved changes.",
-            "discard": "Discard",
-            "leaveConfirm": "Leave without saving?",
-            "leaveHint": "Your changes to the notification settings will be lost.",
-            "leave": "Leave"
+            "leaveHint": "Your changes to the notification settings will be lost."
         },
         "editor": {
             "parts": {
@@ -1740,6 +1743,71 @@
             "openResent": "Open the message that sent this one again",
             "resend": "Send again",
             "resent": "Sent again as a new message."
+        }
+    },
+    "appointments": {
+        "subtitle": "Whether people book a time or a day to come in, who books it and on what terms.",
+        "readOnly": "You can see these settings but not change them: that needs permission to change the organization’s settings.",
+        "loadFailed": "The appointment settings could not be loaded.",
+        "retry": "Try again",
+        "tabs": {
+            "general": "General"
+        },
+        "save": {
+            "leaveHint": "Your changes to the appointment settings will be lost."
+        },
+        "summary": {
+            "on": "On",
+            "off": "Off",
+            "offHint": "Appointments appear nowhere.",
+            "bookedBy": "Who books",
+            "booked": "What is booked",
+            "slot": "{label}, {minutes} minutes",
+            "confirmation": "Confirmation"
+        },
+        "general": {
+            "title": "Appointments",
+            "description": "Turn them on when the organization wants people to book a time or a day to come in — for a new card, a renewal, biometrics…",
+            "enabled": "Use appointments",
+            "enabledHint": "Off: appointments appear nowhere — not in the menu, on cardholders or through a public link. The settings below can be prepared first.",
+            "range": "From {min} to {max}.",
+            "booking": {
+                "title": "Booking",
+                "description": "Who books, what is booked, and how far ahead.",
+                "bookedBy": "Who books",
+                "bookedByHint": "At least one, to turn appointments on.",
+                "scheduling": "What is booked",
+                "slotMinutes": "Minutes of a time slot",
+                "confirmation": "Confirmation",
+                "familyMembers": "Family members may have appointments too",
+                "familyMembersHint": "Those with cards of their own.",
+                "openPerService": "Open bookings per person and kind of visit",
+                "noticeHours": "Hours ahead at least",
+                "noticeHoursHint": "On the public link; staff may book up to the moment. {range}",
+                "daysAhead": "Days ahead at most"
+            },
+            "public": {
+                "title": "Public link",
+                "description": "What people may do themselves, and how they prove who they are.",
+                "off": "People do not book through the public link. Tick it under “Who books” to use these.",
+                "cancel": "People may cancel their booking",
+                "reschedule": "People may move it to another time",
+                "untilHours": "Until how many hours before",
+                "method": "How people prove who they are",
+                "codeChannels": "The code goes by",
+                "codeChannelsHint": "To the e-mail or phone on record.",
+                "codeMinutes": "Minutes a code lasts",
+                "codeAttempts": "Tries for a code"
+            },
+            "reminders": {
+                "title": "Reminders",
+                "description": "Messages before an appointment, sent as notifications while those are on.",
+                "hours": "Hours before",
+                "add": "Add a reminder",
+                "remove": "Remove the reminder",
+                "none": "No reminders.",
+                "hint": "{range} At most {max} reminders."
+            }
         }
     }
 }

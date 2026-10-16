@@ -55,6 +55,7 @@ const routes: RouteRecordRaw[] = [
             { path: 'reports', name: 'reports', component: () => import('@/pages/reports/ReportsPage.vue'), meta: { permission: 'reports.view', title: 'nav.reports' } },
             // Seen by those who see the sent messages or may change the settings (read only for the former)
             { path: 'notifications', name: 'notifications', component: () => import('@/pages/notifications/NotificationsPage.vue'), meta: { permission: ['notifications.view', 'settings.update'], title: 'nav.notifications' } },
+            { path: 'appointments/settings', name: 'appointment-settings', component: () => import('@/pages/appointments/AppointmentSettingsPage.vue'), meta: { permission: ['appointments.view', 'settings.update'], title: 'nav.appointmentSettings' } },
             { path: 'audit', name: 'audit', component: () => import('@/pages/audit/AuditPage.vue'), meta: { permission: 'audit.view', title: 'nav.audit' } },
             { path: 'settings', name: 'settings', component: () => import('@/pages/settings/OrganizationPage.vue'), meta: { permission: 'settings.view', title: 'nav.settings' } },
             { path: 'account', name: 'account', component: () => import('@/pages/account/AccountPage.vue'), meta: { title: 'nav.account' } },

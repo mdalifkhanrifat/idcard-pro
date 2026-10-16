@@ -1,3 +1,4 @@
+import type { AppointmentSettings } from '@/lib/appointments/api';
 import type { NotificationOptions, NotificationSettings } from '@/lib/notifications/api';
 
 export type UserStatus = 'active' | 'inactive';
@@ -31,6 +32,8 @@ export interface Tenant {
     notifications?: NotificationSettings;
     /** What this installation can send and about what (registry). */
     notification_options?: NotificationOptions;
+    /** Whether and how the organization uses appointments (5.3); off by default. */
+    appointments?: AppointmentSettings;
     status: 'active' | 'suspended';
     users_count?: number;
     created_at: string;
