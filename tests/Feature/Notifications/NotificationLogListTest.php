@@ -100,7 +100,7 @@ it('lists what to filter by from the registry, with what the log holds since rem
         ['key' => 'test', 'name' => 'পরীক্ষার বার্তা'],
         ['key' => 'old_event', 'name' => 'old_event'],
     ])
-        ->and($meta['channels'])->toBe([['key' => 'mail', 'name' => 'ইমেইল'], ['key' => 'sms', 'name' => 'এসএমএস'], ['key' => 'whatsapp', 'name' => 'whatsapp']])
+        ->and($meta['channels'])->toBe([['key' => 'mail', 'name' => 'ইমেইল'], ['key' => 'sms', 'name' => 'SMS'], ['key' => 'whatsapp', 'name' => 'whatsapp']])
         ->and(array_column($meta['statuses'], 'key'))->toBe(['queued', 'sent', 'failed', 'skipped'])
         ->and($meta['statuses'][1]['name'])->toBe('পাঠানো হয়েছে');
 

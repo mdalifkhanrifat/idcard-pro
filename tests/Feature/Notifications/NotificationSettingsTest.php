@@ -151,7 +151,7 @@ it('takes a new event from the registry alone: settings, rules and options follo
         ->assertJsonPath('data.notification_options.events.badge_lost.placeholders', [['key' => 'holder.name', 'label' => 'Card holder\'s name']]);
     // Its sample comes by itself, in every language
     $this->getJson('/api/v1/notifications/settings')
-        ->assertJsonPath('data.samples.badge_lost', ['bn' => ['holder.name' => 'এসএমএস Acme'], 'en' => ['holder.name' => 'SMS Acme']]);
+        ->assertJsonPath('data.samples.badge_lost', ['bn' => ['holder.name' => 'SMS Acme'], 'en' => ['holder.name' => 'SMS Acme']]);
     ($this->save)(['enabled' => '1', 'channels' => ['sms'], 'events' => ['badge_lost' => ['enabled' => '1', 'channels' => ['sms'], 'templates' => ['en' => ['sms' => '{holder.name} {card.number}']]]]])
         ->assertJsonValidationErrors('notifications.events.badge_lost.templates.en.sms');
 });

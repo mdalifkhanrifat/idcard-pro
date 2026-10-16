@@ -4,7 +4,7 @@ return [
 
     'channels' => [
         'mail' => 'ইমেইল',
-        'sms' => 'এসএমএস',
+        'sms' => 'SMS',
     ],
 
     // বার্তা যেসব ভাষায় লেখা যায় (config notifications.languages)
