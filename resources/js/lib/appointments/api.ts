@@ -11,6 +11,8 @@ export interface AppointmentService {
     slots: number;
     /** Offered on the public link too (staff can always book it). */
     public: boolean;
+    /** The organization's own kinds: their order, as added (1 on). */
+    position?: number;
 }
 
 /** tenants.settings.appointments, always complete (the server fills in defaults). */

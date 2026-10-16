@@ -250,6 +250,7 @@ return [
         'appointments.services' => 'kinds of visit',
         'appointments.services.*' => 'kind of visit',
         'appointments.services.*.custom' => 'the organization\'s own kind',
+        'appointments.services.*.position' => 'place in the list',
         'appointments.services.*.enabled' => 'kind of visit on',
         'appointments.services.*.name' => 'name',
         'appointments.services.*.name.*' => 'name',

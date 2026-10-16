@@ -227,6 +227,7 @@ return [
         'appointments.services' => 'কাজের ধরন',
         'appointments.services.*' => 'কাজের ধরন',
         'appointments.services.*.custom' => 'প্রতিষ্ঠানের নিজের ধরন',
+        'appointments.services.*.position' => 'তালিকায় ক্রম',
         'appointments.services.*.enabled' => 'কাজের ধরন চালু',
         'appointments.services.*.name' => 'নাম',
         'appointments.services.*.name.*' => 'নাম',

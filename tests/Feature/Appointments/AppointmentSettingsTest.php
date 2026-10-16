@@ -99,7 +99,7 @@ it('lets the organization add, change and remove kinds of visit of its own', fun
     Sanctum::actingAs($this->owner);
 
     ($this->put)(['services' => ['vehicle_pass' => ['name' => ['en' => 'Vehicle pass', 'bn' => 'গাড়ির পাস'], 'slots' => 2, 'public' => false]]])->assertOk()
-        ->assertJsonPath('data.appointments.services.vehicle_pass', ['enabled' => true, 'custom' => true, 'name' => ['bn' => 'গাড়ির পাস', 'en' => 'Vehicle pass'], 'slots' => 2, 'public' => false]);
+        ->assertJsonPath('data.appointments.services.vehicle_pass', ['enabled' => true, 'custom' => true, 'name' => ['bn' => 'গাড়ির পাস', 'en' => 'Vehicle pass'], 'slots' => 2, 'public' => false, 'position' => 1]);
     expect(array_keys(($this->saved)()['services']))->toBe(['new_card', 'renewal', 'biometrics', 'card_collection', 'vehicle_pass'])
         ->and(AppointmentSettings::serviceName('vehicle_pass', ($this->saved)()['services']['vehicle_pass']))->toBe('Vehicle pass')
         ->and(AppointmentSettings::serviceName('renewal', ($this->saved)()['services']['renewal']))->toBe('Card renewal');
@@ -176,4 +176,29 @@ it('takes back the whole settings as it answered them, changing nothing, a wrong
 
     expect($this->tenant->fresh()->settings)->toBe($audit)
         ->and($this->tenant->fresh()->settings['appointments']['services']['renewal']['custom'] ?? false)->toBeFalse();
+});
+
+it('keeps the organization\'s own kinds of visit in the order they were added, whatever order the keys are stored in', function () {
+    Sanctum::actingAs($this->owner);
+    ($this->put)(['services' => ['vehicle_pass' => ['name' => ['en' => 'Vehicle pass']], 'visit' => ['name' => ['bn' => 'অতিথি পাস']]]])->assertOk();
+    ($this->put)(['services' => ['canteen' => ['name' => ['en' => 'Canteen card']]]])->assertOk();
+    $order = fn () => array_slice(array_keys($this->getJson('/api/v1/appointments/settings')->json('data.appointments.services')), 4);
+    expect($order())->toBe(['vehicle_pass', 'visit', 'canteen'])
+        ->and($this->getJson('/api/v1/appointments/settings')->json('data.appointments.services.canteen.position'))->toBe(3);
+
+    // A JSON column (MySQL's) stores an object's keys shortest first: the order still holds
+    $settings = $this->tenant->fresh()->settings;
+    $services = $settings['appointments']['services'];
+    uksort($services, fn (string $a, string $b) => [strlen($a), $a] <=> [strlen($b), $b]);
+    $this->tenant->forceFill(['settings' => [...$settings, 'appointments' => [...$settings['appointments'], 'services' => $services]]])->save();
+    $this->owner->unsetRelation('tenant');
+    expect($order())->toBe(['vehicle_pass', 'visit', 'canteen']);
+
+    // Sent back with other positions, or one removed: the order is kept, then numbered again
+    $answered = $this->getJson('/api/v1/appointments/settings')->json('data.appointments.services');
+    $answered['canteen']['position'] = 1;
+    $answered['vehicle_pass'] = null;
+    ($this->put)(['services' => $answered])->assertOk();
+    expect($order())->toBe(['visit', 'canteen'])
+        ->and($this->getJson('/api/v1/appointments/settings')->json('data.appointments.services.canteen.position'))->toBe(2);
 });

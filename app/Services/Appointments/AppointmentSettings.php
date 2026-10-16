@@ -102,6 +102,8 @@ final class AppointmentSettings
             }
         }
         $services = (array) ($current['services'] ?? []);
+        // An organization's own kinds keep the order they were added in (a JSON column may store keys in its own)
+        $next = 1 + (int) collect($services)->max(fn (mixed $service) => (int) (is_array($service) ? ($service['position'] ?? 0) : 0));
         foreach ((array) ($change['services'] ?? []) as $key => $serviceChange) {
             if ($serviceChange === null) {
                 unset($services[$key]);
@@ -109,7 +111,10 @@ final class AppointmentSettings
                 continue;
             }
             // Whether a kind is the organization's own follows from the registry, not from what is sent
-            $service = [...(array) ($services[$key] ?? []), ...array_diff_key((array) $serviceChange, ['name' => true, 'custom' => true])];
+            $service = [...(array) ($services[$key] ?? []), ...array_diff_key((array) $serviceChange, ['name' => true, 'custom' => true, 'position' => true])];
+            if (! isset(self::registryServices()[$key]) && ! isset($service['position'])) {
+                $service['position'] = $next++;
+            }
             if (array_key_exists('name', (array) $serviceChange)) {
                 $service['name'] = [...(array) ($services[$key]['name'] ?? []), ...(array) $serviceChange['name']];
             }
@@ -124,7 +129,7 @@ final class AppointmentSettings
      * The settings, complete and within their limits, whatever is saved.
      *
      * @param  array<string, mixed>  $saved
-     * @return array{enabled: bool, booking: array<int, string>, scheduling: string, slot_minutes: int, confirmation: string, family_members: bool, open_per_service: int, notice_hours: int, days_ahead: int, changes: array{cancel: bool, reschedule: bool, until_hours: int}, verification: array{method: string, code_channels: array<int, string>, code_minutes: int, code_attempts: int}, reminders: array<int, int>, services: array<string, array{enabled: bool, custom: bool, name: array<string, string|null>, slots: int, public: bool}>}
+     * @return array{enabled: bool, booking: array<int, string>, scheduling: string, slot_minutes: int, confirmation: string, family_members: bool, open_per_service: int, notice_hours: int, days_ahead: int, changes: array{cancel: bool, reschedule: bool, until_hours: int}, verification: array{method: string, code_channels: array<int, string>, code_minutes: int, code_attempts: int}, reminders: array<int, int>, services: array<string, array{enabled: bool, custom: bool, name: array<string, string|null>, slots: int, public: bool, position?: int}>}
      */
     public static function normalize(array $saved): array
     {
@@ -171,10 +176,11 @@ final class AppointmentSettings
 
     /**
      * The registry's kinds of visit first, in its order (on unless turned off), then the organization's own, in
-     * theirs; names null where the default name stands.
+     * the order they were added (`position`, 1 on — kept apart from the keys' order, which a JSON column may
+     * change); names null where the default name stands.
      *
      * @param  array<string, mixed>  $saved
-     * @return array<string, array{enabled: bool, custom: bool, name: array<string, string|null>, slots: int, public: bool}>
+     * @return array<string, array{enabled: bool, custom: bool, name: array<string, string|null>, slots: int, public: bool, position?: int}>
      */
     private static function normalizeServices(array $saved): array
     {
@@ -203,8 +209,11 @@ final class AppointmentSettings
             $services[$key] = $service($values, $clampSlots($values['slots'] ?? null, $slots), false);
         }
         $custom = array_filter($saved, fn (mixed $values, int|string $key) => is_array($values) && ! isset($services[$key]) && preg_match((string) config('appointments.custom_services.key'), (string) $key), ARRAY_FILTER_USE_BOTH);
+        // In the order they were added (stable for those saved before positions)
+        uksort($custom, fn (int|string $a, int|string $b) => ((int) ($custom[$a]['position'] ?? 0)) <=> ((int) ($custom[$b]['position'] ?? 0)));
+        $position = 0;
         foreach (array_slice($custom, 0, (int) config('appointments.custom_services.max'), true) as $key => $values) {
-            $services[(string) $key] = $service($values, $clampSlots($values['slots'] ?? null, 1), true);
+            $services[(string) $key] = [...$service($values, $clampSlots($values['slots'] ?? null, 1), true), 'position' => ++$position];
         }
 
         return $services;
