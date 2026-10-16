@@ -384,6 +384,7 @@ return [
             'biometrics' => 'বায়োমেট্রিক',
             'reports' => 'রিপোর্ট',
             'notifications' => 'নোটিফিকেশন',
+            'appointment_locations' => 'অ্যাপয়েন্টমেন্টের জায়গা',
         ],
         'audit_events' => [
             'created' => 'তৈরি',

@@ -48,8 +48,30 @@ return [
     // An organization's own kinds of visit: how many at most, and the shape of their keys
     'custom_services' => ['max' => 20, 'key' => '/^[a-z][a-z0-9_]{1,39}$/'],
 
+    /*
+     * Places people come to (a branch, an office, a counter), each with its own weekly hours, how many are served
+     * at once per time slot (counters side by side) and per day (day scheduling), and the kinds of visit it takes
+     * (null: every kind, those added later too). Days are ISO keys, Monday first; hours "HH:MM" from–to.
+     */
+    'weekdays' => ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+    'locations' => [
+        // A new place's hours: Sunday to Thursday, 9 to 5 (a working week of Bangladesh; change it for another)
+        'hours' => [
+            'mon' => [['09:00', '17:00']], 'tue' => [['09:00', '17:00']], 'wed' => [['09:00', '17:00']], 'thu' => [['09:00', '17:00']],
+            'fri' => [], 'sat' => [], 'sun' => [['09:00', '17:00']],
+        ],
+        'slot_capacity' => 1,
+        'day_capacity' => 50,
+        // Places one organization may have
+        'max' => 100,
+        // Opening periods in one day (e.g. 9–1 and 2–5)
+        'periods_per_day' => 4,
+    ],
+
     // Limits of what an organization may set: [min, max]
     'limits' => [
+        'slot_capacity' => [1, 100],
+        'day_capacity' => [1, 5000],
         'slot_minutes' => [5, 240],
         'service_slots' => [1, 8],
         'open_per_service' => [1, 10],

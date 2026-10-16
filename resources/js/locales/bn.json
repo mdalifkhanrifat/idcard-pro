@@ -206,7 +206,8 @@
             "cards": "কার্ড",
             "biometrics": "বায়োমেট্রিক",
             "reports": "রিপোর্ট",
-            "notifications": "নোটিফিকেশন"
+            "notifications": "নোটিফিকেশন",
+            "appointment_locations": "অ্যাপয়েন্টমেন্টের জায়গা"
         },
         "events": {
             "created": "তৈরি",

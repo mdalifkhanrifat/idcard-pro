@@ -175,6 +175,16 @@ return [
     */
 
     'attributes' => [
+        // Appointment places (5.3b)
+        'slot_capacity' => 'প্রতি সময়ের ঘরে কতজন',
+        'day_capacity' => 'প্রতি দিনে কতজন',
+        'services' => 'কাজের ধরন',
+        'services.*' => 'কাজের ধরন',
+        'hours' => 'কাজের সময়',
+        'hours.*' => 'দিনের কাজের সময়',
+        'hours.*.*' => 'সময়ের ভাগ',
+        'hours.*.*.*' => 'সময়',
+        'sort_order' => 'ক্রম',
         // Appointment settings (5.3)
         'appointments' => 'অ্যাপয়েন্টমেন্টের সেটিং',
         'appointments.enabled' => 'অ্যাপয়েন্টমেন্ট চালু',

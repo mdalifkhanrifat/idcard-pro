@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AppointmentLocationController;
 use App\Http\Controllers\Api\V1\AppointmentSettingsController;
 use App\Http\Controllers\Api\V1\AuditController;
 use App\Http\Controllers\Api\V1\Auth\ApiTokenController;
@@ -117,6 +118,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('audit/activities', [AuditController::class, 'activities'])->name('audit.activities');
             Route::get('audit/logins', [AuditController::class, 'logins'])->name('audit.logins');
             Route::get('appointments/settings', [AppointmentSettingsController::class, 'show'])->name('appointments.settings.show');
+            Route::apiResource('appointment-locations', AppointmentLocationController::class);
             Route::put('appointments/settings', [AppointmentSettingsController::class, 'update'])->name('appointments.settings.update');
             Route::get('notifications/settings', [NotificationSettingsController::class, 'show'])->name('notifications.settings.show');
             Route::put('notifications/settings', [NotificationSettingsController::class, 'update'])->name('notifications.settings.update');

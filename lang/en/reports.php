@@ -384,6 +384,7 @@ return [
             'biometrics' => 'Biometrics',
             'reports' => 'Reports',
             'notifications' => 'Notifications',
+            'appointment_locations' => 'Appointment places',
         ],
         'audit_events' => [
             'created' => 'Created',

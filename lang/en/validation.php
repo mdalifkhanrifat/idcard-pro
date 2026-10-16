@@ -198,6 +198,16 @@ return [
     */
 
     'attributes' => [
+        // Appointment places (5.3b)
+        'slot_capacity' => 'people per time slot',
+        'day_capacity' => 'people per day',
+        'services' => 'kinds of visit',
+        'services.*' => 'kind of visit',
+        'hours' => 'opening hours',
+        'hours.*' => 'opening hours of the day',
+        'hours.*.*' => 'opening period',
+        'hours.*.*.*' => 'time',
+        'sort_order' => 'order',
         // Appointment settings (5.3): named as the settings page labels them
         'appointments' => 'appointment settings',
         'appointments.enabled' => 'appointments on',

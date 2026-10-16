@@ -25,6 +25,11 @@ return [
         'date_of_birth' => 'Employee number and date of birth',
         'national_id' => 'Employee number and national ID',
     ],
+    'locations' => [
+        'period_order' => 'A period must end after it starts.',
+        'periods_overlap' => 'Two periods of this day overlap; let one end before the next starts.',
+        'too_many' => 'An organization may have at most :max places.',
+    ],
     'settings' => [
         'booking_needed' => 'Choose who books before turning appointments on.',
         'service_needed' => 'Turn on at least one kind of visit before turning appointments on.',

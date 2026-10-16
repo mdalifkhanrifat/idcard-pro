@@ -206,7 +206,8 @@
             "cards": "Cards",
             "biometrics": "Biometrics",
             "reports": "Reports",
-            "notifications": "Notifications"
+            "notifications": "Notifications",
+            "appointment_locations": "Appointment places"
         },
         "events": {
             "created": "Created",
