@@ -9,6 +9,7 @@ use App\Services\Reports\Definitions\ExpiredCardReport;
 use App\Services\Reports\Definitions\FamilyMemberReport;
 use App\Services\Reports\Definitions\LoginEventReport;
 use App\Services\Reports\Definitions\MasterDataReport;
+use App\Services\Reports\Definitions\NotificationMessageReport;
 use App\Services\Reports\Definitions\QualificationReport;
 use App\Services\Reports\Definitions\RoleReport;
 use App\Services\Reports\Definitions\SignatoryReport;
@@ -57,6 +58,8 @@ return [
         // Legacy "Activity Log" list: changes, and sign-ins
         'audit_changes' => AuditChangeReport::class,
         'audit_logins' => LoginEventReport::class,
+        // Sent messages (e-mail, SMS…) as the notifications log finds them
+        'notification_messages' => NotificationMessageReport::class,
     ],
 
     /*

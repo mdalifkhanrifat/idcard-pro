@@ -54,7 +54,7 @@ it('gives the Owner and the Administrator every report, to see and to download',
 })->with(['Owner', 'Administrator']);
 
 it('lets the Viewer see the reports of the lists it sees, without downloading any', function () {
-    $seen = ['card_prints', 'expired_cards', 'cardholders', 'cards', 'family_members', 'qualifications', 'users', 'master_data', 'audit_changes', 'audit_logins'];
+    $seen = ['card_prints', 'expired_cards', 'cardholders', 'cards', 'family_members', 'qualifications', 'users', 'master_data', 'audit_changes', 'audit_logins', 'notification_messages'];
 
     expect(($this->access)(tenantUser($this->tenant, 'Viewer')))->toBe(($this->only)($seen, [true, 200, 403], [false, 403, 403]));
 });
@@ -76,6 +76,11 @@ it('opens the card reports, the print history and expired cards included, only w
 
     expect(($this->access)(($this->roleWith)(['reports.view', 'reports.export', 'cards.view'])))->toBe(($this->only)($cards, [true, 200, 200], [false, 403, 403]))
         ->and(($this->access)(($this->roleWith)(['reports.view', 'cardholders.view'])))->toBe(($this->only)(['cardholders', 'family_members', 'qualifications'], [true, 200, 403], [false, 403, 403]));
+});
+
+it('opens the sent messages report only with notifications.view', function () {
+    expect(($this->access)(($this->roleWith)(['reports.view', 'reports.export', 'notifications.view'])))->toBe(($this->only)(['notification_messages'], [true, 200, 200], [false, 403, 403]))
+        ->and(($this->access)(($this->roleWith)(['reports.view', 'reports.export', 'notifications.send'])))->toBe(($this->only)([], [], [false, 403, 403]));
 });
 
 it('saves the organization\'s default columns of a report only for those who may see that report', function () {

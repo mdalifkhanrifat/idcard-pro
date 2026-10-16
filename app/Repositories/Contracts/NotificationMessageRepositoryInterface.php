@@ -6,6 +6,7 @@ use App\Data\Notifications\NotificationMessageFilter;
 use App\Models\NotificationMessage;
 use Carbon\CarbonInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\LazyCollection;
 
 /**
  * Messages sent or to be sent (5.2): the log of every message.
@@ -31,6 +32,20 @@ interface NotificationMessageRepositoryInterface extends RepositoryInterface
      * @return LengthAwarePaginator<int, NotificationMessage>
      */
     public function list(NotificationMessageFilter $filter): LengthAwarePaginator;
+
+    /**
+     * Every message of the list's criteria, in its order, read a chunk at a time (the report's downloads).
+     *
+     * @return LazyCollection<int, NotificationMessage>
+     */
+    public function reportRows(NotificationMessageFilter $filter): LazyCollection;
+
+    /**
+     * Over every page of the list's criteria: messages, and how many were sent, failed or not sent.
+     *
+     * @return array{messages: int, sent: int, failed: int, skipped: int}
+     */
+    public function reportTotals(NotificationMessageFilter $filter): array;
 
     /**
      * A message locked until the transaction ends (two people sending it again at once make one resend), with

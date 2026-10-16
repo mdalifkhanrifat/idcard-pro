@@ -58,7 +58,8 @@ const fields = computed<ReportFilterField[]>(() => report.value?.filters ?? []);
 const searchField = computed(() => fields.value.find((field) => field.key === 'search') ?? null);
 const panelFields = computed(() =>
     fields.value.filter((field) => {
-        if (field === searchField.value || (field.type === 'user' && !auth.can('users.view'))) {
+        // A cardholder arrives from a link (e.g. their messages), not picked from a list of every cardholder
+        if (field === searchField.value || field.type === 'cardholder' || (field.type === 'user' && !auth.can('users.view'))) {
             return false;
         }
         // Only while it means something (e.g. "within days" for cards expiring soon)

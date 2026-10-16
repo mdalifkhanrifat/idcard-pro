@@ -15,7 +15,7 @@ export interface ReportColumn {
 /** A way to filter a report (the server's ReportFilterField): the page draws it from this alone. */
 export interface ReportFilterField {
     key: string;
-    type: 'search' | 'date' | 'select' | 'number' | 'template' | 'user' | 'master_data';
+    type: 'search' | 'date' | 'select' | 'number' | 'template' | 'user' | 'master_data' | 'cardholder';
     label: string;
     options?: { value: string; label: string }[];
     master_data?: string;

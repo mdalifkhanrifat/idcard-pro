@@ -12,6 +12,7 @@ import { useListQuery, type PageMeta } from '@/composables/useListQuery';
 import { formatDateTime, formatNumber } from '@/lib/format';
 import type { NotificationLogOptions, NotificationMessage } from '@/lib/notifications/api';
 import NotificationMessageDialog from '@/pages/notifications/NotificationMessageDialog.vue';
+import ReportDownloads from '@/pages/reports/ReportDownloads.vue';
 import { statusTone } from '@/pages/notifications/messages';
 import { useAuthStore } from '@/stores/auth';
 
@@ -24,14 +25,23 @@ const props = defineProps<{ fixed?: Record<string, string>; queryPrefix?: string
 const { t } = useI18n();
 const auth = useAuthStore();
 
+const fixedParams = () => Object.fromEntries(Object.entries(props.fixed ?? {}).map(([key, value]) => [`filter[${key}]`, value]));
 const list = useListQuery<NotificationMessage, PageMeta & Partial<NotificationLogOptions>>('/notifications/messages', {
     filters: { search: '', status: '', channel: '', event: '', date_from: '', date_to: '' },
     sort: '-created_at',
     perPage: 25,
     queryPrefix: props.queryPrefix,
-    extraParams: () => Object.fromEntries(Object.entries(props.fixed ?? {}).map(([key, value]) => [`filter[${key}]`, value])),
+    extraParams: fixedParams,
 });
 onMounted(list.load);
+
+/** The list is the "sent messages" report: its downloads hold these rows, the fixed criteria included. */
+const downloadParams = () => ({ ...list.queryParams(), ...fixedParams() });
+/** The same criteria on the report's page, under the report's names (the list may keep its own under a prefix). */
+const reportQuery = computed(() => Object.fromEntries([
+    ...Object.entries({ ...list.filters, ...props.fixed }).filter(([, value]) => value !== '').map(([key, value]) => [`f_${key}`, value]),
+    ...(list.sort.value && list.sort.value !== '-created_at' ? [['sort', list.sort.value]] : []),
+]));
 
 const choices = (named: { key: string; name: string }[] | undefined) => (named ?? []).map((item) => ({ value: item.key, label: item.name }));
 const sorts = computed(() => [
@@ -67,6 +77,7 @@ const dialogOpen = computed({ get: () => opened.value !== null, set: (open: bool
             <div class="flex flex-wrap items-end gap-2 sm:col-span-2 lg:col-span-4 lg:justify-end">
                 <UiButton v-if="filtered" variant="ghost" size="sm" @click="list.resetFilters()">{{ t('common.reset') }}</UiButton>
                 <UiButton variant="secondary" size="sm" :loading="list.loading.value" data-refresh @click="list.load()"><RefreshCw class="size-4" />{{ t('notifications.messages.refresh') }}</UiButton>
+                <ReportDownloads v-if="auth.can('reports.view')" report-key="notification_messages" variant="menu" :params="downloadParams" :total="list.meta.value.total" :link-query="reportQuery" />
             </div>
         </div>
 

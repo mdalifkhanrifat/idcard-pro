@@ -4,6 +4,7 @@ namespace App\Services\Reports;
 
 use App\Data\Reports\ReportFilterField;
 use App\Data\Reports\ReportQuery;
+use App\Repositories\Contracts\CardholderRepositoryInterface;
 use App\Repositories\Contracts\CardTemplateRepositoryInterface;
 use App\Repositories\Contracts\MasterDataRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
@@ -18,6 +19,7 @@ class ReportFilterSummary
         private MasterDataRepositoryInterface $masterData,
         private CardTemplateRepositoryInterface $templates,
         private UserRepositoryInterface $users,
+        private CardholderRepositoryInterface $cardholders,
         private ReportValueText $text,
     ) {}
 
@@ -47,7 +49,23 @@ class ReportFilterSummary
             ReportFilterField::MASTER_DATA => $this->masterData->findByPublicId($value)?->getAttribute('name') ?? $value,
             ReportFilterField::TEMPLATE => ($template = $this->templates->findByPublicId($value)) ? "{$template->getAttribute('name')} ({$template->getAttribute('code')})" : $value,
             ReportFilterField::USER => $this->users->findByPublicId($value)?->getAttribute('name') ?? $value,
+            ReportFilterField::CARDHOLDER => $this->cardholderName($value),
             default => $value,
         };
+    }
+
+    /**
+     * "Rahim Uddin (EMP-1024)", the employee number left out when there is none.
+     */
+    private function cardholderName(string $publicId): string
+    {
+        $cardholder = $this->cardholders->findByPublicId($publicId);
+        if ($cardholder === null) {
+            return $publicId;
+        }
+        $name = (string) $cardholder->getAttribute('full_name');
+        $number = (string) $cardholder->getAttribute('employee_no');
+
+        return $number === '' ? $name : "{$name} ({$number})";
     }
 }

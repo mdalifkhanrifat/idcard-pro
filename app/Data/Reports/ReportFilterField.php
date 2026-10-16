@@ -29,6 +29,12 @@ final readonly class ReportFilterField
     /** A user of the organization (public id); the client lists them when it may. */
     public const USER = 'user';
 
+    /**
+     * A cardholder (public id), e.g. one cardholder's messages from their page. Not drawn among the filters (no
+     * list of every cardholder): it arrives from a link, and documents name the cardholder.
+     */
+    public const CARDHOLDER = 'cardholder';
+
     /** An item of a master data list (`masterData` type, public id), inside the `parent` filter's item if any. */
     public const MASTER_DATA = 'master_data';
 
