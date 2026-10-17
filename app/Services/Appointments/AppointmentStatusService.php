@@ -4,7 +4,9 @@ namespace App\Services\Appointments;
 
 use App\Enums\AppointmentStatus;
 use App\Models\Appointment;
+use App\Models\AppointmentLocation;
 use App\Models\User;
+use App\Repositories\Contracts\AppointmentLocationRepositoryInterface;
 use App\Repositories\Contracts\AppointmentRepositoryInterface;
 use App\Services\Reports\ReportValueText;
 use App\Support\Tenancy\TenantContext;
@@ -24,6 +26,7 @@ class AppointmentStatusService
 {
     public function __construct(
         private AppointmentRepositoryInterface $appointments,
+        private AppointmentLocationRepositoryInterface $locations,
         private AppointmentBookingService $booking,
         private TenantContext $tenant,
     ) {}
@@ -45,6 +48,8 @@ class AppointmentStatusService
         return DB::transaction(function () use ($appointment, $to, $by, $reason, $now): Appointment {
             $appointment = $this->appointments->lockForChange($appointment);
             $from = $appointment->status;
+            // Restoring takes a place: its lock next, before any other read (see lockForBooking())
+            $place = $from === AppointmentStatus::Cancelled ? $this->locations->lockForBooking($appointment->location_id) : null;
             if (! $from->canBecome($to)) {
                 throw ValidationException::withMessages(['status' => __('appointments.changes.not_allowed', ['from' => $this->name($from), 'to' => $this->name($to)])]);
             }
@@ -60,8 +65,8 @@ class AppointmentStatusService
                 throw ValidationException::withMessages(['status' => __($appointment->starts_at !== null ? 'appointments.changes.not_started' : 'appointments.changes.day_not_over')]);
             }
             $times = [];
-            if ($from === AppointmentStatus::Cancelled) {
-                $times = $this->takePlaceAgain($appointment, $now);
+            if ($place instanceof AppointmentLocation) {
+                $times = $this->takePlaceAgain($appointment, $place, $now);
             }
 
             return $this->apply($appointment, $to, $by, $reason, $now, $times);
@@ -74,14 +79,14 @@ class AppointmentStatusService
      *
      * @return array<string, mixed>
      */
-    private function takePlaceAgain(Appointment $appointment, CarbonImmutable $now): array
+    private function takePlaceAgain(Appointment $appointment, AppointmentLocation $place, CarbonImmutable $now): array
     {
         $limit = $this->tenant->get()->appointmentSettings()['open_per_service'];
         if ($this->appointments->countOpen($appointment->cardholder_id, $appointment->family_member_id, $appointment->service) >= $limit) {
             throw ValidationException::withMessages(['status' => __('appointments.booking.open_limit', ['count' => app(ReportValueText::class)->number($limit)])]);
         }
         try {
-            [$startsAt, $endsAt] = $this->booking->claim($appointment, $appointment->location, $appointment->date->toDateString(), $appointment->starts_at?->setTimezone($this->timezone())->format('H:i'), $now);
+            [$startsAt, $endsAt] = $this->booking->claim($appointment, $place, $appointment->date->toDateString(), $appointment->starts_at?->setTimezone($this->timezone())->format('H:i'), $now);
         } catch (ValidationException $refused) {
             throw ValidationException::withMessages(['status' => __('appointments.changes.no_room', ['why' => collect($refused->errors())->flatten()->first()])]);
         }

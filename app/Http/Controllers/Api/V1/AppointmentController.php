@@ -7,6 +7,7 @@ use App\Http\Requests\Appointments\BookAppointmentRequest;
 use App\Http\Requests\Appointments\CancelAppointmentRequest;
 use App\Http\Requests\Appointments\ChangeAppointmentStatusRequest;
 use App\Http\Requests\Appointments\ListAppointmentsRequest;
+use App\Http\Requests\Appointments\MoveAppointmentRequest;
 use App\Http\Resources\AppointmentResource;
 use App\Models\Appointment;
 use App\Services\Appointments\AppointmentBookingService;
@@ -55,6 +56,19 @@ class AppointmentController extends Controller
         $data = $request->validated();
 
         return (new AppointmentResource($this->booking->book($data, $request->user())))->response()->setStatusCode(201);
+    }
+
+    /**
+     * Move an appointment still ahead (appointments.book): `location`, `date`, `time`, `note` — only what is sent,
+     * by the rules of a new booking, its own place not counted; number and status stay. Its own answer can be
+     * sent back as it is; a different kind of visit or person is refused (cancel and book anew).
+     */
+    public function update(MoveAppointmentRequest $request, Appointment $appointment): AppointmentResource
+    {
+        /** @var array{location?: string, date?: string, time?: string|null, note?: string|null, service?: string, cardholder?: string, family_member?: string|null} $data */
+        $data = $request->validated();
+
+        return new AppointmentResource($this->booking->move($appointment, $data));
     }
 
     /**

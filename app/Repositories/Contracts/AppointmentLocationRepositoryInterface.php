@@ -34,7 +34,9 @@ interface AppointmentLocationRepositoryInterface extends RepositoryInterface
 
     /**
      * The place read again under a row lock, so bookings at one place are made one after another (two at once
-     * never both take its last place). Call inside a database transaction.
+     * never both take its last place). Call inside a database transaction, before any plain read of it: MySQL
+     * reads the rest of a transaction as of its first plain read, so one made before waiting for the lock would
+     * not see the booking that held it.
      */
-    public function lockForBooking(AppointmentLocation $location): AppointmentLocation;
+    public function lockForBooking(int $locationId): AppointmentLocation;
 }

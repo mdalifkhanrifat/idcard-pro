@@ -133,6 +133,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::put('appointments/settings', [AppointmentSettingsController::class, 'update'])->name('appointments.settings.update');
             // After appointments/settings, so that is not taken for an appointment
             Route::get('appointments/{appointment}', [AppointmentController::class, 'show'])->name('appointments.show');
+            Route::match(['put', 'patch'], 'appointments/{appointment}', [AppointmentController::class, 'update'])->name('appointments.update');
             Route::post('appointments/{appointment}/cancel', [AppointmentController::class, 'cancel'])->name('appointments.cancel');
             Route::post('appointments/{appointment}/status', [AppointmentController::class, 'status'])->name('appointments.status');
             Route::get('notifications/settings', [NotificationSettingsController::class, 'show'])->name('notifications.settings.show');

@@ -30,8 +30,9 @@ class AvailabilityService
      * to `days_ahead` on; earlier and later days are left out. Staff may book up to now, the public link at
      * least `notice_hours` ahead and only kinds offered there. A preview shows it as it will be once
      * appointments and the place are turned on (setting up before turning them on); every other rule holds.
+     * `except` (an appointment's id) leaves that booking out of what is taken: the one being moved.
      */
-    public function for(AppointmentLocation $location, string $service, string $from, string $to, BookingAudience $audience = BookingAudience::Staff, ?CarbonImmutable $now = null, bool $preview = false): Availability
+    public function for(AppointmentLocation $location, string $service, string $from, string $to, BookingAudience $audience = BookingAudience::Staff, ?CarbonImmutable $now = null, bool $preview = false, ?int $except = null): Availability
     {
         $tenant = $this->tenant->get();
         $settings = $tenant->appointmentSettings();
@@ -67,10 +68,10 @@ class AvailabilityService
                 'id' => $closure->public_id, 'reason' => $closure->reason, 'reason_local' => $closure->reason_local,
             ]];
             if ($scheduling === 'slot') {
-                $load ??= $this->load->slots($location, CarbonImmutable::parse($first, $timezone)->utc(), CarbonImmutable::parse($last, $timezone)->addDay()->utc(), $settings['slot_minutes']);
+                $load ??= $this->load->slots($location, CarbonImmutable::parse($first, $timezone)->utc(), CarbonImmutable::parse($last, $timezone)->addDay()->utc(), $settings['slot_minutes'], $except);
                 $entry['slots'] = $entry['open'] ? $this->slots($location, $day, $periods, $settings['slot_minutes'], $settings['services'][$service]['slots'], $earliest, $load) : [];
             } else {
-                $load ??= $this->load->days($location, $first, $last);
+                $load ??= $this->load->days($location, $first, $last, $except);
                 // Served in turn: the day can still be booked while there is time to come before it closes
                 $closes = $periods === [] ? null : $this->at($day, (string) end($periods)[1]);
                 $bookable = $entry['open'] && $closes !== null && $closes->greaterThan($earliest);

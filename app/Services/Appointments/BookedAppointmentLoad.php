@@ -15,10 +15,10 @@ final class BookedAppointmentLoad implements AppointmentLoad
 {
     public function __construct(private AppointmentRepositoryInterface $appointments) {}
 
-    public function slots(AppointmentLocation $location, CarbonImmutable $from, CarbonImmutable $to, int $slotMinutes): array
+    public function slots(AppointmentLocation $location, CarbonImmutable $from, CarbonImmutable $to, int $slotMinutes, ?int $except = null): array
     {
         $load = [];
-        foreach ($this->appointments->heldTimes($location->id, $from, $to) as $appointment) {
+        foreach ($this->appointments->heldTimes($location->id, $from, $to, $except) as $appointment) {
             /** @var Appointment $appointment */
             $end = $appointment->ends_at?->getTimestamp() ?? 0;
             for ($start = (int) $appointment->starts_at?->getTimestamp(); $start < $end; $start += $slotMinutes * 60) {
@@ -29,8 +29,8 @@ final class BookedAppointmentLoad implements AppointmentLoad
         return $load;
     }
 
-    public function days(AppointmentLocation $location, string $from, string $to): array
+    public function days(AppointmentLocation $location, string $from, string $to, ?int $except = null): array
     {
-        return $this->appointments->heldDays($location->id, $from, $to);
+        return $this->appointments->heldDays($location->id, $from, $to, $except);
     }
 }

@@ -46,7 +46,7 @@ class AppointmentRepository extends EloquentRepository implements AppointmentRep
 
     public function lockForChange(Appointment $appointment): Appointment
     {
-        return $this->query()->whereKey($appointment->id)->lockForUpdate()->with('location')->firstOrFail();
+        return $this->query()->whereKey($appointment->id)->lockForUpdate()->firstOrFail();
     }
 
     public function usedServices(): array
@@ -100,12 +100,13 @@ class AppointmentRepository extends EloquentRepository implements AppointmentRep
             ->count();
     }
 
-    public function heldTimes(int $locationId, CarbonImmutable $from, CarbonImmutable $to): Collection
+    public function heldTimes(int $locationId, CarbonImmutable $from, CarbonImmutable $to, ?int $exceptId = null): Collection
     {
         return $this->query()
             ->select(['id', 'starts_at', 'ends_at'])
             ->where('location_id', $locationId)
             ->whereIn('status', AppointmentStatus::holdingPlace())
+            ->when($exceptId !== null, fn ($q) => $q->whereKeyNot($exceptId))
             ->whereNotNull('starts_at')
             ->where('starts_at', '<', $to->utc()->toDateTimeString())
             ->where('ends_at', '>', $from->utc()->toDateTimeString())
@@ -121,11 +122,12 @@ class AppointmentRepository extends EloquentRepository implements AppointmentRep
             ->exists();
     }
 
-    public function heldDays(int $locationId, string $from, string $to): array
+    public function heldDays(int $locationId, string $from, string $to, ?int $exceptId = null): array
     {
         return $this->query()
             ->where('location_id', $locationId)
             ->whereIn('status', AppointmentStatus::holdingPlace())
+            ->when($exceptId !== null, fn ($q) => $q->whereKeyNot($exceptId))
             ->whereBetween('date', [$from, $to])
             ->selectRaw('date, count(*) as people')
             ->groupBy('date')

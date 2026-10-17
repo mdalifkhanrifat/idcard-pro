@@ -29,8 +29,9 @@ interface AppointmentRepositoryInterface extends RepositoryInterface
     public function withDetails(Appointment $appointment): Appointment;
 
     /**
-     * The appointment as it is now (with its place), its row locked until the transaction ends: two changes at once never both
-     * apply to what each read before.
+     * The appointment as it is now, its row locked until the transaction ends: two changes at once never both
+     * apply to what each read before. Nothing else is loaded — take the place's lock next, before any plain
+     * read (see AppointmentLocationRepositoryInterface::lockForBooking()).
      */
     public function lockForChange(Appointment $appointment): Appointment;
 
@@ -62,19 +63,20 @@ interface AppointmentRepositoryInterface extends RepositoryInterface
     public function countOpen(int $cardholderId, ?int $familyMemberId, string $service): int;
 
     /**
-     * Booked times at a place that hold their place and overlap [from, to) (UTC): starts_at and ends_at.
+     * Booked times at a place that hold their place and overlap [from, to) (UTC): starts_at and ends_at; one
+     * appointment may be left out (`exceptId`).
      *
      * @return Collection<int, Appointment>
      */
-    public function heldTimes(int $locationId, CarbonImmutable $from, CarbonImmutable $to): Collection;
+    public function heldTimes(int $locationId, CarbonImmutable $from, CarbonImmutable $to, ?int $exceptId = null): Collection;
 
     /**
      * People booked at a place on each day (Y-m-d, the organization's) between two days, both whole, holding
-     * their place.
+     * their place; one appointment may be left out (`exceptId`).
      *
      * @return array<string, int>
      */
-    public function heldDays(int $locationId, string $from, string $to): array;
+    public function heldDays(int $locationId, string $from, string $to, ?int $exceptId = null): array;
 
     /**
      * Whether any appointment (of any status — bookings are never deleted) is of this cardholder (theirs or a

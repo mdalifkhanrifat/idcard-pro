@@ -110,12 +110,12 @@ it('takes what is booked off the capacity: per slot, the fullest slot of a longe
     {
         public function __construct(private array $slots) {}
 
-        public function slots(AppointmentLocation $location, CarbonImmutable $from, CarbonImmutable $to, int $slotMinutes): array
+        public function slots(AppointmentLocation $location, CarbonImmutable $from, CarbonImmutable $to, int $slotMinutes, ?int $except = null): array
         {
             return $this->slots;
         }
 
-        public function days(AppointmentLocation $location, string $from, string $to): array
+        public function days(AppointmentLocation $location, string $from, string $to, ?int $except = null): array
         {
             return ['2026-10-19' => 45];
         }

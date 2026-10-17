@@ -85,6 +85,9 @@ return [
         'not_started' => 'Mark "did not come" once the appointment\'s time has begun.',
         'day_not_over' => 'Mark "did not come" once the appointment\'s day is over.',
         'no_room' => 'It cannot be restored: :why Book a new appointment instead.',
+        'cannot_move' => 'Only an appointment still ahead (waiting or confirmed) can be moved; this one is ":status".',
+        'kind_fixed' => 'The kind of visit of an appointment does not change; cancel it and book anew.',
+        'person_fixed' => 'The person of an appointment does not change; cancel it and book anew.',
     ],
     'in_use' => [
         'cardholder' => 'This person has appointments, which are kept as records (cancelled ones too). Mark the person inactive instead of deleting.',
