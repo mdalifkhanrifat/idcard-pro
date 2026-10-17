@@ -88,6 +88,22 @@ class AppointmentBookingService
     }
 
     /**
+     * Takes a place again, by the same rules as a new booking (as staff), for an appointment of its kind of visit:
+     * a cancelled one being restored (5.4d). Locks the place, so the caller must be in a transaction. Returns
+     * the start and end of its time (null when days are booked).
+     *
+     * @return array{0: CarbonImmutable|null, 1: CarbonImmutable|null}
+     */
+    public function claim(Appointment $appointment, AppointmentLocation $location, string $date, ?string $time, ?CarbonImmutable $now = null): array
+    {
+        $settings = $this->tenant->get()->appointmentSettings();
+        $location = $this->locations->lockForBooking($location);
+        $day = $this->bookableDay($location, ['service' => $appointment->service, 'date' => $date], BookingAudience::Staff, $now);
+
+        return $settings['scheduling'] === 'slot' ? $this->slot($day, $time) : [null, null];
+    }
+
+    /**
      * The day asked for as the free times see it now: open, within notice and days ahead, with room.
      *
      * @param  array<string, mixed>  $data

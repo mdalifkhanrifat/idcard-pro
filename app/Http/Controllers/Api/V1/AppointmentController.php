@@ -4,11 +4,14 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Appointments\BookAppointmentRequest;
+use App\Http\Requests\Appointments\CancelAppointmentRequest;
+use App\Http\Requests\Appointments\ChangeAppointmentStatusRequest;
 use App\Http\Requests\Appointments\ListAppointmentsRequest;
 use App\Http\Resources\AppointmentResource;
 use App\Models\Appointment;
 use App\Services\Appointments\AppointmentBookingService;
 use App\Services\Appointments\AppointmentService;
+use App\Services\Appointments\AppointmentStatusService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
@@ -19,7 +22,11 @@ use Illuminate\Support\Facades\Gate;
  */
 class AppointmentController extends Controller
 {
-    public function __construct(private AppointmentBookingService $booking, private AppointmentService $appointments) {}
+    public function __construct(
+        private AppointmentBookingService $booking,
+        private AppointmentService $appointments,
+        private AppointmentStatusService $statuses,
+    ) {}
 
     /**
      * Filters: filter[from], filter[to] (days of the organization, both whole; without them from its today on,
@@ -48,5 +55,24 @@ class AppointmentController extends Controller
         $data = $request->validated();
 
         return (new AppointmentResource($this->booking->book($data, $request->user())))->response()->setStatusCode(201);
+    }
+
+    /**
+     * Cancel an appointment still ahead (waiting or confirmed): appointments.book; `reason` optional. It gives
+     * up its place.
+     */
+    public function cancel(CancelAppointmentRequest $request, Appointment $appointment): AppointmentResource
+    {
+        return new AppointmentResource($this->statuses->cancel($appointment, $request->user(), $request->validated('reason')));
+    }
+
+    /**
+     * Take an appointment a step (`status`; `reason` when cancelling): appointments.manage. Allowed steps:
+     * AppointmentStatus::next() — approve or turn down, came in (on its day), did not come (once its time has
+     * begun), done, and back from each; 422 on `status` otherwise.
+     */
+    public function status(ChangeAppointmentStatusRequest $request, Appointment $appointment): AppointmentResource
+    {
+        return new AppointmentResource($this->statuses->change($appointment, $request->status(), $request->user(), $request->validated('reason')));
     }
 }

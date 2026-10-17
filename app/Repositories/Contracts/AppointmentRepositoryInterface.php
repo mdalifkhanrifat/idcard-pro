@@ -29,6 +29,12 @@ interface AppointmentRepositoryInterface extends RepositoryInterface
     public function withDetails(Appointment $appointment): Appointment;
 
     /**
+     * The appointment as it is now (with its place), its row locked until the transaction ends: two changes at once never both
+     * apply to what each read before.
+     */
+    public function lockForChange(Appointment $appointment): Appointment;
+
+    /**
      * The kinds of visit bookings were made for (also those since removed from the settings).
      *
      * @return array<int, string>

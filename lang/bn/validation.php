@@ -198,6 +198,8 @@ return [
         'filter.to' => 'পর্যন্ত',
         'filter.past' => 'পুরনোগুলোও',
         'filter.yearly' => 'প্রতি বছর',
+        // Appointment changes (5.4d)
+        'status' => 'অবস্থা',
         // Appointments list (5.4c)
         'filter.status.*' => 'অবস্থা',
         'filter.service' => 'কাজের ধরন',

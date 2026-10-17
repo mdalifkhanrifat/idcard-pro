@@ -78,6 +78,14 @@ return [
         'family_off' => 'Family members do not have appointments in this organization.',
         'family_not_theirs' => 'This family member is not this cardholder\'s.',
     ],
+    'changes' => [
+        'cannot_cancel' => 'Only an appointment still ahead (waiting or confirmed) can be cancelled; this one is ":status".',
+        'not_allowed' => 'An appointment that is ":from" cannot become ":to".',
+        'not_today' => 'A person can be marked as come in only on the appointment\'s day (:date).',
+        'not_started' => 'Mark "did not come" once the appointment\'s time has begun.',
+        'day_not_over' => 'Mark "did not come" once the appointment\'s day is over.',
+        'no_room' => 'It cannot be restored: :why Book a new appointment instead.',
+    ],
     'in_use' => [
         'cardholder' => 'This person has appointments, which are kept as records (cancelled ones too). Mark the person inactive instead of deleting.',
         'family_member' => 'This family member has appointments, which are kept as records (cancelled ones too).',

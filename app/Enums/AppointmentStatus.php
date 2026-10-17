@@ -25,6 +25,38 @@ enum AppointmentStatus: string
     }
 
     /**
+     * Where those who manage appointments may take an appointment from here (5.4d): approve or turn down, came in
+     * or did not come, served — and back from each step taken by mistake (from cancelled it takes its place
+     * again, so only while there is room).
+     *
+     * @return array<int, self>
+     */
+    public function next(): array
+    {
+        return match ($this) {
+            self::Pending => [self::Confirmed, self::Cancelled],
+            self::Confirmed => [self::CheckedIn, self::NoShow, self::Cancelled],
+            self::CheckedIn => [self::Done, self::Confirmed],
+            self::Done => [self::CheckedIn],
+            self::NoShow => [self::Confirmed],
+            self::Cancelled => [self::Confirmed, self::Pending],
+        };
+    }
+
+    public function canBecome(self $status): bool
+    {
+        return in_array($status, $this->next(), true);
+    }
+
+    /**
+     * Still waiting for its day: may be moved to another time or place, or cancelled by those who book.
+     */
+    public function isAhead(): bool
+    {
+        return in_array($this, [self::Pending, self::Confirmed], true);
+    }
+
+    /**
      * Holds its place in a slot or a day (all but a cancelled one: a past one keeps what it took).
      */
     public function holdsPlace(): bool

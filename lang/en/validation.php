@@ -221,6 +221,9 @@ return [
         'filter.to' => 'to',
         'filter.past' => 'past ones too',
         'filter.yearly' => 'every year',
+        // Appointment changes (5.4d)
+        'status' => 'status',
+        'reason' => 'reason',
         // Appointments list (5.4c)
         'filter.status.*' => 'status',
         'filter.service' => 'kind of visit',

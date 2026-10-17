@@ -44,6 +44,11 @@ class AppointmentRepository extends EloquentRepository implements AppointmentRep
         return $appointment->loadMissing([...self::LIST_RELATIONS, 'statusChangedBy']);
     }
 
+    public function lockForChange(Appointment $appointment): Appointment
+    {
+        return $this->query()->whereKey($appointment->id)->lockForUpdate()->with('location')->firstOrFail();
+    }
+
     public function usedServices(): array
     {
         return $this->query()->distinct()->orderBy('service')->pluck('service')->all();
