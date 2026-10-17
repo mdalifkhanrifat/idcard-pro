@@ -27,6 +27,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $family_member_id
  * @property int|null $user_id
  * @property int|null $card_id
+ * @property int|null $appointment_id
  * @property string $languages e.g. "bn,en"
  * @property string|null $subject
  * @property string $body
@@ -46,12 +47,13 @@ use Illuminate\Support\Carbon;
  * @property-read FamilyMember|null $familyMember
  * @property-read User|null $user
  * @property-read Card|null $card
+ * @property-read Appointment|null $appointment
  * @property-read User|null $sender
  * @property-read NotificationMessage|null $resendOf
  * @property-read NotificationMessage|null $resend
  */
 #[Fillable([
-    'event', 'channel', 'address', 'cardholder_id', 'family_member_id', 'user_id', 'card_id', 'languages', 'subject',
+    'event', 'channel', 'address', 'cardholder_id', 'family_member_id', 'user_id', 'card_id', 'appointment_id', 'languages', 'subject',
     'body', 'status', 'reason', 'error', 'attempts', 'driver', 'provider_id', 'sent_by', 'resend_of_id', 'sent_at', 'failed_at',
 ])]
 class NotificationMessage extends Model
@@ -117,6 +119,16 @@ class NotificationMessage extends Model
     public function card(): BelongsTo
     {
         return $this->belongsTo(Card::class);
+    }
+
+    /**
+     * The appointment it is about (booked, changed, cancelled, a reminder).
+     *
+     * @return BelongsTo<Appointment, $this>
+     */
+    public function appointment(): BelongsTo
+    {
+        return $this->belongsTo(Appointment::class);
     }
 
     /**

@@ -30,6 +30,15 @@ return [
         'card.expiry_date' => 'মেয়াদ শেষের তারিখ',
         'card.days_left' => 'মেয়াদ শেষ হতে বাকি দিন',
         'card.validity' => 'মেয়াদ (পুরো বাক্য; মেয়াদহীন কার্ডেও ঠিক)',
+        'appointment.number' => 'অ্যাপয়েন্টমেন্টের নম্বর',
+        'appointment.service' => 'কাজের ধরন',
+        'appointment.place' => 'জায়গা',
+        'appointment.address' => 'জায়গার ঠিকানা',
+        'appointment.date' => 'অ্যাপয়েন্টমেন্টের তারিখ',
+        'appointment.time' => 'অ্যাপয়েন্টমেন্টের সময় (শুধু দিন বুক হলে ফাঁকা)',
+        'appointment.when' => 'তারিখ ও সময় (শুধু দিন বুক হলে শুধু দিন)',
+        'appointment.status' => 'অ্যাপয়েন্টমেন্টের অবস্থা',
+        'appointment.cancel_reason' => 'বাতিলের কারণ (পুরো বাক্য; কারণ না দিলে ফাঁকা)',
     ],
 
     // লেখার preview-এর বানানো তথ্য (কখনো আসল কারও নয়)
@@ -37,6 +46,15 @@ return [
         'holder_name' => 'রহিম উদ্দিন',
         'employee_no' => 'EMP-1024',
         'template' => 'কর্মী কার্ড',
+        'place' => 'প্রধান কার্যালয়',
+        'address' => '১২ স্টেশন রোড',
+        'cancel_reason' => 'সেদিন অফিস বন্ধ',
+    ],
+
+    // অ্যাপয়েন্টমেন্টের যে মান বাক্য হিসেবে লেখা
+    'appointment' => [
+        'when' => ':date, :time',
+        'reason' => 'কারণ: :reason।',
     ],
 
     'validity' => [
@@ -59,6 +77,35 @@ return [
             'subject' => 'আপনার আইডি কার্ড {card.number}-এর মেয়াদ {card.expiry_date}-এ শেষ হবে',
             'body' => "প্রিয় {holder.name},\n\n{organization.name}-এর আপনার আইডি কার্ড {card.number}-এর মেয়াদ {card.expiry_date}-এ শেষ হবে (আজ থেকে {card.days_left} দিন পর)। সময়মতো নবায়নের ব্যবস্থা করুন।\n\nধন্যবাদ।",
             'sms' => '{organization.name}: কার্ডের মেয়াদ {card.expiry_date}-এ শেষ, নবায়ন করুন।',
+        ],
+        'appointment_booked' => [
+            'name' => 'অ্যাপয়েন্টমেন্ট বুক হয়েছে',
+            'description' => 'অ্যাপয়েন্টমেন্ট বুক হয়েছে (কর্মী, পাবলিক লিংক বা অন্য সিস্টেম থেকে)।',
+            'subject' => 'আপনার অ্যাপয়েন্টমেন্ট {appointment.number}: {appointment.when}',
+            'body' => "প্রিয় {holder.name},\n\n{appointment.place}-এ {appointment.service}-এর জন্য আপনার অ্যাপয়েন্টমেন্ট {appointment.when}-এ বুক হয়েছে ({appointment.status})। নম্বর {appointment.number}; সাথে রাখুন।\n\n{organization.name}",
+            // এক ভাগের SMS (বাংলা = Unicode, ৭০ অক্ষর); জায়গা আর বাকিটা ইমেইলে
+            'sms' => '{organization.name}: বুকিং {appointment.number}, {appointment.when}।',
+        ],
+        'appointment_changed' => [
+            'name' => 'অ্যাপয়েন্টমেন্ট সরানো হয়েছে',
+            'description' => 'অ্যাপয়েন্টমেন্ট অন্য সময়, দিন বা জায়গায় সরানো হয়েছে।',
+            'subject' => 'আপনার অ্যাপয়েন্টমেন্ট {appointment.number} এখন {appointment.when}',
+            'body' => "প্রিয় {holder.name},\n\n{appointment.service}-এর জন্য আপনার অ্যাপয়েন্টমেন্ট {appointment.number} সরানো হয়েছে। এখন {appointment.when}, {appointment.place}-এ।\n\n{organization.name}",
+            'sms' => '{organization.name}: বুকিং {appointment.number} এখন {appointment.when}।',
+        ],
+        'appointment_cancelled' => [
+            'name' => 'অ্যাপয়েন্টমেন্ট বাতিল',
+            'description' => 'অ্যাপয়েন্টমেন্ট বাতিল হয়েছে, বা অনুমোদনের অপেক্ষায় থাকা অবস্থায় না-মঞ্জুর হয়েছে।',
+            'subject' => 'আপনার অ্যাপয়েন্টমেন্ট {appointment.number} বাতিল হয়েছে',
+            'body' => "প্রিয় {holder.name},\n\n{appointment.when}-এর {appointment.service}-এর জন্য আপনার অ্যাপয়েন্টমেন্ট {appointment.number} বাতিল হয়েছে। {appointment.cancel_reason}\n\nঅন্য সময়ে আবার বুক করতে পারেন।\n\n{organization.name}",
+            'sms' => '{organization.name}: বুকিং {appointment.number} বাতিল হয়েছে।',
+        ],
+        'appointment_reminder' => [
+            'name' => 'অ্যাপয়েন্টমেন্টের রিমাইন্ডার',
+            'description' => 'অ্যাপয়েন্টমেন্ট কাছে এসেছে (প্রতিষ্ঠানের রিমাইন্ডারের ঘণ্টা আগে)।',
+            'subject' => 'মনে করিয়ে দিচ্ছি: আপনার অ্যাপয়েন্টমেন্ট {appointment.when}',
+            'body' => "প্রিয় {holder.name},\n\nমনে করিয়ে দিচ্ছি: {appointment.when}, {appointment.place}-এ {appointment.service}-এর জন্য আপনার অ্যাপয়েন্টমেন্ট {appointment.number}। নম্বরটি সাথে রাখুন।\n\n{organization.name}",
+            'sms' => '{organization.name}: স্মরণ, বুকিং {appointment.number}, {appointment.when}।',
         ],
     ],
 

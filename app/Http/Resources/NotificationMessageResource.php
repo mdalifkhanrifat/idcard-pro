@@ -27,6 +27,7 @@ class NotificationMessageResource extends JsonResource
             'address' => $this->address,
             'recipient' => $this->recipient(),
             'card' => $this->card ? ['id' => $this->card->public_id, 'number' => $this->card->number] : null,
+            'appointment' => $this->appointment ? ['id' => $this->appointment->public_id, 'number' => $this->appointment->number] : null,
             'languages' => explode(',', $this->languages),
             'subject' => $this->subject,
             'body' => $this->body,

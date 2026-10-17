@@ -97,6 +97,10 @@ it('lists what to filter by from the registry, with what the log holds since rem
     expect($meta['events'])->toBe([
         ['key' => 'card_ready', 'name' => 'কার্ড তৈরি'],
         ['key' => 'card_expiring', 'name' => 'কার্ডের মেয়াদ শেষ হচ্ছে'],
+        ['key' => 'appointment_booked', 'name' => 'অ্যাপয়েন্টমেন্ট বুক হয়েছে'],
+        ['key' => 'appointment_changed', 'name' => 'অ্যাপয়েন্টমেন্ট সরানো হয়েছে'],
+        ['key' => 'appointment_cancelled', 'name' => 'অ্যাপয়েন্টমেন্ট বাতিল'],
+        ['key' => 'appointment_reminder', 'name' => 'অ্যাপয়েন্টমেন্টের রিমাইন্ডার'],
         ['key' => 'test', 'name' => 'পরীক্ষার বার্তা'],
         ['key' => 'old_event', 'name' => 'old_event'],
     ])

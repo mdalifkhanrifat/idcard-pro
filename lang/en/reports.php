@@ -175,6 +175,7 @@ return [
         'message.recipient_type' => 'Recipient type',
         'message.employee_no' => 'Employee no',
         'message.card' => 'Card no',
+        'message.appointment' => 'Appointment no',
         'message.languages' => 'Languages',
         'message.status' => 'Status',
         'message.reason' => 'Why not sent',

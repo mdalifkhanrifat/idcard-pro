@@ -175,6 +175,7 @@ return [
         'message.recipient_type' => 'প্রাপকের ধরন',
         'message.employee_no' => 'কর্মী নম্বর',
         'message.card' => 'কার্ড নম্বর',
+        'message.appointment' => 'অ্যাপয়েন্টমেন্ট নম্বর',
         'message.languages' => 'ভাষা',
         'message.status' => 'অবস্থা',
         'message.reason' => 'না যাওয়ার কারণ',

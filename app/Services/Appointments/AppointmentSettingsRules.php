@@ -2,6 +2,7 @@
 
 namespace App\Services\Appointments;
 
+use App\Repositories\Contracts\AppointmentRepositoryInterface;
 use App\Services\Reports\ReportValueText;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -90,6 +91,9 @@ final class AppointmentSettingsRules
                 }
             } elseif (! preg_match((string) config('appointments.custom_services.key'), (string) $key)) {
                 $validator->errors()->add($field, __('appointments.settings.service_key'));
+            } elseif ($service === null && in_array((string) $key, $booked ??= app(AppointmentRepositoryInterface::class)->usedServices(), true)) {
+                // Its bookings are kept, so the kind stays (named) too: turned off instead
+                $validator->errors()->add($field, __('appointments.settings.service_in_use'));
             }
         }
         if (is_string($change['number_format'] ?? null) && ($problem = AppointmentNumbers::problem($change['number_format'])) !== null) {

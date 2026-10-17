@@ -108,6 +108,7 @@ return [
         'code_channel_needed' => 'Choose at least one way a one-time code can be sent.',
         'service_name' => 'Give this kind of visit a name.',
         'service_key' => 'A kind of visit\'s key is 2 to 40 small letters, digits or underscores, starting with a letter.',
+        'service_in_use' => 'This kind of visit has bookings, which are kept as records; turn it off instead of removing it.',
         'registry_service_kept' => 'A built-in kind of visit cannot be removed; turn it off instead.',
         'too_many_services' => 'An organization may add at most :max kinds of visit of its own.',
     ],

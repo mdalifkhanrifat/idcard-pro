@@ -55,6 +55,7 @@ class NotificationMessageReport implements Report
             ...$column('message.recipient_type', ReportColumn::TEXT, 'recipient', fn (NotificationMessage $message) => ($type = $this->recipientType($message)) ? (string) __("reports.values.recipient_types.{$type}") : null),
             ...$column('message.employee_no', ReportColumn::TEXT, 'recipient', fn (NotificationMessage $message) => $message->cardholder->employee_no ?? $message->familyMember?->cardholder?->employee_no),
             ...$column('message.card', ReportColumn::TEXT, 'message', fn (NotificationMessage $message) => $message->card?->number),
+            ...$column('message.appointment', ReportColumn::TEXT, 'message', fn (NotificationMessage $message) => $message->appointment?->number),
             ...$column('message.languages', ReportColumn::TEXT, 'message', fn (NotificationMessage $message) => implode(', ', array_map(fn (string $code) => NotificationLogService::label('languages', $code), explode(',', $message->languages)))),
             ...$column('message.status', ReportColumn::TEXT, 'message', fn (NotificationMessage $message) => NotificationLogService::label('statuses', $message->status->value)),
             ...$column('message.reason', ReportColumn::TEXT, 'message', fn (NotificationMessage $message) => $message->reason === null ? null : NotificationLogService::label('reasons', $message->reason)),

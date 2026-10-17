@@ -30,6 +30,15 @@ return [
         'card.expiry_date' => 'Expiry date',
         'card.days_left' => 'Days until expiry',
         'card.validity' => 'Validity (a sentence; also for cards without an expiry date)',
+        'appointment.number' => 'Appointment number',
+        'appointment.service' => 'Kind of visit',
+        'appointment.place' => 'Place',
+        'appointment.address' => 'Place\'s address',
+        'appointment.date' => 'Appointment date',
+        'appointment.time' => 'Appointment time (empty when a day is booked)',
+        'appointment.when' => 'Date and time (the day alone when a day is booked)',
+        'appointment.status' => 'Appointment status',
+        'appointment.cancel_reason' => 'Reason for cancelling (a sentence; empty when none was given)',
     ],
 
     // Made-up details for previews of the texts (never a real person's)
@@ -37,6 +46,15 @@ return [
         'holder_name' => 'Rahim Uddin',
         'employee_no' => 'EMP-1024',
         'template' => 'Employee card',
+        'place' => 'Head office',
+        'address' => '12 Station Road',
+        'cancel_reason' => 'The office is closed that day',
+    ],
+
+    // Appointment values written as sentences
+    'appointment' => [
+        'when' => ':date at :time',
+        'reason' => 'Reason: :reason.',
     ],
 
     'validity' => [
@@ -59,6 +77,34 @@ return [
             'subject' => 'Your ID card {card.number} expires on {card.expiry_date}',
             'body' => "Dear {holder.name},\n\nYour ID card {card.number} from {organization.name} expires on {card.expiry_date} ({card.days_left} days from today). Please arrange its renewal in time.\n\nThank you.",
             'sms' => '{organization.name}: your ID card {card.number} expires on {card.expiry_date}. Please arrange its renewal.',
+        ],
+        'appointment_booked' => [
+            'name' => 'Appointment booked',
+            'description' => 'An appointment was booked (by staff, through the public link or by another system).',
+            'subject' => 'Your appointment {appointment.number} on {appointment.when}',
+            'body' => "Dear {holder.name},\n\nYour appointment for {appointment.service} at {appointment.place} is booked for {appointment.when} ({appointment.status}). Its number is {appointment.number}; please have it with you.\n\n{organization.name}",
+            'sms' => '{organization.name}: appointment {appointment.number} on {appointment.when} at {appointment.place}.',
+        ],
+        'appointment_changed' => [
+            'name' => 'Appointment moved',
+            'description' => 'An appointment was moved to another time, day or place.',
+            'subject' => 'Your appointment {appointment.number} is now on {appointment.when}',
+            'body' => "Dear {holder.name},\n\nYour appointment {appointment.number} for {appointment.service} has been moved. It is now on {appointment.when} at {appointment.place}.\n\n{organization.name}",
+            'sms' => '{organization.name}: appointment {appointment.number} moved to {appointment.when} at {appointment.place}.',
+        ],
+        'appointment_cancelled' => [
+            'name' => 'Appointment cancelled',
+            'description' => 'An appointment was cancelled, or turned down while waiting for approval.',
+            'subject' => 'Your appointment {appointment.number} is cancelled',
+            'body' => "Dear {holder.name},\n\nYour appointment {appointment.number} for {appointment.service} on {appointment.when} has been cancelled. {appointment.cancel_reason}\n\nYou are welcome to book another time.\n\n{organization.name}",
+            'sms' => '{organization.name}: appointment {appointment.number} on {appointment.when} is cancelled.',
+        ],
+        'appointment_reminder' => [
+            'name' => 'Appointment reminder',
+            'description' => 'An appointment is near (the organization\'s reminder hours before it).',
+            'subject' => 'Reminder: your appointment on {appointment.when}',
+            'body' => "Dear {holder.name},\n\nA reminder of your appointment {appointment.number} for {appointment.service} on {appointment.when} at {appointment.place}. Please have its number with you.\n\n{organization.name}",
+            'sms' => '{organization.name}: reminder, appointment {appointment.number} on {appointment.when} at {appointment.place}.',
         ],
     ],
 

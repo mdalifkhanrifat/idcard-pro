@@ -180,7 +180,7 @@ it('makes the samples up in memory: nothing is read from or saved to the databas
     $samples = app(NotificationComposer::class)->samples($this->tenant);
 
     expect($queries)->toBe(0)
-        ->and(array_keys($samples))->toBe(['card_ready', 'card_expiring'])
+        ->and(array_keys($samples))->toBe(array_keys(config('notifications.events')))
         ->and(array_keys($samples['card_ready']))->toBe(['bn', 'en'])
         ->and(Card::query()->withoutGlobalScopes()->count())->toBe(0)
         ->and(Cardholder::query()->withoutGlobalScopes()->count())->toBe(0)

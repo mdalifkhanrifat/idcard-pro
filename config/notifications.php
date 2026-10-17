@@ -2,6 +2,10 @@
 
 use App\Services\Notifications\Channels\MailChannel;
 use App\Services\Notifications\Channels\SmsChannel;
+use App\Services\Notifications\Events\AppointmentBookedEvent;
+use App\Services\Notifications\Events\AppointmentCancelledEvent;
+use App\Services\Notifications\Events\AppointmentChangedEvent;
+use App\Services\Notifications\Events\AppointmentReminderEvent;
 use App\Services\Notifications\Events\CardExpiringEvent;
 use App\Services\Notifications\Events\CardReadyEvent;
 use App\Services\Notifications\Sms\LogSmsDriver;
@@ -105,6 +109,11 @@ return [
         'card_ready' => CardReadyEvent::class,
         // A card's last day is near (reminder days in 5.7)
         'card_expiring' => CardExpiringEvent::class,
+        // Appointments (5.4e; sent from 5.7): booked, moved, cancelled or turned down, and a reminder before it
+        'appointment_booked' => AppointmentBookedEvent::class,
+        'appointment_changed' => AppointmentChangedEvent::class,
+        'appointment_cancelled' => AppointmentCancelledEvent::class,
+        'appointment_reminder' => AppointmentReminderEvent::class,
     ],
 
 ];

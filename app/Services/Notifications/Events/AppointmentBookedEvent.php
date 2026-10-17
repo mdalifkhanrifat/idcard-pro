@@ -1,0 +1,62 @@
+<?php
+
+namespace App\Services\Notifications\Events;
+
+use App\Data\Notifications\NotificationRecipient;
+use App\Models\Appointment;
+use App\Models\Tenant;
+use App\Services\Notifications\NotificationEvent;
+
+/**
+ * An appointment was booked — by staff, through the public link or by another system (sent from 5.7).
+ *
+ * @implements NotificationEvent<Appointment>
+ */
+class AppointmentBookedEvent implements NotificationEvent
+{
+    use DescribesAppointments;
+
+    public function key(): string
+    {
+        return 'appointment_booked';
+    }
+
+    public function placeholders(): array
+    {
+        return $this->appointmentPlaceholders();
+    }
+
+    public function defaultChannels(): array
+    {
+        return ['mail', 'sms'];
+    }
+
+    /**
+     * @param  Appointment  $subject
+     */
+    public function values(object $subject): array
+    {
+        return $this->appointmentValues($subject);
+    }
+
+    public function sample(Tenant $tenant): Appointment
+    {
+        return $this->sampleAppointment($tenant);
+    }
+
+    /**
+     * @param  Appointment  $subject
+     */
+    public function recipient(object $subject): NotificationRecipient
+    {
+        return $this->appointmentRecipient($subject);
+    }
+
+    /**
+     * @param  Appointment  $subject
+     */
+    public function links(object $subject): array
+    {
+        return ['appointment_id' => $subject->id];
+    }
+}

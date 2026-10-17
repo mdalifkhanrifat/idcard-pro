@@ -61,7 +61,7 @@ class NotificationService
      * Log one message and hand it to the queue (or log it as skipped when the recipient has no address for the
      * channel). Also for messages that are not an event's, such as a test message.
      *
-     * @param  array{event: string, channel: string, languages: string, subject: string|null, body: string, card_id?: int|null, resend_of_id?: int|null}  $message
+     * @param  array{event: string, channel: string, languages: string, subject: string|null, body: string, card_id?: int|null, appointment_id?: int|null, resend_of_id?: int|null}  $message
      */
     public function queue(array $message, NotificationRecipient $recipient, ?User $sender = null): NotificationMessage
     {
@@ -119,6 +119,7 @@ class NotificationService
                 'subject' => $message->subject,
                 'body' => $message->body,
                 'card_id' => $message->card_id,
+                'appointment_id' => $message->appointment_id,
                 'resend_of_id' => $message->id,
             ], $recipient, $sender);
         });

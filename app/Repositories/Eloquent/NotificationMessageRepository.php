@@ -30,6 +30,7 @@ class NotificationMessageRepository extends EloquentRepository implements Notifi
         'familyMember.cardholder:id,public_id,employee_no',
         'user:id,public_id,name',
         'card:id,public_id,number',
+        'appointment:id,public_id,number',
         'sender:id,public_id,name',
         'resendOf:id,public_id',
         'resend:id,public_id,resend_of_id',
