@@ -2,8 +2,11 @@
 
 namespace App\Repositories\Contracts;
 
+use App\Data\Appointments\AppointmentFilter;
 use App\Models\Appointment;
 use Carbon\CarbonImmutable;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 
 /**
@@ -13,6 +16,39 @@ use Illuminate\Support\Collection;
  */
 interface AppointmentRepositoryInterface extends RepositoryInterface
 {
+    /**
+     * A page of appointments matching the criteria, in the asked order, with what a list shows.
+     *
+     * @return LengthAwarePaginator<int, Appointment>
+     */
+    public function list(AppointmentFilter $filter): LengthAwarePaginator;
+
+    /**
+     * An appointment with everything its details show.
+     */
+    public function withDetails(Appointment $appointment): Appointment;
+
+    /**
+     * The kinds of visit bookings were made for (also those since removed from the settings).
+     *
+     * @return array<int, string>
+     */
+    public function usedServices(): array;
+
+    /**
+     * The list's criteria in the list's order — shared by the list and its report.
+     *
+     * @return Builder<Appointment>
+     */
+    public function ordered(AppointmentFilter $filter): Builder;
+
+    /**
+     * The list's criteria alone (no order, no relations) — for a report's rows and totals.
+     *
+     * @return Builder<Appointment>
+     */
+    public function criteria(AppointmentFilter $filter): Builder;
+
     /**
      * Open bookings (AppointmentStatus::open()) a person holds for a kind of visit: the cardholder's own, or —
      * given — one family member's.

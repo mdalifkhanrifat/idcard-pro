@@ -221,6 +221,11 @@ return [
         'filter.to' => 'to',
         'filter.past' => 'past ones too',
         'filter.yearly' => 'every year',
+        // Appointments list (5.4c)
+        'filter.status.*' => 'status',
+        'filter.service' => 'kind of visit',
+        'filter.source' => 'booked through',
+        'filter.family_member' => 'family member',
         // Appointment availability (5.3d)
         'service' => 'kind of visit',
         // Booking an appointment (5.4)

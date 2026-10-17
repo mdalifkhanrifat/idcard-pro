@@ -198,6 +198,11 @@ return [
         'filter.to' => 'পর্যন্ত',
         'filter.past' => 'পুরনোগুলোও',
         'filter.yearly' => 'প্রতি বছর',
+        // Appointments list (5.4c)
+        'filter.status.*' => 'অবস্থা',
+        'filter.service' => 'কাজের ধরন',
+        'filter.source' => 'কোথা থেকে বুক',
+        'filter.family_member' => 'পরিবারের সদস্য',
         // Appointment availability (5.3d)
         'service' => 'কাজের ধরন',
         // Booking an appointment (5.4)

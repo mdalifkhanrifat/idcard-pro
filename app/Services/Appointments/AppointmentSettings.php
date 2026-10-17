@@ -2,6 +2,7 @@
 
 namespace App\Services\Appointments;
 
+use App\Models\Tenant;
 use App\Services\Notifications\NotificationSettings;
 
 /**
@@ -218,6 +219,31 @@ final class AppointmentSettings
         }
 
         return $services;
+    }
+
+    /**
+     * Names worked out before, by language, saved kinds and registry (see serviceNames()).
+     *
+     * @var array<string, array<string, string>>
+     */
+    private static array $names = [];
+
+    /**
+     * An organization's kinds of visit (in their order) named in the current language — worked out once for the
+     * same settings, so a long list or report does not normalize the settings for every row.
+     *
+     * @return array<string, string>
+     */
+    public static function serviceNames(Tenant $tenant): array
+    {
+        $key = app()->getLocale().'|'.md5((string) json_encode([$tenant->settings['appointments']['services'] ?? null, config('appointments.services')]));
+        if (count(self::$names) > 100) {
+            self::$names = [];
+        }
+
+        return self::$names[$key] ??= collect($tenant->appointmentSettings()['services'])
+            ->map(fn (array $service, string $kind): string => self::serviceName($kind, $service))
+            ->all();
     }
 
     /**

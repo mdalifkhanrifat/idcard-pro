@@ -122,6 +122,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('audit/activities', [AuditController::class, 'activities'])->name('audit.activities');
             Route::get('audit/logins', [AuditController::class, 'logins'])->name('audit.logins');
             Route::get('appointments/settings', [AppointmentSettingsController::class, 'show'])->name('appointments.settings.show');
+            Route::get('appointments', [AppointmentController::class, 'index'])->name('appointments.index');
             Route::post('appointments', [AppointmentController::class, 'store'])->name('appointments.store');
             Route::apiResource('appointment-locations', AppointmentLocationController::class);
             Route::get('appointment-locations/{appointment_location}/availability', [AppointmentAvailabilityController::class, 'show'])->name('appointment-locations.availability');
@@ -130,6 +131,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::post('appointment-closures/presets', [AppointmentHolidayPresetController::class, 'store'])->name('appointment-closures.presets.store');
             Route::apiResource('appointment-closures', AppointmentClosureController::class);
             Route::put('appointments/settings', [AppointmentSettingsController::class, 'update'])->name('appointments.settings.update');
+            // After appointments/settings, so that is not taken for an appointment
+            Route::get('appointments/{appointment}', [AppointmentController::class, 'show'])->name('appointments.show');
             Route::get('notifications/settings', [NotificationSettingsController::class, 'show'])->name('notifications.settings.show');
             Route::put('notifications/settings', [NotificationSettingsController::class, 'update'])->name('notifications.settings.update');
             Route::get('notifications/messages', [NotificationMessageController::class, 'index'])->name('notifications.messages.index');
