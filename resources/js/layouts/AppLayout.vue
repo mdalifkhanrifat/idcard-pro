@@ -33,6 +33,8 @@ const sections = computed<{ title?: string; items: NavItem[] }[]>(() => {
         result.push({ items: [{ to: '/', label: t('nav.dashboard'), icon: LayoutDashboard }] });
         const records = [
             { to: '/cardholders', label: t('nav.cardholders'), icon: ContactRound, permission: 'cardholders.view' },
+            // Only while the organization uses appointments (its settings page stays under Administration)
+            ...(auth.tenant.appointments?.enabled ? [{ to: '/appointments', label: t('nav.appointments'), icon: CalendarClock, permission: 'appointments.view' }] : []),
             { to: '/reports', label: t('nav.reports'), icon: FileBarChart, permission: 'reports.view' },
         ].filter((item) => auth.can(item.permission));
         if (records.length) {
@@ -45,12 +47,6 @@ const sections = computed<{ title?: string; items: NavItem[] }[]>(() => {
         if (cardItems.length) {
             result.push({ title: t('nav.cardsSection'), items: cardItems });
         }
-        result.push({
-            title: t('nav.comingSoon'),
-            items: [
-                { label: t('nav.appointments'), icon: CalendarClock, soon: true },
-            ],
-        });
         const setup = [
             { to: '/master-data', label: t('nav.masterData'), icon: Database, permission: 'master_data.view' },
             { to: '/custom-fields', label: t('nav.customFields'), icon: ListPlus, permission: 'settings.view' },
@@ -81,8 +77,14 @@ const sections = computed<{ title?: string; items: NavItem[] }[]>(() => {
     return result.filter((s) => s.items.length);
 });
 
+/** The item whose path is the longest that leads to this page (/appointments/settings is not /appointments). */
 function isActive(to?: string): boolean {
-    return !!to && (to === '/' ? route.path === '/' : route.path.startsWith(to));
+    const leadsHere = (path: string) => (path === '/' ? route.path === '/' : route.path === path || route.path.startsWith(`${path}/`));
+    if (!to || !leadsHere(to)) {
+        return false;
+    }
+
+    return !sections.value.some((section) => section.items.some((item) => item.to && item.to.length > to.length && leadsHere(item.to)));
 }
 
 const initials = computed(() =>

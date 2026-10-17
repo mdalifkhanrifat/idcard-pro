@@ -1,0 +1,180 @@
+<script setup lang="ts">
+import { computed, onMounted, ref } from 'vue';
+import { useRoute } from 'vue-router';
+import { useI18n } from 'vue-i18n';
+import { CalendarCog, ChevronLeft, ChevronRight, RefreshCw, SlidersHorizontal } from 'lucide-vue-next';
+import ListPagination from '@/components/ListPagination.vue';
+import UiBadge from '@/components/ui/UiBadge.vue';
+import UiButton from '@/components/ui/UiButton.vue';
+import UiEmpty from '@/components/ui/UiEmpty.vue';
+import UiInput from '@/components/ui/UiInput.vue';
+import UiPageHeader from '@/components/ui/UiPageHeader.vue';
+import UiSelect from '@/components/ui/UiSelect.vue';
+import { useListQuery, type PageMeta } from '@/composables/useListQuery';
+import { addDays, todayIn } from '@/lib/appointments/availability';
+import { filtersFor, namesDays, scopeOf, statusTone, timeRange, type Appointment, type AppointmentListOptions, type AppointmentScope } from '@/lib/appointments/bookings';
+import { fetchPlaces, type AppointmentPlace } from '@/lib/appointments/places';
+import { formatDate, formatNumber, localDigits } from '@/lib/format';
+import { i18n } from '@/lib/i18n';
+import { useAuthStore } from '@/stores/auth';
+
+/**
+ * The staff's appointments (5.5): a day's bookings in time order by default — or those from today on, or every
+ * day —, by place, status, kind of visit and search. Every name (statuses, kinds) comes from the server. Seen
+ * while appointments are off too (their history), with a note.
+ */
+const { t } = useI18n();
+const auth = useAuthStore();
+const timeZone = computed(() => auth.tenant?.timezone);
+const today = todayIn(timeZone.value);
+// Opened afresh: today; a link (or a reload) keeps the days it names
+const days = namesDays(useRoute().query) ? { from: '', to: '', past: '' } : filtersFor('day', today, today);
+
+const list = useListQuery<Appointment, PageMeta & Partial<AppointmentListOptions>>('/appointments', {
+    filters: { ...days, location: '', status: '', service: '', search: '' },
+    sort: 'date',
+    perPage: 50,
+});
+const places = ref<AppointmentPlace[]>([]);
+onMounted(async () => {
+    list.load();
+    places.value = await fetchPlaces().catch(() => []);
+});
+
+const scope = computed<AppointmentScope>({
+    get: () => scopeOf(list.filters as { from: string; to: string; past: string }),
+    set: (value) => {
+        Object.assign(list.filters, filtersFor(value, list.filters.from || today, today));
+        // Every day: the latest first
+        list.sort.value = value === 'all' ? '-date' : 'date';
+    },
+});
+const scopes = computed(() => (['day', 'upcoming', 'all'] as const).map((value) => ({ value, label: t(`appointments.list.scopes.${value}`) })));
+const day = computed(() => list.filters.from);
+function goTo(next: string): void {
+    if (next) {
+        Object.assign(list.filters, filtersFor('day', next, today));
+    }
+}
+const dayLabel = computed(() => {
+    const [year, month, date] = day.value.split('-').map(Number);
+
+    return new Intl.DateTimeFormat(i18n.global.locale.value === 'bn' ? 'bn-BD' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(year, month - 1, date));
+});
+
+const choices = (named: { key: string; name: string }[] | undefined) => (named ?? []).map((item) => ({ value: item.key, label: item.name }));
+const placeChoices = computed(() => places.value.map((place) => ({ value: place.id, label: place.name })));
+/** With one place, it goes without saying. */
+const manyPlaces = computed(() => places.value.length > 1);
+const sorts = computed(() => [
+    { value: 'date', label: t('appointments.list.sorts.date') },
+    { value: '-date', label: t('appointments.list.sorts.latest') },
+    { value: 'number', label: t('appointments.list.sorts.number') },
+    { value: '-created_at', label: t('appointments.list.sorts.booked') },
+]);
+const otherFilters = ['location', 'status', 'service', 'search'] as const;
+const filtered = computed(() => otherFilters.some((key) => list.filters[key] !== ''));
+function resetOthers(): void {
+    for (const key of otherFilters) {
+        list.filters[key] = '';
+    }
+}
+/** On a phone the filters other than the search open on demand, so the bookings come first. */
+const moreFilters = ref(false);
+const activeFilters = computed(() => (['location', 'status', 'service'] as const).filter((key) => list.filters[key] !== '').length);
+
+const off = computed(() => !auth.tenant?.appointments?.enabled);
+const relation = (key: string) => t(`cardholders.family.relations.${key}`);
+const time = (row: Appointment) => {
+    const range = timeRange(row);
+
+    return range ? localDigits(range) : t('appointments.list.inTurn');
+};
+</script>
+
+<template>
+    <div>
+        <UiPageHeader :title="t('appointments.list.title')" :subtitle="t('appointments.list.subtitle')">
+            <RouterLink v-if="auth.can(['appointments.view', 'settings.update'])" to="/appointments/settings" class="inline-flex items-center gap-1.5 text-sm text-brand-ink hover:underline" data-settings-link>
+                <CalendarCog class="size-4" />{{ t('nav.appointmentSettings') }}
+            </RouterLink>
+        </UiPageHeader>
+
+        <p v-if="off" class="mb-4 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-fg" data-off-note>{{ t('appointments.list.off') }}</p>
+
+        <div class="rounded-xl border border-line bg-surface" data-appointment-list>
+            <div class="space-y-3 border-b border-line p-4">
+                <div class="flex flex-wrap items-center gap-3">
+                    <div role="radiogroup" :aria-label="t('appointments.list.scope')" class="inline-flex rounded-lg border border-line p-0.5" data-scope>
+                        <button
+                            v-for="option in scopes"
+                            :key="option.value"
+                            type="button"
+                            role="radio"
+                            :aria-checked="scope === option.value"
+                            class="rounded-md px-3 py-1.5 text-sm"
+                            :class="scope === option.value ? 'bg-brand/12 font-medium text-brand-ink' : 'text-muted hover:text-fg'"
+                            :data-scope-option="option.value"
+                            @click="scope = option.value"
+                        >{{ option.label }}</button>
+                    </div>
+                    <div v-if="scope === 'day'" class="flex flex-wrap items-center gap-2" data-day-nav>
+                        <UiButton variant="secondary" size="sm" :aria-label="t('appointments.list.previousDay')" data-previous-day @click="goTo(addDays(day, -1))"><ChevronLeft class="size-4" /></UiButton>
+                        <input :value="day" type="date" class="rounded-lg border border-line bg-surface px-2.5 py-1.5 text-sm text-fg" :aria-label="t('appointments.list.day')" data-day @change="goTo(($event.target as HTMLInputElement).value)" />
+                        <UiButton variant="secondary" size="sm" :aria-label="t('appointments.list.nextDay')" data-next-day @click="goTo(addDays(day, 1))"><ChevronRight class="size-4" /></UiButton>
+                        <UiButton v-if="day !== today" variant="ghost" size="sm" data-today @click="goTo(today)">{{ t('appointments.list.today') }}</UiButton>
+                    </div>
+                </div>
+                <p v-if="scope === 'day'" class="text-sm font-medium text-fg" data-day-label>
+                    {{ dayLabel }}<span v-if="day === today" class="ml-2 text-xs font-normal text-muted">{{ t('appointments.list.today') }}</span>
+                </p>
+
+                <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                    <UiInput v-model="list.filters.search" type="search" :label="t('common.search')" :placeholder="t('appointments.list.searchHint')" class="sm:col-span-2" data-filter="search" />
+                    <button type="button" class="inline-flex items-center gap-2 justify-self-start text-sm text-brand-ink sm:hidden" :aria-expanded="moreFilters" data-more-filters @click="moreFilters = !moreFilters">
+                        <SlidersHorizontal class="size-4" />{{ t('common.filters') }}<template v-if="activeFilters"> ({{ formatNumber(activeFilters) }})</template>
+                    </button>
+                    <div class="contents" :class="!moreFilters && 'max-sm:hidden'">
+                        <UiSelect v-if="manyPlaces" v-model="list.filters.location" :label="t('appointments.list.place')" :placeholder="t('common.all')" :options="placeChoices" data-filter="location" />
+                        <UiSelect v-model="list.filters.status" :label="t('appointments.list.status')" :placeholder="t('common.all')" :options="choices(list.meta.value.statuses)" data-filter="status" />
+                        <UiSelect v-model="list.filters.service" :label="t('appointments.list.service')" :placeholder="t('common.all')" :options="choices(list.meta.value.services)" data-filter="service" />
+                        <UiSelect v-if="scope !== 'day'" v-model="list.sort.value" :label="t('appointments.list.sort')" :options="sorts" data-filter="sort" />
+                    </div>
+                    <div class="flex flex-wrap items-end gap-2 sm:col-span-2 lg:col-span-4 lg:justify-end">
+                        <UiButton v-if="filtered" variant="ghost" size="sm" @click="resetOthers()">{{ t('common.reset') }}</UiButton>
+                        <UiButton variant="secondary" size="sm" :loading="list.loading.value" data-refresh @click="list.load()"><RefreshCw class="size-4" />{{ t('appointments.list.refresh') }}</UiButton>
+                    </div>
+                </div>
+            </div>
+
+            <ul class="divide-y divide-line" :class="list.loading.value && 'opacity-50'">
+                <li v-for="row in list.rows.value" :key="row.id" class="flex flex-col gap-1.5 px-5 py-3 text-sm sm:flex-row sm:items-center sm:gap-4" :data-row="row.number">
+                    <span class="shrink-0 tabular-nums sm:w-36" data-when>
+                        <span v-if="scope !== 'day'" class="block text-xs text-muted">{{ formatDate(row.date) }}</span>
+                        <span class="font-medium text-fg">{{ time(row) }}</span>
+                    </span>
+                    <span class="min-w-0 flex-1">
+                        <span class="block break-words text-fg">
+                            <span class="font-medium">{{ row.family_member?.name ?? row.cardholder?.name }}</span>
+                            <span v-if="row.family_member" class="text-xs text-muted"> · {{ relation(row.family_member.relation) }} — {{ row.cardholder?.name }}</span>
+                        </span>
+                        <span class="block text-xs break-words text-muted">
+                            <span class="font-mono">{{ row.number }}</span> · {{ row.service.name }}<template v-if="manyPlaces && row.location"> · {{ row.location.name }}</template><template v-if="row.cardholder?.employee_no"> · {{ row.cardholder.employee_no }}</template>
+                        </span>
+                    </span>
+                    <UiBadge :tone="statusTone(row.status.key)" class="w-fit justify-center sm:w-36" :class="row.status.key === 'cancelled' && 'line-through'" data-status>{{ row.status.name }}</UiBadge>
+                </li>
+            </ul>
+            <div v-if="list.failed.value && !list.loading.value" class="flex flex-col items-center gap-3 px-5 py-10 text-sm text-muted" data-failed>
+                {{ t('appointments.list.failed') }}<UiButton variant="secondary" size="sm" @click="list.load()">{{ t('appointments.retry') }}</UiButton>
+            </div>
+            <UiEmpty
+                v-else-if="!list.loading.value && !list.rows.value.length"
+                :title="filtered ? t('common.noResults') : t(`appointments.list.none.${scope}`)"
+                :hint="filtered ? t('common.noResultsHint') : t('appointments.list.noneHint')"
+                data-empty
+            />
+            <ListPagination :list="list" />
+        </div>
+    </div>
+</template>

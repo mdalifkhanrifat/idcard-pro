@@ -1968,6 +1968,41 @@
             "hint": "Holidays that follow the moon, like Eid or Puja, move every year: add them each year by hand. An added holiday can be changed or deleted like any closure.",
             "add": "Add ({count})",
             "added": "{count} holidays added."
+        },
+        "list": {
+            "title": "Appointments",
+            "subtitle": "Who is booked to come, when and where.",
+            "off": "Appointments are turned off for the organization: nothing new can be booked. Bookings made before stay here as records.",
+            "scope": "Days shown",
+            "scopes": {
+                "day": "Day",
+                "upcoming": "From today",
+                "all": "All days"
+            },
+            "day": "Day",
+            "previousDay": "Previous day",
+            "nextDay": "Next day",
+            "today": "Today",
+            "searchHint": "Number, name or employee no",
+            "place": "Place",
+            "status": "Status",
+            "service": "Kind of visit",
+            "sort": "Order",
+            "sorts": {
+                "date": "Day and time",
+                "latest": "Latest day first",
+                "number": "Number",
+                "booked": "Booked most recently"
+            },
+            "refresh": "Refresh",
+            "inTurn": "In turn",
+            "none": {
+                "day": "No appointments on this day",
+                "upcoming": "No appointments ahead",
+                "all": "No appointments yet"
+            },
+            "noneHint": "Bookings made by staff, through the public link or by another system show here.",
+            "failed": "The appointments could not be loaded."
         }
     }
 }
