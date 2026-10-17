@@ -11,6 +11,7 @@ use App\Support\ListPage;
 use Closure;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\LazyCollection;
 
 /**
@@ -61,6 +62,18 @@ class CardholderRepository extends EloquentRepository implements CardholderRepos
         $printed = $count(fn (Builder $c) => $c->where('print_count', '>', 0));
 
         return ['cardholders' => $cardholders, 'no_card' => $cardholders - $pending - $printed, 'pending' => $pending, 'printed' => $printed];
+    }
+
+    public function findForBooking(string $search, int $limit): Collection
+    {
+        return $this->filtered(new CardholderFilter(search: $search))
+            ->with('familyMembers:id,public_id,cardholder_id,name,relation')
+            // Not the list's order: the exact employee number first
+            ->reorder()
+            ->orderByRaw('case when employee_no = ? then 0 else 1 end', [$search])
+            ->orderBy('full_name')
+            ->limit($limit)
+            ->get();
     }
 
     /**

@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
-import { CalendarCog, ChevronLeft, ChevronRight, RefreshCw, SlidersHorizontal } from 'lucide-vue-next';
+import { CalendarCog, CalendarPlus, ChevronLeft, ChevronRight, RefreshCw, SlidersHorizontal } from 'lucide-vue-next';
 import ListPagination from '@/components/ListPagination.vue';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
@@ -15,6 +15,7 @@ import { addDays, todayIn } from '@/lib/appointments/availability';
 import { filtersFor, namesDays, scopeOf, statusTone, timeRange, type Appointment, type AppointmentListOptions, type AppointmentScope } from '@/lib/appointments/bookings';
 import { fetchPlaces, type AppointmentPlace } from '@/lib/appointments/places';
 import { formatDate, formatNumber, localDigits } from '@/lib/format';
+import AppointmentBookDialog from '@/pages/appointments/AppointmentBookDialog.vue';
 import { i18n } from '@/lib/i18n';
 import { useAuthStore } from '@/stores/auth';
 
@@ -84,6 +85,17 @@ const moreFilters = ref(false);
 const activeFilters = computed(() => (['location', 'status', 'service'] as const).filter((key) => list.filters[key] !== '').length);
 
 const off = computed(() => !auth.tenant?.appointments?.enabled);
+/** Staff book while the organization books through staff (and appointments are on). */
+const canBook = computed(() => !off.value && auth.can('appointments.book') && (auth.tenant?.appointments?.booking ?? []).includes('staff'));
+const booking = ref(false);
+/** A new booking: its day, so it shows in the list. */
+function booked(appointment: Appointment): void {
+    if (scope.value === 'day' && day.value !== appointment.date) {
+        goTo(appointment.date);
+    } else {
+        list.load();
+    }
+}
 const relation = (key: string) => t(`cardholders.family.relations.${key}`);
 const time = (row: Appointment) => {
     const range = timeRange(row);
@@ -95,6 +107,7 @@ const time = (row: Appointment) => {
 <template>
     <div>
         <UiPageHeader :title="t('appointments.list.title')" :subtitle="t('appointments.list.subtitle')">
+            <UiButton v-if="canBook" data-book-open @click="booking = true"><CalendarPlus class="size-4" />{{ t('appointments.book.open') }}</UiButton>
             <RouterLink v-if="auth.can(['appointments.view', 'settings.update'])" to="/appointments/settings" class="inline-flex items-center gap-1.5 text-sm text-brand-ink hover:underline" data-settings-link>
                 <CalendarCog class="size-4" />{{ t('nav.appointmentSettings') }}
             </RouterLink>
@@ -176,5 +189,7 @@ const time = (row: Appointment) => {
             />
             <ListPagination :list="list" />
         </div>
+
+        <AppointmentBookDialog v-if="canBook" v-model:open="booking" @booked="booked" />
     </div>
 </template>

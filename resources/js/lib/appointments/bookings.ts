@@ -1,4 +1,5 @@
 import { wallClock } from '@/lib/appointments/availability';
+import { http } from '@/lib/http';
 
 /** A name from the server in the reader's language, with its key (statuses, sources, kinds of visit). */
 export interface Named {
@@ -78,4 +79,39 @@ export function timeRange(appointment: Pick<Appointment, 'starts_at' | 'ends_at'
     }
 
     return appointment.ends_at ? `${wallClock(appointment.starts_at)}–${wallClock(appointment.ends_at)}` : wallClock(appointment.starts_at);
+}
+
+/** Someone to book for (GET /appointments/people): who they are and their family members, nothing more. */
+export interface BookablePerson {
+    id: string;
+    name: string;
+    name_local: string | null;
+    employee_no: string | null;
+    status: string;
+    family_members: { id: string; name: string; relation: string }[];
+}
+
+/** People to book for by name, local name or employee number (two characters at least): ten at most. */
+export async function findPeople(search: string): Promise<BookablePerson[]> {
+    const { data } = await http.get<{ data: BookablePerson[] }>('/appointments/people', { params: { search } });
+
+    return data.data;
+}
+
+export interface BookingInput {
+    location: string;
+    service: string;
+    cardholder: string;
+    family_member: string | null;
+    date: string;
+    /** "HH:MM" on the organization's clock; null when a day is booked. */
+    time: string | null;
+    note: string | null;
+}
+
+/** POST /appointments (appointments.book): checked again by the server, which may refuse a time taken meanwhile. */
+export async function bookAppointment(input: BookingInput): Promise<Appointment> {
+    const { data } = await http.post<{ data: Appointment }>('/appointments', input);
+
+    return data.data;
 }

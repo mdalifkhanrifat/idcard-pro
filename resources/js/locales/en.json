@@ -2003,6 +2003,23 @@
             },
             "noneHint": "Bookings made by staff, through the public link or by another system show here.",
             "failed": "The appointments could not be loaded."
+        },
+        "book": {
+            "title": "Book an appointment",
+            "description": "For a cardholder or a family member of theirs, at a free time.",
+            "open": "Book",
+            "person": "Who",
+            "searchHint": "Name, local name or employee no",
+            "change": "Choose someone else",
+            "nobody": "Nobody found by that name or number.",
+            "family": "{count} family member | {count} family members",
+            "forWhom": "For",
+            "themself": "The cardholder themself",
+            "noPlace": "No place that is on takes this kind of visit.",
+            "when": "When",
+            "note": "Note (optional)",
+            "submit": "Book",
+            "done": "Booked: {number}"
         }
     }
 }

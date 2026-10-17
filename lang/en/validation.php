@@ -221,6 +221,8 @@ return [
         'filter.to' => 'to',
         'filter.past' => 'past ones too',
         'filter.yearly' => 'every year',
+        // Finding a person to book for (5.5b)
+        'search' => 'search',
         // Appointment changes (5.4d)
         'status' => 'status',
         'reason' => 'reason',

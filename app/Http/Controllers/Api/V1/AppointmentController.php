@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Appointments\BookAppointmentRequest;
 use App\Http\Requests\Appointments\CancelAppointmentRequest;
 use App\Http\Requests\Appointments\ChangeAppointmentStatusRequest;
+use App\Http\Requests\Appointments\FindPeopleRequest;
 use App\Http\Requests\Appointments\ListAppointmentsRequest;
 use App\Http\Requests\Appointments\MoveAppointmentRequest;
+use App\Http\Resources\AppointmentPersonResource;
 use App\Http\Resources\AppointmentResource;
 use App\Models\Appointment;
 use App\Services\Appointments\AppointmentBookingService;
@@ -41,6 +43,15 @@ class AppointmentController extends Controller
     {
         return AppointmentResource::collection($this->appointments->list($request->toFilter()))
             ->additional(['meta' => $this->appointments->options()]);
+    }
+
+    /**
+     * People to book for (appointments.book; `search`: name, local name or employee number): who they are and
+     * their family members only, an exact employee number first, ten at most.
+     */
+    public function people(FindPeopleRequest $request): AnonymousResourceCollection
+    {
+        return AppointmentPersonResource::collection($this->appointments->people((string) $request->validated('search')));
     }
 
     public function show(Appointment $appointment): AppointmentResource

@@ -123,6 +123,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('audit/logins', [AuditController::class, 'logins'])->name('audit.logins');
             Route::get('appointments/settings', [AppointmentSettingsController::class, 'show'])->name('appointments.settings.show');
             Route::get('appointments', [AppointmentController::class, 'index'])->name('appointments.index');
+            Route::get('appointments/people', [AppointmentController::class, 'people'])->name('appointments.people');
             Route::post('appointments', [AppointmentController::class, 'store'])->name('appointments.store');
             Route::apiResource('appointment-locations', AppointmentLocationController::class);
             Route::get('appointment-locations/{appointment_location}/availability', [AppointmentAvailabilityController::class, 'show'])->name('appointment-locations.availability');

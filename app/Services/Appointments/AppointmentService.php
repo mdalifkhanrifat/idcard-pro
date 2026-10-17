@@ -6,9 +6,12 @@ use App\Data\Appointments\AppointmentFilter;
 use App\Enums\AppointmentSource;
 use App\Enums\AppointmentStatus;
 use App\Models\Appointment;
+use App\Models\Cardholder;
 use App\Repositories\Contracts\AppointmentRepositoryInterface;
+use App\Repositories\Contracts\CardholderRepositoryInterface;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 /**
  * Reading appointments (5.4c): the list, an appointment's details and what the list can be filtered by. Seen
@@ -17,7 +20,24 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
  */
 class AppointmentService
 {
-    public function __construct(private AppointmentRepositoryInterface $appointments) {}
+    /** People found for booking at most */
+    public const PEOPLE_LIMIT = 10;
+
+    public function __construct(
+        private AppointmentRepositoryInterface $appointments,
+        private CardholderRepositoryInterface $cardholders,
+    ) {}
+
+    /**
+     * People to book for (5.5b), by the cardholder list's search: only what booking needs — who they are and
+     * their family members —, so those who book need not see the whole record.
+     *
+     * @return Collection<int, Cardholder>
+     */
+    public function people(string $search): Collection
+    {
+        return $this->cardholders->findForBooking($search, self::PEOPLE_LIMIT);
+    }
 
     /**
      * @return LengthAwarePaginator<int, Appointment>

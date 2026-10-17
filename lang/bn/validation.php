@@ -198,6 +198,8 @@ return [
         'filter.to' => 'পর্যন্ত',
         'filter.past' => 'পুরনোগুলোও',
         'filter.yearly' => 'প্রতি বছর',
+        // Finding a person to book for (5.5b)
+        'search' => 'খোঁজ',
         // Appointment changes (5.4d)
         'status' => 'অবস্থা',
         // Appointments list (5.4c)

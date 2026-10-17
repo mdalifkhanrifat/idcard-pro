@@ -49,6 +49,14 @@ interface CardholderRepositoryInterface extends RepositoryInterface
     public function findByEmployeeNo(string $employeeNo): ?Cardholder;
 
     /**
+     * People to book an appointment for (5.5b): the list's own search, an exact employee number first, then by
+     * name; with their family members (id, name, relation only).
+     *
+     * @return Collection<int, Cardholder>
+     */
+    public function findForBooking(string $search, int $limit): Collection;
+
+    /**
      * Keep the biometric status of cardholders; not an edit of the person (no audit entry, no updated_at).
      *
      * @param  array<int, int>  $ids
