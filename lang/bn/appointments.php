@@ -62,6 +62,14 @@ return [
         'no_show' => 'আসেননি',
         'cancelled' => 'বাতিল',
     ],
+    'steps' => [
+        'pending' => ['confirmed' => 'অনুমোদন দিন', 'cancelled' => 'নামঞ্জুর করুন'],
+        'confirmed' => ['checked_in' => 'উপস্থিত', 'no_show' => 'আসেননি', 'cancelled' => 'বাতিল করুন'],
+        'checked_in' => ['done' => 'সম্পন্ন', 'confirmed' => 'ফেরান: নিশ্চিত (এখনো আসেননি)'],
+        'done' => ['checked_in' => 'ফেরান: উপস্থিত (কাজ বাকি)'],
+        'no_show' => ['confirmed' => 'ফেরান: নিশ্চিত'],
+        'cancelled' => ['confirmed' => 'ফেরান: নিশ্চিত হিসেবে', 'pending' => 'ফেরান: অনুমোদনের অপেক্ষায়'],
+    ],
     'sources' => [
         'staff' => 'কর্মী',
         'public' => 'পাবলিক লিংক',

@@ -3,6 +3,7 @@
 namespace App\Services\Appointments;
 
 use App\Enums\AppointmentStatus;
+use App\Exceptions\BusinessRuleException;
 use App\Models\Appointment;
 use App\Models\AppointmentLocation;
 use App\Models\User;
@@ -35,8 +36,9 @@ class AppointmentStatusService
     {
         return DB::transaction(function () use ($appointment, $by, $reason, $now): Appointment {
             $appointment = $this->appointments->lockForChange($appointment);
-            if (! $appointment->status->isAhead()) {
-                throw ValidationException::withMessages(['status' => __('appointments.changes.cannot_cancel', ['status' => $this->name($appointment->status)])]);
+            $problem = $this->cancelProblem($appointment);
+            if ($problem !== null) {
+                throw ValidationException::withMessages(['status' => $problem]);
             }
 
             return $this->apply($appointment, AppointmentStatus::Cancelled, $by, $reason, $now);
@@ -47,30 +49,65 @@ class AppointmentStatusService
     {
         return DB::transaction(function () use ($appointment, $to, $by, $reason, $now): Appointment {
             $appointment = $this->appointments->lockForChange($appointment);
-            $from = $appointment->status;
             // Restoring takes a place: its lock next, before any other read (see lockForBooking())
-            $place = $from === AppointmentStatus::Cancelled ? $this->locations->lockForBooking($appointment->location_id) : null;
-            if (! $from->canBecome($to)) {
-                throw ValidationException::withMessages(['status' => __('appointments.changes.not_allowed', ['from' => $this->name($from), 'to' => $this->name($to)])]);
-            }
-            $now = ($now ?? CarbonImmutable::now())->setTimezone($this->timezone());
-            $today = $now->toDateString();
-            $day = $appointment->date->toDateString();
+            $place = $appointment->status === AppointmentStatus::Cancelled ? $this->locations->lockForBooking($appointment->location_id) : null;
+            $now = $this->now($now);
 
-            if ($to === AppointmentStatus::CheckedIn && $from === AppointmentStatus::Confirmed && $day !== $today) {
-                throw ValidationException::withMessages(['status' => __('appointments.changes.not_today', ['date' => app(ReportValueText::class)->date($day)])]);
-            }
-            $started = $appointment->starts_at !== null ? $appointment->starts_at->lte($now) : $day < $today;
-            if ($to === AppointmentStatus::NoShow && ! $started) {
-                throw ValidationException::withMessages(['status' => __($appointment->starts_at !== null ? 'appointments.changes.not_started' : 'appointments.changes.day_not_over')]);
-            }
-            $times = [];
-            if ($place instanceof AppointmentLocation) {
-                $times = $this->takePlaceAgain($appointment, $place, $now);
-            }
-
-            return $this->apply($appointment, $to, $by, $reason, $now, $times);
+            return $this->apply($appointment, $to, $by, $reason, $now, $this->check($appointment, $to, $now, $place));
         });
+    }
+
+    /**
+     * Why an appointment cannot be cancelled now (it is no longer ahead), or null (5.5c — what the page offers).
+     */
+    public function cancelProblem(Appointment $appointment): ?string
+    {
+        return $appointment->status->isAhead() ? null : (string) __('appointments.changes.cannot_cancel', ['status' => $this->name($appointment->status)]);
+    }
+
+    /**
+     * Why an appointment cannot take this step now, or null (5.5c — what the page offers): change()'s own checks,
+     * without its locks — so whether a cancelled one still has room may change before the step is taken, and
+     * change() checks again.
+     */
+    public function problem(Appointment $appointment, AppointmentStatus $to, ?CarbonImmutable $now = null): ?string
+    {
+        try {
+            $this->check($appointment, $to, $this->now($now), $appointment->status === AppointmentStatus::Cancelled ? $appointment->loadMissing('location')->location : null);
+        } catch (ValidationException $refused) {
+            return (string) collect($refused->errors())->flatten()->first();
+        } catch (BusinessRuleException $refused) {
+            return $refused->getMessage();
+        }
+
+        return null;
+    }
+
+    /**
+     * The rules of a step: allowed from where it stands, came in only on its day, did not come once its time has
+     * begun (or its day is over), and a cancelled one restored takes its place again (`$place`, its own). Returns
+     * the times a restored one takes.
+     *
+     * @return array<string, mixed>
+     */
+    private function check(Appointment $appointment, AppointmentStatus $to, CarbonImmutable $now, ?AppointmentLocation $place): array
+    {
+        $from = $appointment->status;
+        if (! $from->canBecome($to)) {
+            throw ValidationException::withMessages(['status' => __('appointments.changes.not_allowed', ['from' => $this->name($from), 'to' => $this->name($to)])]);
+        }
+        $today = $now->toDateString();
+        $day = $appointment->date->toDateString();
+
+        if ($to === AppointmentStatus::CheckedIn && $from === AppointmentStatus::Confirmed && $day !== $today) {
+            throw ValidationException::withMessages(['status' => __('appointments.changes.not_today', ['date' => app(ReportValueText::class)->date($day)])]);
+        }
+        $started = $appointment->starts_at !== null ? $appointment->starts_at->lte($now) : $day < $today;
+        if ($to === AppointmentStatus::NoShow && ! $started) {
+            throw ValidationException::withMessages(['status' => __($appointment->starts_at !== null ? 'appointments.changes.not_started' : 'appointments.changes.day_not_over')]);
+        }
+
+        return $place instanceof AppointmentLocation ? $this->takePlaceAgain($appointment, $place, $now) : [];
     }
 
     /**
@@ -114,6 +151,11 @@ class AppointmentStatusService
     private function name(AppointmentStatus $status): string
     {
         return (string) __("appointments.statuses.{$status->value}");
+    }
+
+    private function now(?CarbonImmutable $now): CarbonImmutable
+    {
+        return ($now ?? CarbonImmutable::now())->setTimezone($this->timezone());
     }
 
     private function timezone(): string

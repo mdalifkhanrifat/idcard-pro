@@ -49,6 +49,19 @@ enum AppointmentStatus: string
     }
 
     /**
+     * Whether a step from here to `$status` goes back from one taken by mistake (5.5c — the page shows these
+     * apart from the steps forward): came in → confirmed, and every step from done, did not come or cancelled.
+     */
+    public function isCorrection(self $status): bool
+    {
+        return $this->canBecome($status) && match ($this) {
+            self::CheckedIn => $status === self::Confirmed,
+            self::Done, self::NoShow, self::Cancelled => true,
+            default => false,
+        };
+    }
+
+    /**
      * Still waiting for its day: may be moved to another time or place, or cancelled by those who book.
      */
     public function isAhead(): bool

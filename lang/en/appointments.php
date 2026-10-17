@@ -62,6 +62,14 @@ return [
         'no_show' => 'Did not come',
         'cancelled' => 'Cancelled',
     ],
+    'steps' => [
+        'pending' => ['confirmed' => 'Approve', 'cancelled' => 'Turn down'],
+        'confirmed' => ['checked_in' => 'Came in', 'no_show' => 'Did not come', 'cancelled' => 'Cancel'],
+        'checked_in' => ['done' => 'Done', 'confirmed' => 'Back to confirmed (not come in)'],
+        'done' => ['checked_in' => 'Back to came in (not done)'],
+        'no_show' => ['confirmed' => 'Back to confirmed'],
+        'cancelled' => ['confirmed' => 'Restore as confirmed', 'pending' => 'Restore as waiting for approval'],
+    ],
     'sources' => [
         'staff' => 'Staff',
         'public' => 'Public link',

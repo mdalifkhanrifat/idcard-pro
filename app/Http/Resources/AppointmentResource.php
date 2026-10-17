@@ -11,12 +11,28 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /**
  * An appointment as the API answers it: its number, status and source named in the reader's language, the
  * place, the kind of visit, the person, the day and — when times are booked — its times with the
- * organization's offset.
+ * organization's offset. An answer about one appointment also says what the reader may do with it now
+ * (`actions` — AppointmentActions; not in lists).
  *
  * @mixin Appointment
  */
 class AppointmentResource extends JsonResource
 {
+    /**
+     * @var array<string, mixed>|null
+     */
+    private ?array $actions = null;
+
+    /**
+     * @param  array<string, mixed>  $actions
+     */
+    public function withActions(array $actions): static
+    {
+        $this->actions = $actions;
+
+        return $this;
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -45,6 +61,7 @@ class AppointmentResource extends JsonResource
             'status_changed_by' => $this->whenLoaded('statusChangedBy', fn () => $this->statusChangedBy === null ? null : ['id' => $this->statusChangedBy->public_id, 'name' => $this->statusChangedBy->name]),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+            'actions' => $this->when($this->actions !== null, fn () => $this->actions),
         ];
     }
 }

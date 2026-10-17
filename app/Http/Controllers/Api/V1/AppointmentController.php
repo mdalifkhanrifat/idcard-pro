@@ -12,16 +12,19 @@ use App\Http\Requests\Appointments\MoveAppointmentRequest;
 use App\Http\Resources\AppointmentPersonResource;
 use App\Http\Resources\AppointmentResource;
 use App\Models\Appointment;
+use App\Services\Appointments\AppointmentActions;
 use App\Services\Appointments\AppointmentBookingService;
 use App\Services\Appointments\AppointmentService;
 use App\Services\Appointments\AppointmentStatusService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
 
 /**
  * Appointments (5.4): seen with appointments.view (also while the module is off — their history), booked by staff
- * with appointments.book, by the same rules as the free times.
+ * with appointments.book, by the same rules as the free times. Every answer about one appointment says what
+ * the user may do with it now (`actions`: move, cancel and the steps, each allowed or why not — 5.5c).
  */
 class AppointmentController extends Controller
 {
@@ -29,6 +32,7 @@ class AppointmentController extends Controller
         private AppointmentBookingService $booking,
         private AppointmentService $appointments,
         private AppointmentStatusService $statuses,
+        private AppointmentActions $actions,
     ) {}
 
     /**
@@ -54,11 +58,11 @@ class AppointmentController extends Controller
         return AppointmentPersonResource::collection($this->appointments->people((string) $request->validated('search')));
     }
 
-    public function show(Appointment $appointment): AppointmentResource
+    public function show(Request $request, Appointment $appointment): AppointmentResource
     {
         Gate::authorize('appointments.view');
 
-        return new AppointmentResource($this->appointments->details($appointment));
+        return $this->one($request, $this->appointments->details($appointment));
     }
 
     public function store(BookAppointmentRequest $request): JsonResponse
@@ -66,7 +70,7 @@ class AppointmentController extends Controller
         /** @var array{location: string, service: string, cardholder: string, family_member?: string|null, date: string, time?: string|null, note?: string|null} $data */
         $data = $request->validated();
 
-        return (new AppointmentResource($this->booking->book($data, $request->user())))->response()->setStatusCode(201);
+        return $this->one($request, $this->booking->book($data, $request->user()))->response()->setStatusCode(201);
     }
 
     /**
@@ -79,7 +83,7 @@ class AppointmentController extends Controller
         /** @var array{location?: string, date?: string, time?: string|null, note?: string|null, service?: string, cardholder?: string, family_member?: string|null} $data */
         $data = $request->validated();
 
-        return new AppointmentResource($this->booking->move($appointment, $data));
+        return $this->one($request, $this->booking->move($appointment, $data));
     }
 
     /**
@@ -88,7 +92,7 @@ class AppointmentController extends Controller
      */
     public function cancel(CancelAppointmentRequest $request, Appointment $appointment): AppointmentResource
     {
-        return new AppointmentResource($this->statuses->cancel($appointment, $request->user(), $request->validated('reason')));
+        return $this->one($request, $this->statuses->cancel($appointment, $request->user(), $request->validated('reason')));
     }
 
     /**
@@ -98,6 +102,11 @@ class AppointmentController extends Controller
      */
     public function status(ChangeAppointmentStatusRequest $request, Appointment $appointment): AppointmentResource
     {
-        return new AppointmentResource($this->statuses->change($appointment, $request->status(), $request->user(), $request->validated('reason')));
+        return $this->one($request, $this->statuses->change($appointment, $request->status(), $request->user(), $request->validated('reason')));
+    }
+
+    private function one(Request $request, Appointment $appointment): AppointmentResource
+    {
+        return (new AppointmentResource($appointment))->withActions($this->actions->for($appointment, $request->user()));
     }
 }

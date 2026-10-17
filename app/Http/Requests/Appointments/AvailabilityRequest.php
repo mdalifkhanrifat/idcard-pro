@@ -8,19 +8,21 @@ use App\Support\Tenancy\TenantContext;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
 use Illuminate\Validation\Validator;
 
 /**
  * What a place has free: a kind of visit, the days (the organization's, both whole; from today and a week by
  * default, at most config('appointments.availability.max_days')), and for whom (staff by default; `public`
- * shows the public link's view); `preview` shows it as it will be once appointments and the place are on.
+ * shows the public link's view); `preview` shows it as it will be once appointments and the place are on;
+ * `except` (an appointment's id — for those who book) shows it as for moving that appointment, its own place free.
  */
 class AvailabilityRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return Gate::any(['appointments.view', 'settings.update']);
+        return Gate::any(['appointments.view', 'settings.update']) && (! $this->filled('except') || Gate::allows('appointments.book'));
     }
 
     /**
@@ -34,6 +36,7 @@ class AvailabilityRequest extends FormRequest
             'to' => ['sometimes', 'date_format:Y-m-d', 'after_or_equal:from'],
             'audience' => ['sometimes', new Enum(BookingAudience::class)],
             'preview' => ['sometimes', 'boolean'],
+            'except' => ['sometimes', 'nullable', 'string', 'size:26', Rule::exists('appointments', 'public_id')->where('tenant_id', app(TenantContext::class)->id())],
         ];
     }
 

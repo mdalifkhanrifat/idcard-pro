@@ -107,7 +107,7 @@ class AppointmentBookingService
             $location = $this->locations->lockForBooking($target->id ?? $appointment->location_id);
             $appointment->loadMissing(['cardholder', 'familyMember']);
             if (! $appointment->status->isAhead()) {
-                throw ValidationException::withMessages(['status' => __('appointments.changes.cannot_move', ['status' => __("appointments.statuses.{$appointment->status->value}")])]);
+                throw ValidationException::withMessages(['status' => $this->notAhead($appointment)]);
             }
             $fixed = array_filter([
                 'service' => array_key_exists('service', $data) && $data['service'] !== $appointment->service ? 'kind_fixed' : null,
@@ -135,6 +135,27 @@ class AppointmentBookingService
 
             return $this->appointments->withDetails($appointment);
         });
+    }
+
+    /**
+     * Why an appointment cannot be moved to another place, day or time now, or null (5.5c — what the page
+     * offers): it is no longer ahead, appointments are off, or the organization's staff do not book.
+     */
+    public function moveProblem(Appointment $appointment): ?string
+    {
+        $settings = $this->tenant->get()->appointmentSettings();
+
+        return match (true) {
+            ! $appointment->status->isAhead() => $this->notAhead($appointment),
+            ! $settings['enabled'] => (string) __('appointments.availability.unavailable.off'),
+            ! in_array(BookingAudience::Staff->value, $settings['booking'], true) => (string) __('appointments.availability.unavailable.not_staff'),
+            default => null,
+        };
+    }
+
+    private function notAhead(Appointment $appointment): string
+    {
+        return (string) __('appointments.changes.cannot_move', ['status' => __("appointments.statuses.{$appointment->status->value}")]);
     }
 
     /**

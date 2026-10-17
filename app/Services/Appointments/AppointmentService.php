@@ -47,6 +47,14 @@ class AppointmentService
         return $this->appointments->list($filter);
     }
 
+    /**
+     * An appointment's own key by its public id (the free times as for moving it — 5.5c), or null.
+     */
+    public function idOf(?string $publicId): ?int
+    {
+        return $publicId === null || $publicId === '' ? null : $this->appointments->findByPublicId($publicId)?->getKey();
+    }
+
     public function details(Appointment $appointment): Appointment
     {
         return $this->appointments->withDetails($appointment);
