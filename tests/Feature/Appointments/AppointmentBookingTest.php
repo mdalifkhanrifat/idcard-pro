@@ -170,3 +170,22 @@ it('keeps a booked cardholder, family member and place from deletion, with a mes
     $free = ($this->inTenant)(fn () => AppointmentLocation::factory()->create(['tenant_id' => $this->tenant->id]));
     $this->deleteJson("/api/v1/appointment-locations/{$free->public_id}")->assertNoContent();
 });
+
+it('still counts a booking after the slot length or the place\'s hours changed', function () {
+    Sanctum::actingAs($this->owner);
+    ($this->settings)(['slot_minutes' => 15]);
+    $this->place->forceFill(['slot_capacity' => 1])->save();
+    ($this->book)(['time' => '09:15'])->assertCreated();
+    $slots = fn () => collect($this->getJson("/api/v1/appointment-locations/{$this->place->public_id}/availability?service=new_card&from=2026-10-18&to=2026-10-18")->json('data.days.0.slots'))
+        ->mapWithKeys(fn (array $slot) => [substr($slot['start'], 11, 5) => $slot['available']]);
+
+    // Half-hour slots now: 09:15–09:30 lies in the 09:00 slot, which is taken
+    ($this->settings)(['slot_minutes' => 30]);
+    expect($slots()->only(['09:00', '09:30'])->all())->toBe(['09:00' => 0, '09:30' => 1]);
+    $other = ($this->inTenant)(fn () => Cardholder::factory()->create(['tenant_id' => $this->tenant->id]));
+    ($this->book)(['cardholder' => $other->public_id, 'time' => '09:00'])->assertUnprocessable()->assertJsonValidationErrors('time');
+
+    // The place now opens at 09:10: the 09:10 slot (to 09:40) overlaps it, the 09:40 one does not
+    $this->place->forceFill(['hours' => ['sun' => [['09:10', '17:00']]]])->save();
+    expect($slots()->only(['09:10', '09:40'])->all())->toBe(['09:10' => 0, '09:40' => 1]);
+});

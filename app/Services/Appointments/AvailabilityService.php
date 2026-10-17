@@ -68,7 +68,7 @@ class AvailabilityService
                 'id' => $closure->public_id, 'reason' => $closure->reason, 'reason_local' => $closure->reason_local,
             ]];
             if ($scheduling === 'slot') {
-                $load ??= $this->load->slots($location, CarbonImmutable::parse($first, $timezone)->utc(), CarbonImmutable::parse($last, $timezone)->addDay()->utc(), $settings['slot_minutes'], $except);
+                $load ??= $this->load->slots($location, CarbonImmutable::parse($first, $timezone)->utc(), CarbonImmutable::parse($last, $timezone)->addDay()->utc(), $except);
                 $entry['slots'] = $entry['open'] ? $this->slots($location, $day, $periods, $settings['slot_minutes'], $settings['services'][$service]['slots'], $earliest, $load) : [];
             } else {
                 $load ??= $this->load->days($location, $first, $last, $except);
@@ -111,7 +111,7 @@ class AvailabilityService
      * of the run decides).
      *
      * @param  array<int, array{0: string, 1: string}>  $periods
-     * @param  array<int, int>  $load  people booked by a slot's start (Unix timestamp)
+     * @param  array<int, array{0: int, 1: int}>  $load  the booked times (start and end, Unix timestamps)
      * @return array<int, array{start: string, end: string, capacity: int, booked: int, available: int}>
      */
     private function slots(AppointmentLocation $location, CarbonImmutable $day, array $periods, int $minutes, int $take, CarbonImmutable $earliest, array $load): array
@@ -128,7 +128,12 @@ class AvailabilityService
                 if (in_array(null, $run, true) || $run[0]->lessThan($earliest)) {
                     continue;
                 }
-                $booked = max(array_map(fn (CarbonImmutable $slot) => (int) ($load[$slot->getTimestamp()] ?? 0), $run));
+                // Each slot holds those whose booked time overlaps it at all; the fullest slot of the run decides
+                $booked = max(array_map(function (CarbonImmutable $slot) use ($load, $minutes): int {
+                    [$from, $to] = [$slot->getTimestamp(), $slot->getTimestamp() + $minutes * 60];
+
+                    return count(array_filter($load, fn (array $held) => $held[0] < $to && $held[1] > $from));
+                }, $run));
                 $slots[] = [
                     'start' => $run[0]->toIso8601String(),
                     'end' => $run[0]->addMinutes($take * $minutes)->toIso8601String(),

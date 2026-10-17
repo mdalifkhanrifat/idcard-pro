@@ -106,11 +106,12 @@ it('takes what is booked off the capacity: per slot, the fullest slot of a longe
     ($this->settings)(['slot_minutes' => 60, 'services' => ['renewal' => ['slots' => 2]]]);
     $place = ($this->place)(['slot_capacity' => 2]);
     $at = fn (string $time) => CarbonImmutable::parse("2026-10-19 {$time}", 'Asia/Dhaka')->getTimestamp();
-    app()->instance(AppointmentLoad::class, new class([$at('10:00') => 1, $at('11:00') => 2]) implements AppointmentLoad
+    $hour = fn (string $time) => [$at($time), $at($time) + 3600];
+    app()->instance(AppointmentLoad::class, new class([$hour('10:00'), $hour('11:00'), $hour('11:00')]) implements AppointmentLoad
     {
         public function __construct(private array $slots) {}
 
-        public function slots(AppointmentLocation $location, CarbonImmutable $from, CarbonImmutable $to, int $slotMinutes, ?int $except = null): array
+        public function slots(AppointmentLocation $location, CarbonImmutable $from, CarbonImmutable $to, ?int $except = null): array
         {
             return $this->slots;
         }

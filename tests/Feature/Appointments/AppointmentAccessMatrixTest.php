@@ -1,16 +1,19 @@
 <?php
 
+use App\Enums\AppointmentStatus;
+use App\Models\Appointment;
 use App\Models\AppointmentClosure;
 use App\Models\AppointmentLocation;
+use App\Models\Cardholder;
 use App\Models\User;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Laravel\Sanctum\Sanctum;
 
 /*
-| Appointments end check (5.3f): who may do what across every appointments API — the settings, places,
-| closures, the country's holidays and free times — for each default role, a user without appointments and
-| another organization; and every JSON API takes back what it answered, changing nothing.
+| Appointments end check (5.3f, bookings 5.4f): who may do what across every appointments API — the settings,
+| places, closures, the country's holidays, free times and bookings — for each default role, a user without
+| appointments and another organization; and every JSON API takes back what it answered, changing nothing.
 */
 
 beforeEach(function () {
@@ -118,4 +121,80 @@ it('takes back a place and a closure as it answered them, changing nothing', fun
 
     // Nothing changed, so nothing new in the audit log
     expect($audit())->toBe($before);
+});
+
+/**
+ * Every booking call (5.4): [method, path, body, the ability it needs], with a fresh person or booking for those
+ * that change one. Appointments are on; the place takes many at once; it is Friday 16 October in Dhaka.
+ *
+ * @return array<string, array{0: string, 1: string, 2: array<string, mixed>, 3: string}>
+ */
+function bookingCalls(object $test): array
+{
+    $holder = fn (): Cardholder => ($test->inTenant)(fn () => Cardholder::factory()->create(['tenant_id' => $test->tenant->id]));
+    $booking = fn (AppointmentStatus $status = AppointmentStatus::Confirmed): string => ($test->inTenant)(fn () => Appointment::factory()->at('2026-10-18', '2026-10-18 04:00:00', 30)->status($status)->create([
+        'tenant_id' => $test->tenant->id, 'location_id' => $test->place->id, 'cardholder_id' => $holder()->id,
+    ]))->public_id;
+
+    return [
+        'list bookings' => ['GET', '/api/v1/appointments?filter[past]=1', [], 'appointments.view'],
+        'see a booking' => ['GET', '/api/v1/appointments/'.$booking(), [], 'appointments.view'],
+        'book' => ['POST', '/api/v1/appointments', ['location' => $test->place->public_id, 'service' => 'new_card', 'cardholder' => $holder()->public_id, 'date' => '2026-10-18', 'time' => '10:00'], 'appointments.book'],
+        'move a booking' => ['PATCH', '/api/v1/appointments/'.$booking(), ['time' => '11:00'], 'appointments.book'],
+        'cancel a booking' => ['POST', '/api/v1/appointments/'.$booking().'/cancel', ['reason' => 'Check'], 'appointments.book'],
+        'approve a booking' => ['POST', '/api/v1/appointments/'.$booking(AppointmentStatus::Pending).'/status', ['status' => 'confirmed'], 'appointments.manage'],
+    ];
+}
+
+it('lets each role book, change and take bookings a step by its abilities, and nobody else', function () {
+    $this->tenant->forceFill(['timezone' => 'Asia/Dhaka', 'settings' => ['appointments' => ['enabled' => true, 'slot_minutes' => 30]]])->save();
+    $this->place->forceFill(['slot_capacity' => 50, 'day_capacity' => 50])->save();
+    $this->travelTo(now()->parse('2026-10-16 03:00:00'));
+    // New organizations' roles: Administrator sees, books and manages; Operator sees and books; Viewer sees
+    $abilities = [
+        'Owner' => ['appointments.view', 'appointments.book', 'appointments.manage'],
+        'Administrator' => ['appointments.view', 'appointments.book', 'appointments.manage'],
+        'Operator' => ['appointments.view', 'appointments.book'],
+        'Viewer' => ['appointments.view'],
+        'without appointments' => [],
+    ];
+    $outcomes = [];
+    foreach ($abilities as $who => $may) {
+        $user = match ($who) {
+            'Owner' => $this->owner,
+            'without appointments' => ($this->inTenant)(fn () => User::factory()->create(['tenant_id' => $this->tenant->id])),
+            default => tenantUser($this->tenant, $who),
+        };
+        $user->unsetRelation('tenant');
+        Sanctum::actingAs($user);
+        foreach (bookingCalls($this) as $call => [$method, $path, $body, $needs]) {
+            $status = $this->json($method, $path, $body)->status();
+            $allowed = in_array($needs, $may, true);
+            $outcomes["{$who}: {$call}"] = $allowed ? ($status < 300 ?: "unexpected {$status}") : ($status === 403 ?: "unexpected {$status}");
+        }
+    }
+
+    expect(array_filter($outcomes, fn ($ok) => $ok !== true))->toBe([]);
+});
+
+it('keeps another organization\'s bookings out of reach', function () {
+    $this->tenant->forceFill(['timezone' => 'Asia/Dhaka', 'settings' => ['appointments' => ['enabled' => true, 'slot_minutes' => 30]]])->save();
+    $this->travelTo(now()->parse('2026-10-16 03:00:00'));
+    $calls = bookingCalls($this);
+    [$other, $otherOwner] = tenantWithOwner('globex', 'owner@globex.test');
+    $other->forceFill(['settings' => ['appointments' => ['enabled' => true]]])->save();
+    $otherOwner->unsetRelation('tenant');
+    Sanctum::actingAs($otherOwner);
+    $before = Appointment::query()->withoutGlobalScopes()->get(['id', 'status', 'starts_at'])->toArray();
+
+    foreach ($calls as $call => [$method, $path, $body]) {
+        $status = $this->json($method, $path, $body)->status();
+        match ($call) {
+            'list bookings' => expect($this->getJson($path)->json('data'))->toBe([]),
+            // This organization's place and person are not the other's to book
+            'book' => expect($status)->toBe(422, $call),
+            default => expect($status)->toBe(404, $call),
+        };
+    }
+    expect(Appointment::query()->withoutGlobalScopes()->get(['id', 'status', 'starts_at'])->toArray())->toBe($before);
 });
