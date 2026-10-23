@@ -41,6 +41,7 @@ const daysAhead = numberOf(() => settings.value.days_ahead, (value) => (settings
 const untilHours = numberOf(() => settings.value.changes.until_hours, (value) => (settings.value.changes.until_hours = value));
 const codeMinutes = numberOf(() => settings.value.verification.code_minutes, (value) => (settings.value.verification.code_minutes = value));
 const codeAttempts = numberOf(() => settings.value.verification.code_attempts, (value) => (settings.value.verification.code_attempts = value));
+const dailyFailures = numberOf(() => settings.value.verification.daily_failures, (value) => (settings.value.verification.daily_failures = value));
 
 const publicLink = computed(() => settings.value.booking.includes('public'));
 const auth = useAuthStore();
@@ -164,10 +165,12 @@ function setReminder(index: number, value: number | string | null | undefined): 
                             <p v-if="error('verification.code_channels')" class="text-xs text-danger">{{ error('verification.code_channels')?.[0] }}</p>
                             <p v-else class="text-xs text-muted">{{ t('appointments.general.public.codeChannelsHint') }}</p>
                         </div>
-                        <div class="grid gap-4 sm:grid-cols-2">
-                            <UiInput v-model="codeMinutes" type="number" :min="String(limit('code_minutes')[0])" :max="String(limit('code_minutes')[1])" :label="t('appointments.general.public.codeMinutes')" :hint="range('code_minutes')" :error="error('verification.code_minutes')" data-setting="verification.code_minutes" />
-                            <UiInput v-model="codeAttempts" type="number" :min="String(limit('code_attempts')[0])" :max="String(limit('code_attempts')[1])" :label="t('appointments.general.public.codeAttempts')" :hint="range('code_attempts')" :error="error('verification.code_attempts')" data-setting="verification.code_attempts" />
-                        </div>
+                    </div>
+                    <!-- For every way of proving who one is: minutes and tries to answer, wrong answers a day -->
+                    <div class="grid gap-4 sm:grid-cols-3 md:col-span-2" data-verification-limits>
+                        <UiInput v-model="codeMinutes" type="number" :min="String(limit('code_minutes')[0])" :max="String(limit('code_minutes')[1])" :label="t('appointments.general.public.codeMinutes')" :hint="range('code_minutes')" :error="error('verification.code_minutes')" data-setting="verification.code_minutes" />
+                        <UiInput v-model="codeAttempts" type="number" :min="String(limit('code_attempts')[0])" :max="String(limit('code_attempts')[1])" :label="t('appointments.general.public.codeAttempts')" :hint="range('code_attempts')" :error="error('verification.code_attempts')" data-setting="verification.code_attempts" />
+                        <UiInput v-model="dailyFailures" type="number" :min="String(limit('daily_failures')[0])" :max="String(limit('daily_failures')[1])" :label="t('appointments.general.public.dailyFailures')" :hint="t('appointments.general.public.dailyFailuresHint', { range: range('daily_failures') })" :error="error('verification.daily_failures')" data-setting="verification.daily_failures" />
                     </div>
                 </div>
             </fieldset>

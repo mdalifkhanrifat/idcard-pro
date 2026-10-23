@@ -39,7 +39,7 @@ it('starts off, booked by staff at a time and confirmed at once, with every choi
         'notice_hours' => 2,
         'days_ahead' => 30,
         'changes' => ['cancel' => true, 'reschedule' => true, 'until_hours' => 2],
-        'verification' => ['method' => 'code', 'code_channels' => ['mail', 'sms'], 'code_minutes' => 10, 'code_attempts' => 5],
+        'verification' => ['method' => 'code', 'code_channels' => ['mail', 'sms'], 'code_minutes' => 10, 'code_attempts' => 5, 'daily_failures' => 10],
         'reminders' => [24],
     ])
         ->and(array_keys($response->json('data.appointments.services')))->toBe(['new_card', 'renewal', 'biometrics', 'card_collection'])

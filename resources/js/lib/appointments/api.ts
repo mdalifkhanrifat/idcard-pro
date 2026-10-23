@@ -31,7 +31,7 @@ export interface AppointmentSettings {
     days_ahead: number;
     /** What people may do themselves through the public link, until some hours before. */
     changes: { cancel: boolean; reschedule: boolean; until_hours: number };
-    verification: { method: string; code_channels: string[]; code_minutes: number; code_attempts: number };
+    verification: { method: string; code_channels: string[]; code_minutes: number; code_attempts: number; daily_failures: number };
     /** Hours before an appointment a reminder goes, largest first (at most three). */
     reminders: number[];
     /** A booking's short number: {YYYY}, {YY}, {MM} and one running {SEQ:n}. */

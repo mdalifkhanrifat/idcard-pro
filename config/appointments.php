@@ -122,6 +122,8 @@ return [
         'change_until_hours' => [0, 168],
         'code_minutes' => [2, 60],
         'code_attempts' => [1, 10],
+        // Wrong answers one employee number may give in 24 hours, over all its codes (5.6e)
+        'daily_failures' => [3, 100],
         'reminder_hours' => [1, 168],
         'reminders' => [0, 3],
         'name' => [1, 80],
@@ -143,7 +145,7 @@ return [
         'days_ahead' => 30,
         // What a person may do themselves through the public link, until some hours before
         'changes' => ['cancel' => true, 'reschedule' => true, 'until_hours' => 2],
-        'verification' => ['method' => 'code', 'code_channels' => ['mail', 'sms'], 'code_minutes' => 10, 'code_attempts' => 5],
+        'verification' => ['method' => 'code', 'code_channels' => ['mail', 'sms'], 'code_minutes' => 10, 'code_attempts' => 5, 'daily_failures' => 10],
         // Reminders this many hours before (sent as notifications, when those are on)
         'reminders' => [24],
         // A booking's short number: {YYYY}, {YY}, {MM} of the day it was booked and one running {SEQ:n}

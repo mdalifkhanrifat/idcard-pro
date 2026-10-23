@@ -1823,8 +1823,10 @@
                 "method": "How people prove who they are",
                 "codeChannels": "The code goes by",
                 "codeChannelsHint": "To the e-mail or phone on record.",
-                "codeMinutes": "Minutes a code lasts",
-                "codeAttempts": "Tries for a code",
+                "codeMinutes": "Minutes to answer",
+                "codeAttempts": "Tries to answer",
+                "dailyFailures": "Wrong answers a number may give in a day",
+                "dailyFailuresHint": "Counting every answer, whatever the way; then it waits a day (it never says whether the number is on record). {range}",
                 "link": "The public booking page",
                 "open": "Open it",
                 "linkHint": "Share this address with people (on a notice, the website, a message). It works while appointments are on and saved with the public link."

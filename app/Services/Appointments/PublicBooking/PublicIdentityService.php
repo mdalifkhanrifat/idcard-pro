@@ -23,8 +23,10 @@ use Illuminate\Validation\ValidationException;
  * or their national ID number — within the organization's minutes and tries. The answer to an employee number is
  * the same whether or not it is known, active or has an address on record, so the link tells nobody who works
  * there. Proven, they get a session for some minutes (renewed by each use). Codes and tokens are kept only hashed,
- * in the cache, and expire by themselves. The audit's sign-ins keep each one proven, locked out (no tries left) and
- * blocked (too many tries for a number) — not each wrong answer.
+ * in the cache, and expire by themselves. An employee number may be asked for a few times an hour and may give the
+ * organization's number of wrong answers in a day (over all its codes) — known or not, alike. The audit's sign-ins
+ * keep each one proven, locked out (no tries left) and blocked (too many tries for a number) — not each wrong
+ * answer.
  */
 class PublicIdentityService
 {
@@ -48,6 +50,7 @@ class PublicIdentityService
         $tenant = $this->tenant->get();
         $verification = $tenant->appointmentSettings()['verification'];
         $limiter = self::PREFIX."identify:{$tenant->id}:".mb_strtolower(trim($employeeNo));
+        $this->refuseAfterFailures($employeeNo, (int) $verification['daily_failures'], 'employee_no');
         if (RateLimiter::tooManyAttempts($limiter, (int) config('appointments.public.identify_per_hour'))) {
             $this->audit->recordPublicSignIn(LoginEventType::Blocked, $this->request, $tenant, trim($employeeNo), $this->cardholders->findByEmployeeNo(trim($employeeNo)));
             throw ValidationException::withMessages(['employee_no' => __('appointments.public.too_many', ['minutes' => app(ReportValueText::class)->number((int) ceil(RateLimiter::availableIn($limiter) / 60))])]);
@@ -91,12 +94,21 @@ class PublicIdentityService
             throw ValidationException::withMessages(['challenge' => __('appointments.public.expired')]);
         }
         $person = $held['cardholder'] === null ? null : $this->cardholders->findById($held['cardholder']);
+        $employeeNo = (string) ($held['employee_no'] ?? $person?->employee_no);
         if ($person === null || $person->status !== CardholderStatus::Active || ! $this->answers($held, $person, $answer)) {
+            RateLimiter::hit($this->failuresKey($employeeNo), 86400);
+            try {
+                $this->refuseAfterFailures($employeeNo, (int) $tenant->appointmentSettings()['verification']['daily_failures'], 'challenge');
+            } catch (ValidationException $refused) {
+                Cache::forget($key);
+
+                throw $refused;
+            }
             $tries = $held['tries'] + 1;
             $left = (int) $tenant->appointmentSettings()['verification']['code_attempts'] - $tries;
             if ($left <= 0) {
                 Cache::forget($key);
-                $this->audit->recordPublicSignIn(LoginEventType::Locked, $this->request, $tenant, (string) ($held['employee_no'] ?? ''), $person);
+                $this->audit->recordPublicSignIn(LoginEventType::Locked, $this->request, $tenant, $employeeNo, $person);
                 throw ValidationException::withMessages(['challenge' => __('appointments.public.no_tries_left')]);
             }
             // The same expiry: only the tries change
@@ -105,12 +117,38 @@ class PublicIdentityService
         }
 
         Cache::forget($key);
-        $this->audit->recordPublicSignIn(LoginEventType::Succeeded, $this->request, $tenant, (string) ($held['employee_no'] ?? $person->employee_no), $person);
+        // The person proved who they are: earlier slips of theirs no longer count
+        RateLimiter::clear($this->failuresKey($employeeNo));
+        $this->audit->recordPublicSignIn(LoginEventType::Succeeded, $this->request, $tenant, $employeeNo, $person);
         $token = Str::random(48);
         $minutes = (int) config('appointments.public.session_minutes');
         Cache::put($this->key('session', $token), ['tenant' => $tenant->id, 'cardholder' => $person->id], now()->addMinutes($minutes));
 
         return ['token' => $token, 'expires_in' => $minutes * 60, 'person' => $person];
+    }
+
+    /**
+     * Refuse a number that has given the organization's number of wrong answers in the last day (kept in the
+     * sign-ins as blocked), whether or not it is on record.
+     */
+    private function refuseAfterFailures(string $employeeNo, int $limit, string $field): void
+    {
+        $key = $this->failuresKey($employeeNo);
+        if (! RateLimiter::tooManyAttempts($key, $limit)) {
+            return;
+        }
+        $tenant = $this->tenant->get();
+        $this->audit->recordPublicSignIn(LoginEventType::Blocked, $this->request, $tenant, trim($employeeNo), $this->cardholders->findByEmployeeNo(trim($employeeNo)));
+
+        throw ValidationException::withMessages([$field => __('appointments.public.too_many_hours', ['hours' => app(ReportValueText::class)->number(max(1, (int) ceil(RateLimiter::availableIn($key) / 3600)))])]);
+    }
+
+    /**
+     * Wrong answers of one employee number in this organization (any case, spaces around ignored).
+     */
+    private function failuresKey(string $employeeNo): string
+    {
+        return self::PREFIX."failures:{$this->tenant->id()}:".mb_strtolower(trim($employeeNo));
     }
 
     /**

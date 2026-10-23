@@ -169,3 +169,33 @@ it('keeps proven sign-ins, lock-outs and blocks in the organization\'s sign-ins,
     Sanctum::actingAs($otherOwner);
     expect($this->getJson('/api/v1/audit/logins?filter[channel]=public_booking')->json('data'))->toBe([]);
 });
+
+it('stops a number for a day after the organization\'s wrong answers over all its codes, known or not, and forgives a proven person', function () {
+    config(['appointments.public.identify_per_hour' => 50]);
+    ($this->settings)(['method' => 'date_of_birth', 'code_attempts' => 5, 'daily_failures' => 3]);
+    $verify = fn (string $number, string $date) => $this->postJson("{$this->url}/verify", ['challenge' => ($this->identify)($number)->assertOk()->json('data.challenge'), 'date_of_birth' => $date]);
+
+    // Two slips, then the right answer: the slips no longer count
+    $verify('E-100', '2000-01-01')->assertJsonValidationErrors('date_of_birth');
+    $verify('E-100', '2000-01-01')->assertJsonValidationErrors('date_of_birth');
+    $verify('E-100', '1990-05-01')->assertOk();
+    // Three wrong answers over three codes: stopped for a day, the same for a number not on record
+    foreach (['E-100', ' x-404 '] as $number) {
+        $verify($number, '2000-01-01')->assertJsonValidationErrors('date_of_birth');
+        $verify($number, '2000-01-01')->assertJsonValidationErrors('date_of_birth');
+        $verify($number, '2000-01-01')->assertUnprocessable()->assertJsonPath('errors.challenge.0', 'Too many wrong answers for this employee number. Try again in 24 hours, or contact the office.');
+        ($this->identify)(strtoupper(trim($number)))->assertUnprocessable()->assertJsonPath('errors.employee_no.0', 'Too many wrong answers for this employee number. Try again in 24 hours, or contact the office.');
+    }
+    $this->travel(23)->hours();
+    $this->postJson("{$this->url}/identify", ['employee_no' => 'E-100'], ['Accept-Language' => 'bn'])
+        ->assertJsonPath('errors.employee_no.0', 'এই কর্মী নম্বরে অনেকবার ভুল উত্তর দেওয়া হয়েছে। ১ ঘণ্টা পরে আবার চেষ্টা করুন, অথবা অফিসে যোগাযোগ করুন।');
+    $this->travel(2)->hours();
+    $verify('E-100', '1990-05-01')->assertOk();
+
+    Sanctum::actingAs($this->owner);
+    expect(array_count_values(array_column($this->getJson('/api/v1/audit/logins?filter[channel]=public_booking&per_page=100')->json('data'), 'event')))
+        ->toBe(['succeeded' => 2, 'blocked' => 5]);
+    // The setting's bounds
+    $this->putJson('/api/v1/appointments/settings', ['appointments' => ['verification' => ['daily_failures' => 2]]])->assertJsonValidationErrors('appointments.verification.daily_failures');
+    $this->putJson('/api/v1/appointments/settings', ['appointments' => ['verification' => ['daily_failures' => 20]]])->assertOk()->assertJsonPath('data.appointments.verification.daily_failures', 20);
+});

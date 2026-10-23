@@ -95,6 +95,7 @@ return [
     'public' => [
         'unavailable' => 'This booking page is not available.',
         'too_many' => 'Too many tries for this employee number. Try again in :minutes minutes.',
+        'too_many_hours' => 'Too many wrong answers for this employee number. Try again in :hours hours, or contact the office.',
         'expired' => 'This check has ended. Enter your employee number again.',
         'no_tries_left' => 'No tries left. Enter your employee number again.',
         'wrong' => 'That is not right. :count try left.|That is not right. :count tries left.',
