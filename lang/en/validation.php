@@ -198,6 +198,12 @@ return [
     */
 
     'attributes' => [
+        // The public booking link (5.6)
+        'employee_no' => 'employee number',
+        'challenge' => 'check',
+        'code' => 'code',
+        'date_of_birth' => 'date of birth',
+        'national_id' => 'national ID number',
         // Appointment places (5.3b)
         'slot_capacity' => 'people per time slot',
         'day_capacity' => 'people per day',

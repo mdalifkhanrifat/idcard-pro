@@ -5,10 +5,12 @@ namespace App\Services\Notifications;
 use App\Data\Notifications\NotificationRecipient;
 use App\Enums\NotificationStatus;
 use App\Jobs\SendNotificationMessage;
+use App\Models\Cardholder;
 use App\Models\NotificationMessage;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Repositories\Contracts\NotificationMessageRepositoryInterface;
+use App\Services\Reports\ReportValueText;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -98,6 +100,10 @@ class NotificationService
             if (! in_array($message->status, [NotificationStatus::Failed, NotificationStatus::Skipped], true)) {
                 self::refuseResend('not_failed');
             }
+            // A one-time code is short-lived: the person asks for a new one
+            if ($message->event === NotificationLogService::BOOKING_CODE_EVENT) {
+                self::refuseResend('code');
+            }
             if ($message->resend !== null) {
                 self::refuseResend('already');
             }
@@ -166,6 +172,31 @@ class NotificationService
             ->log('test_sent');
 
         return $message;
+    }
+
+    /**
+     * A one-time code for the public booking link (5.6), to the address on the cardholder's record for the channel,
+     * in the organization's languages, whatever the notification settings (proving who they are needs it). Nothing
+     * is logged when the record has no address for the channel. The code shows in the log as its words do, like
+     * any message; it lasts only minutes.
+     *
+     * @param  string  $channel  a config('notifications.channels') key
+     */
+    public function sendBookingCode(Cardholder $cardholder, string $channel, string $code, int $minutes): ?NotificationMessage
+    {
+        $recipient = NotificationRecipient::forCardholder($cardholder);
+        if ($recipient->addressFor($channel) === null) {
+            return null;
+        }
+        $settings = $this->tenant()->notificationSettings();
+        $words = $this->composer->composeText(
+            'notifications.booking_code',
+            ['organization.name' => (string) $this->tenant()->name, 'code' => $code, 'minutes' => app(ReportValueText::class)->number($minutes)],
+            $settings['languages'],
+            NotificationSettings::smsLanguagesOf($settings),
+        );
+
+        return $this->queue(['event' => NotificationLogService::BOOKING_CODE_EVENT, 'channel' => $channel, ...self::wordsFor($channel, $words)], $recipient);
     }
 
     /**

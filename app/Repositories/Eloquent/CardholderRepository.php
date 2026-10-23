@@ -143,6 +143,11 @@ class CardholderRepository extends EloquentRepository implements CardholderRepos
         return $this->query()->where('employee_no', $employeeNo)->first();
     }
 
+    public function findById(int $id): ?Cardholder
+    {
+        return $this->query()->whereKey($id)->first();
+    }
+
     public function setBiometricStatus(array $ids, BiometricStatus $status): void
     {
         if ($ids !== []) {

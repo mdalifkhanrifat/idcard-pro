@@ -21,6 +21,16 @@ class NotificationLogService
      */
     public const TEST_EVENT = 'test';
 
+    /**
+     * A one-time code proving who a person is on the public booking link (5.6) — sent whatever the settings.
+     */
+    public const BOOKING_CODE_EVENT = 'booking_code';
+
+    /**
+     * Messages not of the registry's events, named by lang/<language>/notifications.php → <key>.name.
+     */
+    public const SYSTEM_EVENTS = [self::TEST_EVENT, self::BOOKING_CODE_EVENT];
+
     public function __construct(
         private NotificationMessageRepositoryInterface $messages,
         private TenantRepositoryInterface $tenants,
@@ -47,7 +57,7 @@ class NotificationLogService
      */
     public function options(): array
     {
-        $events = array_values(array_unique([...array_keys(NotificationSettings::events()), self::TEST_EVENT, ...$this->messages->loggedValues('event')]));
+        $events = array_values(array_unique([...array_keys(NotificationSettings::events()), ...self::SYSTEM_EVENTS, ...$this->messages->loggedValues('event')]));
         $channels = array_values(array_unique([...NotificationSettings::channels(), ...$this->messages->loggedValues('channel')]));
 
         return [
@@ -62,7 +72,7 @@ class NotificationLogService
      */
     public static function eventName(string $key): string
     {
-        return self::label($key === self::TEST_EVENT ? 'test' : "events.{$key}", 'name', $key);
+        return in_array($key, self::SYSTEM_EVENTS, true) ? self::label($key, 'name', $key) : self::label("events.{$key}", 'name', $key);
     }
 
     /**

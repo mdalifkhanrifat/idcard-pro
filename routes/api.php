@@ -91,6 +91,12 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     // The public booking link (5.6): the organization by its slug, no sign-in, rate limited per address
     Route::prefix('public/{organization}/booking')->middleware(['public.booking', 'throttle:public-booking'])->name('public-booking.')->group(function () {
         Route::get('/', [PublicBookingController::class, 'show'])->name('show');
+        Route::post('identify', [PublicBookingController::class, 'identify'])->name('identify');
+        Route::post('verify', [PublicBookingController::class, 'verify'])->name('verify');
+        Route::middleware('public.booking.session')->group(function () {
+            Route::get('me', [PublicBookingController::class, 'me'])->name('me');
+            Route::post('sign-out', [PublicBookingController::class, 'signOut'])->name('sign-out');
+        });
     });
 
     // Cards for the PDF engine's render page (signed link made by CardRenderService::link)

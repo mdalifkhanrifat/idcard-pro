@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\EnsurePlatformAdmin;
+use App\Http\Middleware\RequirePublicBookingSession;
 use App\Http\Middleware\RequireTenant;
 use App\Http\Middleware\ResolvePublicBookingTenant;
 use App\Http\Middleware\ResolveTenant;
@@ -27,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant.required' => RequireTenant::class,
             'platform.admin' => EnsurePlatformAdmin::class,
             'public.booking' => ResolvePublicBookingTenant::class,
+            'public.booking.session' => RequirePublicBookingSession::class,
         ]);
 
         // The tenant must be bound before route-model binding so that

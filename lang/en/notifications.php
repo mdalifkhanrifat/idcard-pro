@@ -109,6 +109,14 @@ return [
     ],
 
     // A message sent by hand to check a channel (not an event of the registry)
+    // A one-time code proving who a person is on the public booking link (5.6)
+    'booking_code' => [
+        'name' => 'Booking code',
+        'subject' => '{organization.name}: your booking code {code}',
+        'body' => "Your code for booking an appointment with {organization.name} is {code}.\n\nIt works for {minutes} minutes. Do not share it with anyone; if you did not ask for it, ignore this message.",
+        'sms' => '{organization.name}: your booking code is {code} ({minutes} min). Do not share it.',
+    ],
+
     'test' => [
         'name' => 'Test message',
         'subject' => '{organization.name}: test message',
@@ -137,6 +145,7 @@ return [
     // Sending a message again by hand: why it cannot go
     'resend' => [
         'not_failed' => 'Only a failed message, or one that was not sent, can be sent again.',
+        'code' => 'A booking code is not sent again: the person asks for a new one on the booking page.',
         'already' => 'This message was already sent again; send the newer one again if needed.',
         'unknown_channel' => 'This channel is no longer available.',
         'no_recipient' => 'The person it went to is no longer on record.',

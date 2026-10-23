@@ -175,6 +175,12 @@ return [
     */
 
     'attributes' => [
+        // The public booking link (5.6)
+        'employee_no' => 'কর্মী নম্বর',
+        'challenge' => 'যাচাই',
+        'code' => 'কোড',
+        'date_of_birth' => 'জন্মতারিখ',
+        'national_id' => 'জাতীয় পরিচয়পত্র নম্বর',
         // Appointment places (5.3b)
         'slot_capacity' => 'প্রতি সময়ের ঘরে কতজন',
         'day_capacity' => 'প্রতি দিনে কতজন',

@@ -102,6 +102,7 @@ it('lists what to filter by from the registry, with what the log holds since rem
         ['key' => 'appointment_cancelled', 'name' => 'অ্যাপয়েন্টমেন্ট বাতিল'],
         ['key' => 'appointment_reminder', 'name' => 'অ্যাপয়েন্টমেন্টের রিমাইন্ডার'],
         ['key' => 'test', 'name' => 'পরীক্ষার বার্তা'],
+        ['key' => 'booking_code', 'name' => 'বুকিংয়ের কোড'],
         ['key' => 'old_event', 'name' => 'old_event'],
     ])
         ->and($meta['channels'])->toBe([['key' => 'mail', 'name' => 'ইমেইল'], ['key' => 'sms', 'name' => 'SMS'], ['key' => 'whatsapp', 'name' => 'whatsapp']])
