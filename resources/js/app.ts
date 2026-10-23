@@ -14,7 +14,8 @@ app.use(router);
 
 onUnauthorized(() => {
     const auth = useAuthStore();
-    if (auth.isAuthenticated) {
+    // A public page's 401 is its own (e.g. a booking session ended), not the signed-in user's
+    if (auth.isAuthenticated && !router.currentRoute.value.meta.public) {
         auth.clear();
         router.push({ name: 'login', query: { redirect: router.currentRoute.value.fullPath } });
     }

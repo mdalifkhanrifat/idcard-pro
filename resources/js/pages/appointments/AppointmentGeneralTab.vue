@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Plus, Trash2 } from 'lucide-vue-next';
+import { Copy, ExternalLink, Plus, Trash2 } from 'lucide-vue-next';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiCard from '@/components/ui/UiCard.vue';
 import UiCheckbox from '@/components/ui/UiCheckbox.vue';
@@ -11,6 +11,8 @@ import { formatNumber } from '@/lib/format';
 import type { AppointmentOptions, AppointmentSettings, PlaceCounts } from '@/lib/appointments/api';
 import { numberSample } from '@/lib/appointments/numbers';
 import AppointmentSummary from '@/pages/appointments/AppointmentSummary.vue';
+import { useAuthStore } from '@/stores/auth';
+import { useUiStore } from '@/stores/ui';
 
 /**
  * The organization's appointments as a whole: on or off, how booking works, what people may do through the public
@@ -41,6 +43,18 @@ const codeMinutes = numberOf(() => settings.value.verification.code_minutes, (va
 const codeAttempts = numberOf(() => settings.value.verification.code_attempts, (value) => (settings.value.verification.code_attempts = value));
 
 const publicLink = computed(() => settings.value.booking.includes('public'));
+const auth = useAuthStore();
+const ui = useUiStore();
+/** The organization's public booking page (5.6), to share with people. */
+const publicUrl = computed(() => (auth.tenant ? `${window.location.origin}/book/${auth.tenant.slug}` : ''));
+async function copyPublicUrl(): Promise<void> {
+    try {
+        await navigator.clipboard.writeText(publicUrl.value);
+        ui.notify(t('common.copied'));
+    } catch {
+        ui.notify(publicUrl.value, 'info');
+    }
+}
 /** The format at work today, as the 42nd booking (an identifier: its digits stay as stored, like card numbers). */
 const sample = computed(() => numberSample(settings.value.number_format, new Date(), 42));
 
@@ -114,6 +128,15 @@ function setReminder(index: number, value: number | string | null | undefined): 
 
         <UiCard :title="t('appointments.general.public.title')" :description="t('appointments.general.public.description')" data-public-card>
             <p v-if="!publicLink" class="mb-4 rounded-lg border border-line bg-surface-2 px-4 py-3 text-sm text-muted" data-public-off>{{ t('appointments.general.public.off') }}</p>
+            <div v-else-if="publicUrl" class="mb-4 space-y-2 rounded-lg border border-line bg-surface-2 px-4 py-3 text-sm" data-public-url>
+                <p class="font-medium text-fg">{{ t('appointments.general.public.link') }}</p>
+                <p class="font-mono text-xs break-all text-fg" dir="ltr">{{ publicUrl }}</p>
+                <div class="flex flex-wrap gap-2">
+                    <UiButton variant="secondary" size="sm" data-public-url-copy @click="copyPublicUrl"><Copy class="size-4" />{{ t('common.copy') }}</UiButton>
+                    <a :href="publicUrl" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-sm text-brand-ink hover:underline"><ExternalLink class="size-4" />{{ t('appointments.general.public.open') }}</a>
+                </div>
+                <p class="text-xs text-muted">{{ t('appointments.general.public.linkHint') }}</p>
+            </div>
             <fieldset :disabled="disabled" class="space-y-6" :class="!publicLink && 'opacity-60'">
                 <div class="space-y-3">
                     <UiCheckbox v-model="settings.changes.cancel" :label="t('appointments.general.public.cancel')" data-setting="changes.cancel" />

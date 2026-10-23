@@ -65,6 +65,7 @@ const routes: RouteRecordRaw[] = [
     },
     // Public card verification from a card's QR code (no sign-in; what it shows is the organization's choice)
     { path: '/v/:code', name: 'cards.verify', component: () => import('@/pages/verify/CardVerifyPage.vue'), meta: { public: true, title: 'verify.title' } },
+    { path: '/book/:organization', name: 'public.booking', component: () => import('@/pages/public-booking/PublicBookingPage.vue'), meta: { public: true, title: 'publicBooking.title' } },
     // Server PDF engine's view of cards (signed link, no sign-in)
     { path: '/render/cards', name: 'cards.render', component: () => import('@/pages/cards/CardRenderPage.vue'), meta: { public: true } },
     // Printing: the cards alone at their real size, without the app's menu and header

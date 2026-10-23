@@ -5,7 +5,7 @@ import { ChevronLeft, ChevronRight } from 'lucide-vue-next';
 import UiButton from '@/components/ui/UiButton.vue';
 import { formatNumber, localDigits } from '@/lib/format';
 import { toApiError } from '@/lib/http';
-import { addDays, fetchAvailability, todayIn, wallClock, type Availability, type AvailableDay } from '@/lib/appointments/availability';
+import { addDays, fetchAvailability, todayIn, wallClock, type Availability, type AvailabilityQuery, type AvailableDay } from '@/lib/appointments/availability';
 import { useAuthStore } from '@/stores/auth';
 
 /**
@@ -27,7 +27,13 @@ const props = withDefaults(defineProps<{
     current?: { date: string; time: string | null } | null;
     /** The first day shown (e.g. a moved appointment's own day), when not before today. */
     startOn?: string | null;
+    /** Where the free times come from (the public link has its own); the staff's API when left out. */
+    fetcher?: ((placeId: string, query: AvailabilityQuery) => Promise<Availability>) | null;
+    /** The organization's time zone when the page has no signed-in organization (the public link). */
+    timeZone?: string | null;
 }>(), {
+    fetcher: null,
+    timeZone: null,
     audience: 'staff',
     preview: false,
     selectable: false,
@@ -40,7 +46,7 @@ const { t, locale } = useI18n();
 const auth = useAuthStore();
 
 const WEEK = 7;
-const today = computed(() => todayIn(auth.tenant?.timezone));
+const today = computed(() => todayIn(props.timeZone ?? auth.tenant?.timezone));
 const lastBookable = computed(() => addDays(today.value, props.daysAhead));
 const firstDay = () => (props.startOn && props.startOn > today.value && props.startOn <= lastBookable.value ? props.startOn : today.value);
 const start = ref(firstDay());
@@ -58,7 +64,7 @@ async function load(): Promise<void> {
     loading.value = true;
     failure.value = null;
     try {
-        const answer = await fetchAvailability(props.placeId, { service: props.service, from: start.value, to: addDays(start.value, WEEK - 1), audience: props.audience, preview: props.preview, except: props.except });
+        const answer = await (props.fetcher ?? fetchAvailability)(props.placeId, { service: props.service, from: start.value, to: addDays(start.value, WEEK - 1), audience: props.audience, preview: props.preview, except: props.except });
         // An older answer (a quick change of week or kind) does not overwrite a newer one
         if (ask === asked) {
             result.value = answer;

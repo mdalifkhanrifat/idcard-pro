@@ -1822,7 +1822,10 @@
                 "codeChannels": "The code goes by",
                 "codeChannelsHint": "To the e-mail or phone on record.",
                 "codeMinutes": "Minutes a code lasts",
-                "codeAttempts": "Tries for a code"
+                "codeAttempts": "Tries for a code",
+                "link": "The public booking page",
+                "open": "Open it",
+                "linkHint": "Share this address with people (on a notice, the website, a message). It works while appointments are on and saved with the public link."
             },
             "reminders": {
                 "title": "Reminders",
@@ -2097,6 +2100,80 @@
             "previous": "Previous week",
             "next": "Next week",
             "this": "This week"
+        }
+    },
+    "publicBooking": {
+        "title": "Book an appointment",
+        "footer": "Your details are used only to check who you are and to manage your appointments with this organization.",
+        "problems": {
+            "unavailable": {
+                "title": "This booking page is not available",
+                "hint": "The organization does not take bookings here now. Please contact the office."
+            },
+            "too_many": {
+                "title": "Too many requests",
+                "hint": "Please wait a minute and try again."
+            },
+            "failed": {
+                "title": "The page could not be loaded",
+                "hint": "Please check your connection and try again."
+            }
+        },
+        "channels": {
+            "mail": "e-mail",
+            "sms": "phone (SMS)"
+        },
+        "or": " or ",
+        "identify": {
+            "title": "Who are you?",
+            "hint": "Enter your employee number to see and book your appointments.",
+            "employeeNo": "Employee number",
+            "continue": "Continue",
+            "privacy": "We check who you are before showing anything about you."
+        },
+        "verify": {
+            "code": {
+                "title": "Enter the code",
+                "hint": "If the number is on record, a code was sent to the {channels} on your record. It lasts a few minutes.",
+                "label": "Code"
+            },
+            "date_of_birth": {
+                "title": "Your date of birth",
+                "hint": "As on your record.",
+                "label": "Date of birth"
+            },
+            "national_id": {
+                "title": "Your national ID number",
+                "hint": "As on your record.",
+                "label": "National ID number"
+            },
+            "submit": "Verify",
+            "again": "Use another employee number"
+        },
+        "ended": "Your session has ended. Please prove who you are again.",
+        "home": {
+            "hello": "Hello, {name}",
+            "signOut": "Sign out",
+            "book": "Book an appointment",
+            "mine": "Your appointments",
+            "failed": "Your appointments could not be loaded.",
+            "none": "You have no appointments ahead.",
+            "for": "For"
+        },
+        "book": {
+            "title": "New appointment",
+            "myself": "Myself ({name})",
+            "forWhom": "For"
+        },
+        "move": {
+            "title": "Move appointment {number}"
+        },
+        "done": {
+            "booked": "Your appointment is booked.",
+            "pending": "Your request is sent — the office will confirm it.",
+            "moved": "Your appointment is moved.",
+            "number": "Appointment number",
+            "hint": "Show this number at the desk."
         }
     }
 }
