@@ -37,6 +37,7 @@ use Spatie\Activitylog\Support\LogOptions;
  * @property string|null $cancel_reason
  * @property Carbon|null $status_changed_at
  * @property int|null $status_changed_by_id
+ * @property AppointmentSource|null $status_changed_via which way the last step was taken (null before any)
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read AppointmentLocation $location
@@ -45,7 +46,7 @@ use Spatie\Activitylog\Support\LogOptions;
  * @property-read User|null $bookedBy
  * @property-read User|null $statusChangedBy
  */
-#[Fillable(['number', 'location_id', 'service', 'cardholder_id', 'family_member_id', 'date', 'starts_at', 'ends_at', 'status', 'source', 'booked_by_id', 'note', 'cancel_reason', 'status_changed_at', 'status_changed_by_id'])]
+#[Fillable(['number', 'location_id', 'service', 'cardholder_id', 'family_member_id', 'date', 'starts_at', 'ends_at', 'status', 'source', 'booked_by_id', 'note', 'cancel_reason', 'status_changed_at', 'status_changed_by_id', 'status_changed_via'])]
 class Appointment extends Model
 {
     /** @use HasFactory<AppointmentFactory> */
@@ -116,6 +117,7 @@ class Appointment extends Model
             'status' => AppointmentStatus::class,
             'source' => AppointmentSource::class,
             'status_changed_at' => 'datetime',
+            'status_changed_via' => AppointmentSource::class,
         ];
     }
 

@@ -2,6 +2,7 @@
 
 namespace App\Services\Appointments;
 
+use App\Enums\AppointmentSource;
 use App\Enums\AppointmentStatus;
 use App\Exceptions\BusinessRuleException;
 use App\Models\Appointment;
@@ -33,18 +34,19 @@ class AppointmentStatusService
     ) {}
 
     /**
-     * Cancel one still ahead, by those who book — or by the person themself on the public link (`$by` null).
+     * Cancel one still ahead, by those who book — or by the person themself on the public link (`$by` null,
+     * `$via` public).
      */
-    public function cancel(Appointment $appointment, ?User $by, ?string $reason = null, ?CarbonImmutable $now = null): Appointment
+    public function cancel(Appointment $appointment, ?User $by, ?string $reason = null, ?CarbonImmutable $now = null, AppointmentSource $via = AppointmentSource::Staff): Appointment
     {
-        return DB::transaction(function () use ($appointment, $by, $reason, $now): Appointment {
+        return DB::transaction(function () use ($appointment, $by, $reason, $now, $via): Appointment {
             $appointment = $this->appointments->lockForChange($appointment);
             $problem = $this->cancelProblem($appointment);
             if ($problem !== null) {
                 throw ValidationException::withMessages(['status' => $problem]);
             }
 
-            return $this->apply($appointment, AppointmentStatus::Cancelled, $by, $reason, $now);
+            return $this->apply($appointment, AppointmentStatus::Cancelled, $by, $reason, $now, via: $via);
         });
     }
 
@@ -137,7 +139,7 @@ class AppointmentStatusService
     /**
      * @param  array<string, mixed>  $times
      */
-    private function apply(Appointment $appointment, AppointmentStatus $to, ?User $by, ?string $reason, ?CarbonImmutable $now, array $times = []): Appointment
+    private function apply(Appointment $appointment, AppointmentStatus $to, ?User $by, ?string $reason, ?CarbonImmutable $now, array $times = [], AppointmentSource $via = AppointmentSource::Staff): Appointment
     {
         $this->appointments->update($appointment, [
             ...$times,
@@ -146,8 +148,9 @@ class AppointmentStatusService
             'cancel_reason' => $to === AppointmentStatus::Cancelled ? ($reason ?: null) : null,
             // Stored in UTC: a time on the organization's clock would be written as its wall-clock reading
             'status_changed_at' => ($now ?? CarbonImmutable::now())->utc(),
-            // Null: the person themself, on the public link
+            // Null: the person themself, on the public link — which `status_changed_via` says
             'status_changed_by_id' => $by?->id,
+            'status_changed_via' => $via,
         ]);
 
         return $this->appointments->withDetails($appointment);

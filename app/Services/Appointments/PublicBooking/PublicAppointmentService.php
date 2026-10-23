@@ -67,7 +67,7 @@ class PublicAppointmentService
         $appointment = $this->own($person, $id);
         $this->refuse($this->changeProblem($appointment, 'cancel'));
 
-        return $this->statuses->cancel($appointment, null, $reason);
+        return $this->statuses->cancel($appointment, null, $reason, via: AppointmentSource::Public);
     }
 
     /**

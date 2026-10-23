@@ -75,6 +75,12 @@ return [
         'public' => 'Public link',
         'api' => 'Another system',
     ],
+    // Who acts that way, for a booking or step with no user to name
+    'actors' => [
+        'staff' => 'Staff',
+        'public' => 'The person themself (public link)',
+        'api' => 'Another system (API)',
+    ],
     'booking' => [
         'not_bookable_day' => 'This day cannot be booked: it is past, or further ahead than bookings open.',
         'closed' => 'The place is closed on this day.',

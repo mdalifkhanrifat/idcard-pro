@@ -11,4 +11,12 @@ enum AppointmentSource: string
     case Staff = 'staff';
     case Public = 'public';
     case Api = 'api';
+
+    /**
+     * Who acts this way, for a booking or step with no user to name ("The person themself (public link)").
+     */
+    public function actor(): string
+    {
+        return (string) __("appointments.actors.{$this->value}");
+    }
 }

@@ -151,3 +151,25 @@ it('keeps the person\'s own changes in the organization\'s audit as done by them
     Sanctum::actingAs($otherOwner);
     expect($this->getJson('/api/v1/audit/activities?filter[log_name]=appointments')->assertOk()->json('data'))->toBe([]);
 });
+
+it('tells staff the person booked and cancelled it themself, on the page and in the report', function () {
+    $mine = ($this->book)()->json('data.id');
+    $this->postJson("{$this->url}/appointments/{$mine}/cancel", ['reason' => 'Travelling'], $this->headers)->assertOk();
+
+    Sanctum::actingAs($this->owner);
+    $themself = 'The person themself (public link)';
+    $seen = $this->getJson("/api/v1/appointments/{$mine}")->assertOk()->json('data');
+    expect($seen['source'])->toBe(['key' => 'public', 'name' => 'Public link', 'actor' => $themself])
+        ->and($seen['booked_by'])->toBeNull()
+        ->and($seen['status_changed_by'])->toBeNull()
+        ->and($seen['status_changed_via'])->toBe(['key' => 'public', 'name' => 'Public link', 'actor' => $themself]);
+    // A step staff take is theirs
+    $this->postJson("/api/v1/appointments/{$this->kims->public_id}/status", ['status' => 'cancelled'])->assertOk()
+        ->assertJsonPath('data.status_changed_by.name', 'Owner')->assertJsonPath('data.status_changed_via.key', 'staff');
+
+    $columns = 'columns[]=appointment.number&columns[]=appointment.booked_by&columns[]=appointment.status_changed_by';
+    $rows = collect($this->getJson("/api/v1/reports/appointments?filter[past]=1&{$columns}")->assertOk()->json('data'))->mapWithKeys(fn (array $row) => [$row['number'] => $row['values']]);
+    expect($rows[Appointment::query()->withoutGlobalScopes()->where('public_id', $mine)->value('number')])->toMatchArray(['appointment.booked_by' => $themself, 'appointment.status_changed_by' => $themself])
+        ->and($rows['A-26-90001'])->toMatchArray(['appointment.booked_by' => 'Staff', 'appointment.status_changed_by' => 'Owner']);
+    $this->getJson("/api/v1/appointments/{$mine}", ['Accept-Language' => 'bn'])->assertJsonPath('data.status_changed_via.actor', 'ব্যক্তি নিজে (পাবলিক লিংক)');
+});

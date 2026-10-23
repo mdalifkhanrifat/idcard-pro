@@ -13,7 +13,8 @@ export interface Appointment {
     number: string;
     /** `open` while still to be served (waiting, confirmed, came in): a finished one is only corrected. */
     status: Named & { open?: boolean };
-    source: Named;
+    /** `actor`: who books this way, named for a booking with no user (e.g. the person themself on the public link). */
+    source: Named & { actor?: string };
     location?: { id: string; name: string; name_local: string | null };
     service: Named;
     cardholder?: { id: string; name: string; name_local: string | null; employee_no: string | null };
@@ -28,6 +29,8 @@ export interface Appointment {
     booked_by?: { id: string; name: string } | null;
     status_changed_at: string | null;
     status_changed_by?: { id: string; name: string } | null;
+    /** Which way the last step was taken (as `source`); null before any. */
+    status_changed_via?: (Named & { actor?: string }) | null;
     created_at: string;
     updated_at: string;
     /** What the reader may do with it now — in answers about one appointment only, not in lists (5.5c). */

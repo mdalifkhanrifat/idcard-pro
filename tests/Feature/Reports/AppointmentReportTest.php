@@ -103,7 +103,7 @@ it('shows each appointment whole, on the organization\'s clock and in the reader
         ->and($rows[$this->one->public_id])->toMatchArray(['number' => 'A-26-00001', 'date' => '2026-10-15', 'status' => 'confirmed'])
         // A family member's: the member, the relation, the cardholder's employee number; a whole day is served in turn
         ->and($rows[$this->two->public_id]['values'])->toMatchArray(['appointment.time' => 'In turn', 'appointment.person' => 'Sam Doe', 'appointment.relation' => 'Son', 'appointment.cardholder' => 'Jane Doe',
-            'appointment.employee_no' => 'E-100', 'appointment.service' => 'Card renewal', 'appointment.source' => 'Public link', 'appointment.booked_by' => null, 'appointment.status' => 'Waiting for approval'])
+            'appointment.employee_no' => 'E-100', 'appointment.service' => 'Card renewal', 'appointment.source' => 'Public link', 'appointment.booked_by' => 'The person themself (public link)', 'appointment.status' => 'Waiting for approval'])
         ->and($rows[$this->three->public_id]['values'])->toMatchArray(['appointment.status' => 'Cancelled', 'appointment.cancel_reason' => 'Travelling',
             'appointment.status_changed_by' => $this->owner->name, 'appointment.status_changed_at' => '2026-10-09T11:00:00+06:00']);
 

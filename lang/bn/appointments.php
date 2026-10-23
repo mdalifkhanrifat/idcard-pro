@@ -75,6 +75,12 @@ return [
         'public' => 'পাবলিক লিংক',
         'api' => 'অন্য সিস্টেম',
     ],
+    // Who acts that way, for a booking or step with no user to name
+    'actors' => [
+        'staff' => 'কর্মী',
+        'public' => 'ব্যক্তি নিজে (পাবলিক লিংক)',
+        'api' => 'অন্য সিস্টেম (API)',
+    ],
     'booking' => [
         'not_bookable_day' => 'এই দিন বুক করা যায় না: দিনটা পেরিয়ে গেছে, বা বুকিং যতদিন আগে খোলে তার চেয়েও পরে।',
         'closed' => 'এই দিনে জায়গাটা বন্ধ।',
