@@ -106,8 +106,10 @@ class AppointmentBookingService
             $appointment = $this->appointments->lockForChange($appointment);
             $location = $this->locations->lockForBooking($target->id ?? $appointment->location_id);
             $appointment->loadMissing(['cardholder', 'familyMember']);
-            if (! $appointment->status->isAhead()) {
-                throw ValidationException::withMessages(['status' => $this->notAhead($appointment)]);
+            // Only a note sent: the note's own rule (it changes while appointments are off too)
+            $problem = array_diff(array_keys($data), ['note']) === [] ? $this->noteProblem($appointment) : ($appointment->status->isAhead() ? null : $this->notAhead($appointment));
+            if ($problem !== null) {
+                throw ValidationException::withMessages(['status' => $problem]);
             }
             $fixed = array_filter([
                 'service' => array_key_exists('service', $data) && $data['service'] !== $appointment->service ? 'kind_fixed' : null,
@@ -151,6 +153,15 @@ class AppointmentBookingService
             ! in_array(BookingAudience::Staff->value, $settings['booking'], true) => (string) __('appointments.availability.unavailable.not_staff'),
             default => null,
         };
+    }
+
+    /**
+     * Why an appointment's note cannot be changed now, or null (5.5c — what the page offers): only while it is
+     * still ahead; appointments being off or staff not booking do not matter, as nothing is taken.
+     */
+    public function noteProblem(Appointment $appointment): ?string
+    {
+        return $appointment->status->isAhead() ? null : (string) __('appointments.changes.cannot_note', ['status' => __("appointments.statuses.{$appointment->status->value}")]);
     }
 
     private function notAhead(Appointment $appointment): string

@@ -54,10 +54,10 @@ it('offers those who book to move and cancel, the steps only to those who manage
     $appointment = ($this->booked)();
 
     Sanctum::actingAs($this->operator);
-    expect(($this->actions)($appointment))->toBe(['move' => ['allowed' => true, 'reason' => null], 'cancel' => ['allowed' => true, 'reason' => null], 'steps' => []]);
+    expect(($this->actions)($appointment))->toBe(['move' => ['allowed' => true, 'reason' => null], 'note' => ['allowed' => true, 'reason' => null], 'cancel' => ['allowed' => true, 'reason' => null], 'steps' => []]);
 
     Sanctum::actingAs(tenantUser($this->tenant, 'Viewer'));
-    expect(($this->actions)($appointment))->toBe(['move' => null, 'cancel' => null, 'steps' => []]);
+    expect(($this->actions)($appointment))->toBe(['move' => null, 'note' => null, 'cancel' => null, 'steps' => []]);
 
     // Those who also manage: the steps — cancelling once, as `cancel`
     Sanctum::actingAs($this->owner);
@@ -75,7 +75,7 @@ it('offers those who book to move and cancel, the steps only to those who manage
     Sanctum::actingAs($manager->fresh());
     $waiting = ($this->booked)(['status' => AppointmentStatus::Pending, 'service' => 'renewal']);
     $actions = ($this->actions)($waiting);
-    expect($actions['move'])->toBeNull()->and($actions['cancel'])->toBeNull()
+    expect($actions['move'])->toBeNull()->and($actions['note'])->toBeNull()->and($actions['cancel'])->toBeNull()
         ->and($actions['steps'])->toBe([
             ['status' => ['key' => 'confirmed', 'name' => 'Confirmed'], 'label' => 'Approve', 'correction' => false, 'allowed' => true, 'reason' => null],
             ['status' => ['key' => 'cancelled', 'name' => 'Cancelled'], 'label' => 'Turn down', 'correction' => false, 'allowed' => true, 'reason' => null],
@@ -137,8 +137,9 @@ it('follows the organization\'s settings: no moving or restoring while appointme
 
     ($this->settings)(['enabled' => false]);
     $actions = ($this->actions)($appointment);
-    // Bookings left can still be cancelled and taken through their steps
+    // Bookings left can still be cancelled, noted and taken through their steps
     expect($actions['move'])->toBe(['allowed' => false, 'reason' => 'Appointments are turned off for the organization.'])
+        ->and($actions['note'])->toBe(['allowed' => true, 'reason' => null])
         ->and($actions['cancel']['allowed'])->toBeTrue()
         ->and(array_keys(($this->steps)($actions)))->toBe(['checked_in', 'no_show']);
     $restore = ($this->actions)($cancelled);
@@ -147,6 +148,26 @@ it('follows the organization\'s settings: no moving or restoring while appointme
 
     ($this->settings)(['booking' => ['public']]);
     expect(($this->actions)($appointment)['move'])->toBe(['allowed' => false, 'reason' => 'The organization\'s staff do not book appointments.']);
+});
+
+it('offers changing a note only while the appointment is ahead, as the change itself says', function () {
+    Sanctum::actingAs($this->operator);
+    $appointment = ($this->booked)();
+    $note = fn () => $this->patchJson("/api/v1/appointments/{$appointment->public_id}", ['note' => 'Bring the old card'], ['Accept-Language' => 'bn']);
+
+    // While appointments are off too: nothing is taken
+    ($this->settings)(['enabled' => false]);
+    expect(($this->actions)($appointment)['note']['allowed'])->toBeTrue();
+    $note()->assertOk()->assertJsonPath('data.note', 'Bring the old card')->assertJsonPath('data.actions.note.allowed', true);
+
+    ($this->settings)();
+    ($this->inTenant)(fn () => $appointment->forceFill(['status' => AppointmentStatus::Done])->save());
+    $offered = ($this->actions)($appointment, ['Accept-Language' => 'bn'])['note'];
+    expect($offered)->toBe(['allowed' => false, 'reason' => 'শুধু সামনের (অপেক্ষায় বা নিশ্চিত) অ্যাপয়েন্টমেন্টের নোট বদলানো যায়; এটা এখন "সম্পন্ন"।'])
+        ->and($note()->assertUnprocessable()->json('errors.status.0'))->toBe($offered['reason']);
+    // Moving it says it is moving that is refused
+    expect($this->patchJson("/api/v1/appointments/{$appointment->public_id}", ['date' => '2026-10-19', 'note' => 'x'])->assertUnprocessable()->json('errors.status.0'))
+        ->toBe('Only an appointment still ahead (waiting or confirmed) can be moved; this one is "Done".');
 });
 
 it('names every step in both languages', function () {

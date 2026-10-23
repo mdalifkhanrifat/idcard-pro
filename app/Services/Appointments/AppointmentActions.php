@@ -8,8 +8,8 @@ use App\Models\User;
 use Carbon\CarbonImmutable;
 
 /**
- * What a user may do with an appointment now (5.5c), so a page only draws the buttons: move it and cancel it
- * (appointments.book), and the steps it can take (appointments.manage) — each allowed or with the reason why
+ * What a user may do with an appointment now (5.5c), so a page only draws the buttons: move it, change its note
+ * and cancel it (appointments.book), and the steps it can take (appointments.manage) — each allowed or with the reason why
  * not, by the very checks the change itself makes (AppointmentStatusService::problem(), AppointmentBookingService::
  * moveProblem()). What the user's role never allows is left out (null, or no step), so nothing is offered that
  * could not be; cancelling is offered once — as `cancel` to those who book, else as a step to those who manage.
@@ -24,7 +24,7 @@ class AppointmentActions
     ) {}
 
     /**
-     * @return array{move: array{allowed: bool, reason: string|null}|null, cancel: array{allowed: bool, reason: string|null}|null, steps: array<int, array{status: array{key: string, name: string}, label: string, correction: bool, allowed: bool, reason: string|null}>}
+     * @return array{move: array{allowed: bool, reason: string|null}|null, note: array{allowed: bool, reason: string|null}|null, cancel: array{allowed: bool, reason: string|null}|null, steps: array<int, array{status: array{key: string, name: string}, label: string, correction: bool, allowed: bool, reason: string|null}>}
      */
     public function for(Appointment $appointment, User $user, ?CarbonImmutable $now = null): array
     {
@@ -47,6 +47,7 @@ class AppointmentActions
 
         return [
             'move' => $books ? $this->verdict($this->booking->moveProblem($appointment)) : null,
+            'note' => $books ? $this->verdict($this->booking->noteProblem($appointment)) : null,
             'cancel' => $books ? $this->verdict($this->statuses->cancelProblem($appointment)) : null,
             'steps' => $steps,
         ];
