@@ -30,7 +30,7 @@
 
 **(আ) কাজের সারি — এই ক্রমেই (৫.৫-এর পরিকল্পনা ইউজার মেনেছেন, ১৭ অক্টোবর; ৫.৫গ-র তিন ভাগের পরিকল্পনাও — পঞ্চম চ্যাট; ষষ্ঠ চ্যাটে গ-২, গ-৩ = ৫.৫গ ✅, ৫.৫ঘ ✅, ৫.৫ঙ ✅, ৫.৫চ ✅, ৫.৫ছ ✅ = **৫.৫ ✅**):**
 
-0. **শুরুতে মিলিয়ে নিন** (নিচের (ঙ)-র কমান্ড): container চালু; `git log --oneline -3` — শেষ কাজের commit ৫.৫ছ-৩-এর ছক-টেস্ট ("the access matrix covers…"), তার পরে এর docs commit; `php artisan test --compact` = **৬০৪টা**; `npm test` = **৮২টা**; নতুন মেশিনে `npm install` (নতুন `jsqr`); typecheck + build (container-এ); phpstan; নতুন মেশিনে `migrate` (পঞ্চম-ষষ্ঠ চ্যাটে নতুন migration নেই) + `app:sync-permissions` (৫১টা); `docker compose restart queue`। **dev মিলিয়ে নিন** ((চ)): audit-এর সর্বোচ্চ id **৪৫০৮**, Acme-এর `settings` md5 `d3596194…`, বুকিং/জায়গা/ছুটি/counter ০ (`devcheck.php`)। তারপর **ইউজারকে বাংলায়:** "৫.৫ পুরো শেষ (কর্মীর অ্যাপয়েন্টমেন্ট পাতা); এখন ৫.৬ — পাবলিক বুকিং" + নিচের ৬-এর **ছোট পরিকল্পনা আর প্রশ্নগুলো** (৫.৬ বড় কাজ — শুরুর আগে ইউজারের মত নিন) + (আ১)-এর খোলা প্রস্তাব মনে করানো (বিশেষ করে "ইতিহাস" — বিবরণের ডায়ালগ তৈরি, এখন সহজে বসে; আর নতুন "শেষ হওয়া বুকিংয়ে নোট")।
+0. **শুরুতে মিলিয়ে নিন** (নিচের (ঙ)-র কমান্ড): container চালু; `git log --oneline -3` — শেষ কাজের commit `b7d69af` (৫.৫ছ-৩-এর ছক-টেস্ট), তার পরে এর docs commit; `php artisan test --compact` = **৬০৪টা**; `npm test` = **৮২টা**; নতুন মেশিনে `npm install` (নতুন `jsqr`); typecheck + build (container-এ); phpstan; নতুন মেশিনে `migrate` (পঞ্চম-ষষ্ঠ চ্যাটে নতুন migration নেই) + `app:sync-permissions` (৫১টা); `docker compose restart queue`। **dev মিলিয়ে নিন** ((চ)): audit-এর সর্বোচ্চ id **৪৫০৮**, Acme-এর `settings` md5 `d3596194…`, বুকিং/জায়গা/ছুটি/counter ০ (`devcheck.php`)। তারপর **ইউজারকে বাংলায়:** "৫.৫ পুরো শেষ (কর্মীর অ্যাপয়েন্টমেন্ট পাতা); এখন ৫.৬ — পাবলিক বুকিং" + নিচের ৬-এর **ছোট পরিকল্পনা আর প্রশ্নগুলো** (৫.৬ বড় কাজ — শুরুর আগে ইউজারের মত নিন) + (আ১)-এর খোলা প্রস্তাব মনে করানো (বিশেষ করে "ইতিহাস" — বিবরণের ডায়ালগ তৈরি, এখন সহজে বসে; আর নতুন "শেষ হওয়া বুকিংয়ে নোট")।
 1. **৫.৫গ বিবরণ + অবস্থার বোতাম + বাতিল + সরানো** — তিন ভাগ, প্রতিটার আলাদা commit:
    - **গ-১ ✅ সার্ভার (`bbefe2f`, পঞ্চম চ্যাট):** একটা বুকিংয়ের প্রতিটা উত্তরে (`GET /appointments/{id}`, `POST /appointments` (২০১), `PUT|PATCH /appointments/{id}`, `POST …/cancel`, `POST …/status`) এখন **`data.actions`** — "এই ইউজার এখন কী করতে পারেন"; **তালিকায় নয়** (ভারী)। আকার:
      ```json
@@ -147,7 +147,7 @@
 **(ঙ) চালু করে মিলিয়ে নিন:**
 ```bash
 cd /var/www/php74/idcard/idcard-pro && docker compose up -d && docker compose ps --format '{{.Service}} {{.State}}'
-git log --oneline -3                                           # শেষ কাজের commit ৫.৫ছ-৩ (ছক-টেস্ট) + তার docs commit
+git log --oneline -3                                           # শেষ কাজের commit b7d69af (৫.৫ছ-৩) + তার docs commit
 docker compose exec app php artisan migrate --no-interaction   # নতুন মেশিনে (শেষ নতুন migration ১৭ অক্টোবর: notification_messages.appointment_id)
 docker compose exec app php artisan app:sync-permissions       # ৫১টা (নতুন পারমিশন শুধু Owner পায়)
 docker compose restart queue                                   # নতুন job/notification কোডের পর
