@@ -68,7 +68,8 @@ return [
         // Texts the "log" SMS driver writes instead of sending them (config/notifications.php)
         'sms' => [
             'driver' => 'daily',
-            'path' => storage_path('logs/sms.log'),
+            // Tests write theirs elsewhere (phpunit.xml), never into the running app's log
+            'path' => env('SMS_LOG_PATH', storage_path('logs/sms.log')),
             'level' => 'info',
             'days' => env('SMS_LOG_DAYS', 30),
             'replace_placeholders' => true,
