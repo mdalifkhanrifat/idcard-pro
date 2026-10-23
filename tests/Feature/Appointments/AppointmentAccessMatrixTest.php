@@ -131,7 +131,7 @@ it('takes back a place and a closure as it answered them, changing nothing', fun
  */
 function bookingCalls(object $test): array
 {
-    $holder = fn (): Cardholder => ($test->inTenant)(fn () => Cardholder::factory()->create(['tenant_id' => $test->tenant->id]));
+    $holder = fn (array $values = []): Cardholder => ($test->inTenant)(fn () => Cardholder::factory()->create(['tenant_id' => $test->tenant->id, ...$values]));
     $booking = fn (AppointmentStatus $status = AppointmentStatus::Confirmed): string => ($test->inTenant)(fn () => Appointment::factory()->at('2026-10-18', '2026-10-18 04:00:00', 30)->status($status)->create([
         'tenant_id' => $test->tenant->id, 'location_id' => $test->place->id, 'cardholder_id' => $holder()->id,
     ]))->public_id;
@@ -143,6 +143,11 @@ function bookingCalls(object $test): array
         'move a booking' => ['PATCH', '/api/v1/appointments/'.$booking(), ['time' => '11:00'], 'appointments.book'],
         'cancel a booking' => ['POST', '/api/v1/appointments/'.$booking().'/cancel', ['reason' => 'Check'], 'appointments.book'],
         'approve a booking' => ['POST', '/api/v1/appointments/'.$booking(AppointmentStatus::Pending).'/status', ['status' => 'confirmed'], 'appointments.manage'],
+        // 5.5: finding people to book for, counting by day, free times as for moving one, finding one by its number
+        'find people' => ['GET', '/api/v1/appointments/people?search='.$holder(['full_name' => 'Matrix Person'])->full_name, [], 'appointments.book'],
+        'count by day' => ['GET', '/api/v1/appointments/summary?filter[from]=2026-10-16&filter[to]=2026-10-22', [], 'appointments.view'],
+        'free times to move' => ['GET', "/api/v1/appointment-locations/{$test->place->public_id}/availability?service=new_card&except=".$booking(), [], 'appointments.book'],
+        'find by number' => ['GET', '/api/v1/appointments?filter[number]=A-26-00001', [], 'appointments.view'],
     ];
 }
 
@@ -190,7 +195,8 @@ it('keeps another organization\'s bookings out of reach', function () {
     foreach ($calls as $call => [$method, $path, $body]) {
         $status = $this->json($method, $path, $body)->status();
         match ($call) {
-            'list bookings' => expect($this->getJson($path)->json('data'))->toBe([]),
+            'list bookings', 'find people', 'find by number' => expect($this->getJson($path)->json('data'))->toBe([], $call),
+            'count by day' => expect(array_sum(array_column($this->getJson($path)->json('data.days'), 'total')))->toBe(0),
             // This organization's place and person are not the other's to book
             'book' => expect($status)->toBe(422, $call),
             default => expect($status)->toBe(404, $call),
