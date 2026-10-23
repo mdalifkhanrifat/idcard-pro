@@ -109,7 +109,7 @@ class ReportExportService
             description: (string) __("reports.descriptions.{$report->key()}"),
             logo: $this->logo($tenant?->logo_path),
             filters: $this->summary->describe($report, $query),
-            totals: array_map(fn (string $key) => ['label' => (string) __("reports.totals.{$key}"), 'value' => (int) ($totals[$key] ?? 0)], $report->totalKeys()),
+            totals: array_map(fn (string $key) => ['label' => ReportService::totalLabel($report, $key), 'value' => (int) ($totals[$key] ?? 0)], $report->totalKeys()),
             locale: app()->getLocale(),
             timezone: $timezone,
             color: $tenant?->primary_color ?: '#0f766e',

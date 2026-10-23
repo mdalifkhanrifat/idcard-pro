@@ -8,6 +8,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\LazyCollection;
 
 /**
  * Appointments (5.4).
@@ -55,6 +56,20 @@ interface AppointmentRepositoryInterface extends RepositoryInterface
      * @return Builder<Appointment>
      */
     public function criteria(AppointmentFilter $filter): Builder;
+
+    /**
+     * Every row of the list's criteria in its order, with what a report shows (for downloads).
+     *
+     * @return LazyCollection<int, Appointment>
+     */
+    public function reportRows(AppointmentFilter $filter): LazyCollection;
+
+    /**
+     * Counts over the list's criteria: every appointment and those of each status (`status_<key>`).
+     *
+     * @return array<string, int>
+     */
+    public function reportTotals(AppointmentFilter $filter): array;
 
     /**
      * Open bookings (AppointmentStatus::open()) a person holds for a kind of visit: the cardholder's own, or —

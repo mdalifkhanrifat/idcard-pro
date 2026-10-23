@@ -63,7 +63,8 @@ interface Report
     public function defaultSort(): string;
 
     /**
-     * Keys of the totals the report counts over every page (labels: reports.totals.<key>).
+     * Keys of the totals the report counts over every page (labels: reports.totals.<key>, or the report's own —
+     * NamesTotals).
      *
      * @return array<int, string>
      */

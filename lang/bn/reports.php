@@ -16,6 +16,7 @@ return [
         'audit_changes' => 'অডিট লগ: পরিবর্তন',
         'audit_logins' => 'অডিট লগ: লগইন',
         'notification_messages' => 'পাঠানো বার্তা',
+        'appointments' => 'অ্যাপয়েন্টমেন্ট',
     ],
     'descriptions' => [
         'card_prints' => 'প্রতিটা কার্ডের প্রতিবার ছাপা: কবে, কে, কীভাবে আর কয় কপি।',
@@ -32,6 +33,7 @@ return [
         'audit_changes' => 'কে কখন কী বদলেছেন, কী বদলেছে কথায়সহ — অডিট পাতা যেভাবে খোঁজে।',
         'audit_logins' => 'লগইন, ব্যর্থতা আর লক: কে, কোন ঠিকানা থেকে, কখন।',
         'notification_messages' => 'প্রতিষ্ঠান যত ইমেইল, SMS আর অন্য বার্তা পাঠিয়েছে বা পাঠাতে চেয়েছে: কাকে, কী বিষয়ে, কেমন গেল আর কেন, নোটিফিকেশনের লগ যেমন দেখায়।',
+        'appointments' => 'কে কখন কোথায় আসার জন্য বুক করেছেন, প্রতিটা বুকিং কোন অবস্থায় আর কে বুক করেছেন — অ্যাপয়েন্টমেন্টের তালিকা যেভাবে খুঁজে পায়।',
     ],
     'groups' => [
         'print' => 'ছাপা',
@@ -50,6 +52,8 @@ return [
         'login' => 'লগইন',
         'message' => 'বার্তা',
         'recipient' => 'প্রাপক',
+        'appointment' => 'অ্যাপয়েন্টমেন্ট',
+        'person' => 'ব্যক্তি',
     ],
     'columns' => [
         'printed_at' => 'ছাপার সময়',
@@ -189,6 +193,23 @@ return [
         'message.failed_at' => 'ব্যর্থ হওয়ার সময়',
         'message.subject' => 'ইমেইলের বিষয়',
         'message.body' => 'লেখা',
+        'appointment.date' => 'তারিখ',
+        'appointment.time' => 'সময়',
+        'appointment.number' => 'অ্যাপয়েন্টমেন্ট নম্বর',
+        'appointment.person' => 'ব্যক্তি',
+        'appointment.relation' => 'সম্পর্ক (পরিবারের সদস্য)',
+        'appointment.cardholder' => 'কার্ডধারী',
+        'appointment.employee_no' => 'কর্মী নম্বর',
+        'appointment.service' => 'কাজের ধরন',
+        'appointment.location' => 'জায়গা',
+        'appointment.status' => 'অবস্থা',
+        'appointment.source' => 'বুকিংয়ের পথ',
+        'appointment.booked_by' => 'বুক করেছেন',
+        'appointment.created_at' => 'বুকিংয়ের সময়',
+        'appointment.status_changed_by' => 'শেষ ধাপ নিয়েছেন',
+        'appointment.status_changed_at' => 'শেষ ধাপের সময়',
+        'appointment.note' => 'নোট',
+        'appointment.cancel_reason' => 'বাতিলের কারণ',
     ],
     'fields' => [
         'full_name' => 'পূর্ণ নাম',
@@ -282,6 +303,12 @@ return [
         'on_or_before' => 'যেদিন পর্যন্ত',
         'search_messages' => 'ঠিকানা, বিষয়, নাম, কর্মী বা কার্ড নম্বর',
         'cardholder' => 'কার্ডধারী',
+        'search_appointments' => 'নম্বর, নাম বা কর্মী নম্বর',
+        'days' => 'দিন',
+        'day_choices' => [
+            'upcoming' => 'আজ থেকে',
+            'all' => 'আগের দিনসহ',
+        ],
     ],
     'totals' => [
         'prints' => 'মোট ছাপা',
@@ -312,6 +339,7 @@ return [
         'sent' => 'পাঠানো',
         'failed' => 'ব্যর্থ',
         'skipped' => 'পাঠানো হয়নি',
+        'appointments' => 'অ্যাপয়েন্টমেন্ট',
     ],
     'pdf' => [
         'generated' => ':when-এ বানিয়েছেন :who',
@@ -408,6 +436,7 @@ return [
             'resent' => 'আবার পাঠানো',
             'test_sent' => 'পরীক্ষার বার্তা',
         ],
+        'in_turn' => 'আসার ক্রমে',
     ],
     // The master data lists (config master_data.types), named as the master data page names them
     'master_data_types' => [

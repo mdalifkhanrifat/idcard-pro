@@ -1,5 +1,6 @@
 <?php
 
+use App\Services\Reports\Definitions\AppointmentReport;
 use App\Services\Reports\Definitions\AuditChangeReport;
 use App\Services\Reports\Definitions\CardholderReport;
 use App\Services\Reports\Definitions\CardPrintReport;
@@ -60,6 +61,7 @@ return [
         'audit_logins' => LoginEventReport::class,
         // Sent messages (e-mail, SMS…) as the notifications log finds them
         'notification_messages' => NotificationMessageReport::class,
+        'appointments' => AppointmentReport::class,
     ],
 
     /*

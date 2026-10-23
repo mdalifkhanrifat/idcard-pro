@@ -108,7 +108,7 @@ class ReportService
             'filters' => array_map(fn (ReportFilterField $field) => $field->toArray(), $report->filters()),
             'sorts' => $report->sorts(),
             'default_sort' => $report->defaultSort(),
-            'totals' => array_map(fn (string $key) => ['key' => $key, 'label' => (string) __("reports.totals.{$key}")], $report->totalKeys()),
+            'totals' => array_map(fn (string $key) => ['key' => $key, 'label' => self::totalLabel($report, $key)], $report->totalKeys()),
             'formats' => $canExport ? $this->exports->formats() : [],
             'max_export_rows' => $canExport ? $this->exports->maxRows() : null,
             // Rows one file may hold per format (a PDF holds fewer)
@@ -116,5 +116,13 @@ class ReportService
             // Columns one file may show per format, where limited (a PDF must stay readable on paper)
             'format_column_limits' => $canExport ? $this->exports->columnLimits() : [],
         ];
+    }
+
+    /**
+     * A total's name: the report's own (NamesTotals), else reports.totals.<key>.
+     */
+    public static function totalLabel(Report $report, string $key): string
+    {
+        return ($report instanceof NamesTotals ? $report->totalLabel($key) : null) ?? (string) __("reports.totals.{$key}");
     }
 }

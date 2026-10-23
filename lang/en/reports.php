@@ -16,6 +16,7 @@ return [
         'audit_changes' => 'Audit log: changes',
         'audit_logins' => 'Audit log: sign-ins',
         'notification_messages' => 'Sent messages',
+        'appointments' => 'Appointments',
     ],
     'descriptions' => [
         'card_prints' => 'Every printing of every card: when, by whom, how and how many copies.',
@@ -32,6 +33,7 @@ return [
         'audit_changes' => 'Who changed what and when, with what changed in words, as the audit page finds it.',
         'audit_logins' => 'Sign-ins, failures and lockouts: who, from which address and when.',
         'notification_messages' => 'Every e-mail, SMS and other message the organization sent or tried to send: to whom, about what, how it went and why, as the notifications log finds them.',
+        'appointments' => 'Who is booked to come, when and where, how each booking stands and who booked it — as the Appointments list finds them.',
     ],
     'groups' => [
         'print' => 'Printing',
@@ -50,6 +52,8 @@ return [
         'login' => 'Sign-in',
         'message' => 'Message',
         'recipient' => 'Recipient',
+        'appointment' => 'Appointment',
+        'person' => 'Person',
     ],
     'columns' => [
         'printed_at' => 'Printed at',
@@ -189,6 +193,23 @@ return [
         'message.failed_at' => 'Failed at',
         'message.subject' => 'E-mail subject',
         'message.body' => 'Text',
+        'appointment.date' => 'Date',
+        'appointment.time' => 'Time',
+        'appointment.number' => 'Appointment no',
+        'appointment.person' => 'Person',
+        'appointment.relation' => 'Relation (family member)',
+        'appointment.cardholder' => 'Cardholder',
+        'appointment.employee_no' => 'Employee no',
+        'appointment.service' => 'Kind of visit',
+        'appointment.location' => 'Place',
+        'appointment.status' => 'Status',
+        'appointment.source' => 'Booked through',
+        'appointment.booked_by' => 'Booked by',
+        'appointment.created_at' => 'Booked at',
+        'appointment.status_changed_by' => 'Last step by',
+        'appointment.status_changed_at' => 'Last step at',
+        'appointment.note' => 'Note',
+        'appointment.cancel_reason' => 'Why called off',
     ],
     'fields' => [
         'full_name' => 'Full name',
@@ -282,6 +303,12 @@ return [
         'on_or_before' => 'On or before',
         'search_messages' => 'Address, subject, name, employee or card number',
         'cardholder' => 'Cardholder',
+        'search_appointments' => 'Number, name or employee no',
+        'days' => 'Days',
+        'day_choices' => [
+            'upcoming' => 'From today on',
+            'all' => 'Past days too',
+        ],
     ],
     'totals' => [
         'prints' => 'Printings',
@@ -312,6 +339,7 @@ return [
         'sent' => 'Sent',
         'failed' => 'Failed',
         'skipped' => 'Not sent',
+        'appointments' => 'Appointments',
     ],
     'pdf' => [
         'generated' => 'Made :when by :who',
@@ -408,6 +436,7 @@ return [
             'resent' => 'Sent again',
             'test_sent' => 'Test message',
         ],
+        'in_turn' => 'In turn',
     ],
     // The master data lists (config master_data.types), named as the master data page names them
     'master_data_types' => [

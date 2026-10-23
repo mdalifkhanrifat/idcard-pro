@@ -15,6 +15,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
+use Illuminate\Support\LazyCollection;
 
 /**
  * @extends EloquentRepository<Appointment>
@@ -37,6 +38,22 @@ class AppointmentRepository extends EloquentRepository implements AppointmentRep
             ->with(self::LIST_RELATIONS)
             ->paginate(ListPage::clamp($filter->perPage))
             ->withQueryString();
+    }
+
+    public function reportRows(AppointmentFilter $filter): LazyCollection
+    {
+        return $this->ordered($filter)->with([...self::LIST_RELATIONS, 'statusChangedBy'])->lazy(500);
+    }
+
+    public function reportTotals(AppointmentFilter $filter): array
+    {
+        $statuses = AppointmentStatus::cases();
+        // Only the criteria and plain counts (MySQL's only_full_group_by): one sum per status, as the enum has them
+        $totals = (array) $this->criteria($filter)->toBase()
+            ->selectRaw(implode(', ', ['count(*) as appointments', ...array_map(fn (AppointmentStatus $status) => "coalesce(sum(case when status = ? then 1 else 0 end), 0) as status_{$status->value}", $statuses)]), array_map(fn (AppointmentStatus $status) => $status->value, $statuses))
+            ->first();
+
+        return ['appointments' => (int) ($totals['appointments'] ?? 0), ...collect($statuses)->mapWithKeys(fn (AppointmentStatus $status) => ["status_{$status->value}" => (int) ($totals["status_{$status->value}"] ?? 0)])->all()];
     }
 
     public function withDetails(Appointment $appointment): Appointment
