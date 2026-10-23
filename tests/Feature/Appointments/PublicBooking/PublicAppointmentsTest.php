@@ -119,3 +119,35 @@ it('lets staff of an organization that also books through them see the public bo
     $this->getJson("/api/v1/appointments/{$mine}")->assertOk()->assertJsonPath('data.source.key', 'public')->assertJsonPath('data.booked_by', null)
         ->assertJsonPath('data.status.key', AppointmentStatus::Confirmed->value);
 });
+
+it('keeps the person\'s own changes in the organization\'s audit as done by them, and only there', function () {
+    $mine = ($this->book)()->assertCreated()->json('data.id');
+    $this->patchJson("{$this->url}/appointments/{$mine}", ['date' => '2026-10-18', 'time' => '11:00'], $this->headers)->assertOk();
+    $this->postJson("{$this->url}/appointments/{$mine}/cancel", [], $this->headers)->assertOk();
+
+    Sanctum::actingAs($this->owner);
+    // A user and a cardholder with the same id are two people
+    expect($this->owner->id)->toBe($this->kim->id - 1)->and($this->jane->id)->toBe($this->owner->id);
+    $this->postJson("/api/v1/appointments/{$this->kims->public_id}/status", ['status' => 'cancelled'])->assertOk();
+
+    $rows = $this->getJson('/api/v1/audit/activities?filter[log_name]=appointments')->assertOk()->json('data');
+    expect(array_column($rows, 'event'))->toBe(['updated', 'updated', 'updated', 'created'])
+        ->and(array_column($rows, 'causer'))->toBe([
+            ['kind' => 'user', 'name' => 'Owner', 'email' => 'owner@example.com'],
+            ...array_fill(0, 3, ['kind' => 'cardholder', 'name' => 'Jane Doe', 'email' => null, 'employee_no' => 'E-100']),
+        ]);
+    $this->getJson('/api/v1/reports/audit-changes?filter[log_name]=appointments&columns[]=audit.who&columns[]=audit.who_email')
+        ->assertJsonPath('meta.totals', ['changes' => 4, 'people' => 2])
+        ->assertJsonPath('data.1.values', ['audit.who' => 'Jane Doe (cardholder, themself; employee no. E-100)', 'audit.who_email' => null]);
+    $this->getJson('/api/v1/reports/audit-changes?filter[log_name]=appointments&columns[]=audit.who', ['Accept-Language' => 'bn'])
+        ->assertJsonPath('data.3.values', ['audit.who' => 'Jane Doe (কার্ডধারী নিজে; কর্মী নম্বর E-100)']);
+
+    // A cardholder with no employee number on record (one signs in by it, so only if it was removed since)
+    $this->jane->forceFill(['employee_no' => null])->saveQuietly();
+    $this->getJson('/api/v1/reports/audit-changes?filter[log_name]=appointments&columns[]=audit.who')->assertJsonPath('data.1.values', ['audit.who' => 'Jane Doe (cardholder, themself)']);
+    expect($this->getJson('/api/v1/audit/activities?filter[log_name]=appointments')->json('data.1.causer'))->toBe(['kind' => 'cardholder', 'name' => 'Jane Doe', 'email' => null, 'employee_no' => null]);
+
+    [, $otherOwner] = tenantWithOwner('globex', 'owner@globex.test');
+    Sanctum::actingAs($otherOwner);
+    expect($this->getJson('/api/v1/audit/activities?filter[log_name]=appointments')->assertOk()->json('data'))->toBe([]);
+});

@@ -6,6 +6,7 @@ use App\Data\Audit\ActivityFilter;
 use App\Data\Reports\ReportColumn;
 use App\Data\Reports\ReportFilterField;
 use App\Data\Reports\ReportQuery;
+use App\Models\Cardholder;
 use App\Models\User;
 use App\Repositories\Contracts\ActivityRepositoryInterface;
 use App\Services\Reports\Concerns\DescribesColumns;
@@ -45,8 +46,8 @@ class AuditChangeReport implements Report
 
         return [
             ...$column('audit.when', ReportColumn::DATETIME, fn (Activity $activity) => $activity->created_at?->setTimezone($timezone)),
-            ...$column('audit.who', ReportColumn::TEXT, fn (Activity $activity) => $activity->causer?->getAttribute('name') ?? (string) __('reports.values.system')),
-            ...$column('audit.who_email', ReportColumn::TEXT, fn (Activity $activity) => $activity->causer?->getAttribute('email')),
+            ...$column('audit.who', ReportColumn::TEXT, fn (Activity $activity) => $this->who($activity)),
+            ...$column('audit.who_email', ReportColumn::TEXT, fn (Activity $activity) => $activity->causer instanceof User ? $activity->causer->email : null),
             ...$column('audit.module', ReportColumn::TEXT, fn (Activity $activity) => $this->label('audit_logs', $activity->log_name)),
             ...$column('audit.event', ReportColumn::TEXT, fn (Activity $activity) => $this->label('audit_events', $activity->event)),
             ...$column('audit.subject', ReportColumn::TEXT, fn (Activity $activity) => $activity->subject_type ? class_basename($activity->subject_type) : null),
@@ -119,6 +120,20 @@ class AuditChangeReport implements Report
     private function filter(ReportQuery $query): ActivityFilter
     {
         return ActivityFilter::fromArray($query->input());
+    }
+
+    /**
+     * A user by name, a cardholder acting for themself (public booking) by name and employee number, else the system.
+     */
+    private function who(Activity $activity): string
+    {
+        $causer = $activity->causer;
+
+        return match (true) {
+            $causer instanceof Cardholder => (string) __($causer->employee_no ? 'reports.values.cardholder_self_numbered' : 'reports.values.cardholder_self', ['name' => $causer->full_name, 'number' => $causer->employee_no]),
+            $causer !== null => (string) $causer->getAttribute('name'),
+            default => (string) __('reports.values.system'),
+        };
     }
 
     private function label(string $group, ?string $value): ?string

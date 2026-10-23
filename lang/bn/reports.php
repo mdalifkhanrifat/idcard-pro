@@ -389,6 +389,8 @@ return [
             'horizontal' => 'অনুভূমিক',
             'vertical' => 'উল্লম্ব',
         ],
+        'cardholder_self' => ':name (কার্ডধারী নিজে)',
+        'cardholder_self_numbered' => ':name (কার্ডধারী নিজে; কর্মী নম্বর :number)',
         'system' => 'সিস্টেম',
         'recipient_types' => [
             'cardholder' => 'কার্ডধারী',

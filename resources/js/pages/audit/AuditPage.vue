@@ -19,7 +19,8 @@ interface ActivityRow {
     log_name: string;
     event: string;
     subject_type: string;
-    causer: { name: string; email: string } | null;
+    /** A user, or a cardholder acting for themself on the public booking link (5.6); null for the system. */
+    causer: { kind: 'user' | 'cardholder'; name: string | null; email: string | null; employee_no?: string | null } | null;
     /** Field changes, or what an event recorded (e.g. requirements_overridden: moment, reason, requirements). */
     changes: { attributes?: Record<string, unknown>; old?: Record<string, unknown>; reason?: string; moment?: string; report?: string; format?: string; rows?: number; print?: boolean; messages?: number; days?: number; address?: string } | null;
     created_at: string;
@@ -104,7 +105,11 @@ const loginReportQuery = computed(() => Object.fromEntries(Object.entries(logins
                     <li v-for="row in activities.rows.value" :key="row.id" class="flex flex-col gap-1 px-5 py-3 text-sm sm:flex-row sm:items-center sm:gap-4">
                         <UiBadge :tone="tone(row.event) ?? 'neutral'" class="w-fit">{{ eventLabel(row.event) }}</UiBadge>
                         <div class="min-w-0 flex-1">
-                            <p class="text-fg"><span class="font-medium">{{ row.causer?.name ?? t('audit.system') }}</span><template v-if="row.log_name || row.subject_type"> · {{ logLabel(row.log_name ?? '', row.subject_type) }}</template></p>
+                            <p class="break-words text-fg">
+                                <span class="font-medium">{{ row.causer?.name ?? t('audit.system') }}</span>
+                                <span v-if="row.causer?.kind === 'cardholder'" class="text-muted" data-audit-cardholder> ({{ t('audit.cardholderSelf') }}<template v-if="row.causer.employee_no"> · {{ row.causer.employee_no }}</template>)</span>
+                                <template v-if="row.log_name || row.subject_type"> · {{ logLabel(row.log_name ?? '', row.subject_type) }}</template>
+                            </p>
                             <p v-if="changedFields(row).length" class="truncate text-xs text-muted">{{ changedFields(row).join(', ') }}</p>
                             <p v-if="row.event === 'exported' && row.changes?.report" class="text-xs text-muted" data-audit-export>
                                 {{ t('audit.exportDetail', { report: reportName(row.changes.report), format: (row.changes.format ?? '').toUpperCase() + (row.changes.print ? ` (${t('audit.printed')})` : ''), rows: n(row.changes.rows ?? 0) }) }}

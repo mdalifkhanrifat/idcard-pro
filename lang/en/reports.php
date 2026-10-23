@@ -389,6 +389,8 @@ return [
             'horizontal' => 'Horizontal',
             'vertical' => 'Vertical',
         ],
+        'cardholder_self' => ':name (cardholder, themself)',
+        'cardholder_self_numbered' => ':name (cardholder, themself; employee no. :number)',
         'system' => 'System',
         'recipient_types' => [
             'cardholder' => 'Cardholder',
