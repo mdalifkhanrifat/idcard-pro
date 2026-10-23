@@ -1,4 +1,4 @@
-import { wallClock } from '@/lib/appointments/availability';
+import { addDays, wallClock } from '@/lib/appointments/availability';
 import { http } from '@/lib/http';
 
 /** A name from the server in the reader's language, with its key (statuses, sources, kinds of visit). */
@@ -137,13 +137,19 @@ export interface AppointmentListOptions {
     services: Named[];
 }
 
-/** Which days the list shows: one day, from the organization's today on, or every day. */
-export type AppointmentScope = 'day' | 'upcoming' | 'all';
+/** Which days the list shows: one day, a week (seven days from one), from the organization's today on, or every day. */
+export type AppointmentScope = 'day' | 'week' | 'upcoming' | 'all';
+
+/** Days a week view shows, from its first. */
+export const WEEK_DAYS = 7;
 
 /** The list's date filters as the scope reads them. */
 export function scopeOf(filters: { from: string; to: string; past: string }): AppointmentScope {
     if (filters.from !== '' && filters.from === filters.to) {
         return 'day';
+    }
+    if (filters.from !== '' && filters.to !== '') {
+        return 'week';
     }
 
     return filters.past === '1' ? 'all' : 'upcoming';
@@ -151,11 +157,14 @@ export function scopeOf(filters: { from: string; to: string; past: string }): Ap
 
 /**
  * The date filters for a scope — each with a value, so the link (and a reload) keeps it: a day from and to
- * itself, "upcoming" from `today` on, "all" every day (past=1).
+ * itself, a week from `day` for seven days, "upcoming" from `today` on, "all" every day (past=1).
  */
 export function filtersFor(scope: AppointmentScope, day: string, today: string): { from: string; to: string; past: string } {
     if (scope === 'day') {
         return { from: day, to: day, past: '' };
+    }
+    if (scope === 'week') {
+        return { from: day, to: addDays(day, WEEK_DAYS - 1), past: '' };
     }
 
     return scope === 'all' ? { from: '', to: '', past: '1' } : { from: today, to: '', past: '' };
@@ -220,4 +229,18 @@ export async function findByNumber(number: string): Promise<Appointment | null> 
     const { data } = await http.get<{ data: Appointment[] }>('/appointments', { params: { 'filter[number]': number.trim(), per_page: 10 } });
 
     return data.data[0] ?? null;
+}
+
+/** A day's appointments counted by status (GET /appointments/summary). */
+export interface DaySummary {
+    date: string;
+    total: number;
+    statuses: Record<string, number>;
+}
+
+/** Appointments counted by day and status under the list's criteria (`filter[from]` and `filter[to]` needed). */
+export async function fetchSummary(params: Record<string, string>): Promise<{ days: DaySummary[]; statuses: Named[] }> {
+    const { data } = await http.get<{ data: { days: DaySummary[] }; meta: { statuses: Named[] } }>('/appointments/summary', { params });
+
+    return { days: data.data.days, statuses: data.meta.statuses };
 }

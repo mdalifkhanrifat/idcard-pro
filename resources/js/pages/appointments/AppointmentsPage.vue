@@ -12,13 +12,14 @@ import UiSelect from '@/components/ui/UiSelect.vue';
 import { useListQuery, type PageMeta } from '@/composables/useListQuery';
 import { useUrlOpen } from '@/composables/useUrlOpen';
 import { addDays, todayIn } from '@/lib/appointments/availability';
-import { filtersFor, namesDays, scopeOf, type Appointment, type AppointmentListOptions, type AppointmentScope } from '@/lib/appointments/bookings';
+import { filtersFor, namesDays, scopeOf, WEEK_DAYS, type Appointment, type AppointmentListOptions, type AppointmentScope } from '@/lib/appointments/bookings';
 import { fetchPlaces, type AppointmentPlace } from '@/lib/appointments/places';
 import { formatLongDate, formatNumber } from '@/lib/format';
 import AppointmentBookDialog from '@/pages/appointments/AppointmentBookDialog.vue';
 import AppointmentCheckIn from '@/pages/appointments/AppointmentCheckIn.vue';
 import AppointmentDetailDialog from '@/pages/appointments/AppointmentDetailDialog.vue';
 import AppointmentRow from '@/pages/appointments/AppointmentRow.vue';
+import AppointmentWeekSummary from '@/pages/appointments/AppointmentWeekSummary.vue';
 import ReportDownloads from '@/pages/reports/ReportDownloads.vue';
 import { useAuthStore } from '@/stores/auth';
 
@@ -53,7 +54,7 @@ const scope = computed<AppointmentScope>({
         list.sort.value = value === 'all' ? '-date' : 'date';
     },
 });
-const scopes = computed(() => (['day', 'upcoming', 'all'] as const).map((value) => ({ value, label: t(`appointments.list.scopes.${value}`) })));
+const scopes = computed(() => (['day', 'week', 'upcoming', 'all'] as const).map((value) => ({ value, label: t(`appointments.list.scopes.${value}`) })));
 const day = computed(() => list.filters.from);
 function goTo(next: string): void {
     if (next) {
@@ -61,6 +62,21 @@ function goTo(next: string): void {
     }
 }
 const dayLabel = computed(() => formatLongDate(day.value));
+/** A week: seven days from its first, moved a week at a time. */
+function weekFrom(first: string): void {
+    if (first) {
+        Object.assign(list.filters, filtersFor('week', first, today));
+    }
+}
+const weekLabel = computed(() => `${formatLongDate(list.filters.from)} – ${formatLongDate(list.filters.to)}`);
+/** The week's counts under the list's criteria. */
+const summaryParams = computed(() => list.queryParams());
+const week = ref<InstanceType<typeof AppointmentWeekSummary> | null>(null);
+/** Reload the list and, in a week, its counts (after a change, a booking, a refresh). */
+function reload(): void {
+    list.load();
+    week.value?.reload();
+}
 
 const choices = (named: { key: string; name: string }[] | undefined) => (named ?? []).map((item) => ({ value: item.key, label: item.name }));
 const placeChoices = computed(() => places.value.map((place) => ({ value: place.id, label: place.name })));
@@ -92,7 +108,7 @@ function booked(appointment: Appointment): void {
     if (scope.value === 'day' && day.value !== appointment.date) {
         goTo(appointment.date);
     } else {
-        list.load();
+        reload();
     }
 }
 /** The appointment open in its details, kept in the link (?open=). */
@@ -148,6 +164,12 @@ function found(appointment: Appointment): void {
                             @click="scope = option.value"
                         >{{ option.label }}</button>
                     </div>
+                    <div v-if="scope === 'week'" class="flex flex-wrap items-center gap-2" data-week-nav>
+                        <UiButton variant="secondary" size="sm" :aria-label="t('appointments.week.previous')" data-previous-week @click="weekFrom(addDays(list.filters.from, -WEEK_DAYS))"><ChevronLeft class="size-4" /></UiButton>
+                        <input :value="list.filters.from" type="date" class="rounded-lg border border-line bg-surface px-2.5 py-1.5 text-sm text-fg" :aria-label="t('appointments.list.day')" data-week-start @change="weekFrom(($event.target as HTMLInputElement).value)" />
+                        <UiButton variant="secondary" size="sm" :aria-label="t('appointments.week.next')" data-next-week @click="weekFrom(addDays(list.filters.from, WEEK_DAYS))"><ChevronRight class="size-4" /></UiButton>
+                        <UiButton v-if="list.filters.from !== today" variant="ghost" size="sm" data-this-week @click="weekFrom(today)">{{ t('appointments.week.this') }}</UiButton>
+                    </div>
                     <div v-if="scope === 'day'" class="flex flex-wrap items-center gap-2" data-day-nav>
                         <UiButton variant="secondary" size="sm" :aria-label="t('appointments.list.previousDay')" data-previous-day @click="goTo(addDays(day, -1))"><ChevronLeft class="size-4" /></UiButton>
                         <input :value="day" type="date" class="rounded-lg border border-line bg-surface px-2.5 py-1.5 text-sm text-fg" :aria-label="t('appointments.list.day')" data-day @change="goTo(($event.target as HTMLInputElement).value)" />
@@ -155,6 +177,7 @@ function found(appointment: Appointment): void {
                         <UiButton v-if="day !== today" variant="ghost" size="sm" data-today @click="goTo(today)">{{ t('appointments.list.today') }}</UiButton>
                     </div>
                 </div>
+                <p v-if="scope === 'week'" class="text-sm font-medium break-words text-fg" data-week-label>{{ weekLabel }}</p>
                 <p v-if="scope === 'day'" class="text-sm font-medium text-fg" data-day-label>
                     {{ dayLabel }}<span v-if="day === today" class="ml-2 text-xs font-normal text-muted">{{ t('appointments.list.today') }}</span>
                 </p>
@@ -172,13 +195,14 @@ function found(appointment: Appointment): void {
                     </div>
                     <div class="flex flex-wrap items-end gap-2 sm:col-span-2 lg:col-span-4 lg:justify-end">
                         <UiButton v-if="filtered" variant="ghost" size="sm" @click="resetOthers()">{{ t('common.reset') }}</UiButton>
-                        <UiButton variant="secondary" size="sm" :loading="list.loading.value" data-refresh @click="list.load()"><RefreshCw class="size-4" />{{ t('appointments.list.refresh') }}</UiButton>
+                        <UiButton variant="secondary" size="sm" :loading="list.loading.value" data-refresh @click="reload()"><RefreshCw class="size-4" />{{ t('appointments.list.refresh') }}</UiButton>
                         <!-- The list is the "Appointments" report: its downloads hold these rows (the days shown too) -->
                         <ReportDownloads v-if="auth.can('reports.view')" report-key="appointments" variant="menu" :params="list.queryParams" :total="list.meta.value.total" />
                     </div>
                 </div>
             </div>
 
+            <AppointmentWeekSummary v-if="scope === 'week'" ref="week" :params="summaryParams" :today="today" @pick="goTo" />
             <ul class="divide-y divide-line" :class="list.loading.value && 'opacity-50'">
                 <li v-for="row in list.rows.value" :key="row.id" :data-row="row.number">
                     <AppointmentRow :row="row" :show-date="scope !== 'day'" :show-place="manyPlaces" :active="opened === row.id" @open="opened = row.id" />
@@ -197,6 +221,6 @@ function found(appointment: Appointment): void {
         </div>
 
         <AppointmentBookDialog v-if="canBook" v-model:open="booking" @booked="booked" />
-        <AppointmentDetailDialog v-model:open="detailOpen" :appointment-id="opened" :focus-step="checkingIn" @changed="list.load()" />
+        <AppointmentDetailDialog v-model:open="detailOpen" :appointment-id="opened" :focus-step="checkingIn" @changed="reload()" />
     </div>
 </template>

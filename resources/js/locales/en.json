@@ -1988,6 +1988,7 @@
             "scope": "Days shown",
             "scopes": {
                 "day": "Day",
+                "week": "Week",
                 "upcoming": "From today",
                 "all": "All days"
             },
@@ -2010,6 +2011,7 @@
             "inTurn": "In turn",
             "none": {
                 "day": "No appointments on this day",
+                "week": "No appointments in these seven days",
                 "upcoming": "No appointments ahead",
                 "all": "No appointments yet"
             },
@@ -2087,6 +2089,14 @@
                 "busy": "The camera is in use by another program.",
                 "device": "The camera could not be started."
             }
+        },
+        "week": {
+            "total": "{count} appointment in these seven days | {count} appointments in these seven days",
+            "open": "Open {day}",
+            "failed": "The week's counts could not be loaded.",
+            "previous": "Previous week",
+            "next": "Next week",
+            "this": "This week"
         }
     }
 }

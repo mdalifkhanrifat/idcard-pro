@@ -6,18 +6,20 @@ describe('the list\'s days', () => {
         expect(scopeOf({ from: '2026-10-18', to: '2026-10-18', past: '' })).toBe('day');
         expect(scopeOf({ from: '', to: '', past: '' })).toBe('upcoming');
         expect(scopeOf({ from: '', to: '', past: '1' })).toBe('all');
-        // A range of several days is not one day
-        expect(scopeOf({ from: '2026-10-18', to: '2026-10-20', past: '' })).toBe('upcoming');
+        // A range of several days is a week view, not one day
+        expect(scopeOf({ from: '2026-10-18', to: '2026-10-20', past: '' })).toBe('week');
 
-        for (const scope of ['day', 'upcoming', 'all'] as const) {
+        for (const scope of ['day', 'week', 'upcoming', 'all'] as const) {
             expect(scopeOf(filtersFor(scope, '2026-10-18', '2026-10-17'))).toBe(scope);
         }
         expect(filtersFor('day', '2026-10-18', '2026-10-17')).toEqual({ from: '2026-10-18', to: '2026-10-18', past: '' });
+        // Seven days from the one given, across a month's end
+        expect(filtersFor('week', '2026-10-28', '2026-10-17')).toEqual({ from: '2026-10-28', to: '2026-11-03', past: '' });
     });
 
     it('keeps every scope in the link, so a reload shows the same days', () => {
         // Each scope leaves at least one date filter with a value (empty ones are not written to the link)
-        for (const scope of ['day', 'upcoming', 'all'] as const) {
+        for (const scope of ['day', 'week', 'upcoming', 'all'] as const) {
             const query = Object.fromEntries(Object.entries(filtersFor(scope, '2026-10-18', '2026-10-17')).filter(([, v]) => v !== '').map(([k, v]) => [`f_${k}`, v]));
             expect(namesDays(query)).toBe(true);
         }
