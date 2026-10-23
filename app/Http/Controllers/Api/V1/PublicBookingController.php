@@ -5,14 +5,23 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Middleware\RequirePublicBookingSession;
 use App\Http\Requests\Appointments\PublicBooking\IdentifyRequest;
+use App\Http\Requests\Appointments\PublicBooking\PublicAvailabilityRequest;
+use App\Http\Requests\Appointments\PublicBooking\PublicBookRequest;
+use App\Http\Requests\Appointments\PublicBooking\PublicMoveRequest;
 use App\Http\Requests\Appointments\PublicBooking\VerifyRequest;
+use App\Http\Resources\AvailabilityResource;
+use App\Http\Resources\PublicAppointmentResource;
+use App\Models\AppointmentLocation;
 use App\Models\Cardholder;
 use App\Models\FamilyMember;
+use App\Repositories\Contracts\AppointmentLocationRepositoryInterface;
+use App\Services\Appointments\PublicBooking\PublicAppointmentService;
 use App\Services\Appointments\PublicBooking\PublicBookingService;
 use App\Services\Appointments\PublicBooking\PublicIdentityService;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 /**
  * The public booking link (5.6): no sign-in; the organization by its slug (public.booking), rate limited per
@@ -24,6 +33,7 @@ class PublicBookingController extends Controller
     public function __construct(
         private PublicBookingService $booking,
         private PublicIdentityService $identity,
+        private PublicAppointmentService $appointments,
     ) {}
 
     /**
@@ -70,6 +80,63 @@ class PublicBookingController extends Controller
         $this->identity->signOut((string) $request->header(RequirePublicBookingSession::HEADER));
 
         return response()->json(null, 204);
+    }
+
+    /**
+     * The free times of a place for a kind of visit, as the public link offers them (the hours' notice, its kinds).
+     */
+    public function availability(PublicAvailabilityRequest $request, AppointmentLocationRepositoryInterface $locations): AvailabilityResource
+    {
+        [$from, $to] = $request->days();
+        /** @var AppointmentLocation $place */
+        $place = $locations->findByPublicId((string) $request->validated('location'));
+
+        return new AvailabilityResource($this->appointments->availability($place, (string) $request->validated('service'), $from, $to));
+    }
+
+    /**
+     * The person's own appointments and their family members', from today on, each with what they may do now.
+     */
+    public function appointments(Request $request): AnonymousResourceCollection
+    {
+        return PublicAppointmentResource::collection($this->appointments->mine($this->signedIn($request)));
+    }
+
+    /**
+     * Book for oneself or a family member (`location`, `service`, `family_member`, `date`, `time`, `note`).
+     */
+    public function book(PublicBookRequest $request): JsonResponse
+    {
+        /** @var array{location: string, service: string, family_member?: string|null, date: string, time?: string|null, note?: string|null} $data */
+        $data = $request->validated();
+
+        return (new PublicAppointmentResource($this->appointments->book($this->signedIn($request), $data)))->response()->setStatusCode(201);
+    }
+
+    /**
+     * Cancel one's own, as far as the organization allows (`reason` optional).
+     */
+    public function cancel(Request $request, string $appointment): PublicAppointmentResource
+    {
+        $reason = $request->validate(['reason' => ['sometimes', 'nullable', 'string', 'max:500']])['reason'] ?? null;
+
+        return new PublicAppointmentResource($this->appointments->cancel($this->signedIn($request), $appointment, $reason)->load(['location', 'familyMember']));
+    }
+
+    /**
+     * Move one's own to another place, day or time, as far as the organization allows.
+     */
+    public function move(PublicMoveRequest $request, string $appointment): PublicAppointmentResource
+    {
+        /** @var array{location?: string, date: string, time?: string|null} $data */
+        $data = $request->validated();
+
+        return new PublicAppointmentResource($this->appointments->move($this->signedIn($request), $appointment, $data));
+    }
+
+    private function signedIn(Request $request): Cardholder
+    {
+        return $request->attributes->get('booking_person');
     }
 
     /**

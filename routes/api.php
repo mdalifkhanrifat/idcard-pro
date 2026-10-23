@@ -96,6 +96,11 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::middleware('public.booking.session')->group(function () {
             Route::get('me', [PublicBookingController::class, 'me'])->name('me');
             Route::post('sign-out', [PublicBookingController::class, 'signOut'])->name('sign-out');
+            Route::get('availability', [PublicBookingController::class, 'availability'])->name('availability');
+            Route::get('appointments', [PublicBookingController::class, 'appointments'])->name('appointments');
+            Route::post('appointments', [PublicBookingController::class, 'book'])->name('book');
+            Route::post('appointments/{appointment}/cancel', [PublicBookingController::class, 'cancel'])->name('cancel');
+            Route::patch('appointments/{appointment}', [PublicBookingController::class, 'move'])->name('move');
         });
     });
 

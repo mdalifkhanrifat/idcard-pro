@@ -32,7 +32,10 @@ class AppointmentStatusService
         private TenantContext $tenant,
     ) {}
 
-    public function cancel(Appointment $appointment, User $by, ?string $reason = null, ?CarbonImmutable $now = null): Appointment
+    /**
+     * Cancel one still ahead, by those who book — or by the person themself on the public link (`$by` null).
+     */
+    public function cancel(Appointment $appointment, ?User $by, ?string $reason = null, ?CarbonImmutable $now = null): Appointment
     {
         return DB::transaction(function () use ($appointment, $by, $reason, $now): Appointment {
             $appointment = $this->appointments->lockForChange($appointment);
@@ -134,7 +137,7 @@ class AppointmentStatusService
     /**
      * @param  array<string, mixed>  $times
      */
-    private function apply(Appointment $appointment, AppointmentStatus $to, User $by, ?string $reason, ?CarbonImmutable $now, array $times = []): Appointment
+    private function apply(Appointment $appointment, AppointmentStatus $to, ?User $by, ?string $reason, ?CarbonImmutable $now, array $times = []): Appointment
     {
         $this->appointments->update($appointment, [
             ...$times,
@@ -143,7 +146,8 @@ class AppointmentStatusService
             'cancel_reason' => $to === AppointmentStatus::Cancelled ? ($reason ?: null) : null,
             // Stored in UTC: a time on the organization's clock would be written as its wall-clock reading
             'status_changed_at' => ($now ?? CarbonImmutable::now())->utc(),
-            'status_changed_by_id' => $by->id,
+            // Null: the person themself, on the public link
+            'status_changed_by_id' => $by?->id,
         ]);
 
         return $this->appointments->withDetails($appointment);

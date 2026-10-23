@@ -96,11 +96,11 @@ class AppointmentBookingService
      *
      * @param  array{location?: string, date?: string, time?: string|null, note?: string|null, service?: string, cardholder?: string, family_member?: string|null}  $data  validated input
      */
-    public function move(Appointment $appointment, array $data, ?CarbonImmutable $now = null): Appointment
+    public function move(Appointment $appointment, array $data, ?CarbonImmutable $now = null, BookingAudience $audience = BookingAudience::Staff): Appointment
     {
         $target = isset($data['location']) ? $this->locations->findByPublicId($data['location']) : null;
 
-        return DB::transaction(function () use ($appointment, $data, $now, $target): Appointment {
+        return DB::transaction(function () use ($appointment, $data, $now, $target, $audience): Appointment {
             // Both locks before any other read (the appointment, then the place it goes to): MySQL reads the
             // rest as of the first plain read, which must not be older than a booking that held the place
             $appointment = $this->appointments->lockForChange($appointment);
@@ -128,7 +128,7 @@ class AppointmentBookingService
             $moved = $location->id !== $appointment->location_id || $date !== $appointment->date->toDateString()
                 || $time !== $appointment->starts_at?->setTimezone($timezone)->format('H:i');
             if ($moved) {
-                [$startsAt, $endsAt] = $this->claim($appointment, $location, $date, $time, $now, except: $appointment->id);
+                [$startsAt, $endsAt] = $this->claim($appointment, $location, $date, $time, $now, except: $appointment->id, audience: $audience);
                 $changes += ['location_id' => $location->id, 'date' => $date, 'starts_at' => $startsAt?->utc(), 'ends_at' => $endsAt?->utc()];
             }
             if ($changes !== []) {
@@ -141,16 +141,17 @@ class AppointmentBookingService
 
     /**
      * Why an appointment cannot be moved to another place, day or time now, or null (5.5c — what the page
-     * offers): it is no longer ahead, appointments are off, or the organization's staff do not book.
+     * offers): it is no longer ahead, appointments are off, or the organization does not book this way (staff, or
+     * the public link — 5.6).
      */
-    public function moveProblem(Appointment $appointment): ?string
+    public function moveProblem(Appointment $appointment, BookingAudience $audience = BookingAudience::Staff): ?string
     {
         $settings = $this->tenant->get()->appointmentSettings();
 
         return match (true) {
             ! $appointment->status->isAhead() => $this->notAhead($appointment),
             ! $settings['enabled'] => (string) __('appointments.availability.unavailable.off'),
-            ! in_array(BookingAudience::Staff->value, $settings['booking'], true) => (string) __('appointments.availability.unavailable.not_staff'),
+            ! in_array($audience->value, $settings['booking'], true) => (string) __('appointments.availability.unavailable.'.($audience === BookingAudience::Staff ? 'not_staff' : 'not_public')),
             default => null,
         };
     }
@@ -177,10 +178,10 @@ class AppointmentBookingService
      *
      * @return array{0: CarbonImmutable|null, 1: CarbonImmutable|null}
      */
-    public function claim(Appointment $appointment, AppointmentLocation $location, string $date, ?string $time, ?CarbonImmutable $now = null, ?int $except = null): array
+    public function claim(Appointment $appointment, AppointmentLocation $location, string $date, ?string $time, ?CarbonImmutable $now = null, ?int $except = null, BookingAudience $audience = BookingAudience::Staff): array
     {
         $settings = $this->tenant->get()->appointmentSettings();
-        $day = $this->bookableDay($location, ['service' => $appointment->service, 'date' => $date], BookingAudience::Staff, $now, $except);
+        $day = $this->bookableDay($location, ['service' => $appointment->service, 'date' => $date], $audience, $now, $except);
 
         return $settings['scheduling'] === 'slot' ? $this->slot($day, $time) : [null, null];
     }

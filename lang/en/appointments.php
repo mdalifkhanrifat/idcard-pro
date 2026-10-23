@@ -93,6 +93,10 @@ return [
         'no_tries_left' => 'No tries left. Enter your employee number again.',
         'wrong' => 'That is not right. :count try left.|That is not right. :count tries left.',
         'signed_out' => 'Your session has ended. Prove who you are again.',
+        'no_cancel' => 'Cancelling is not offered here. Please contact the office.',
+        'no_move' => 'Moving is not offered here. Please contact the office.',
+        'too_late' => 'Changes are possible here only until :hours hour before. Please contact the office.|Changes are possible here only until :hours hours before. Please contact the office.',
+        'not_yours' => 'There is no such appointment of yours.',
     ],
     'summary' => [
         'too_many_days' => 'Count at most :days days at a time.',
