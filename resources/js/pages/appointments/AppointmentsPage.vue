@@ -19,6 +19,7 @@ import AppointmentBookDialog from '@/pages/appointments/AppointmentBookDialog.vu
 import AppointmentCheckIn from '@/pages/appointments/AppointmentCheckIn.vue';
 import AppointmentDetailDialog from '@/pages/appointments/AppointmentDetailDialog.vue';
 import AppointmentRow from '@/pages/appointments/AppointmentRow.vue';
+import ReportDownloads from '@/pages/reports/ReportDownloads.vue';
 import { useAuthStore } from '@/stores/auth';
 
 /**
@@ -172,6 +173,8 @@ function found(appointment: Appointment): void {
                     <div class="flex flex-wrap items-end gap-2 sm:col-span-2 lg:col-span-4 lg:justify-end">
                         <UiButton v-if="filtered" variant="ghost" size="sm" @click="resetOthers()">{{ t('common.reset') }}</UiButton>
                         <UiButton variant="secondary" size="sm" :loading="list.loading.value" data-refresh @click="list.load()"><RefreshCw class="size-4" />{{ t('appointments.list.refresh') }}</UiButton>
+                        <!-- The list is the "Appointments" report: its downloads hold these rows (the days shown too) -->
+                        <ReportDownloads v-if="auth.can('reports.view')" report-key="appointments" variant="menu" :params="list.queryParams" :total="list.meta.value.total" />
                     </div>
                 </div>
             </div>

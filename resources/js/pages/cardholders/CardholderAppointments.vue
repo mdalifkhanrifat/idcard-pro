@@ -14,6 +14,7 @@ import { formatNumber } from '@/lib/format';
 import AppointmentBookDialog from '@/pages/appointments/AppointmentBookDialog.vue';
 import AppointmentDetailDialog from '@/pages/appointments/AppointmentDetailDialog.vue';
 import AppointmentRow from '@/pages/appointments/AppointmentRow.vue';
+import ReportDownloads from '@/pages/reports/ReportDownloads.vue';
 import { useAuthStore } from '@/stores/auth';
 import type { Cardholder, FamilyMember } from '@/types';
 
@@ -32,9 +33,19 @@ const list = useListQuery<Appointment, PageMeta & Partial<AppointmentListOptions
     sort: '-date',
     perPage: 20,
     queryPrefix: 'ap_',
-    extraParams: () => ({ 'filter[cardholder]': props.cardholder.id, 'filter[past]': 1 }),
+    extraParams: () => fixed(),
 });
 onMounted(() => list.load());
+/** The tab is the "Appointments" report for this person: every day, theirs and their family's. */
+const fixed = () => ({ 'filter[cardholder]': props.cardholder.id, 'filter[past]': '1' });
+const downloadParams = () => ({ ...list.queryParams(), ...fixed() });
+/** The same criteria on the report's page, under the report's names (the tab keeps its own under ap_*). */
+const reportQuery = computed(() => Object.fromEntries([
+    ...Object.entries(list.filters).filter(([, value]) => value !== '').map(([key, value]) => [`f_${key}`, value]),
+    ['f_cardholder', props.cardholder.id],
+    ['f_past', '1'],
+    ['sort', list.sort.value],
+]));
 const choices = (named: { key: string; name: string }[] | undefined) => (named ?? []).map((item) => ({ value: item.key, label: item.name }));
 const filtered = computed(() => list.filters.status !== '' || list.filters.service !== '');
 
@@ -73,6 +84,7 @@ function booked(appointment: Appointment): void {
             <UiSelect v-model="list.filters.service" :label="t('appointments.list.service')" :placeholder="t('common.all')" :options="choices(list.meta.value.services)" class="w-full sm:w-48" data-filter="service" />
             <div class="flex flex-wrap items-center gap-2 sm:ml-auto">
                 <UiButton variant="secondary" size="sm" :loading="list.loading.value" @click="list.load()"><RefreshCw class="size-4" />{{ t('appointments.list.refresh') }}</UiButton>
+                <ReportDownloads v-if="auth.can('reports.view')" report-key="appointments" variant="menu" :params="downloadParams" :total="list.meta.value.total" :link-query="reportQuery" />
                 <UiButton v-if="canBook" size="sm" data-book-open @click="book"><CalendarPlus class="size-4" />{{ t('appointments.book.open') }}</UiButton>
             </div>
         </div>
