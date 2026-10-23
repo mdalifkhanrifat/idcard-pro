@@ -6,6 +6,7 @@ use App\Data\Audit\LoginEventFilter;
 use App\Data\Reports\ReportColumn;
 use App\Data\Reports\ReportFilterField;
 use App\Data\Reports\ReportQuery;
+use App\Enums\LoginChannel;
 use App\Enums\LoginEventType;
 use App\Models\LoginEvent;
 use App\Models\User;
@@ -45,8 +46,9 @@ class LoginEventReport implements Report
         return [
             ...$column('login.when', ReportColumn::DATETIME, fn (LoginEvent $event) => $event->created_at?->setTimezone($timezone)),
             ...$column('login.event', ReportColumn::TEXT, fn (LoginEvent $event) => (string) (((array) __('reports.values.audit_events'))[$event->event->value] ?? $event->event->value)),
+            ...$column('login.channel', ReportColumn::TEXT, fn (LoginEvent $event) => $event->channel->label()),
             ...$column('login.identifier', ReportColumn::TEXT, fn (LoginEvent $event) => $event->identifier),
-            ...$column('login.user', ReportColumn::TEXT, fn (LoginEvent $event) => $event->user?->name),
+            ...$column('login.user', ReportColumn::TEXT, fn (LoginEvent $event) => $this->who($event)),
             ...$column('login.user_email', ReportColumn::TEXT, fn (LoginEvent $event) => $event->user?->email),
             ...$column('login.ip_address', ReportColumn::TEXT, fn (LoginEvent $event) => $event->ip_address),
             ...$column('login.user_agent', ReportColumn::TEXT, fn (LoginEvent $event) => $event->user_agent),
@@ -55,7 +57,7 @@ class LoginEventReport implements Report
 
     public function defaultColumns(): array
     {
-        return ['login.when', 'login.event', 'login.identifier', 'login.user', 'login.ip_address'];
+        return ['login.when', 'login.event', 'login.channel', 'login.identifier', 'login.user', 'login.ip_address'];
     }
 
     public function filters(): array
@@ -66,6 +68,10 @@ class LoginEventReport implements Report
             new ReportFilterField('event', ReportFilterField::SELECT, $this->columnLabel('login.event'), array_map(
                 fn (LoginEventType $type) => ['value' => $type->value, 'label' => (string) ($events[$type->value] ?? $type->value)],
                 LoginEventType::cases(),
+            )),
+            new ReportFilterField('channel', ReportFilterField::SELECT, $this->columnLabel('login.channel'), array_map(
+                fn (LoginChannel $channel) => ['value' => $channel->value, 'label' => $channel->label()],
+                LoginChannel::cases(),
             )),
             new ReportFilterField('identifier', ReportFilterField::SEARCH, $this->columnLabel('login.identifier')),
             new ReportFilterField('ip_address', ReportFilterField::SEARCH, $this->columnLabel('login.ip_address')),
@@ -120,5 +126,18 @@ class LoginEventReport implements Report
     private function filter(ReportQuery $query): LoginEventFilter
     {
         return LoginEventFilter::fromArray($query->input());
+    }
+
+    /**
+     * The user who signed in, or the cardholder who proved who they are on the public booking link.
+     */
+    private function who(LoginEvent $event): ?string
+    {
+        $cardholder = $event->cardholder;
+        if ($cardholder !== null) {
+            return (string) __($cardholder->employee_no ? 'reports.values.cardholder_self_numbered' : 'reports.values.cardholder_self', ['name' => $cardholder->full_name, 'number' => $cardholder->employee_no]);
+        }
+
+        return $event->user?->name;
     }
 }

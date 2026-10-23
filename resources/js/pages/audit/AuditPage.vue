@@ -29,7 +29,10 @@ interface LoginRow {
     id: number;
     event: string;
     identifier: string | null;
+    /** Staff sign-in, or a cardholder proving who they are on the public booking link (5.6e). */
+    channel: { key: string; name: string };
     user: { name: string } | null;
+    cardholder: { name: string; employee_no: string | null } | null;
     ip_address: string;
     user_agent: string;
     created_at: string;
@@ -42,7 +45,9 @@ const reports = useReports();
 
 const activities = useListQuery<ActivityRow>('/audit/activities', { filters: { log_name: '', event: '', date_from: '', date_to: '' }, perPage: 25 });
 // Its own keys in the URL (login_page, login_f_event...): the changes tab's page or filters are not the sign-ins'
-const logins = useListQuery<LoginRow>('/audit/logins', { filters: { event: '', identifier: '', ip_address: '', date_from: '', date_to: '' }, perPage: 25, queryPrefix: 'login_' });
+const logins = useListQuery<LoginRow>('/audit/logins', { filters: { event: '', channel: '', identifier: '', ip_address: '', date_from: '', date_to: '' }, perPage: 25, queryPrefix: 'login_' });
+/** The ways one signs in (from the API, so new ones appear by themselves). */
+const loginChannels = computed(() => ((logins.meta.value as { channels?: { key: string; name: string }[] }).channels ?? []).map((channel) => ({ value: channel.key, label: channel.name })));
 
 onMounted(() => {
     activities.load();
@@ -107,7 +112,7 @@ const loginReportQuery = computed(() => Object.fromEntries(Object.entries(logins
                         <div class="min-w-0 flex-1">
                             <p class="break-words text-fg">
                                 <span class="font-medium">{{ row.causer?.name ?? t('audit.system') }}</span>
-                                <span v-if="row.causer?.kind === 'cardholder'" class="text-muted" data-audit-cardholder> ({{ t('audit.cardholderSelf') }}<template v-if="row.causer.employee_no"> · {{ row.causer.employee_no }}</template>)</span>
+                                <span v-if="row.causer?.kind === 'cardholder'" class="text-muted" data-audit-cardholder> ({{ t('audit.cardholderSelf') }}<template v-if="row.causer.employee_no"> · <span class="whitespace-nowrap">{{ row.causer.employee_no }}</span></template>)</span>
                                 <template v-if="row.log_name || row.subject_type"> · {{ logLabel(row.log_name ?? '', row.subject_type) }}</template>
                             </p>
                             <p v-if="changedFields(row).length" class="truncate text-xs text-muted">{{ changedFields(row).join(', ') }}</p>
@@ -135,14 +140,15 @@ const loginReportQuery = computed(() => Object.fromEntries(Object.entries(logins
             </TabsContent>
 
             <TabsContent value="logins" class="rounded-xl border border-line bg-surface">
-                <div class="grid gap-3 border-b border-line p-4 sm:grid-cols-5">
+                <div class="grid gap-3 border-b border-line p-4 sm:grid-cols-3 lg:grid-cols-6">
                     <UiSelect v-model="logins.filters.event" :label="t('audit.event')" :placeholder="t('common.all')" :options="loginEvents.map((v) => ({ value: v, label: t(`audit.events.${v}`) }))" />
+                    <UiSelect v-model="logins.filters.channel" :label="t('audit.channel')" :placeholder="t('common.all')" :options="loginChannels" data-login-channel />
                     <UiInput v-model="logins.filters.identifier" :label="t('audit.identifier')" />
                     <UiInput v-model="logins.filters.ip_address" :label="t('audit.ip')" />
                     <UiInput v-model="logins.filters.date_from" type="date" :label="t('common.from')" />
                     <UiInput v-model="logins.filters.date_to" type="date" :min="logins.filters.date_from || undefined" :error="logins.filterError('date_to')" :label="t('common.to')" />
                     <!-- The sign-ins list keeps its criteria under login_*: the report's link names them as the report does -->
-                    <div v-if="auth.can('reports.view')" class="flex items-end sm:col-span-5 sm:justify-end">
+                    <div v-if="auth.can('reports.view')" class="flex items-end sm:col-span-3 sm:justify-end lg:col-span-6">
                         <ReportDownloads report-key="audit_logins" variant="menu" :params="logins.queryParams" :total="logins.meta.value.total" :link-query="loginReportQuery" />
                     </div>
                 </div>
@@ -160,7 +166,11 @@ const loginReportQuery = computed(() => Object.fromEntries(Object.entries(logins
                         <tbody>
                             <tr v-for="row in logins.rows.value" :key="row.id" class="border-b border-line last:border-0">
                                 <td class="px-5 py-3"><UiBadge :tone="tone(row.event) ?? 'neutral'">{{ t(`audit.events.${row.event}`) }}</UiBadge></td>
-                                <td class="px-5 py-3 text-fg">{{ row.user?.name ?? row.identifier ?? '—' }}</td>
+                                <td class="px-5 py-3 text-fg" data-login-who>
+                                    <template v-if="row.cardholder">{{ row.cardholder.name }} <span class="text-muted">({{ t('audit.cardholderSelf') }}<template v-if="row.cardholder.employee_no"> · <span class="whitespace-nowrap">{{ row.cardholder.employee_no }}</span></template>)</span></template>
+                                    <template v-else>{{ row.user?.name ?? row.identifier ?? '—' }}</template>
+                                    <span v-if="row.channel?.key && row.channel.key !== 'staff'" class="block text-xs text-muted" data-login-channel-name>{{ row.channel.name }}</span>
+                                </td>
                                 <td class="px-5 py-3 font-mono text-xs text-muted">{{ row.ip_address }}</td>
                                 <td class="px-5 py-3 text-xs text-muted">{{ browser(row.user_agent ?? '') }}</td>
                                 <td class="px-5 py-3 text-xs whitespace-nowrap text-muted">{{ formatDateTime(row.created_at) }}</td>

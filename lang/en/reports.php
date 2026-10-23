@@ -166,8 +166,9 @@ return [
         'audit.changes' => 'Changes',
         'login.when' => 'When',
         'login.event' => 'Event',
-        'login.identifier' => 'Email or username tried',
-        'login.user' => 'User',
+        'login.channel' => 'Way',
+        'login.identifier' => 'Email, username or employee number tried',
+        'login.user' => 'Who',
         'login.user_email' => 'User\'s email',
         'login.ip_address' => 'IP address',
         'login.user_agent' => 'Browser',
@@ -388,6 +389,10 @@ return [
         'orientation' => [
             'horizontal' => 'Horizontal',
             'vertical' => 'Vertical',
+        ],
+        'login_channels' => [
+            'staff' => 'Staff sign-in',
+            'public_booking' => 'Public booking link',
         ],
         'cardholder_self' => ':name (cardholder, themself)',
         'cardholder_self_numbered' => ':name (cardholder, themself; employee no. :number)',

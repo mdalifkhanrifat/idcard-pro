@@ -3,7 +3,9 @@
 namespace App\Repositories\Eloquent;
 
 use App\Data\Audit\LoginEventFilter;
+use App\Enums\LoginChannel;
 use App\Enums\LoginEventType;
+use App\Models\Cardholder;
 use App\Models\LoginEvent;
 use App\Models\Tenant;
 use App\Models\User;
@@ -18,11 +20,13 @@ class LoginEventRepository implements LoginEventRepositoryInterface
 {
     public function __construct(private TenantContext $tenantContext) {}
 
-    public function record(LoginEventType $event, ?string $ipAddress, ?string $userAgent, ?User $user = null, ?Tenant $tenant = null, ?string $identifier = null): LoginEvent
+    public function record(LoginEventType $event, ?string $ipAddress, ?string $userAgent, ?User $user = null, ?Tenant $tenant = null, ?string $identifier = null, LoginChannel $channel = LoginChannel::Staff, ?Cardholder $cardholder = null): LoginEvent
     {
         return LoginEvent::query()->create([
-            'tenant_id' => $tenant->id ?? $user?->tenant_id,
+            'tenant_id' => $tenant->id ?? $user->tenant_id ?? $cardholder?->tenant_id,
+            'channel' => $channel,
             'user_id' => $user?->id,
+            'cardholder_id' => $cardholder?->id,
             'identifier' => $identifier,
             'event' => $event,
             'ip_address' => $ipAddress,
@@ -33,7 +37,7 @@ class LoginEventRepository implements LoginEventRepositoryInterface
     public function list(LoginEventFilter $filter): LengthAwarePaginator
     {
         return $this->criteria($filter)
-            ->with('user:id,name,email')
+            ->with(['user:id,name,email', 'cardholder:id,full_name,employee_no'])
             ->orderBy('id', $filter->descending ? 'desc' : 'asc')
             ->paginate(ListPage::clamp($filter->perPage))
             ->withQueryString();
@@ -41,7 +45,7 @@ class LoginEventRepository implements LoginEventRepositoryInterface
 
     public function reportRows(LoginEventFilter $filter): LazyCollection
     {
-        return $this->criteria($filter)->with('user:id,name,email')->orderBy('id', $filter->descending ? 'desc' : 'asc')->lazy(500);
+        return $this->criteria($filter)->with(['user:id,name,email', 'cardholder:id,full_name,employee_no'])->orderBy('id', $filter->descending ? 'desc' : 'asc')->lazy(500);
     }
 
     public function reportTotals(LoginEventFilter $filter): array
@@ -63,6 +67,7 @@ class LoginEventRepository implements LoginEventRepositoryInterface
         return LoginEvent::query()
             ->when($this->tenantContext->has(), fn (Builder $q) => $q->where('tenant_id', $this->tenantContext->id()))
             ->when($filter->event, fn (Builder $q, string $v) => $q->where('event', $v))
+            ->when($filter->channel, fn (Builder $q, string $v) => $q->where('channel', $v))
             ->when($filter->identifier, fn (Builder $q, string $v) => $q->where('identifier', 'like', "%{$v}%"))
             ->when($filter->ipAddress, fn (Builder $q, string $v) => $q->where('ip_address', $v))
             ->when($filter->dateFrom, fn (Builder $q, string $v) => $q->where('created_at', '>=', $this->tenantContext->dayStart($v)))

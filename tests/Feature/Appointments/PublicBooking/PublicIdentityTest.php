@@ -132,3 +132,40 @@ it('leaves out family members where the organization books for the cardholder on
         ->assertJsonPath('errors.message.0', 'A booking code is not sent again: the person asks for a new one on the booking page.');
     expect(collect($this->getJson('/api/v1/notifications/messages')->json('meta.events'))->firstWhere('key', 'booking_code')['name'])->toBe('Booking code');
 });
+
+it('keeps proven sign-ins, lock-outs and blocks in the organization\'s sign-ins, not each wrong answer', function () {
+    ($this->settings)(['method' => 'date_of_birth', 'code_attempts' => 2]);
+    $verify = fn (string $challenge, string $date) => $this->postJson("{$this->url}/verify", ['challenge' => $challenge, 'date_of_birth' => $date], ['User-Agent' => 'Phone browser']);
+    $verify(($this->identify)()->json('data.challenge'), '1990-05-01')->assertOk();
+    // A wrong answer is not kept; no tries left is — for a known and an unknown number alike
+    $challenge = ($this->identify)()->json('data.challenge');
+    $verify($challenge, '2000-01-01')->assertUnprocessable();
+    $verify($challenge, '2000-01-01')->assertUnprocessable()->assertJsonValidationErrors('challenge');
+    $unknown = ($this->identify)(' X-999 ')->json('data.challenge');
+    $verify($unknown, '2000-01-01');
+    $verify($unknown, '2000-01-01')->assertJsonValidationErrors('challenge');
+    // Too many tries for a number (three an hour here; two so far)
+    config(['appointments.public.identify_per_hour' => 3]);
+    ($this->identify)()->assertOk();
+    ($this->identify)()->assertJsonValidationErrors('employee_no');
+
+    Sanctum::actingAs($this->owner);
+    $rows = $this->getJson('/api/v1/audit/logins?filter[channel]=public_booking')->assertOk()->assertJsonPath('meta.channels', [
+        ['key' => 'staff', 'name' => 'Staff sign-in'], ['key' => 'public_booking', 'name' => 'Public booking link'],
+    ])->json('data');
+    $jane = ['name' => 'Jane Doe', 'employee_no' => 'E-100'];
+    expect(collect($rows)->map(fn (array $row) => [$row['event'], $row['identifier'], $row['cardholder'], $row['channel']['key'], $row['user']])->all())->toBe([
+        ['blocked', 'E-100', $jane, 'public_booking', null],
+        ['locked', 'X-999', null, 'public_booking', null],
+        ['locked', 'E-100', $jane, 'public_booking', null],
+        ['succeeded', 'E-100', $jane, 'public_booking', null],
+    ])->and($rows[3]['user_agent'])->toBe('Phone browser');
+    // Staff sign-ins stay apart
+    expect(array_column($this->getJson('/api/v1/audit/logins?filter[channel]=staff')->json('data'), 'event'))->not->toContain('locked');
+    $this->getJson('/api/v1/reports/audit-logins?filter[channel]=public_booking&filter[event]=succeeded&columns[]=login.channel&columns[]=login.user', ['Accept-Language' => 'bn'])
+        ->assertJsonPath('data.0.values', ['login.channel' => 'পাবলিক বুকিং লিংক', 'login.user' => 'Jane Doe (কার্ডধারী নিজে; কর্মী নম্বর E-100)']);
+
+    [, $otherOwner] = tenantWithOwner('globex', 'owner@globex.test');
+    Sanctum::actingAs($otherOwner);
+    expect($this->getJson('/api/v1/audit/logins?filter[channel]=public_booking')->json('data'))->toBe([]);
+});

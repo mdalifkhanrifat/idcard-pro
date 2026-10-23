@@ -3,6 +3,7 @@
 namespace App\Http\Requests\Audit;
 
 use App\Data\Audit\LoginEventFilter;
+use App\Enums\LoginChannel;
 use App\Enums\LoginEventType;
 use App\Support\ListPage;
 use Illuminate\Foundation\Http\FormRequest;
@@ -21,8 +22,9 @@ class ListLoginEventsRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'filter' => ['sometimes', 'array:event,identifier,ip_address,date_from,date_to'],
+            'filter' => ['sometimes', 'array:event,channel,identifier,ip_address,date_from,date_to'],
             'filter.event' => ['nullable', new Enum(LoginEventType::class)],
+            'filter.channel' => ['nullable', new Enum(LoginChannel::class)],
             'filter.identifier' => ['nullable', 'string', 'max:255'],
             'filter.ip_address' => ['nullable', 'ip'],
             'filter.date_from' => ['nullable', 'date_format:Y-m-d'],

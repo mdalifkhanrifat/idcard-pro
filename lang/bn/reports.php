@@ -166,8 +166,9 @@ return [
         'audit.changes' => 'পরিবর্তন',
         'login.when' => 'কখন',
         'login.event' => 'ঘটনা',
-        'login.identifier' => 'যে ইমেইল বা ইউজারনেম দিয়ে চেষ্টা',
-        'login.user' => 'ইউজার',
+        'login.channel' => 'পথ',
+        'login.identifier' => 'যে ইমেইল, ইউজারনেম বা কর্মী নম্বর দিয়ে চেষ্টা',
+        'login.user' => 'কে',
         'login.user_email' => 'ইউজারের ইমেইল',
         'login.ip_address' => 'IP ঠিকানা',
         'login.user_agent' => 'ব্রাউজার',
@@ -388,6 +389,10 @@ return [
         'orientation' => [
             'horizontal' => 'অনুভূমিক',
             'vertical' => 'উল্লম্ব',
+        ],
+        'login_channels' => [
+            'staff' => 'কর্মীর লগইন',
+            'public_booking' => 'পাবলিক বুকিং লিংক',
         ],
         'cardholder_self' => ':name (কার্ডধারী নিজে)',
         'cardholder_self_numbered' => ':name (কার্ডধারী নিজে; কর্মী নম্বর :number)',

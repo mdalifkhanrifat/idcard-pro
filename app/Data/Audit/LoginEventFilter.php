@@ -9,6 +9,8 @@ final readonly class LoginEventFilter
 {
     public function __construct(
         public ?string $event = null,
+        /** A LoginChannel: staff, public_booking */
+        public ?string $channel = null,
         public ?string $identifier = null,
         public ?string $ipAddress = null,
         public ?string $dateFrom = null,
@@ -27,6 +29,7 @@ final readonly class LoginEventFilter
 
         return new self(
             event: $filter['event'] ?? null,
+            channel: $filter['channel'] ?? null,
             identifier: $filter['identifier'] ?? null,
             ipAddress: $filter['ip_address'] ?? null,
             dateFrom: $filter['date_from'] ?? null,

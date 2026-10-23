@@ -3,7 +3,9 @@
 namespace App\Repositories\Contracts;
 
 use App\Data\Audit\LoginEventFilter;
+use App\Enums\LoginChannel;
 use App\Enums\LoginEventType;
+use App\Models\Cardholder;
 use App\Models\LoginEvent;
 use App\Models\Tenant;
 use App\Models\User;
@@ -12,7 +14,7 @@ use Illuminate\Support\LazyCollection;
 
 interface LoginEventRepositoryInterface
 {
-    public function record(LoginEventType $event, ?string $ipAddress, ?string $userAgent, ?User $user = null, ?Tenant $tenant = null, ?string $identifier = null): LoginEvent;
+    public function record(LoginEventType $event, ?string $ipAddress, ?string $userAgent, ?User $user = null, ?Tenant $tenant = null, ?string $identifier = null, LoginChannel $channel = LoginChannel::Staff, ?Cardholder $cardholder = null): LoginEvent;
 
     /**
      * Sign-in events of the current tenant (all events when no tenant is bound).

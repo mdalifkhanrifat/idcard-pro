@@ -3,12 +3,15 @@
 namespace App\Services\Appointments\PublicBooking;
 
 use App\Enums\CardholderStatus;
+use App\Enums\LoginEventType;
 use App\Models\Cardholder;
 use App\Repositories\Contracts\CardholderRepositoryInterface;
+use App\Services\Audit\AuditService;
 use App\Services\Notifications\NotificationService;
 use App\Services\Reports\ReportValueText;
 use App\Support\Tenancy\TenantContext;
 use Carbon\CarbonImmutable;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
@@ -20,7 +23,8 @@ use Illuminate\Validation\ValidationException;
  * or their national ID number — within the organization's minutes and tries. The answer to an employee number is
  * the same whether or not it is known, active or has an address on record, so the link tells nobody who works
  * there. Proven, they get a session for some minutes (renewed by each use). Codes and tokens are kept only hashed,
- * in the cache, and expire by themselves.
+ * in the cache, and expire by themselves. The audit's sign-ins keep each one proven, locked out (no tries left) and
+ * blocked (too many tries for a number) — not each wrong answer.
  */
 class PublicIdentityService
 {
@@ -30,6 +34,8 @@ class PublicIdentityService
         private TenantContext $tenant,
         private CardholderRepositoryInterface $cardholders,
         private NotificationService $notifications,
+        private AuditService $audit,
+        private Request $request,
     ) {}
 
     /**
@@ -43,6 +49,7 @@ class PublicIdentityService
         $verification = $tenant->appointmentSettings()['verification'];
         $limiter = self::PREFIX."identify:{$tenant->id}:".mb_strtolower(trim($employeeNo));
         if (RateLimiter::tooManyAttempts($limiter, (int) config('appointments.public.identify_per_hour'))) {
+            $this->audit->recordPublicSignIn(LoginEventType::Blocked, $this->request, $tenant, trim($employeeNo), $this->cardholders->findByEmployeeNo(trim($employeeNo)));
             throw ValidationException::withMessages(['employee_no' => __('appointments.public.too_many', ['minutes' => app(ReportValueText::class)->number((int) ceil(RateLimiter::availableIn($limiter) / 60))])]);
         }
         RateLimiter::hit($limiter, 3600);
@@ -61,7 +68,7 @@ class PublicIdentityService
         $challenge = Str::random(40);
         $expires = now()->addMinutes($minutes);
         Cache::put($this->key('challenge', $challenge), [
-            'tenant' => $tenant->id, 'cardholder' => $person?->id, 'method' => $verification['method'],
+            'tenant' => $tenant->id, 'cardholder' => $person?->id, 'employee_no' => trim($employeeNo), 'method' => $verification['method'],
             'code' => $code === null ? null : hash('sha256', $code), 'tries' => 0, 'expires' => $expires->getTimestamp(),
         ], $expires);
 
@@ -89,6 +96,7 @@ class PublicIdentityService
             $left = (int) $tenant->appointmentSettings()['verification']['code_attempts'] - $tries;
             if ($left <= 0) {
                 Cache::forget($key);
+                $this->audit->recordPublicSignIn(LoginEventType::Locked, $this->request, $tenant, (string) ($held['employee_no'] ?? ''), $person);
                 throw ValidationException::withMessages(['challenge' => __('appointments.public.no_tries_left')]);
             }
             // The same expiry: only the tries change
@@ -97,6 +105,7 @@ class PublicIdentityService
         }
 
         Cache::forget($key);
+        $this->audit->recordPublicSignIn(LoginEventType::Succeeded, $this->request, $tenant, (string) ($held['employee_no'] ?? $person->employee_no), $person);
         $token = Str::random(48);
         $minutes = (int) config('appointments.public.session_minutes');
         Cache::put($this->key('session', $token), ['tenant' => $tenant->id, 'cardholder' => $person->id], now()->addMinutes($minutes));

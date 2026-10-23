@@ -248,6 +248,7 @@
         },
         "printed": "print",
         "system": "System",
+        "channel": "Way",
         "cardholderSelf": "cardholder themself",
         "prunedDetail": "{messages} messages older than {days} days deleted (as the organization chose)",
         "resentDetail": "Message sent again to {address}",

@@ -25,10 +25,12 @@ class AuditController extends Controller
     }
 
     /**
-     * Sign-in history. Filters: filter[event|identifier|ip_address|date_from|date_to].
+     * Sign-in history. Filters: filter[event|channel|identifier|ip_address|date_from|date_to]; meta.channels names
+     * the ways one signs in (staff, the public booking link), so new ones appear in the filter by themselves.
      */
     public function logins(ListLoginEventsRequest $request): AnonymousResourceCollection
     {
-        return LoginEventResource::collection($this->audit->logins($request->toFilter()));
+        return LoginEventResource::collection($this->audit->logins($request->toFilter()))
+            ->additional(['meta' => ['channels' => $this->audit->loginChannels()]]);
     }
 }

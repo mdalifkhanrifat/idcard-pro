@@ -49,7 +49,7 @@ it('lists sign-ins with the audit page\'s criteria and totals', function () {
 it('needs the audit.view permission, and keeps its own downloads in the log', function () {
     $this->get('/api/v1/reports/audit-logins/export?format=csv&filter[event]=failed&columns[]=login.identifier&columns[]=login.ip_address')
         ->assertOk()
-        ->assertStreamedContent("\u{FEFF}\"Email or username tried\",\"IP address\"\nnobody@example.com,10.0.0.9\n");
+        ->assertStreamedContent("\u{FEFF}\"Email, username or employee number tried\",\"IP address\"\nnobody@example.com,10.0.0.9\n");
     $changes = $this->getJson('/api/v1/reports/audit-changes?filter[event]=exported&columns[]=audit.changes')->assertJsonCount(1, 'data')->json('data.0.values');
     expect($changes['audit.changes'])->toContain('report: audit_logins', 'format: csv', 'rows: 1');
 
