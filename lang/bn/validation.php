@@ -305,6 +305,7 @@ return [
         // List filters (cards, cardholders, audit)
         'filter' => 'ফিল্টার',
         'filter.search' => 'খোঁজ',
+        'filter.number' => 'নম্বর',
         'filter.status' => 'অবস্থা',
         'filter.date_from' => 'তারিখ (থেকে)',
         'filter.date_to' => 'তারিখ (পর্যন্ত)',

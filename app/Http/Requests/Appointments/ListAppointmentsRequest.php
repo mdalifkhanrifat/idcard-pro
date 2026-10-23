@@ -36,8 +36,9 @@ class ListAppointmentsRequest extends FormRequest
         $sorts = collect(AppointmentFilter::SORTS)->flatMap(fn (string $s) => [$s, "-{$s}"])->all();
 
         return [
-            'filter' => ['sometimes', 'array:search,from,to,past,location,status,service,source,cardholder,family_member'],
+            'filter' => ['sometimes', 'array:search,number,from,to,past,location,status,service,source,cardholder,family_member'],
             'filter.search' => ['nullable', 'string', 'max:100'],
+            'filter.number' => ['nullable', 'string', 'max:40'],
             'filter.from' => ['nullable', 'date_format:Y-m-d'],
             'filter.to' => ['nullable', 'date_format:Y-m-d', 'after_or_equal:filter.from'],
             'filter.past' => ['nullable', 'boolean'],

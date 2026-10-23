@@ -77,10 +77,12 @@ class AppointmentRepository extends EloquentRepository implements AppointmentRep
                     ->orWhere('full_name_local', 'like', "%{$search}%")
                     ->orWhere('employee_no', 'like', "%{$search}%"))
                 ->orWhereHas('familyMember', fn (Builder $f) => $f->where('name', 'like', "%{$search}%"))))
+            // A number names one appointment, whatever its day; written in any case (a scanner, a person typing)
+            ->when($filter->number, fn (Builder $q, string $number) => $q->whereIn('number', array_unique([$number, strtoupper($number), strtolower($number)])))
             // Dates are the organization's days, so compared as they are
             ->when($filter->from, fn (Builder $q, string $from) => $q->where('date', '>=', $from))
             ->when($filter->to, fn (Builder $q, string $to) => $q->where('date', '<=', $to))
-            ->when(! $ranged && ! $filter->past, fn (Builder $q) => $q->where('date', '>=', app(TenantContext::class)->today()->toDateString()))
+            ->when(! $ranged && ! $filter->past && ! $filter->number, fn (Builder $q) => $q->where('date', '>=', app(TenantContext::class)->today()->toDateString()))
             ->when($filter->locationPublicId, fn (Builder $q, string $id) => $q->whereIn('location_id', $ids(AppointmentLocation::class, $id)))
             ->when($filter->statuses !== [], fn (Builder $q) => $q->whereIn('status', $filter->statuses))
             ->when($filter->service, fn (Builder $q, string $service) => $q->where('service', $service))

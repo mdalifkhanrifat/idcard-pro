@@ -105,6 +105,22 @@ it('filters by place, status, kind of visit, source, person and search', functio
         ->and($past("filter[cardholder]={$this->rahim->public_id}&filter[status]=pending,cancelled&filter[from]=2026-10-16"))->toBe([2, 3]);
 });
 
+it('finds one appointment by its number exactly, whatever its day and however it is written', function () {
+    Sanctum::actingAs($this->owner);
+    // 16 October: number 1 (the 15th) is past, yet found by its number
+    $this->travelTo(now()->parse('2026-10-16 08:00:00'));
+
+    expect(($this->numbers)('filter[number]=A-26-00001'))->toBe([1])
+        ->and(($this->numbers)('filter[number]=a-26-00003'))->toBe([3])
+        ->and(($this->numbers)('filter[number]='.urlencode(' A-26-00004 ')))->toBe([4])
+        // Only the whole number: a part of it is not one
+        ->and(($this->numbers)('filter[number]=A-26-0000'))->toBe([])
+        // With other criteria as usual
+        ->and(($this->numbers)('filter[number]=A-26-00003&filter[status]=pending'))->toBe([]);
+    $this->getJson('/api/v1/appointments?filter[number]='.str_repeat('A', 41), ['Accept-Language' => 'bn'])->assertUnprocessable()
+        ->assertJsonPath('errors', fn (array $errors) => str_contains($errors['filter.number'][0], 'নম্বর') && str_contains($errors['filter.number'][0], '৪০'));
+});
+
 it('answers an appointment\'s details and names everything in the reader\'s language', function () {
     Sanctum::actingAs($this->owner);
     $this->travelTo(now()->parse('2026-10-16 03:00:00'));

@@ -12,6 +12,8 @@ final readonly class AppointmentFilter
     public function __construct(
         /** The number, the cardholder's name, local name or employee number, or the family member's name */
         public ?string $search = null,
+        /** One appointment by its number exactly (any day — checking in by number or QR, another system's lookup) */
+        public ?string $number = null,
         /** Days of the organization (both whole) */
         public ?string $from = null,
         public ?string $to = null,
@@ -41,6 +43,7 @@ final readonly class AppointmentFilter
 
         return new self(
             search: $filter['search'] ?? null,
+            number: isset($filter['number']) ? trim((string) $filter['number']) : null,
             from: $filter['from'] ?? null,
             to: $filter['to'] ?? null,
             past: filter_var($filter['past'] ?? false, FILTER_VALIDATE_BOOL),

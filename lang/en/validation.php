@@ -329,6 +329,7 @@ return [
         // List filters (cards, cardholders, audit): named as the pages label them
         'filter' => 'filter',
         'filter.search' => 'search',
+        'filter.number' => 'number',
         'filter.status' => 'status',
         'filter.date_from' => 'from date',
         'filter.date_to' => 'to date',
