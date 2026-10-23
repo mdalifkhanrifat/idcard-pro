@@ -214,3 +214,10 @@ export async function bookAppointment(input: BookingInput): Promise<Appointment>
 
     return data.data;
 }
+
+/** The appointment with this number exactly (any day, any case), or null. */
+export async function findByNumber(number: string): Promise<Appointment | null> {
+    const { data } = await http.get<{ data: Appointment[] }>('/appointments', { params: { 'filter[number]': number.trim(), per_page: 10 } });
+
+    return data.data[0] ?? null;
+}

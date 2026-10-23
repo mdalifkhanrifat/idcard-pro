@@ -2069,6 +2069,24 @@
             "same": "That is its time now.",
             "submit": "Move here",
             "done": "Moved: {number}"
+        },
+        "checkIn": {
+            "title": "Check in by number or QR",
+            "findTitle": "Find by number",
+            "placeholder": "Appointment number, e.g. A-26-00012",
+            "find": "Open",
+            "scan": "Scan QR",
+            "hint": "Type the number, use a barcode scanner, or scan the QR code with the camera; then press “Came in”.",
+            "notFound": "No appointment is numbered “{number}”.",
+            "scanTitle": "Scan the QR code",
+            "scanHint": "Hold the appointment’s QR code inside the frame.",
+            "camera": {
+                "insecure": "The camera works only on a secure (https) address of this site.",
+                "permission": "The camera is not allowed for this site: allow it in the browser and try again.",
+                "no_device": "No camera was found.",
+                "busy": "The camera is in use by another program.",
+                "device": "The camera could not be started."
+            }
         }
     }
 }

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { CalendarClock, ExternalLink, Pencil, Undo2 } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
@@ -20,7 +20,8 @@ import { useUiStore } from '@/stores/ui';
  * with a reason, changing its note in place, and going back from a mistake apart. A button not possible now says why underneath (a phone has no hover). Read afresh each time it
  * opens and after a refusal (time passing changes what is possible); a change's own answer redraws it.
  */
-const props = defineProps<{ appointmentId: string | null }>();
+/** `focusStep`: the first step ahead takes the focus once shown (checking in at the desk: Enter takes it). */
+const props = defineProps<{ appointmentId: string | null; focusStep?: boolean }>();
 const open = defineModel<boolean>('open', { default: false });
 const emit = defineEmits<{ changed: [appointment: Appointment] }>();
 const { t } = useI18n();
@@ -55,6 +56,10 @@ async function load(quiet = false): Promise<void> {
         if (id === props.appointmentId) {
             appointment.value = found;
             failure.value = null;
+            if (props.focusStep && !quiet) {
+                await nextTick();
+                document.querySelector<HTMLButtonElement>('[data-detail] [data-detail-step]:not([disabled])')?.focus();
+            }
         }
     } catch (error) {
         if (id === props.appointmentId && !quiet) {

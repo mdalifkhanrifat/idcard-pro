@@ -16,6 +16,7 @@ import { filtersFor, namesDays, scopeOf, type Appointment, type AppointmentListO
 import { fetchPlaces, type AppointmentPlace } from '@/lib/appointments/places';
 import { formatLongDate, formatNumber } from '@/lib/format';
 import AppointmentBookDialog from '@/pages/appointments/AppointmentBookDialog.vue';
+import AppointmentCheckIn from '@/pages/appointments/AppointmentCheckIn.vue';
 import AppointmentDetailDialog from '@/pages/appointments/AppointmentDetailDialog.vue';
 import AppointmentRow from '@/pages/appointments/AppointmentRow.vue';
 import { useAuthStore } from '@/stores/auth';
@@ -100,9 +101,21 @@ const detailOpen = computed({
     set: (value) => {
         if (!value) {
             opened.value = null;
+            // Back to the number box for the next person
+            if (checkingIn.value) {
+                checkingIn.value = false;
+                checkIn.value?.focus();
+            }
         }
     },
 });
+/** Opened by its number at the desk: its first step takes the focus. */
+const checkingIn = ref(false);
+const checkIn = ref<InstanceType<typeof AppointmentCheckIn> | null>(null);
+function found(appointment: Appointment): void {
+    checkingIn.value = true;
+    opened.value = appointment.id;
+}
 </script>
 
 <template>
@@ -115,6 +128,8 @@ const detailOpen = computed({
         </UiPageHeader>
 
         <p v-if="off" class="mb-4 rounded-lg border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-fg" data-off-note>{{ t('appointments.list.off') }}</p>
+
+        <AppointmentCheckIn ref="checkIn" @found="found" />
 
         <div class="rounded-xl border border-line bg-surface" data-appointment-list>
             <div class="space-y-3 border-b border-line p-4">
@@ -179,6 +194,6 @@ const detailOpen = computed({
         </div>
 
         <AppointmentBookDialog v-if="canBook" v-model:open="booking" @booked="booked" />
-        <AppointmentDetailDialog v-model:open="detailOpen" :appointment-id="opened" @changed="list.load()" />
+        <AppointmentDetailDialog v-model:open="detailOpen" :appointment-id="opened" :focus-step="checkingIn" @changed="list.load()" />
     </div>
 </template>
