@@ -34,6 +34,7 @@ use App\Http\Controllers\Api\V1\NotificationMessageController;
 use App\Http\Controllers\Api\V1\NotificationSettingsController;
 use App\Http\Controllers\Api\V1\PermissionController;
 use App\Http\Controllers\Api\V1\Platform\TenantController;
+use App\Http\Controllers\Api\V1\PublicBookingController;
 use App\Http\Controllers\Api\V1\QualificationController;
 use App\Http\Controllers\Api\V1\Reports\ReportController;
 use App\Http\Controllers\Api\V1\Reports\ReportDataController;
@@ -86,6 +87,11 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::get('verify/{code}', [CardVerificationController::class, 'show'])
         ->middleware('throttle:'.(int) config('cards.verification.throttle').',1')
         ->name('cards.verify');
+
+    // The public booking link (5.6): the organization by its slug, no sign-in, rate limited per address
+    Route::prefix('public/{organization}/booking')->middleware(['public.booking', 'throttle:public-booking'])->name('public-booking.')->group(function () {
+        Route::get('/', [PublicBookingController::class, 'show'])->name('show');
+    });
 
     // Cards for the PDF engine's render page (signed link made by CardRenderService::link)
     Route::get('card-render', [CardRenderController::class, 'show'])

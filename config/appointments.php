@@ -93,6 +93,18 @@ return [
         'max_days' => 62,
     ],
 
+    /*
+     * The public booking link (5.6, /book/<organization>): how long a person stays signed in after proving who they
+     * are, the one-time code's length, and the guards against guessing — requests per minute from one address, and
+     * identity checks per employee number per hour (the code's own tries are the organization's setting).
+     */
+    'public' => [
+        'session_minutes' => (int) env('PUBLIC_BOOKING_SESSION_MINUTES', 30),
+        'code_length' => 6,
+        'per_minute' => (int) env('PUBLIC_BOOKING_PER_MINUTE', 30),
+        'identify_per_hour' => 5,
+    ],
+
     'summary' => [
         // Days one count of appointments may cover (a week, or a month's calendar)
         'max_days' => 62,

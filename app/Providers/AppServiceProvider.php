@@ -67,6 +67,9 @@ class AppServiceProvider extends ServiceProvider
 
         // Files behind signed links (photos, signatures, biometric images, fonts, design images): a print batch
         // loads several per card, so the limit follows the batch size; per user, else per address (PDF engine)
+        // The public booking link (5.6): no sign-in, so per address
+        RateLimiter::for('public-booking', fn (Request $request) => Limit::perMinute((int) config('appointments.public.per_minute'))->by('ip:'.$request->ip()));
+
         RateLimiter::for('signed-files', fn (Request $request) => Limit::perMinute((int) config('cards.print.files_per_minute'))
             ->by($request->user() !== null ? 'user:'.$request->user()->getAuthIdentifier() : 'ip:'.$request->ip()));
     }

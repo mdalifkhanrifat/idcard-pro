@@ -86,6 +86,9 @@ return [
         'family_off' => 'Family members do not have appointments in this organization.',
         'family_not_theirs' => 'This family member is not this cardholder\'s.',
     ],
+    'public' => [
+        'unavailable' => 'This booking page is not available.',
+    ],
     'summary' => [
         'too_many_days' => 'Count at most :days days at a time.',
     ],
