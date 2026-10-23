@@ -17,6 +17,7 @@ import ReportTable from './ReportTable.vue';
 import { reportSlug, useChosenColumns, useReports, type ReportFilterField, type ReportValue } from './reports';
 import { useListQuery, type PageMeta } from '@/composables/useListQuery';
 import { useMasterDataOptions } from '@/composables/useMasterDataOptions';
+import { formatNumber } from '@/lib/format';
 import { http, toApiError } from '@/lib/http';
 import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
@@ -230,7 +231,7 @@ useCardsPrinted(() => {
                 <div v-else class="flex-1" />
                 <UiButton v-if="panelFields.length" variant="secondary" @click="showFilters = !showFilters">
                     <SlidersHorizontal class="size-4" />{{ t('common.filters') }}
-                    <UiBadge v-if="activeFilterCount" tone="brand">{{ activeFilterCount }}</UiBadge>
+                    <UiBadge v-if="activeFilterCount" tone="brand">{{ formatNumber(activeFilterCount) }}</UiBadge>
                 </UiButton>
                 <UiButton v-if="anyFilter" variant="ghost" @click="list.resetFilters()"><RotateCcw class="size-4" />{{ t('common.reset') }}</UiButton>
             </div>

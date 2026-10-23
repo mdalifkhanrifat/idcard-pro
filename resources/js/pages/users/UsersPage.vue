@@ -15,7 +15,7 @@ import UserFormDialog from './UserFormDialog.vue';
 import { useConfirm } from '@/composables/useConfirm';
 import { useListQuery } from '@/composables/useListQuery';
 import { http, toApiError } from '@/lib/http';
-import { formatRelative } from '@/lib/format';
+import { formatNumber, formatRelative } from '@/lib/format';
 import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
 import type { User } from '@/types';
@@ -96,7 +96,7 @@ const yesNo = computed(() => [
                 </div>
                 <UiButton variant="secondary" @click="showFilters = !showFilters">
                     <SlidersHorizontal class="size-4" />{{ t('common.filters') }}
-                    <UiBadge v-if="activeFilterCount" tone="brand">{{ activeFilterCount }}</UiBadge>
+                    <UiBadge v-if="activeFilterCount" tone="brand">{{ formatNumber(activeFilterCount) }}</UiBadge>
                 </UiButton>
                 <UiButton v-if="activeFilterCount || filters.search" variant="ghost" @click="list.resetFilters()"><RotateCcw class="size-4" />{{ t('common.reset') }}</UiButton>
             </div>

@@ -17,7 +17,7 @@ import { addToSelection, displayStatus, downloadCardsPdf, findPrintableCards, op
 import { useListQuery } from '@/composables/useListQuery';
 import { useMasterDataOptions } from '@/composables/useMasterDataOptions';
 import { http, toApiError } from '@/lib/http';
-import { formatDate, formatDateTime } from '@/lib/format';
+import { formatDate, formatDateTime, formatNumber } from '@/lib/format';
 import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
 import type { CardTemplate, IssuedCard } from '@/types';
@@ -213,7 +213,7 @@ useCardsPrinted(changed);
                 </div>
                 <UiButton variant="secondary" @click="showFilters = !showFilters">
                     <SlidersHorizontal class="size-4" />{{ t('common.filters') }}
-                    <UiBadge v-if="activeFilterCount" tone="brand">{{ activeFilterCount }}</UiBadge>
+                    <UiBadge v-if="activeFilterCount" tone="brand">{{ formatNumber(activeFilterCount) }}</UiBadge>
                 </UiButton>
                 <UiButton v-if="activeFilterCount || filters.search" variant="ghost" @click="list.resetFilters()"><RotateCcw class="size-4" />{{ t('common.reset') }}</UiButton>
             </div>

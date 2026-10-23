@@ -14,6 +14,7 @@ import UiSortHeader from '@/components/ui/UiSortHeader.vue';
 import MasterDataFormDialog from './MasterDataFormDialog.vue';
 import { useConfirm } from '@/composables/useConfirm';
 import { useListQuery } from '@/composables/useListQuery';
+import { formatNumber } from '@/lib/format';
 import { http, toApiError } from '@/lib/http';
 import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
@@ -123,7 +124,7 @@ const reportLinkQuery = computed(() => {
                     :class="item.type === currentType ? 'bg-brand/10 font-medium text-brand-ink' : 'text-muted hover:bg-surface-2 hover:text-fg'"
                 >
                     <span class="truncate">{{ t(`masterData.types.${item.type}`) }}</span>
-                    <span class="rounded-full bg-surface-2 px-2 text-xs tabular-nums text-muted">{{ item.count }}</span>
+                    <span class="rounded-full bg-surface-2 px-2 text-xs tabular-nums text-muted">{{ formatNumber(item.count) }}</span>
                 </RouterLink>
             </nav>
 
