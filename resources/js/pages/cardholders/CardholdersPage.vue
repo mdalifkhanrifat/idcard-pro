@@ -18,7 +18,7 @@ import { useMasterDataOptions } from '@/composables/useMasterDataOptions';
 import { useCustomFields } from '@/composables/useCustomFields';
 import { http, toApiError } from '@/lib/http';
 import { formatDate, formatDateTime } from '@/lib/format';
-import { statusTone } from './cardholder';
+import { keptAsRecord, statusTone } from './cardholder';
 import { useCardsPrinted } from '@/pages/cards/cards';
 import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
@@ -76,6 +76,12 @@ useCardsPrinted((cardIds) => {
 });
 
 async function remove(cardholder: Cardholder): Promise<void> {
+    // Kept as a record: say why (a phone has no hover)
+    const kept = keptAsRecord(cardholder, t);
+    if (kept) {
+        ui.notify(kept, 'info');
+        return;
+    }
     if (!(await confirm({ title: t('common.areYouSure'), message: t('cardholders.deleteConfirm', { name: cardholder.full_name }), confirmLabel: t('common.delete'), danger: true }))) {
         return;
     }
@@ -234,9 +240,10 @@ async function remove(cardholder: Cardholder): Promise<void> {
                                     <button
                                         v-if="auth.can('cardholders.delete')"
                                         class="rounded-md p-2 text-muted hover:bg-danger/10 hover:text-danger disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent disabled:hover:text-muted"
-                                        :disabled="row.has_cards"
+                                        :class="keptAsRecord(row, t) && 'opacity-40 hover:bg-transparent hover:text-muted'"
+                                        :aria-disabled="!!keptAsRecord(row, t)"
                                         :aria-label="t('common.delete')"
-                                        :title="row.has_cards ? t('cardholders.hasCards') : t('common.delete')"
+                                        :title="keptAsRecord(row, t) ?? t('common.delete')"
                                         data-delete-cardholder
                                         @click="remove(row)"
                                     >

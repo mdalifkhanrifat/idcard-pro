@@ -114,7 +114,7 @@ const reportLinkQuery = computed(() => {
 
         <div class="grid gap-6 lg:grid-cols-[260px_1fr]">
             <!-- Types -->
-            <nav class="h-fit rounded-xl border border-line bg-surface p-2" aria-label="Lists">
+            <nav class="h-fit rounded-xl border border-line bg-surface p-2" :aria-label="t('masterData.lists')">
                 <RouterLink
                     v-for="item in types"
                     :key="item.type"

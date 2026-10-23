@@ -122,7 +122,7 @@ async function exitTenant(): Promise<void> {
                     <p class="truncate text-sm font-semibold text-fg">{{ auth.tenant?.name ?? t('app.name') }}</p>
                     <p class="truncate text-xs text-muted">{{ auth.tenant ? auth.tenant.slug : t('nav.platform') }}</p>
                 </div>
-                <button class="text-muted lg:hidden" aria-label="Close menu" @click="ui.sidebarOpen = false"><X class="size-5" /></button>
+                <button class="text-muted lg:hidden" :aria-label="t('common.closeMenu')" @click="ui.sidebarOpen = false"><X class="size-5" /></button>
             </div>
 
             <nav class="flex-1 space-y-6 overflow-y-auto px-3 py-4">
@@ -155,7 +155,7 @@ async function exitTenant(): Promise<void> {
                 <button class="font-semibold underline" @click="exitTenant">{{ t('platform.exit') }}</button>
             </div>
             <header class="sticky top-0 z-20 flex h-16 items-center gap-3 border-b border-line bg-surface/80 px-4 backdrop-blur sm:px-6">
-                <button class="rounded-lg p-2 text-muted hover:bg-surface-2 lg:hidden" aria-label="Open menu" @click="ui.sidebarOpen = true">
+                <button class="rounded-lg p-2 text-muted hover:bg-surface-2 lg:hidden" :aria-label="t('common.openMenu')" @click="ui.sidebarOpen = true">
                     <Menu class="size-5" />
                 </button>
                 <div class="flex-1" />

@@ -1,8 +1,10 @@
 <script setup lang="ts">
 import { CheckCircle2, Info, X, XCircle } from 'lucide-vue-next';
+import { useI18n } from 'vue-i18n';
 import { useUiStore } from '@/stores/ui';
 
 const ui = useUiStore();
+const { t } = useI18n();
 const icons = { success: CheckCircle2, error: XCircle, info: Info };
 </script>
 
@@ -25,7 +27,7 @@ const icons = { success: CheckCircle2, error: XCircle, info: Info };
                     :class="{ 'text-success': toast.type === 'success', 'text-danger': toast.type === 'error', 'text-brand-ink': toast.type === 'info' }"
                 />
                 <p class="flex-1 text-sm text-fg">{{ toast.message }}</p>
-                <button class="text-muted hover:text-fg" aria-label="Dismiss" @click="ui.dismiss(toast.id)"><X class="size-4" /></button>
+                <button class="text-muted hover:text-fg" :aria-label="t('common.dismiss')" @click="ui.dismiss(toast.id)"><X class="size-4" /></button>
             </div>
         </TransitionGroup>
     </div>

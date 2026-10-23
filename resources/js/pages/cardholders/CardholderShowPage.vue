@@ -6,6 +6,7 @@ import { ArrowLeft, Loader2, Pencil, Trash2, UserRound } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiCard from '@/components/ui/UiCard.vue';
+import CardholderAppointments from './CardholderAppointments.vue';
 import CardholderBiometrics from './CardholderBiometrics.vue';
 import CardholderCards from './CardholderCards.vue';
 import CardholderDocuments from './CardholderDocuments.vue';
@@ -16,7 +17,7 @@ import { useCustomFields } from '@/composables/useCustomFields';
 import { useConfirm } from '@/composables/useConfirm';
 import { http, toApiError } from '@/lib/http';
 import { formatDate, formatDateTime } from '@/lib/format';
-import { statusTone } from './cardholder';
+import { keptAsRecord, statusTone } from './cardholder';
 import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
 import type { Cardholder, CardholderFile, LookupRef } from '@/types';
@@ -35,11 +36,14 @@ const earlierImages = ref<CardholderFile[]>([]);
 const showBiometrics = computed(() => auth.can('biometrics.view') && !!auth.tenant?.biometrics?.enabled);
 /** Messages to the cardholder and their family members, for those who may read the log. */
 const showMessages = computed(() => auth.can('notifications.view'));
-type TabKey = 'details' | 'cards' | 'biometrics' | 'family' | 'qualifications' | 'documents' | 'messages';
+/** Appointments for those who may see them, while the organization books them — or the person has some from before. */
+const showAppointments = computed(() => auth.can('appointments.view') && (!!auth.tenant?.appointments?.enabled || !!cardholder.value?.has_appointments));
+type TabKey = 'details' | 'cards' | 'biometrics' | 'appointments' | 'family' | 'qualifications' | 'documents' | 'messages';
 const TABS = computed<TabKey[]>(() => [
     'details',
     ...(auth.can('cards.view') ? (['cards'] as const) : []),
     ...(showBiometrics.value ? (['biometrics'] as const) : []),
+    ...(showAppointments.value ? (['appointments'] as const) : []),
     'family',
     'qualifications',
     'documents',
@@ -47,9 +51,11 @@ const TABS = computed<TabKey[]>(() => [
 ]);
 const tabFromUrl = (): TabKey => (TABS.value.includes(route.query.tab as TabKey) ? (route.query.tab as TabKey) : 'details');
 const tab = ref<TabKey>(tabFromUrl());
-// The tab is in the URL (?tab=), so a link or a reload opens it; the details keep the URL plain. The messages
-// list keeps its criteria under msg_*, dropped on leaving it.
-watch(tab, (value) => router.replace({ query: { ...Object.fromEntries(Object.entries(route.query).filter(([key]) => value === 'messages' || !key.startsWith('msg_'))), tab: value === 'details' ? undefined : value } }));
+// The tab is in the URL (?tab=), so a link or a reload opens it; the details keep the URL plain. A tab's list
+// keeps its criteria under its own prefix (messages msg_*, appointments ap_*), dropped on leaving it.
+const PREFIXES: Partial<Record<TabKey, string>> = { messages: 'msg_', appointments: 'ap_' };
+const ownedByAnother = (key: string, value: TabKey) => Object.entries(PREFIXES).some(([owner, prefix]) => owner !== value && key.startsWith(prefix));
+watch(tab, (value) => router.replace({ query: { ...Object.fromEntries(Object.entries(route.query).filter(([key]) => !ownedByAnother(key, value))), tab: value === 'details' ? undefined : value } }));
 watch(() => route.query.tab, () => (tab.value = tabFromUrl()));
 const tabLabel = (key: TabKey) =>
     ({
@@ -59,6 +65,7 @@ const tabLabel = (key: TabKey) =>
         family: t('cardholders.family.title'),
         qualifications: t('cardholders.qualifications.title'),
         documents: t('cardholders.files.document'),
+        appointments: t('cardholders.tabs.appointments'),
         messages: t('cardholders.tabs.messages'),
     })[key];
 // On a phone the tab bar scrolls sideways: the open tab is brought into it (e.g. the last one, from a link)
@@ -169,6 +176,8 @@ async function load(): Promise<void> {
             http.get(`/cardholders/${id}/files`, { params: { include_replaced: 1 } }),
         ]);
         cardholder.value = record.data.data;
+        // A tab shown only for what the record says (appointments from before) opens from a link too
+        tab.value = tabFromUrl();
         earlierImages.value = (images.data.data as CardholderFile[]).filter((file) => !file.is_current && file.collection !== 'document');
     } catch (error) {
         ui.notify(toApiError(error).message, 'error');
@@ -176,8 +185,15 @@ async function load(): Promise<void> {
     }
 }
 
+/** Why the record is kept (cards issued, appointments booked), or null when it can be deleted. */
+const keptBecause = computed(() => (cardholder.value ? keptAsRecord(cardholder.value, t) : null));
+
 async function remove(): Promise<void> {
     const c = cardholder.value!;
+    if (keptBecause.value) {
+        ui.notify(keptBecause.value, 'info');
+        return;
+    }
     if (!(await confirm({ title: t('common.areYouSure'), message: t('cardholders.deleteConfirm', { name: c.full_name }), confirmLabel: t('common.delete'), danger: true }))) {
         return;
     }
@@ -218,7 +234,8 @@ onMounted(load);
             </div>
             <div class="flex gap-2 self-start">
                 <UiButton v-if="auth.can('cardholders.update')" variant="secondary" @click="router.push(`/cardholders/${cardholder.id}/edit`)"><Pencil class="size-4" />{{ t('common.edit') }}</UiButton>
-                <UiButton v-if="auth.can('cardholders.delete')" variant="ghost" :disabled="cardholder.has_cards" :title="cardholder.has_cards ? t('cardholders.hasCards') : undefined" data-delete-cardholder @click="remove">
+                <!-- Kept as a record: pressing it says why (a phone has no hover) -->
+                <UiButton v-if="auth.can('cardholders.delete')" variant="ghost" :class="keptBecause && 'opacity-60'" :aria-disabled="!!keptBecause" :title="keptBecause ?? undefined" data-delete-cardholder @click="remove">
                     <Trash2 class="size-4" />{{ t('common.delete') }}
                 </UiButton>
             </div>
@@ -271,6 +288,7 @@ onMounted(load);
 
         <CardholderCards v-else-if="tab === 'cards'" :cardholder="cardholder" />
         <CardholderBiometrics v-else-if="tab === 'biometrics'" :cardholder-id="cardholder.id" />
+        <CardholderAppointments v-else-if="tab === 'appointments'" :cardholder="cardholder" @booked="cardholder.has_appointments = true" />
         <CardholderFamily v-else-if="tab === 'family'" :cardholder-id="cardholder.id" />
         <CardholderQualifications v-else-if="tab === 'qualifications'" :cardholder-id="cardholder.id" />
         <NotificationMessageList v-else-if="tab === 'messages'" :fixed="{ cardholder: cardholder.id }" query-prefix="msg_" :language-names="languageNames" data-tab="messages" />

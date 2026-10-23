@@ -5,6 +5,18 @@ export function statusTone(status: CardholderStatus): 'success' | 'neutral' | 'w
     return status === 'active' ? 'success' : status === 'retired' ? 'warning' : 'neutral';
 }
 
+/**
+ * Why a cardholder is kept as a record instead of deleted — cards issued, appointments booked (for them or their
+ * family; the server refuses the delete too) — or null when it can be deleted.
+ */
+export function keptAsRecord(cardholder: Pick<Cardholder, 'has_cards' | 'has_appointments'>, t: (key: string) => string): string | null {
+    if (cardholder.has_cards) {
+        return t('cardholders.hasCards');
+    }
+
+    return cardholder.has_appointments ? t('cardholders.hasAppointments') : null;
+}
+
 /** Upload limits in KB; keep in sync with config/cardholder_files.php. */
 export const FILE_LIMITS = { photo: 5120, signature: 2048, document: 10240 } as const;
 

@@ -51,7 +51,10 @@
             "discard": "Discard",
             "leaveConfirm": "Leave without saving?",
             "leave": "Leave"
-        }
+        },
+        "dismiss": "Dismiss",
+        "closeMenu": "Close menu",
+        "openMenu": "Open menu"
     },
     "auth": {
         "signIn": "Sign in",
@@ -429,10 +432,12 @@
             "region": "Regions / districts",
             "sub_region": "Areas / sub-districts",
             "card_type": "Card types"
-        }
+        },
+        "lists": "Lists"
     },
     "cardholders": {
         "hasCards": "Has issued cards, kept as records: mark the person inactive instead of deleting.",
+        "hasAppointments": "Has appointments, kept as records (cancelled ones too): mark the person inactive instead of deleting.",
         "title": "Cardholders",
         "subtitle": "People who can be issued ID cards.",
         "new": "New cardholder",
@@ -552,7 +557,8 @@
         "back": "Back to cardholders",
         "tabs": {
             "details": "Details",
-            "messages": "Messages"
+            "messages": "Messages",
+            "appointments": "Appointments"
         },
         "family": {
             "imagesHint": "Their own photo and signature are printed on family cards. Without them the card prints no photo (not the cardholder's).",
@@ -679,6 +685,11 @@
             "none": "No card",
             "pending": "Not printed",
             "printed": "Printed"
+        },
+        "appointments": {
+            "total": "{count} appointment | {count} appointments",
+            "none": "No appointments yet",
+            "noneHint": "Appointments booked for the person or their family members show here."
         }
     },
     "customFields": {

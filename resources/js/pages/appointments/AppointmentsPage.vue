@@ -4,7 +4,6 @@ import { useRoute } from 'vue-router';
 import { useI18n } from 'vue-i18n';
 import { CalendarCog, CalendarPlus, ChevronLeft, ChevronRight, RefreshCw, SlidersHorizontal } from 'lucide-vue-next';
 import ListPagination from '@/components/ListPagination.vue';
-import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiEmpty from '@/components/ui/UiEmpty.vue';
 import UiInput from '@/components/ui/UiInput.vue';
@@ -13,11 +12,12 @@ import UiSelect from '@/components/ui/UiSelect.vue';
 import { useListQuery, type PageMeta } from '@/composables/useListQuery';
 import { useUrlOpen } from '@/composables/useUrlOpen';
 import { addDays, todayIn } from '@/lib/appointments/availability';
-import { filtersFor, namesDays, scopeOf, statusTone, timeRange, type Appointment, type AppointmentListOptions, type AppointmentScope } from '@/lib/appointments/bookings';
+import { filtersFor, namesDays, scopeOf, type Appointment, type AppointmentListOptions, type AppointmentScope } from '@/lib/appointments/bookings';
 import { fetchPlaces, type AppointmentPlace } from '@/lib/appointments/places';
-import { formatDate, formatLongDate, formatNumber, localDigits } from '@/lib/format';
+import { formatLongDate, formatNumber } from '@/lib/format';
 import AppointmentBookDialog from '@/pages/appointments/AppointmentBookDialog.vue';
 import AppointmentDetailDialog from '@/pages/appointments/AppointmentDetailDialog.vue';
+import AppointmentRow from '@/pages/appointments/AppointmentRow.vue';
 import { useAuthStore } from '@/stores/auth';
 
 /**
@@ -103,12 +103,6 @@ const detailOpen = computed({
         }
     },
 });
-const relation = (key: string) => t(`cardholders.family.relations.${key}`);
-const time = (row: Appointment) => {
-    const range = timeRange(row);
-
-    return range ? localDigits(range) : t('appointments.list.inTurn');
-};
 </script>
 
 <template>
@@ -169,22 +163,7 @@ const time = (row: Appointment) => {
 
             <ul class="divide-y divide-line" :class="list.loading.value && 'opacity-50'">
                 <li v-for="row in list.rows.value" :key="row.id" :data-row="row.number">
-                    <button type="button" class="flex w-full flex-col gap-1.5 px-5 py-3 text-left text-sm hover:bg-surface-2 focus-visible:bg-surface-2 focus-visible:outline-none sm:flex-row sm:items-center sm:gap-4" :class="opened === row.id && 'bg-surface-2'" data-row-open @click="opened = row.id">
-                    <span class="shrink-0 tabular-nums sm:w-36" data-when>
-                        <span v-if="scope !== 'day'" class="block text-xs text-muted">{{ formatDate(row.date) }}</span>
-                        <span class="font-medium text-fg">{{ time(row) }}</span>
-                    </span>
-                    <span class="min-w-0 flex-1">
-                        <span class="block break-words text-fg">
-                            <span class="font-medium">{{ row.family_member?.name ?? row.cardholder?.name }}</span>
-                            <span v-if="row.family_member" class="text-xs text-muted"> · {{ relation(row.family_member.relation) }} — {{ row.cardholder?.name }}</span>
-                        </span>
-                        <span class="block text-xs break-words text-muted">
-                            <span class="font-mono">{{ row.number }}</span> · {{ row.service.name }}<template v-if="manyPlaces && row.location"> · {{ row.location.name }}</template><template v-if="row.cardholder?.employee_no"> · {{ row.cardholder.employee_no }}</template>
-                        </span>
-                    </span>
-                    <UiBadge :tone="statusTone(row.status.key)" class="w-fit justify-center sm:w-36" :class="row.status.key === 'cancelled' && 'line-through'" data-status>{{ row.status.name }}</UiBadge>
-                    </button>
+                    <AppointmentRow :row="row" :show-date="scope !== 'day'" :show-place="manyPlaces" :active="opened === row.id" @open="opened = row.id" />
                 </li>
             </ul>
             <div v-if="list.failed.value && !list.loading.value" class="flex flex-col items-center gap-3 px-5 py-10 text-sm text-muted" data-failed>
