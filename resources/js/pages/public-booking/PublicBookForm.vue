@@ -5,7 +5,7 @@ import UiButton from '@/components/ui/UiButton.vue';
 import UiSelect from '@/components/ui/UiSelect.vue';
 import UiTextarea from '@/components/ui/UiTextarea.vue';
 import { wallClock } from '@/lib/appointments/availability';
-import { bookPublic, movePublic, publicAvailability, type PublicAppointment, type PublicBookingInfo, type PublicPerson } from '@/lib/appointments/public';
+import { bookableServices, bookPublic, movePublic, publicAvailability, type PublicAppointment, type PublicBookingInfo, type PublicPerson } from '@/lib/appointments/public';
 import { formatLongDate, localDigits } from '@/lib/format';
 import { toApiError } from '@/lib/http';
 import AvailabilityWeek from '@/pages/appointments/AvailabilityWeek.vue';
@@ -21,7 +21,7 @@ const emit = defineEmits<{ done: [appointment: PublicAppointment]; cancel: []; '
 const { t } = useI18n();
 
 const member = ref('');
-const service = ref(props.moving?.service.key ?? props.info.services[0]?.key ?? '');
+const service = ref(props.moving?.service.key ?? bookableServices(props.info)[0]?.key ?? '');
 const place = ref('');
 const chosen = ref<{ date: string; time: string | null } | null>(null);
 const note = ref('');
@@ -34,7 +34,8 @@ const members = computed(() => [
     { value: '', label: t('publicBooking.book.myself', { name: props.person.name }) },
     ...props.person.family_members.map((m) => ({ value: m.id, label: `${m.name} · ${t(`cardholders.family.relations.${m.relation}`)}` })),
 ]);
-const services = computed(() => props.info.services.map((s) => ({ value: s.key, label: s.name })));
+// Only kinds some place takes: one with nowhere to go is not offered
+const services = computed(() => bookableServices(props.info).map((s) => ({ value: s.key, label: s.name })));
 const places = computed(() => props.info.places.filter((p) => p.services.includes(service.value)).map((p) => ({ value: p.id, label: p.name, address: p.address })));
 watch(places, (choices) => {
     if (!choices.some((choice) => choice.value === place.value)) {

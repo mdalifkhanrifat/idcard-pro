@@ -23,6 +23,11 @@ export interface PublicBookingInfo {
     places: { id: string; name: string; name_local: string | null; address: string | null; services: string[] }[];
 }
 
+/** The kinds of visit one can book on the link now: offered there and taken by at least one open place. */
+export function bookableServices(info: Pick<PublicBookingInfo, 'services' | 'places'>): Named[] {
+    return info.services.filter((service) => info.places.some((place) => place.services.includes(service.key)));
+}
+
 export interface PublicPerson {
     name: string;
     employee_no: string | null;

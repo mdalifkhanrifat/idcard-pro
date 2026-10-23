@@ -2159,6 +2159,7 @@
             "hello": "Hello, {name}",
             "signOut": "Sign out",
             "book": "Book an appointment",
+            "noBooking": "New bookings are not taken on this link just now. Please contact the office. Your appointments are below.",
             "mine": "Your appointments",
             "failed": "Your appointments could not be loaded.",
             "none": "You have no appointments ahead.",

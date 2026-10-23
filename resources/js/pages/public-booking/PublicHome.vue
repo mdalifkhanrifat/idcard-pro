@@ -6,7 +6,7 @@ import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiTextarea from '@/components/ui/UiTextarea.vue';
 import { statusTone, timeRange } from '@/lib/appointments/bookings';
-import { cancelPublic, myAppointments, signOut, type PublicAppointment, type PublicBookingInfo, type PublicPerson } from '@/lib/appointments/public';
+import { bookableServices, cancelPublic, myAppointments, signOut, type PublicAppointment, type PublicBookingInfo, type PublicPerson } from '@/lib/appointments/public';
 import { formatLongDate, formatNumber, localDigits } from '@/lib/format';
 import { toApiError } from '@/lib/http';
 import PublicBookForm from './PublicBookForm.vue';
@@ -19,6 +19,8 @@ import PublicBookForm from './PublicBookForm.vue';
 const props = defineProps<{ organization: string; info: PublicBookingInfo; person: PublicPerson }>();
 const emit = defineEmits<{ 'signed-out': [note: string | null] }>();
 const { t } = useI18n();
+/** Nothing to book when no kind of visit is offered on the link or no open place takes one (own bookings still show). */
+const canBook = computed(() => bookableServices(props.info).length > 0);
 
 const appointments = ref<PublicAppointment[]>([]);
 const loading = ref(true);
@@ -129,7 +131,8 @@ async function leave(): Promise<void> {
         <PublicBookForm v-if="mode !== 'list'" :organization="organization" :info="info" :person="person" :moving="mode === 'move' ? moving : null" @done="finished" @cancel="mode = 'list'" @signed-out="ended" />
 
         <template v-else>
-            <UiButton block data-public-book @click="startBooking"><CalendarPlus class="size-4" />{{ t('publicBooking.home.book') }}</UiButton>
+            <UiButton v-if="canBook" block data-public-book @click="startBooking"><CalendarPlus class="size-4" />{{ t('publicBooking.home.book') }}</UiButton>
+            <p v-else class="rounded-lg border border-line bg-surface-2 px-4 py-3 text-sm text-muted" data-public-no-booking>{{ t('publicBooking.home.noBooking') }}</p>
             <p v-if="refusal" role="alert" class="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-sm text-fg" data-public-refusal>{{ refusal }}</p>
 
             <section class="space-y-3">
