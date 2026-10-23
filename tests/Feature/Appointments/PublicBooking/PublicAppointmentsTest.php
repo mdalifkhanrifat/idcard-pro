@@ -81,6 +81,10 @@ it('keeps to the public\'s rules: the hours\' notice and the kinds offered, and 
 
 it('cancels and moves the person\'s own as far as the organization allows, and only their own', function () {
     $mine = ($this->book)()->json('data.id');
+    // As for moving it: its own time shown free; another's cannot be named
+    $slot = fn (string $query) => collect($this->getJson("{$this->url}/availability?location={$this->place->public_id}&service=new_card&from=2026-10-18&to=2026-10-18{$query}", $this->headers)->json('data.days.0.slots'))->firstWhere('start', '2026-10-18T10:00:00+06:00')['available'] ?? null;
+    expect($slot(''))->toBe(0)->and($slot("&except={$mine}"))->toBe(1);
+    $this->getJson("{$this->url}/availability?location={$this->place->public_id}&service=new_card&except={$this->kims->public_id}", $this->headers)->assertNotFound();
 
     $this->patchJson("{$this->url}/appointments/{$mine}", ['date' => '2026-10-18', 'time' => '11:00'], $this->headers)->assertOk()
         ->assertJsonPath('data.starts_at', '2026-10-18T11:00:00+06:00');

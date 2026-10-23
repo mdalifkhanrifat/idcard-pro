@@ -91,7 +91,7 @@ class PublicBookingController extends Controller
         /** @var AppointmentLocation $place */
         $place = $locations->findByPublicId((string) $request->validated('location'));
 
-        return new AvailabilityResource($this->appointments->availability($place, (string) $request->validated('service'), $from, $to));
+        return new AvailabilityResource($this->appointments->availability($this->signedIn($request), $place, (string) $request->validated('service'), $from, $to, $request->validated('except')));
     }
 
     /**

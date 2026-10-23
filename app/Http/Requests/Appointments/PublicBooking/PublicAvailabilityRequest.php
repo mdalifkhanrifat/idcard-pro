@@ -22,6 +22,8 @@ class PublicAvailabilityRequest extends FormRequest
             'service' => ['required', 'string', 'max:40', 'regex:/^[a-z][a-z0-9_]*$/'],
             'from' => ['sometimes', 'date_format:Y-m-d'],
             'to' => ['sometimes', 'date_format:Y-m-d', 'after_or_equal:from'],
+            // One of the person's own being moved
+            'except' => ['sometimes', 'nullable', 'string', 'size:26'],
         ];
     }
 

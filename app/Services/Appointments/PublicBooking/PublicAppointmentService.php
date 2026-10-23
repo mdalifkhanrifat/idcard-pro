@@ -36,9 +36,12 @@ class PublicAppointmentService
         private AvailabilityService $availability,
     ) {}
 
-    public function availability(AppointmentLocation $location, string $service, string $from, string $to): Availability
+    /**
+     * `$except`: one of the person's own being moved — its own place shown free (another's is not found).
+     */
+    public function availability(Cardholder $person, AppointmentLocation $location, string $service, string $from, string $to, ?string $except = null): Availability
     {
-        return $this->availability->for($location, $service, $from, $to, BookingAudience::Public);
+        return $this->availability->for($location, $service, $from, $to, BookingAudience::Public, except: $except === null ? null : $this->own($person, $except)->id);
     }
 
     /**

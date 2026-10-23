@@ -43,7 +43,7 @@ class PublicBookingService
             'organization' => [
                 'name' => $tenant->name,
                 'logo_url' => $tenant->logo_path ? url('storage/'.$tenant->logo_path) : null,
-                'color' => $tenant->primary_color,
+                'primary_color' => $tenant->primary_color,
                 'timezone' => $tenant->timezone ?: (string) config('app.timezone'),
             ],
             'scheduling' => $settings['scheduling'],
