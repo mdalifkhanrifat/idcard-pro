@@ -42,10 +42,12 @@ export interface AvailabilityQuery {
     audience: string;
     /** As it will be once appointments and the place are on (setting up). */
     preview?: boolean;
+    /** An appointment being moved (its public id): its own place is shown free. */
+    except?: string | null;
 }
 
 export async function fetchAvailability(placeId: string, query: AvailabilityQuery): Promise<Availability> {
-    const { data } = await http.get<{ data: Availability }>(`/appointment-locations/${placeId}/availability`, { params: { ...query, preview: query.preview ? 1 : undefined } });
+    const { data } = await http.get<{ data: Availability }>(`/appointment-locations/${placeId}/availability`, { params: { ...query, preview: query.preview ? 1 : undefined, except: query.except || undefined } });
 
     return data.data;
 }

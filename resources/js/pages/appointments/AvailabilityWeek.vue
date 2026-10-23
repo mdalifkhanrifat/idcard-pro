@@ -12,12 +12,28 @@ import { useAuthStore } from '@/stores/auth';
  * A week of a place's days for a kind of visit, on the organization's wall clock: closed (with the closure's
  * reason), or the times still free (the day's places when a day is booked); earlier and later weeks within the
  * days bookings open. Shown as it is (the settings' preview) or to choose a time or a day from (booking, moving):
- * `v-model:chosen` is then the day and the time ("HH:MM", null for a day booked).
+ * `v-model:chosen` is then the day and the time ("HH:MM", null for a day booked). `except`: an appointment being
+ * moved, whose own place is shown free (and `current` marks its time; `startOn` opens on its week).
  */
-const props = withDefaults(defineProps<{ placeId: string | null; service: string; audience?: string; preview?: boolean; daysAhead: number; selectable?: boolean }>(), {
+const props = withDefaults(defineProps<{
+    placeId: string | null;
+    service: string;
+    audience?: string;
+    preview?: boolean;
+    daysAhead: number;
+    selectable?: boolean;
+    except?: string | null;
+    /** The time an appointment being moved has now, marked among the free ones. */
+    current?: { date: string; time: string | null } | null;
+    /** The first day shown (e.g. a moved appointment's own day), when not before today. */
+    startOn?: string | null;
+}>(), {
     audience: 'staff',
     preview: false,
     selectable: false,
+    except: null,
+    current: null,
+    startOn: null,
 });
 const chosen = defineModel<{ date: string; time: string | null } | null>('chosen', { default: null });
 const { t, locale } = useI18n();
@@ -26,7 +42,8 @@ const auth = useAuthStore();
 const WEEK = 7;
 const today = computed(() => todayIn(auth.tenant?.timezone));
 const lastBookable = computed(() => addDays(today.value, props.daysAhead));
-const start = ref(today.value);
+const firstDay = () => (props.startOn && props.startOn > today.value && props.startOn <= lastBookable.value ? props.startOn : today.value);
+const start = ref(firstDay());
 const result = ref<Availability | null>(null);
 const loading = ref(false);
 const failure = ref<string | null>(null);
@@ -41,7 +58,7 @@ async function load(): Promise<void> {
     loading.value = true;
     failure.value = null;
     try {
-        const answer = await fetchAvailability(props.placeId, { service: props.service, from: start.value, to: addDays(start.value, WEEK - 1), audience: props.audience, preview: props.preview });
+        const answer = await fetchAvailability(props.placeId, { service: props.service, from: start.value, to: addDays(start.value, WEEK - 1), audience: props.audience, preview: props.preview, except: props.except });
         // An older answer (a quick change of week or kind) does not overwrite a newer one
         if (ask === asked) {
             result.value = answer;
@@ -57,8 +74,8 @@ async function load(): Promise<void> {
         }
     }
 }
-watch(() => [props.placeId, props.service, props.audience, props.preview], () => {
-    start.value = today.value;
+watch(() => [props.placeId, props.service, props.audience, props.preview, props.except], () => {
+    start.value = firstDay();
     load();
 }, { immediate: true });
 watch(start, load);
@@ -84,6 +101,7 @@ function closedText(day: AvailableDay): string {
 }
 const noneLeft = (day: AvailableDay) => (day.date === today.value ? t('appointments.preview.noneLeftToday') : t('appointments.preview.noneLeft'));
 const isChosen = (date: string, time: string | null) => chosen.value?.date === date && chosen.value.time === time;
+const isCurrent = (date: string, time: string | null) => props.current?.date === date && props.current.time === time;
 </script>
 
 <template>
@@ -123,9 +141,11 @@ const isChosen = (date: string, time: string | null) => chosen.value?.date === d
                                         slot.available > 0 ? 'border-line text-fg' : 'border-line bg-surface-2 text-muted line-through',
                                         selectable && slot.available > 0 && 'hover:border-brand',
                                         isChosen(day.date, wallClock(slot.start)) && 'border-brand bg-brand/12 font-medium text-brand-ink',
+                                        isCurrent(day.date, wallClock(slot.start)) && 'border-dashed border-brand-ink',
                                     ]"
                                     :aria-pressed="selectable && slot.available > 0 ? isChosen(day.date, wallClock(slot.start)) : undefined"
-                                    :title="t('appointments.preview.slotFree', { free: formatNumber(slot.available), capacity: formatNumber(slot.capacity) })"
+                                    :title="isCurrent(day.date, wallClock(slot.start)) ? t('appointments.preview.current') : t('appointments.preview.slotFree', { free: formatNumber(slot.available), capacity: formatNumber(slot.capacity) })"
+                                    :data-current="isCurrent(day.date, wallClock(slot.start)) || undefined"
                                     :data-slot="`${day.date} ${wallClock(slot.start)}`"
                                     @click="selectable && slot.available > 0 && (chosen = { date: day.date, time: wallClock(slot.start) })"
                                 >
@@ -139,7 +159,8 @@ const isChosen = (date: string, time: string | null) => chosen.value?.date === d
                             v-if="selectable"
                             type="button"
                             class="rounded-md border px-2 py-0.5 text-sm"
-                            :class="isChosen(day.date, null) ? 'border-brand bg-brand/12 font-medium text-brand-ink' : 'border-line text-fg hover:border-brand'"
+                            :class="[isChosen(day.date, null) ? 'border-brand bg-brand/12 font-medium text-brand-ink' : 'border-line text-fg hover:border-brand', isCurrent(day.date, null) && 'border-dashed border-brand-ink']"
+                            :data-current="isCurrent(day.date, null) || undefined"
                             :aria-pressed="isChosen(day.date, null)"
                             :data-slot="`${day.date} day`"
                             @click="chosen = { date: day.date, time: null }"
@@ -151,5 +172,6 @@ const isChosen = (date: string, time: string | null) => chosen.value?.date === d
             </li>
         </ul>
         <p v-if="result?.scheduling === 'slot' && result.days.length" class="text-xs text-muted">{{ t('appointments.preview.slotHint') }}</p>
+        <p v-if="current && result?.days.length" class="text-xs text-muted" data-week-current-hint><span class="mr-1 inline-block h-3 w-5 rounded border border-dashed border-brand-ink align-middle"></span>{{ t('appointments.preview.current') }}</p>
     </div>
 </template>

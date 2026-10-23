@@ -1,22 +1,23 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { ExternalLink, Undo2 } from 'lucide-vue-next';
+import { CalendarClock, ExternalLink, Pencil, Undo2 } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiDialog from '@/components/ui/UiDialog.vue';
 import UiTextarea from '@/components/ui/UiTextarea.vue';
 import { useConfirm } from '@/composables/useConfirm';
-import { cancelAppointment, changeAppointmentStatus, fetchAppointment, layoutActions, statusTone, timeRange, type Appointment, type AppointmentStep } from '@/lib/appointments/bookings';
+import { cancelAppointment, changeAppointmentNote, changeAppointmentStatus, fetchAppointment, layoutActions, statusTone, timeRange, type Appointment, type AppointmentStep } from '@/lib/appointments/bookings';
 import { formatDateTime, formatLongDate, localDigits } from '@/lib/format';
 import { toApiError } from '@/lib/http';
+import AppointmentMoveDialog from '@/pages/appointments/AppointmentMoveDialog.vue';
 import { useAuthStore } from '@/stores/auth';
 import { useUiStore } from '@/stores/ui';
 
 /**
  * One appointment (5.5c): who, what, where and when, who booked it and who took its last step — and only the
- * buttons the server offers (`actions`): the steps ahead first, calling it off with a reason, and going back from
- * a mistake apart. A button not possible now says why underneath (a phone has no hover). Read afresh each time it
+ * buttons the server offers (`actions`): the steps ahead first, moving it (AppointmentMoveDialog), calling it off
+ * with a reason, changing its note in place, and going back from a mistake apart. A button not possible now says why underneath (a phone has no hover). Read afresh each time it
  * opens and after a refusal (time passing changes what is possible); a change's own answer redraws it.
  */
 const props = defineProps<{ appointmentId: string | null }>();
@@ -37,6 +38,10 @@ const busy = ref<string | null>(null);
 const stopping = ref(false);
 const reason = ref('');
 const reasonError = ref<string | undefined>();
+const moving = ref(false);
+const editingNote = ref(false);
+const noteDraft = ref('');
+const noteError = ref<string | undefined>();
 
 async function load(quiet = false): Promise<void> {
     const id = props.appointmentId;
@@ -66,20 +71,56 @@ watch([open, () => props.appointmentId], ([isOpen, id], [wasOpen, previousId]) =
         failure.value = null;
         refusal.value = null;
         stopping.value = false;
+        editingNote.value = false;
+        moving.value = false;
         load();
     }
 }, { immediate: true });
 
 const actions = computed(() => layoutActions(appointment.value?.actions, appointment.value?.status.open ?? true));
-const blocked = computed(() => [...actions.value.forward, ...(actions.value.stop ? [actions.value.stop] : [])].filter((action) => !action.allowed && action.reason));
 const stopLabel = computed(() => actions.value.stop?.label ?? t('appointments.detail.cancel'));
+/** What cannot be done now, each with why. */
+const blocked = computed(() => [
+    ...actions.value.forward.map((step) => ({ key: step.status.key, label: step.label, verdict: step })),
+    ...(actions.value.move ? [{ key: 'move', label: t('appointments.detail.move'), verdict: actions.value.move }] : []),
+    ...(actions.value.stop ? [{ key: 'stop', label: stopLabel.value, verdict: actions.value.stop }] : []),
+].filter((action) => !action.verdict.allowed && action.verdict.reason));
+const hasActions = computed(() => !!(actions.value.forward.length || actions.value.move || actions.value.stop));
 
 /** A change's answer: drawn at once (with its new actions), and the page behind reloads. */
-function changed(next: Appointment, message: string): void {
+function changed(next: Appointment, message: string | null): void {
     appointment.value = next;
     refusal.value = null;
-    ui.notify(message, 'success');
+    if (message) {
+        ui.notify(message, 'success');
+    }
     emit('changed', next);
+}
+
+function startNote(): void {
+    noteDraft.value = appointment.value?.note ?? '';
+    noteError.value = undefined;
+    editingNote.value = true;
+}
+async function saveNote(): Promise<void> {
+    const current = appointment.value;
+    if (!current) {
+        return;
+    }
+    busy.value = 'note';
+    try {
+        const next = await changeAppointmentNote(current.id, noteDraft.value.trim() || null);
+        editingNote.value = false;
+        changed(next, t('appointments.detail.noteSaved'));
+    } catch (error) {
+        noteError.value = toApiError(error).errors.note?.[0];
+        if (!noteError.value) {
+            editingNote.value = false;
+            await refused(error);
+        }
+    } finally {
+        busy.value = null;
+    }
 }
 async function refused(error: unknown): Promise<void> {
     const apiError = toApiError(error);
@@ -174,7 +215,23 @@ const by = (name: string | undefined, at: string | null) => [name, formatDateTim
                 <div class="flex flex-wrap justify-between gap-x-3"><dt class="text-muted">{{ t('appointments.detail.booked') }}</dt><dd class="text-right break-words text-fg" data-detail-booked>{{ by(appointment.booked_by?.name, appointment.created_at) }}</dd></div>
                 <div v-if="appointment.status_changed_at" class="flex flex-wrap justify-between gap-x-3"><dt class="text-muted">{{ t('appointments.detail.lastStep') }}</dt><dd class="text-right break-words text-fg" data-detail-last-step>{{ by(appointment.status_changed_by?.name, appointment.status_changed_at) }}</dd></div>
             </dl>
-            <div v-if="appointment.note" class="space-y-1"><p class="text-muted">{{ t('appointments.detail.note') }}</p><p class="whitespace-pre-line break-words text-fg" dir="auto" data-detail-note>{{ appointment.note }}</p></div>
+            <!-- The note: changed in place while the server allows it -->
+            <div v-if="editingNote" class="space-y-2" data-detail-note-form>
+                <UiTextarea v-model="noteDraft" :label="t('appointments.detail.note')" :rows="3" :maxlength="500" :error="noteError" autofocus data-detail-note-input />
+                <div class="flex flex-wrap justify-end gap-2">
+                    <UiButton variant="secondary" size="sm" :disabled="busy === 'note'" @click="editingNote = false">{{ t('common.cancel') }}</UiButton>
+                    <UiButton size="sm" :loading="busy === 'note'" data-detail-note-save @click="saveNote">{{ t('common.save') }}</UiButton>
+                </div>
+            </div>
+            <div v-else-if="appointment.note || appointment.actions?.note?.allowed" class="space-y-1">
+                <div class="flex items-center justify-between gap-3">
+                    <p class="text-muted">{{ t('appointments.detail.note') }}</p>
+                    <button v-if="appointment.actions?.note?.allowed && !stopping" type="button" class="inline-flex items-center gap-1 text-xs text-brand-ink hover:underline" :disabled="!!busy" data-detail-note-edit @click="startNote">
+                        <Pencil class="size-3.5" />{{ appointment.note ? t('appointments.detail.changeNote') : t('appointments.detail.addNote') }}
+                    </button>
+                </div>
+                <p v-if="appointment.note" class="whitespace-pre-line break-words text-fg" dir="auto" data-detail-note>{{ appointment.note }}</p>
+            </div>
             <div v-if="appointment.cancel_reason" class="space-y-1"><p class="text-muted">{{ t('appointments.detail.cancelReason') }}</p><p class="whitespace-pre-line break-words text-fg" dir="auto" data-detail-cancel-reason>{{ appointment.cancel_reason }}</p></div>
 
             <p v-if="refusal" role="alert" class="rounded-lg border border-danger/30 bg-danger/10 px-3 py-2 text-fg" data-detail-refusal>{{ refusal }}</p>
@@ -191,7 +248,7 @@ const by = (name: string | undefined, at: string | null) => [name, formatDateTim
             </section>
 
             <!-- What can be done -->
-            <section v-else-if="actions.forward.length || actions.stop" class="space-y-2" data-detail-actions>
+            <section v-else-if="hasActions" class="space-y-2" data-detail-actions>
                 <div class="flex flex-wrap gap-2">
                     <UiButton
                         v-for="(next, index) in actions.forward"
@@ -203,11 +260,12 @@ const by = (name: string | undefined, at: string | null) => [name, formatDateTim
                         :data-detail-step="next.status.key"
                         @click="step(next)"
                     >{{ next.label }}</UiButton>
+                    <UiButton v-if="actions.move" variant="secondary" class="whitespace-nowrap" :disabled="!actions.move.allowed || !!busy" data-detail-move @click="moving = true"><CalendarClock class="size-4" />{{ t('appointments.detail.move') }}</UiButton>
                     <UiButton v-if="actions.stop" variant="secondary" class="whitespace-nowrap" :disabled="!actions.stop.allowed || !!busy" data-detail-stop @click="startStop">{{ stopLabel }}</UiButton>
                 </div>
                 <ul v-if="blocked.length" class="space-y-1 text-xs text-muted" data-detail-blocked>
-                    <li v-for="action in blocked" :key="'status' in action ? action.status.key : 'stop'">
-                        <span class="font-medium">{{ 'status' in action ? action.label : stopLabel }}:</span> {{ action.reason }}
+                    <li v-for="action in blocked" :key="action.key">
+                        <span class="font-medium">{{ action.label }}:</span> {{ action.verdict.reason }}
                     </li>
                 </ul>
             </section>
@@ -237,4 +295,5 @@ const by = (name: string | undefined, at: string | null) => [name, formatDateTim
             <UiButton variant="secondary" @click="open = false">{{ t('common.close') }}</UiButton>
         </template>
     </UiDialog>
+    <AppointmentMoveDialog v-if="appointment?.actions?.move" v-model:open="moving" :appointment="appointment" @moved="changed($event, null)" />
 </template>

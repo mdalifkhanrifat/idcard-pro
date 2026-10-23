@@ -53,6 +53,8 @@ export interface AppointmentStep extends Verdict {
  */
 export interface AppointmentActions {
     move: Verdict | null;
+    /** Changing its note only: while it is ahead, also while appointments are off. */
+    note: Verdict | null;
     cancel: Verdict | null;
     steps: AppointmentStep[];
 }
@@ -64,11 +66,11 @@ export interface StopAction extends Verdict {
 }
 
 /**
- * The buttons of an appointment's details: the steps ahead, calling it off, and going back from a mistake. Once
- * finished (not `open`), calling it off is not shown as a button that cannot be pressed — only a correction could
- * reopen it.
+ * The buttons of an appointment's details: the steps ahead, moving it, calling it off, and going back from a
+ * mistake. Once finished (not `open`), moving and calling it off are not shown as buttons that cannot be pressed —
+ * only a correction could reopen it.
  */
-export function layoutActions(actions: AppointmentActions | undefined, open = true): { forward: AppointmentStep[]; stop: StopAction | null; corrections: AppointmentStep[] } {
+export function layoutActions(actions: AppointmentActions | undefined, open = true): { forward: AppointmentStep[]; move: Verdict | null; stop: StopAction | null; corrections: AppointmentStep[] } {
     const steps = actions?.steps ?? [];
     const cancelling = steps.find((step) => step.status.key === 'cancelled' && !step.correction);
     let stop: StopAction | null = null;
@@ -80,6 +82,7 @@ export function layoutActions(actions: AppointmentActions | undefined, open = tr
 
     return {
         forward: steps.filter((step) => !step.correction && step !== cancelling),
+        move: actions?.move && (actions.move.allowed || open) ? actions.move : null,
         stop: stop && (stop.allowed || open) ? stop : null,
         corrections: steps.filter((step) => step.correction),
     };
@@ -88,6 +91,27 @@ export function layoutActions(actions: AppointmentActions | undefined, open = tr
 /** One appointment with what the reader may do with it now. */
 export async function fetchAppointment(id: string): Promise<Appointment> {
     const { data } = await http.get<{ data: Appointment }>(`/appointments/${id}`);
+
+    return data.data;
+}
+
+/** Where and when it moves to: a place, a day and a time ("HH:MM" on the organization's clock; null when a day is booked). */
+export interface MoveInput {
+    location: string;
+    date: string;
+    time: string | null;
+}
+
+/** Move one still ahead (appointments.book), by the rules of a new booking, its own place not counted; number and status stay. */
+export async function moveAppointment(id: string, input: MoveInput): Promise<Appointment> {
+    const { data } = await http.patch<{ data: Appointment }>(`/appointments/${id}`, input);
+
+    return data.data;
+}
+
+/** Change only its note (appointments.book; null takes it away). */
+export async function changeAppointmentNote(id: string, note: string | null): Promise<Appointment> {
+    const { data } = await http.patch<{ data: Appointment }>(`/appointments/${id}`, { note });
 
     return data.data;
 }

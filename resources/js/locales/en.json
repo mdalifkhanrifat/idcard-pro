@@ -1957,7 +1957,8 @@
             "slotFree": "{free} of {capacity} free",
             "dayFree": "{free} of {capacity} places free",
             "slotHint": "Each time shows how many can still book it (in brackets); a crossed-out time is full.",
-            "beyond": "These days cannot be booked yet: booking opens {days} days ahead."
+            "beyond": "These days cannot be booked yet: booking opens {days} days ahead.",
+            "current": "Its time now"
         },
         "holidays": {
             "open": "Add the country's holidays",
@@ -2043,7 +2044,20 @@
             "corrections": "Fix a mistake",
             "correctionsHint": "Only to undo a step taken by mistake; each one is kept in the audit log.",
             "correctionConfirm": "{label}?",
-            "correctionMessage": "The appointment goes back to “{status}”."
+            "correctionMessage": "The appointment goes back to “{status}”.",
+            "move": "Move",
+            "changeNote": "Change the note",
+            "addNote": "Add a note",
+            "noteSaved": "Note saved"
+        },
+        "move": {
+            "title": "Move appointment {number}",
+            "description": "To another day, time or place; its number and status stay.",
+            "now": "Now",
+            "when": "New day and time",
+            "same": "That is its time now.",
+            "submit": "Move here",
+            "done": "Moved: {number}"
         }
     }
 }
