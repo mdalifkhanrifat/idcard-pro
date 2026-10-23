@@ -113,7 +113,7 @@ it('answers an appointment\'s details and names everything in the reader\'s lang
     $details = $this->getJson("/api/v1/appointments/{$this->three->public_id}")->assertOk()->json('data');
     expect($details)->toMatchArray([
         'number' => 'A-26-00003', 'date' => '2026-10-17', 'starts_at' => '2026-10-17T10:00:00+06:00', 'ends_at' => '2026-10-17T10:15:00+06:00',
-        'status' => ['key' => 'cancelled', 'name' => 'Cancelled'], 'source' => ['key' => 'staff', 'name' => 'Staff'],
+        'status' => ['key' => 'cancelled', 'name' => 'Cancelled', 'open' => false], 'source' => ['key' => 'staff', 'name' => 'Staff'],
         'service' => ['key' => 'renewal', 'name' => 'Card renewal'], 'cancel_reason' => 'Travelling',
         'location' => ['id' => $this->branch->public_id, 'name' => 'Branch', 'name_local' => $this->branch->name_local],
         'family_member' => ['id' => $this->ayesha->public_id, 'name' => 'Ayesha Rahim', 'relation' => $this->ayesha->relation->value],
@@ -126,6 +126,9 @@ it('answers an appointment\'s details and names everything in the reader\'s lang
     expect($list['A-26-00005'])->toMatchArray(['starts_at' => null, 'ends_at' => null, 'booked_by' => ['id' => $this->owner->public_id, 'name' => $this->owner->name]])
         ->and($list['A-26-00004']['service'])->toBe(['key' => 'old_kind', 'name' => 'old_kind'])
         ->and($list['A-26-00002']['booked_by'])->toBeNull()
+        // Still to be served while waiting, confirmed or come in; finished once done
+        ->and($list['A-26-00004']['status']['open'])->toBeTrue()
+        ->and($list['A-26-00005']['status']['open'])->toBeFalse()
         // The list leaves out who changed the status (the details have it)
         ->and($list['A-26-00003'])->not->toHaveKey('status_changed_by');
 

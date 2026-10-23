@@ -51,7 +51,7 @@ it('lets those who book cancel an appointment still ahead, with a reason, giving
     Sanctum::actingAs($this->operator);
     expect($free())->toBe(0);
     $data = $this->postJson("/api/v1/appointments/{$appointment->public_id}/cancel", ['reason' => 'Travelling'])->assertOk()->json('data');
-    expect($data['status'])->toBe(['key' => 'cancelled', 'name' => 'Cancelled'])
+    expect($data['status'])->toBe(['key' => 'cancelled', 'name' => 'Cancelled', 'open' => false])
         ->and($data['cancel_reason'])->toBe('Travelling')
         ->and($data['status_changed_by']['name'])->toBe($this->operator->name)
         ->and($free())->toBe(1);

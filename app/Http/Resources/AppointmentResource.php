@@ -11,7 +11,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 /**
  * An appointment as the API answers it: its number, status and source named in the reader's language, the
  * place, the kind of visit, the person, the day and — when times are booked — its times with the
- * organization's offset. An answer about one appointment also says what the reader may do with it now
+ * organization's offset; the status says whether it is still open. An answer about one appointment also says what the reader may do with it now
  * (`actions` — AppointmentActions; not in lists).
  *
  * @mixin Appointment
@@ -44,7 +44,8 @@ class AppointmentResource extends JsonResource
         return [
             'id' => $this->public_id,
             'number' => $this->number,
-            'status' => ['key' => $this->status->value, 'name' => __("appointments.statuses.{$this->status->value}")],
+            // `open`: still to be served (waiting, confirmed, came in) — a finished one is only corrected
+            'status' => ['key' => $this->status->value, 'name' => __("appointments.statuses.{$this->status->value}"), 'open' => $this->status->isOpen()],
             'source' => ['key' => $this->source->value, 'name' => __("appointments.sources.{$this->source->value}")],
             'location' => $this->whenLoaded('location', fn () => ['id' => $this->location->public_id, 'name' => $this->location->name, 'name_local' => $this->location->name_local]),
             // A kind of visit removed since keeps its key as its name

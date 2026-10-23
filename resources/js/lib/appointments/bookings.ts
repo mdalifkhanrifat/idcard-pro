@@ -11,7 +11,8 @@ export interface Named {
 export interface Appointment {
     id: string;
     number: string;
-    status: Named;
+    /** `open` while still to be served (waiting, confirmed, came in): a finished one is only corrected. */
+    status: Named & { open?: boolean };
     source: Named;
     location?: { id: string; name: string; name_local: string | null };
     service: Named;
@@ -29,6 +30,80 @@ export interface Appointment {
     status_changed_by?: { id: string; name: string } | null;
     created_at: string;
     updated_at: string;
+    /** What the reader may do with it now — in answers about one appointment only, not in lists (5.5c). */
+    actions?: AppointmentActions;
+}
+
+/** Whether something may be done now, and if not, why (the server's own words). */
+export interface Verdict {
+    allowed: boolean;
+    reason: string | null;
+}
+
+/** A step an appointment can take, named for what it does; `correction` when it goes back from a mistake. */
+export interface AppointmentStep extends Verdict {
+    status: Named;
+    label: string;
+    correction: boolean;
+}
+
+/**
+ * What the reader may do with an appointment now (AppointmentActions on the server): null, or no step, for what
+ * their role never allows — so nothing is offered that could not be.
+ */
+export interface AppointmentActions {
+    move: Verdict | null;
+    cancel: Verdict | null;
+    steps: AppointmentStep[];
+}
+
+/** Calling an appointment off: `cancel` for those who book (POST …/cancel), else the step to "cancelled" for those who only manage (POST …/status), with its own name. */
+export interface StopAction extends Verdict {
+    via: 'cancel' | 'status';
+    label: string | null;
+}
+
+/**
+ * The buttons of an appointment's details: the steps ahead, calling it off, and going back from a mistake. Once
+ * finished (not `open`), calling it off is not shown as a button that cannot be pressed — only a correction could
+ * reopen it.
+ */
+export function layoutActions(actions: AppointmentActions | undefined, open = true): { forward: AppointmentStep[]; stop: StopAction | null; corrections: AppointmentStep[] } {
+    const steps = actions?.steps ?? [];
+    const cancelling = steps.find((step) => step.status.key === 'cancelled' && !step.correction);
+    let stop: StopAction | null = null;
+    if (actions?.cancel) {
+        stop = { via: 'cancel', label: null, ...actions.cancel };
+    } else if (cancelling) {
+        stop = { via: 'status', label: cancelling.label, allowed: cancelling.allowed, reason: cancelling.reason };
+    }
+
+    return {
+        forward: steps.filter((step) => !step.correction && step !== cancelling),
+        stop: stop && (stop.allowed || open) ? stop : null,
+        corrections: steps.filter((step) => step.correction),
+    };
+}
+
+/** One appointment with what the reader may do with it now. */
+export async function fetchAppointment(id: string): Promise<Appointment> {
+    const { data } = await http.get<{ data: Appointment }>(`/appointments/${id}`);
+
+    return data.data;
+}
+
+/** Cancel one still ahead (appointments.book), with a reason if given. */
+export async function cancelAppointment(id: string, reason: string | null): Promise<Appointment> {
+    const { data } = await http.post<{ data: Appointment }>(`/appointments/${id}/cancel`, { reason });
+
+    return data.data;
+}
+
+/** Take it a step (appointments.manage); `reason` when it is turned down or cancelled. */
+export async function changeAppointmentStatus(id: string, status: string, reason: string | null = null): Promise<Appointment> {
+    const { data } = await http.post<{ data: Appointment }>(`/appointments/${id}/status`, { status, reason });
+
+    return data.data;
 }
 
 /** What the list can be filtered by (its `meta`), named by the server. */

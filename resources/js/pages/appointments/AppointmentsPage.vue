@@ -11,12 +11,13 @@ import UiInput from '@/components/ui/UiInput.vue';
 import UiPageHeader from '@/components/ui/UiPageHeader.vue';
 import UiSelect from '@/components/ui/UiSelect.vue';
 import { useListQuery, type PageMeta } from '@/composables/useListQuery';
+import { useUrlOpen } from '@/composables/useUrlOpen';
 import { addDays, todayIn } from '@/lib/appointments/availability';
 import { filtersFor, namesDays, scopeOf, statusTone, timeRange, type Appointment, type AppointmentListOptions, type AppointmentScope } from '@/lib/appointments/bookings';
 import { fetchPlaces, type AppointmentPlace } from '@/lib/appointments/places';
-import { formatDate, formatNumber, localDigits } from '@/lib/format';
+import { formatDate, formatLongDate, formatNumber, localDigits } from '@/lib/format';
 import AppointmentBookDialog from '@/pages/appointments/AppointmentBookDialog.vue';
-import { i18n } from '@/lib/i18n';
+import AppointmentDetailDialog from '@/pages/appointments/AppointmentDetailDialog.vue';
 import { useAuthStore } from '@/stores/auth';
 
 /**
@@ -57,11 +58,7 @@ function goTo(next: string): void {
         Object.assign(list.filters, filtersFor('day', next, today));
     }
 }
-const dayLabel = computed(() => {
-    const [year, month, date] = day.value.split('-').map(Number);
-
-    return new Intl.DateTimeFormat(i18n.global.locale.value === 'bn' ? 'bn-BD' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(year, month - 1, date));
-});
+const dayLabel = computed(() => formatLongDate(day.value));
 
 const choices = (named: { key: string; name: string }[] | undefined) => (named ?? []).map((item) => ({ value: item.key, label: item.name }));
 const placeChoices = computed(() => places.value.map((place) => ({ value: place.id, label: place.name })));
@@ -96,6 +93,16 @@ function booked(appointment: Appointment): void {
         list.load();
     }
 }
+/** The appointment open in its details, kept in the link (?open=). */
+const opened = useUrlOpen();
+const detailOpen = computed({
+    get: () => opened.value !== null,
+    set: (value) => {
+        if (!value) {
+            opened.value = null;
+        }
+    },
+});
 const relation = (key: string) => t(`cardholders.family.relations.${key}`);
 const time = (row: Appointment) => {
     const range = timeRange(row);
@@ -161,7 +168,8 @@ const time = (row: Appointment) => {
             </div>
 
             <ul class="divide-y divide-line" :class="list.loading.value && 'opacity-50'">
-                <li v-for="row in list.rows.value" :key="row.id" class="flex flex-col gap-1.5 px-5 py-3 text-sm sm:flex-row sm:items-center sm:gap-4" :data-row="row.number">
+                <li v-for="row in list.rows.value" :key="row.id" :data-row="row.number">
+                    <button type="button" class="flex w-full flex-col gap-1.5 px-5 py-3 text-left text-sm hover:bg-surface-2 focus-visible:bg-surface-2 focus-visible:outline-none sm:flex-row sm:items-center sm:gap-4" :class="opened === row.id && 'bg-surface-2'" data-row-open @click="opened = row.id">
                     <span class="shrink-0 tabular-nums sm:w-36" data-when>
                         <span v-if="scope !== 'day'" class="block text-xs text-muted">{{ formatDate(row.date) }}</span>
                         <span class="font-medium text-fg">{{ time(row) }}</span>
@@ -176,6 +184,7 @@ const time = (row: Appointment) => {
                         </span>
                     </span>
                     <UiBadge :tone="statusTone(row.status.key)" class="w-fit justify-center sm:w-36" :class="row.status.key === 'cancelled' && 'line-through'" data-status>{{ row.status.name }}</UiBadge>
+                    </button>
                 </li>
             </ul>
             <div v-if="list.failed.value && !list.loading.value" class="flex flex-col items-center gap-3 px-5 py-10 text-sm text-muted" data-failed>
@@ -191,5 +200,6 @@ const time = (row: Appointment) => {
         </div>
 
         <AppointmentBookDialog v-if="canBook" v-model:open="booking" @booked="booked" />
+        <AppointmentDetailDialog v-model:open="detailOpen" :appointment-id="opened" @changed="list.load()" />
     </div>
 </template>

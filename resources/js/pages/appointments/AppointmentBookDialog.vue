@@ -13,7 +13,7 @@ import { fetchAppointmentSettings, type AppointmentSettingsResponse } from '@/li
 import { bookAppointment, findPeople, type Appointment, type BookablePerson } from '@/lib/appointments/bookings';
 import { fetchPlaces, type AppointmentPlace } from '@/lib/appointments/places';
 import { serviceName } from '@/lib/appointments/services';
-import { formatNumber, localDigits } from '@/lib/format';
+import { formatLongDate, formatNumber, localDigits } from '@/lib/format';
 import AvailabilityWeek from '@/pages/appointments/AvailabilityWeek.vue';
 import { useUiStore } from '@/stores/ui';
 
@@ -109,8 +109,7 @@ const chosenText = computed(() => {
     if (!chosen.value) {
         return '';
     }
-    const [year, month, day] = chosen.value.date.split('-').map(Number);
-    const date = new Intl.DateTimeFormat(locale.value === 'bn' ? 'bn-BD' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date(year, month - 1, day));
+    const date = formatLongDate(chosen.value.date, false);
 
     return chosen.value.time ? `${date}, ${localDigits(chosen.value.time)}` : `${date} · ${t('appointments.list.inTurn')}`;
 });

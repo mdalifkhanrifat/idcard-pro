@@ -2020,6 +2020,30 @@
             "note": "নোট (ঐচ্ছিক)",
             "submit": "বুক করুন",
             "done": "বুক হয়েছে: {number}"
+        },
+        "detail": {
+            "title": "অ্যাপয়েন্টমেন্ট {number}",
+            "loadingTitle": "অ্যাপয়েন্টমেন্ট",
+            "missing": "এখানে এমন কোনো অ্যাপয়েন্টমেন্ট নেই।",
+            "failed": "অ্যাপয়েন্টমেন্টটা আনা যায়নি।",
+            "memberOf": "{name}-এর {relation}",
+            "employeeNo": "কর্মী নম্বর",
+            "openCardholder": "কার্ডধারীর পাতা খুলুন",
+            "when": "কখন",
+            "source": "বুকিংয়ের পথ",
+            "booked": "বুক করেছেন",
+            "lastStep": "শেষ ধাপ",
+            "note": "নোট",
+            "cancelReason": "বাতিলের কারণ",
+            "cancel": "অ্যাপয়েন্টমেন্ট বাতিল করুন",
+            "cancelHint": "এর সময়টা অন্যদের জন্য খালি হবে। কারণটা অ্যাপয়েন্টমেন্টের সাথে থেকে যাবে।",
+            "reason": "কারণ (ঐচ্ছিক)",
+            "keep": "রেখে দিন",
+            "stepDone": "{number}: {status}",
+            "corrections": "ভুল ঠিক করুন",
+            "correctionsHint": "শুধু ভুল করে নেওয়া ধাপ ফেরাতে; প্রতিটা অডিট লগে থাকে।",
+            "correctionConfirm": "{label}?",
+            "correctionMessage": "অ্যাপয়েন্টমেন্টটা আবার “{status}” হবে।"
         }
     }
 }

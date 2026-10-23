@@ -66,6 +66,13 @@ export function formatDate(value: string | null | undefined): string {
     return new Intl.DateTimeFormat(i18n.global.locale.value === 'bn' ? 'bn-BD' : 'en-GB', { dateStyle: 'medium' }).format(new Date(year, month - 1, day));
 }
 
+/** Calendar date (`YYYY-MM-DD`) in full with its weekday ("Monday, 19 October 2026"), without any timezone shift. */
+export function formatLongDate(value: string, withYear = true): string {
+    const [year, month, day] = value.slice(0, 10).split('-').map(Number);
+
+    return new Intl.DateTimeFormat(i18n.global.locale.value === 'bn' ? 'bn-BD' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long', ...(withYear && { year: 'numeric' }) }).format(new Date(year, month - 1, day));
+}
+
 export function formatBytes(bytes: number): string {
     const units = ['B', 'KB', 'MB', 'GB'];
     let value = bytes;

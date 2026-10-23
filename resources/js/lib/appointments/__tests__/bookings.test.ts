@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { filtersFor, namesDays, scopeOf, statusTone, timeRange } from '@/lib/appointments/bookings';
+import { filtersFor, layoutActions, namesDays, scopeOf, statusTone, timeRange } from '@/lib/appointments/bookings';
 
 describe('the list\'s days', () => {
     it('reads the scope from the date filters, and back', () => {
@@ -40,5 +40,44 @@ describe('an appointment as a row shows it', () => {
         expect(statusTone('checked_in')).toBe('success');
         expect(statusTone('no_show')).toBe('danger');
         expect(statusTone('something_new')).toBe('neutral');
+    });
+});
+
+describe('an appointment\'s buttons', () => {
+    const verdict = (allowed: boolean) => ({ allowed, reason: allowed ? null : 'Not now.' });
+    const step = (key: string, correction = false, allowed = true) => ({ status: { key, name: key }, label: `To ${key}`, correction, ...verdict(allowed) });
+
+    it('puts the steps ahead first, calling off apart and corrections last', () => {
+        const laid = layoutActions({ move: verdict(true), cancel: null, steps: [step('checked_in'), step('no_show', false, false), step('cancelled'), step('pending', true)] });
+
+        expect(laid.forward.map((s) => s.status.key)).toEqual(['checked_in', 'no_show']);
+        // Only managing: calling off is the step itself, with its own name
+        expect(laid.stop).toEqual({ via: 'status', label: 'To cancelled', allowed: true, reason: null });
+        expect(laid.corrections.map((s) => s.status.key)).toEqual(['pending']);
+    });
+
+    it('calls off through cancel for those who book, once', () => {
+        const laid = layoutActions({ move: verdict(true), cancel: verdict(false), steps: [step('checked_in')] });
+
+        expect(laid.stop).toEqual({ via: 'cancel', label: null, allowed: false, reason: 'Not now.' });
+        expect(laid.forward).toHaveLength(1);
+    });
+
+    it('leaves a restored cancelled one among the corrections, and offers nothing without actions', () => {
+        // Back from cancelled is a correction, not calling off
+        const laid = layoutActions({ move: null, cancel: null, steps: [step('confirmed', true)] });
+        expect(laid.stop).toBeNull();
+        expect(laid.corrections).toHaveLength(1);
+
+        expect(layoutActions(undefined)).toEqual({ forward: [], stop: null, corrections: [] });
+    });
+
+    it('does not offer to call off a finished one, nor say why not — only its corrections', () => {
+        const actions = { move: verdict(false), cancel: verdict(false), steps: [step('confirmed', true)] };
+
+        expect(layoutActions(actions, false).stop).toBeNull();
+        expect(layoutActions(actions, false).corrections).toHaveLength(1);
+        // Still open (came in): it says why not
+        expect(layoutActions(actions, true).stop).toMatchObject({ allowed: false, reason: 'Not now.' });
     });
 });

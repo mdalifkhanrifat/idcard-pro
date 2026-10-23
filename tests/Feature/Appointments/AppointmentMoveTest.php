@@ -43,7 +43,7 @@ it('moves to another time, day or place, keeping its number and status, in the a
     Sanctum::actingAs($this->operator);
 
     expect(($this->move)(['time' => '11:30', 'note' => 'Moved by phone'])->assertOk()->json('data'))->toMatchArray([
-        'number' => 'A-26-90001', 'status' => ['key' => 'confirmed', 'name' => 'Confirmed'], 'date' => '2026-10-18',
+        'number' => 'A-26-90001', 'status' => ['key' => 'confirmed', 'name' => 'Confirmed', 'open' => true], 'date' => '2026-10-18',
         'starts_at' => '2026-10-18T11:30:00+06:00', 'ends_at' => '2026-10-18T12:00:00+06:00', 'note' => 'Moved by phone',
     ]);
     // A day alone keeps the time of day; a place alone keeps both

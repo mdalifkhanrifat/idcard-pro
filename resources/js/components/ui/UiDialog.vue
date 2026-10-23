@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { DialogClose, DialogContent, DialogDescription, DialogOverlay, DialogPortal, DialogRoot, DialogTitle } from 'reka-ui';
 import { X } from 'lucide-vue-next';
+import { useI18n } from 'vue-i18n';
 
 /** `fullOnPhone`: the whole screen below the sm breakpoint (for dialogs with much to do, e.g. an editor). */
 withDefaults(defineProps<{ title: string; description?: string; size?: 'md' | 'lg' | 'xl' | '2xl'; fullOnPhone?: boolean }>(), { size: 'md' });
 const open = defineModel<boolean>('open', { default: false });
+const { t } = useI18n();
 </script>
 
 <template>
@@ -23,7 +25,7 @@ const open = defineModel<boolean>('open', { default: false });
                         <DialogTitle class="text-lg font-semibold text-fg">{{ title }}</DialogTitle>
                         <DialogDescription v-if="description" class="mt-1 text-sm text-muted">{{ description }}</DialogDescription>
                     </div>
-                    <DialogClose class="rounded-md p-1 text-muted hover:bg-surface-2 hover:text-fg" aria-label="Close">
+                    <DialogClose class="rounded-md p-1 text-muted hover:bg-surface-2 hover:text-fg" :aria-label="t('common.close')">
                         <X class="size-5" />
                     </DialogClose>
                 </div>

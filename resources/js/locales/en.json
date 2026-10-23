@@ -2020,6 +2020,30 @@
             "note": "Note (optional)",
             "submit": "Book",
             "done": "Booked: {number}"
+        },
+        "detail": {
+            "title": "Appointment {number}",
+            "loadingTitle": "Appointment",
+            "missing": "There is no such appointment here.",
+            "failed": "The appointment could not be loaded.",
+            "memberOf": "{relation} of {name}",
+            "employeeNo": "Employee no",
+            "openCardholder": "Open the cardholder's page",
+            "when": "When",
+            "source": "Booked through",
+            "booked": "Booked",
+            "lastStep": "Last step",
+            "note": "Note",
+            "cancelReason": "Why it was called off",
+            "cancel": "Cancel the appointment",
+            "cancelHint": "Its time becomes free for others. The reason is kept with the appointment.",
+            "reason": "Reason (optional)",
+            "keep": "Keep it",
+            "stepDone": "{number}: {status}",
+            "corrections": "Fix a mistake",
+            "correctionsHint": "Only to undo a step taken by mistake; each one is kept in the audit log.",
+            "correctionConfirm": "{label}?",
+            "correctionMessage": "The appointment goes back to “{status}”."
         }
     }
 }

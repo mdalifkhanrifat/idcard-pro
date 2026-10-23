@@ -44,7 +44,7 @@ it('books a free time: confirmed, numbered, on the organization\'s clock, in the
     $response = ($this->book)(['note' => 'Bring the old card'])->assertCreated();
     expect($response->json('data'))->toMatchArray([
         'number' => 'A-26-00001', 'date' => '2026-10-18', 'starts_at' => '2026-10-18T09:30:00+06:00', 'ends_at' => '2026-10-18T10:00:00+06:00',
-        'status' => ['key' => 'confirmed', 'name' => 'Confirmed'], 'source' => ['key' => 'staff', 'name' => 'Staff'], 'note' => 'Bring the old card', 'family_member' => null,
+        'status' => ['key' => 'confirmed', 'name' => 'Confirmed', 'open' => true], 'source' => ['key' => 'staff', 'name' => 'Staff'], 'note' => 'Bring the old card', 'family_member' => null,
         'service' => ['key' => 'new_card', 'name' => 'New card'],
     ])
         ->and($response->json('data.location.id'))->toBe($this->place->public_id)
