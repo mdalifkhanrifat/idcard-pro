@@ -93,6 +93,11 @@ return [
         'max_days' => 62,
     ],
 
+    'summary' => [
+        // Days one count of appointments may cover (a week, or a month's calendar)
+        'max_days' => 62,
+    ],
+
     // Limits of what an organization may set: [min, max]
     'limits' => [
         'slot_capacity' => [1, 100],

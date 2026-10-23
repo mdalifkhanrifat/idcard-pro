@@ -86,6 +86,9 @@ return [
         'family_off' => 'Family members do not have appointments in this organization.',
         'family_not_theirs' => 'This family member is not this cardholder\'s.',
     ],
+    'summary' => [
+        'too_many_days' => 'Count at most :days days at a time.',
+    ],
     'changes' => [
         'cannot_cancel' => 'Only an appointment still ahead (waiting or confirmed) can be cancelled; this one is ":status".',
         'not_allowed' => 'An appointment that is ":from" cannot become ":to".',

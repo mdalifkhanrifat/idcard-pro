@@ -58,6 +58,13 @@ interface AppointmentRepositoryInterface extends RepositoryInterface
     public function criteria(AppointmentFilter $filter): Builder;
 
     /**
+     * How many appointments the list's criteria find on each day in each status: rows of `date`, `status`, `total`.
+     *
+     * @return array<int, array{date: string, status: string, total: int}>
+     */
+    public function countsByDay(AppointmentFilter $filter): array;
+
+    /**
      * Every row of the list's criteria in its order, with what a report shows (for downloads).
      *
      * @return LazyCollection<int, Appointment>

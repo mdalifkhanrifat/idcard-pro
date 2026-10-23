@@ -10,6 +10,7 @@ use App\Models\Cardholder;
 use App\Repositories\Contracts\AppointmentRepositoryInterface;
 use App\Repositories\Contracts\CardholderRepositoryInterface;
 use App\Support\Tenancy\TenantContext;
+use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
 
@@ -45,6 +46,29 @@ class AppointmentService
     public function list(AppointmentFilter $filter): LengthAwarePaginator
     {
         return $this->appointments->list($filter);
+    }
+
+    /**
+     * Appointments counted by day and status over the days asked for (5.5g — the week view): every day of the range,
+     * also those with none, and every status of the registry, so a page draws them without date sums of its own.
+     *
+     * @return array{from: string, to: string, days: array<int, array{date: string, total: int, statuses: array<string, int>}>}
+     */
+    public function summary(AppointmentFilter $filter): array
+    {
+        $none = array_fill_keys(array_map(fn (AppointmentStatus $status) => $status->value, AppointmentStatus::cases()), 0);
+        $days = [];
+        for ($day = CarbonImmutable::parse((string) $filter->from); $day->toDateString() <= (string) $filter->to; $day = $day->addDay()) {
+            $days[$day->toDateString()] = ['date' => $day->toDateString(), 'total' => 0, 'statuses' => $none];
+        }
+        foreach ($this->appointments->countsByDay($filter) as $row) {
+            if (isset($days[$row['date']])) {
+                $days[$row['date']]['statuses'][$row['status']] = $row['total'];
+                $days[$row['date']]['total'] += $row['total'];
+            }
+        }
+
+        return ['from' => (string) $filter->from, 'to' => (string) $filter->to, 'days' => array_values($days)];
     }
 
     /**

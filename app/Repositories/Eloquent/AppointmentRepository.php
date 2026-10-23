@@ -40,6 +40,17 @@ class AppointmentRepository extends EloquentRepository implements AppointmentRep
             ->withQueryString();
     }
 
+    public function countsByDay(AppointmentFilter $filter): array
+    {
+        // Only the grouped columns and a count (MySQL's only_full_group_by)
+        return $this->criteria($filter)->toBase()
+            ->select(['date', 'status'])->selectRaw('count(*) as total')
+            ->groupBy('date', 'status')
+            ->get()
+            ->map(fn (object $row) => ['date' => substr((string) $row->date, 0, 10), 'status' => (string) $row->status, 'total' => (int) $row->total])
+            ->all();
+    }
+
     public function reportRows(AppointmentFilter $filter): LazyCollection
     {
         return $this->ordered($filter)->with([...self::LIST_RELATIONS, 'statusChangedBy'])->lazy(500);

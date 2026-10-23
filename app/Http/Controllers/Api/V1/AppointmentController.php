@@ -9,6 +9,7 @@ use App\Http\Requests\Appointments\ChangeAppointmentStatusRequest;
 use App\Http\Requests\Appointments\FindPeopleRequest;
 use App\Http\Requests\Appointments\ListAppointmentsRequest;
 use App\Http\Requests\Appointments\MoveAppointmentRequest;
+use App\Http\Requests\Appointments\SummarizeAppointmentsRequest;
 use App\Http\Resources\AppointmentPersonResource;
 use App\Http\Resources\AppointmentResource;
 use App\Models\Appointment;
@@ -47,6 +48,16 @@ class AppointmentController extends Controller
     {
         return AppointmentResource::collection($this->appointments->list($request->toFilter()))
             ->additional(['meta' => $this->appointments->options()]);
+    }
+
+    /**
+     * Appointments counted by day and status (appointments.view; 5.5g): the list's criteria with filter[from] and
+     * filter[to] (needed; at most appointments.summary.max_days days). Every day of the range and every status are
+     * in the answer, zero too; meta names the statuses.
+     */
+    public function summary(SummarizeAppointmentsRequest $request): JsonResponse
+    {
+        return response()->json(['data' => $this->appointments->summary($request->toFilter()), 'meta' => ['statuses' => $this->appointments->options()['statuses']]]);
     }
 
     /**
