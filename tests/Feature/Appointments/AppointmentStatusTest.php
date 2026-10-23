@@ -5,7 +5,9 @@ use App\Models\Appointment;
 use App\Models\AppointmentLocation;
 use App\Models\Cardholder;
 use App\Support\Tenancy\TenantContext;
+use Carbon\CarbonImmutable;
 use Illuminate\Routing\Middleware\ThrottleRequests;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\Sanctum;
 
 /*
@@ -98,6 +100,21 @@ it('takes an appointment through its steps — came in only on its day — and b
 
     $steps = ($this->inTenant)(fn () => $appointment->activitiesAsSubject()->orderBy('id')->get()->map(fn ($a) => ($a->attribute_changes['old']['status'] ?? '').'>'.($a->attribute_changes['attributes']['status'] ?? ''))->all());
     expect($steps)->toBe(['>pending', 'pending>confirmed', 'confirmed>checked_in', 'checked_in>done', 'done>checked_in', 'checked_in>confirmed', 'confirmed>cancelled']);
+});
+
+it('records when a step was taken as the moment it was, not the organization\'s wall clock', function () {
+    // 03:00 UTC is 09:00 in Dhaka: a step and a cancel both store and answer the moment itself
+    $appointment = ($this->booked)();
+    Sanctum::actingAs($this->administrator);
+    $stepped = ($this->step)($appointment, 'cancelled')->assertOk()->json('data.status_changed_at');
+    expect(CarbonImmutable::parse($stepped)->equalTo(now()))->toBeTrue()
+        ->and(DB::table('appointments')->where('id', $appointment->id)->value('status_changed_at'))->toBe('2026-10-16 03:00:00');
+
+    Sanctum::actingAs($this->operator);
+    $other = ($this->booked)(['cardholder_id' => ($this->inTenant)(fn () => Cardholder::factory()->create(['tenant_id' => $this->tenant->id]))->id, 'starts_at' => '2026-10-18 05:00:00', 'ends_at' => '2026-10-18 05:30:00']);
+    $this->travelTo(now()->parse('2026-10-16 19:30:00'));
+    $this->postJson("/api/v1/appointments/{$other->public_id}/cancel")->assertOk();
+    expect(DB::table('appointments')->where('id', $other->id)->value('status_changed_at'))->toBe('2026-10-16 19:30:00');
 });
 
 it('marks "did not come" only once the time has begun, or a day booked once it is over', function () {

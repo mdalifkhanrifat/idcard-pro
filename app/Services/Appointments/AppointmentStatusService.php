@@ -141,7 +141,8 @@ class AppointmentStatusService
             'status' => $to,
             // A reason belongs to a cancelled appointment only
             'cancel_reason' => $to === AppointmentStatus::Cancelled ? ($reason ?: null) : null,
-            'status_changed_at' => $now ?? CarbonImmutable::now(),
+            // Stored in UTC: a time on the organization's clock would be written as its wall-clock reading
+            'status_changed_at' => ($now ?? CarbonImmutable::now())->utc(),
             'status_changed_by_id' => $by->id,
         ]);
 
