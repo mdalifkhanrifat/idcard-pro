@@ -99,7 +99,7 @@ class CardholderService
 
     private function withDetails(Cardholder $cardholder): Cardholder
     {
-        return $cardholder->load([...Cardholder::lookupRelations(), 'creator', 'photo', 'signature'])->loadExists('cards');
+        return $cardholder->load([...Cardholder::lookupRelations(), 'creator', 'photo', 'signature'])->loadExists(['cards', 'appointments']);
     }
 
     /**

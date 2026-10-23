@@ -28,8 +28,8 @@ class CardholderRepository extends EloquentRepository implements CardholderRepos
     {
         return $this->filtered($filter)
             ->with(['department', 'unit', 'rank', 'designation', 'bloodGroup', 'photo', 'currentCard:id,public_id,cardholder_id,number,print_count,last_printed_at'])
-            // Any card issued to the person or their family: such records cannot be deleted (has_cards)
-            ->withExists('cards')
+            // Any card issued or appointment booked for the person or their family: such records cannot be deleted
+            ->withExists(['cards', 'appointments'])
             ->paginate(ListPage::clamp($filter->perPage))
             ->withQueryString();
     }

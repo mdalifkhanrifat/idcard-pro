@@ -288,6 +288,16 @@ class Cardholder extends Model
     }
 
     /**
+     * Appointments, the cardholder's own and their family members' (never deleted, only cancelled).
+     *
+     * @return HasMany<Appointment, $this>
+     */
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class);
+    }
+
+    /**
      * Issued cards, newest first (the cardholder's own and their family members').
      *
      * @return HasMany<Card, $this>

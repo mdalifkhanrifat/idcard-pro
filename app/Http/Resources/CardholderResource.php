@@ -68,6 +68,8 @@ class CardholderResource extends JsonResource
             'photo' => $this->whenLoaded('photo', fn () => $this->fileSummary($this->photo)),
             // Cards were issued to the person or their family: kept as records, so the cardholder cannot be deleted
             'has_cards' => $this->when($this->resource->getAttribute('cards_exists') !== null, fn () => (bool) $this->resource->getAttribute('cards_exists')),
+            // Appointments were booked for the person or their family (cancelled ones too): kept as records, likewise
+            'has_appointments' => $this->when($this->resource->getAttribute('appointments_exists') !== null, fn () => (bool) $this->resource->getAttribute('appointments_exists')),
             // Own active card and whether it was printed (legacy list "Status": PENDING / PRINTED); only for those who may see cards
             'current_card' => $this->when($this->relationLoaded('currentCard') && (bool) $request->user()?->can('cards.view'), fn () => $this->currentCard ? [
                 'id' => $this->currentCard->public_id,
