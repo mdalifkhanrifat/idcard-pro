@@ -7,12 +7,13 @@ use App\Http\Requests\Audit\ListActivitiesRequest;
 use App\Http\Requests\Audit\ListLoginEventsRequest;
 use App\Http\Resources\ActivityResource;
 use App\Http\Resources\LoginEventResource;
+use App\Services\Audit\AuditChangeDescriber;
 use App\Services\Audit\AuditService;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class AuditController extends Controller
 {
-    public function __construct(private AuditService $audit) {}
+    public function __construct(private AuditService $audit, private AuditChangeDescriber $describer) {}
 
     /**
      * Data change history. Filters: filter[log_name|event|causer|date_from|date_to]; meta.log_names lists
@@ -20,7 +21,11 @@ class AuditController extends Controller
      */
     public function activities(ListActivitiesRequest $request): AnonymousResourceCollection
     {
-        return ActivityResource::collection($this->audit->activities($request->toFilter()))
+        $activities = $this->audit->activities($request->toFilter());
+        // The records the page's changes point to ("rank_id": 54), named with one query per kind of record
+        $this->describer->prime($activities->items());
+
+        return ActivityResource::collection($activities)
             ->additional(['meta' => ['log_names' => $this->audit->logNames(), 'events' => $this->audit->events()]]);
     }
 

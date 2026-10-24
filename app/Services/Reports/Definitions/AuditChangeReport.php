@@ -91,12 +91,24 @@ class AuditChangeReport implements Report
 
     public function paginate(ReportQuery $query): LengthAwarePaginator
     {
-        return $this->activities->list($this->filter($query));
+        $page = $this->activities->list($this->filter($query));
+        $this->describer->prime($page->items());
+
+        return $page;
     }
 
+    /**
+     * The records the changes point to are named a chunk at a time (one query per kind of record per chunk).
+     */
     public function rows(ReportQuery $query): LazyCollection
     {
-        return $this->activities->reportRows($this->filter($query));
+        return $this->activities->reportRows($this->filter($query))
+            ->chunk(500)
+            ->flatMap(function (LazyCollection $chunk): array {
+                $this->describer->prime($chunk);
+
+                return $chunk->all();
+            });
     }
 
     public function count(ReportQuery $query): int

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
 import ListPagination from '@/components/ListPagination.vue';
 import ReportDownloads from '@/pages/reports/ReportDownloads.vue';
@@ -23,7 +23,7 @@ interface ActivityRow {
     causer: { kind: 'user' | 'cardholder'; name: string | null; email: string | null; employee_no?: string | null } | null;
     /** Field changes, or what an event recorded (e.g. requirements_overridden: moment, reason, requirements). */
     changes: { attributes?: Record<string, unknown>; old?: Record<string, unknown>; reason?: string; moment?: string; report?: string; format?: string; rows?: number; print?: boolean; messages?: number; days?: number; address?: string } | null;
-    /** The field changes for people (6.0): each field's name in the reader's language, old and new as text; null for an event. */
+    /** The field changes for people (6.0): each field's name and its old and new value in the reader's language; null for an event. */
     fields: { key: string; label: string; old: string | null; new: string | null }[] | null;
     created_at: string;
 }
@@ -74,6 +74,19 @@ const tone = (event: string) =>
     ({ succeeded: 'success', created: 'success', failed: 'danger', locked: 'danger', blocked: 'danger', deleted: 'danger', two_factor_failed: 'warning', updated: 'brand', requirements_overridden: 'warning' })[event] as
         | 'success' | 'danger' | 'warning' | 'brand' | undefined;
 
+/** Rows whose changed fields are open (old → new). */
+const opened = reactive(new Set<number>());
+function toggle(id: number): void {
+    if (opened.has(id)) {
+        opened.delete(id);
+    } else {
+        opened.add(id);
+    }
+}
+
+/** A value too long to read with its old one on a line (e.g. a message text). */
+const isLong = (field: { old: string | null; new: string | null }) => (field.old ?? '').length + (field.new ?? '').length > 80 || `${field.old}${field.new}`.includes('\n');
+
 /** The changed fields by name (named by the server, so new fields and settings need nothing here). */
 function changedFields(row: ActivityRow): string[] {
     return (row.fields ?? []).map((field) => field.label);
@@ -110,7 +123,8 @@ const loginReportQuery = computed(() => Object.fromEntries(Object.entries(logins
                     </div>
                 </div>
                 <ul class="divide-y divide-line" :class="activities.loading.value && 'opacity-50'">
-                    <li v-for="row in activities.rows.value" :key="row.id" class="flex flex-col gap-1 px-5 py-3 text-sm sm:flex-row sm:items-center sm:gap-4">
+                    <li v-for="row in activities.rows.value" :key="row.id" class="px-5 py-3 text-sm">
+                        <div class="flex flex-col gap-1 sm:flex-row sm:items-center sm:gap-4">
                         <UiBadge :tone="tone(row.event) ?? 'neutral'" class="w-fit">{{ eventLabel(row.event) }}</UiBadge>
                         <div class="min-w-0 flex-1">
                             <p class="break-words text-fg">
@@ -136,6 +150,46 @@ const loginReportQuery = computed(() => Object.fromEntries(Object.entries(logins
                             </p>
                         </div>
                         <time class="text-xs whitespace-nowrap text-muted">{{ formatDateTime(row.created_at) }}</time>
+                        <button
+                            v-if="row.fields?.length"
+                            type="button"
+                            class="w-fit text-xs font-medium whitespace-nowrap text-brand-ink hover:underline"
+                            :aria-expanded="opened.has(row.id)"
+                            :aria-controls="opened.has(row.id) ? `audit-fields-${row.id}` : undefined"
+                            data-audit-toggle
+                            @click="toggle(row.id)"
+                        >
+                            {{ opened.has(row.id) ? t('audit.hideDetails') : t('audit.details') }}
+                        </button>
+                        </div>
+                        <!-- Each changed field, old → new, as the server names and writes them (6.0b) -->
+                        <dl v-if="row.fields?.length && opened.has(row.id)" :id="`audit-fields-${row.id}`" class="mt-2 grid gap-2 rounded-lg bg-surface-2 p-3 text-xs sm:grid-cols-[minmax(10rem,16rem)_1fr] sm:gap-x-4" data-audit-details>
+                            <template v-for="field in row.fields" :key="field.key">
+                                <dt class="font-medium break-words text-muted">{{ field.label }}</dt>
+                                <!-- Long or multi-line values (message texts): before and after as two blocks, each named -->
+                                <dd v-if="isLong(field)" class="-mt-1 grid gap-1 break-words whitespace-pre-line text-fg sm:mt-0" data-audit-long>
+                                    <div v-if="field.old !== null">
+                                        <span class="text-muted">{{ t('audit.before') }}:</span>
+                                        <del class="block text-muted" dir="auto" data-audit-old>{{ field.old }}</del>
+                                    </div>
+                                    <div v-if="field.new !== null">
+                                        <span class="text-muted">{{ t('audit.after') }}:</span>
+                                        <ins class="block no-underline" dir="auto" data-audit-new>{{ field.new }}</ins>
+                                    </div>
+                                </dd>
+                                <dd v-else class="-mt-1 break-words whitespace-pre-line text-fg sm:mt-0" dir="auto">
+                                    <template v-if="field.old !== null">
+                                        <span class="sr-only">{{ t('audit.before') }}: </span>
+                                        <del class="text-muted" data-audit-old>{{ field.old }}</del>
+                                    </template>
+                                    <template v-if="field.old !== null && field.new !== null"><span aria-hidden="true"> → </span></template>
+                                    <template v-if="field.new !== null">
+                                        <span class="sr-only">{{ t('audit.after') }}: </span>
+                                        <ins class="no-underline" data-audit-new>{{ field.new }}</ins>
+                                    </template>
+                                </dd>
+                            </template>
+                        </dl>
                     </li>
                 </ul>
                 <UiEmpty v-if="!activities.loading.value && !activities.rows.value.length" :title="t('common.noResults')" />

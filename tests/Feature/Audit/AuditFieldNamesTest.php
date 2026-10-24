@@ -1,8 +1,19 @@
 <?php
 
+use App\Models\Appointment;
+use App\Models\BiometricCapture;
+use App\Models\Card;
+use App\Models\Cardholder;
+use App\Models\CardholderFile;
+use App\Models\CustomField;
+use App\Models\MasterDataItem;
 use App\Models\Tenant;
+use App\Models\User;
+use App\Services\Appointments\AppointmentSettings;
 use App\Services\Audit\AuditChangeDescriber;
 use App\Support\Audit\JsonChanges;
+use App\Support\Tenancy\TenantContext;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
@@ -94,4 +105,116 @@ it('gives each changed field its name and its old and new value as text, never a
     $event = new Activity(['log_name' => 'reports', 'properties' => ['report' => 'cards']]);
     expect(app(AuditChangeDescriber::class)->fields($created))->toBe([['key' => 'name', 'label' => 'Name', 'old' => null, 'new' => 'Jane']])
         ->and(app(AuditChangeDescriber::class)->fields($event))->toBeNull();
+});
+
+/**
+ * What the audit shows as a field's new value.
+ */
+function describedValue(string $log, string $subject, string $key, mixed $value): ?string
+{
+    $activity = new Activity(['log_name' => $log, 'subject_type' => $subject]);
+    $activity->attribute_changes = collect(['attributes' => [$key => $value]]);
+
+    return app(AuditChangeDescriber::class)->fields($activity)[0]['new'];
+}
+
+it('names every case of every enum a logged field holds, in both languages', function (string $locale) {
+    app()->setLocale($locale);
+
+    $unnamed = [];
+    foreach (File::files(app_path('Models')) as $file) {
+        $class = 'App\\Models\\'.$file->getFilenameWithoutExtension();
+        if (! in_array(LogsActivity::class, class_uses_recursive($class), true)) {
+            continue;
+        }
+        $model = new $class;
+        foreach ($model->getActivitylogOptions()->logAttributes as $field) {
+            $cast = $model->getCasts()[$field] ?? null;
+            if (! is_string($cast) || ! enum_exists($cast)) {
+                continue;
+            }
+            foreach ($cast::cases() as $case) {
+                if (describedValue('x', $class, $field, $case->value) === $case->value) {
+                    $unnamed[] = class_basename($class).".{$field}={$case->value}";
+                }
+            }
+        }
+    }
+
+    expect($unnamed)->toBe([]);
+})->with(['en', 'bn']);
+
+it('names every choice a logged field or setting offers, in both languages', function (string $locale) {
+    app()->setLocale($locale);
+    $choices = [
+        ['tenant', Tenant::class, 'settings.verification.fields', config('cards.verification.fields')],
+        ['tenant', Tenant::class, 'settings.notifications.channels', array_keys(config('notifications.channels'))],
+        ['tenant', Tenant::class, 'settings.notifications.events.card_ready.channels', array_keys(config('notifications.channels'))],
+        ['tenant', Tenant::class, 'settings.notifications.languages', config('notifications.languages')],
+        ['tenant', Tenant::class, 'settings.notifications.sms_languages', config('notifications.sms_languages')],
+        ['tenant', Tenant::class, 'settings.biometrics.modalities.face.mode', config('biometrics.modes')],
+        ['tenant', Tenant::class, 'settings.biometrics.modalities.face.drivers', array_keys(config('biometrics.drivers'))],
+        ['tenant', Tenant::class, 'settings.biometrics.modalities.fingerprint.positions', array_keys(config('biometrics.modalities.fingerprint.positions'))],
+        ['tenant', Tenant::class, 'settings.card_number_on_reissue', config('cards.number_on_reissue')],
+        ['tenant', Tenant::class, 'settings.appointments.booking', AppointmentSettings::bookingModes()],
+        ['tenant', Tenant::class, 'settings.appointments.scheduling', AppointmentSettings::schedulingModes()],
+        ['tenant', Tenant::class, 'settings.appointments.confirmation', AppointmentSettings::confirmationModes()],
+        ['tenant', Tenant::class, 'settings.appointments.verification.method', AppointmentSettings::verificationMethods()],
+        ['tenant', Tenant::class, 'settings.appointments.verification.code_channels', AppointmentSettings::codeChannels()],
+        ['tenant', Tenant::class, 'locale', config('notifications.languages')],
+        ['user', User::class, 'locale', config('notifications.languages')],
+        ['biometrics', BiometricCapture::class, 'status', [BiometricCapture::STATUS_CAPTURED, BiometricCapture::STATUS_UNAVAILABLE]],
+        ['biometrics', BiometricCapture::class, 'driver', array_keys(config('biometrics.drivers'))],
+        ['biometrics', BiometricCapture::class, 'modality', array_keys(config('biometrics.modalities'))],
+        ['biometrics', BiometricCapture::class, 'unavailable_reason', config('biometrics.unavailable_reasons')],
+        ['cards', Card::class, 'reason', array_keys(config('cards.reasons'))],
+        ['cardholder_files', CardholderFile::class, 'collection', array_keys(config('cardholder_files.collections'))],
+        ['custom_fields', CustomField::class, 'entity', CustomField::ENTITIES],
+        ['master_data', MasterDataItem::class, 'type', array_keys(config('master_data.types'))],
+        ['appointments', Appointment::class, 'service', array_keys(config('appointments.services'))],
+    ];
+
+    $unnamed = [];
+    foreach ($choices as [$log, $subject, $key, $values]) {
+        foreach ($values as $value) {
+            if (describedValue($log, $subject, $key, $value) === $value) {
+                $unnamed[] = "{$log}.{$key}={$value}";
+            }
+        }
+    }
+
+    expect($unnamed)->toBe([]);
+})->with(['en', 'bn']);
+
+it('shows the record a reference points to, days as days and moments in the organization\'s time, in the reader\'s digits', function () {
+    [$tenant] = tenantWithOwner();
+    $tenant->update(['timezone' => 'Asia/Dhaka']);
+    app(TenantContext::class)->set($tenant->fresh());
+    $rank = masterItem($tenant, ['type' => 'rank', 'name' => 'Sergeant']);
+    $unit = masterItem($tenant, ['type' => 'unit', 'name' => 'Base Unit']);
+    $activity = fn (array $old, array $new) => tap(new Activity(['log_name' => 'cardholders', 'subject_type' => Cardholder::class]), fn (Activity $a) => $a->attribute_changes = collect(['old' => $old, 'attributes' => $new]));
+    $rows = [
+        $activity(['rank_id' => null, 'joining_date' => '2026-10-24T00:00:00.000000Z'], ['rank_id' => $rank->id, 'joining_date' => '2026-10-25T00:00:00.000000Z']),
+        $activity(['unit_id' => 999999], ['unit_id' => $unit->id]),
+    ];
+
+    $describer = app(AuditChangeDescriber::class);
+    DB::enableQueryLog();
+    $describer->prime($rows);
+    $fields = [...$describer->fields($rows[0]), ...$describer->fields($rows[1])];
+    // One query for both pointed-to records (and the one no longer there), none while describing
+    expect(count(DB::getQueryLog()))->toBe(1);
+
+    expect(collect($fields)->keyBy('key')->map(fn (array $field) => [$field['old'], $field['new']])->all())->toBe([
+        'rank_id' => ['—', 'Sergeant'],
+        // A day is a day: never moved by a time zone
+        'joining_date' => ['24/10/2026', '25/10/2026'],
+        'unit_id' => ['#999999 (deleted)', 'Base Unit'],
+    ]);
+
+    // A moment in the organization's time: 18:30 UTC is already the next day in Dhaka; Bangla digits for Bangla readers
+    app()->setLocale('bn');
+    $moment = new Activity(['log_name' => 'biometrics', 'subject_type' => BiometricCapture::class]);
+    $moment->attribute_changes = collect(['attributes' => ['replaced_at' => '2026-10-24T18:30:00.000000Z', 'quality' => 72, 'status' => 'captured']]);
+    expect(array_column(app(AuditChangeDescriber::class)->fields($moment), 'new'))->toBe(['২৫/১০/২০২৬ ০০:৩০', '৭২', 'নেওয়া হয়েছে']);
 });

@@ -123,7 +123,7 @@ it('logs who changed which organization settings, old and new, without the uncha
 
     // The same changes for people: each by its name in the reader's language, old and new as text
     $fields = collect($logs[0]['fields'])->keyBy('key');
-    expect($fields['settings.biometrics.modalities.fingerprint.positions'])->toBe(['key' => 'settings.biometrics.modalities.fingerprint.positions', 'label' => 'Fingerprint — Positions', 'old' => 'right_thumb, left_thumb', 'new' => 'right_index, left_index'])
+    expect($fields['settings.biometrics.modalities.fingerprint.positions'])->toBe(['key' => 'settings.biometrics.modalities.fingerprint.positions', 'label' => 'Fingerprint — Positions', 'old' => 'Right thumb, Left thumb', 'new' => 'Right index, Left index'])
         ->and($fields['settings.biometrics.enabled'])->toMatchArray(['label' => 'Capturing biometrics', 'old' => 'No', 'new' => 'Yes']);
     $this->owner->update(['locale' => 'bn']);
     expect(collect($tenantLogs()[0]['fields'])->keyBy('key')['settings.biometrics.modalities.fingerprint.positions']['label'])->toBe('আঙুলের ছাপ — অবস্থান');

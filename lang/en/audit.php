@@ -102,4 +102,20 @@ return [
             'path' => 'Image file',
         ],
     ],
+    // Names of values the app names only on its pages (config audit.values)
+    'values' => [
+        'locale' => ['en' => 'English', 'bn' => 'Bangla'],
+        'tenant_status' => ['active' => 'Active', 'suspended' => 'Suspended'],
+        'custom_field_type' => ['text' => 'Text', 'textarea' => 'Long text', 'number' => 'Number', 'date' => 'Date', 'select' => 'Drop-down', 'checkbox' => 'Yes / no'],
+        'custom_field_entity' => ['cardholder' => 'Cardholder', 'family_member' => 'Family member'],
+        'capture_status' => ['captured' => 'Captured', 'unavailable' => 'Cannot be captured'],
+        'biometric_driver' => ['upload' => 'File upload', 'simulator' => 'Simulator', 'webcam' => 'Webcam', 'secugen' => 'SecuGen', 'bridge' => 'Bridge agent'],
+        'biometric_mode' => ['off' => 'Off', 'optional' => 'Optional', 'required' => 'Required'],
+        'file_collection' => ['photo' => 'Photo', 'signature' => 'Signature', 'document' => 'Document'],
+        'number_on_reissue' => ['keep' => 'Keep the current number', 'new' => 'Always a new number'],
+        'card_detail' => ['photo' => 'Photo', 'template' => 'Template'],
+    ],
+
+    // A record a reference points to that no longer exists
+    'deleted_record' => '#:id (deleted)',
 ];

@@ -29,6 +29,12 @@ it('lists the changes the audit page lists, what changed in words', function () 
     expect($row)->toMatchArray(['audit.who' => $this->owner->name, 'audit.module' => 'Cardholders', 'audit.event' => 'Updated', 'audit.subject' => 'Cardholder'])
         ->and($row['audit.changes'])->toContain('Full name: Jane Doe → Janet Doe');
 
+    // A reference reads as the record it points to, on the page and in a download (named a chunk at a time)
+    $rank = masterItem($this->tenant, ['type' => 'rank', 'name' => 'Sergeant']);
+    app(TenantContext::class)->run($this->tenant, fn () => $this->holder->fresh()->update(['rank_id' => $rank->id]));
+    expect($this->getJson('/api/v1/reports/audit-changes?filter[log_name]=cardholders&columns[]=audit.changes')->json('data.0.values')['audit.changes'])->toBe('Rank / grade: — → Sergeant')
+        ->and($this->get('/api/v1/reports/audit-changes/export?format=csv&filter[log_name]=cardholders&columns[]=audit.changes')->assertOk()->streamedContent())->toContain('Rank / grade: — → Sergeant');
+
     $filters = collect(collect($this->getJson('/api/v1/reports')->json('data'))->keyBy('key')['audit_changes']['filters'])->keyBy('key');
     expect(array_column($filters['log_name']['options'], 'label'))->toContain('Cardholders');
 });

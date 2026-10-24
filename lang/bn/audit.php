@@ -102,4 +102,20 @@ return [
             'path' => 'ছবির ফাইল',
         ],
     ],
+    // যেসব মানের নাম অ্যাপ শুধু পাতায় দেয় (config audit.values)
+    'values' => [
+        'locale' => ['en' => 'ইংরেজি', 'bn' => 'বাংলা'],
+        'tenant_status' => ['active' => 'সক্রিয়', 'suspended' => 'স্থগিত'],
+        'custom_field_type' => ['text' => 'টেক্সট', 'textarea' => 'বড় টেক্সট', 'number' => 'সংখ্যা', 'date' => 'তারিখ', 'select' => 'ড্রপডাউন', 'checkbox' => 'হ্যাঁ / না'],
+        'custom_field_entity' => ['cardholder' => 'কার্ডধারী', 'family_member' => 'পরিবারের সদস্য'],
+        'capture_status' => ['captured' => 'নেওয়া হয়েছে', 'unavailable' => 'নেওয়া যায় না'],
+        'biometric_driver' => ['upload' => 'ফাইল আপলোড', 'simulator' => 'সিমুলেটর', 'webcam' => 'ওয়েবক্যাম', 'secugen' => 'SecuGen', 'bridge' => 'ব্রিজ এজেন্ট'],
+        'biometric_mode' => ['off' => 'বন্ধ', 'optional' => 'ঐচ্ছিক', 'required' => 'বাধ্যতামূলক'],
+        'file_collection' => ['photo' => 'ছবি', 'signature' => 'সই', 'document' => 'নথি'],
+        'number_on_reissue' => ['keep' => 'বর্তমান নম্বর রাখো', 'new' => 'সবসময় নতুন নম্বর'],
+        'card_detail' => ['photo' => 'ছবি', 'template' => 'টেমপ্লেট'],
+    ],
+
+    // যে রেকর্ডের দিকে id দেখায় সেটা আর নেই
+    'deleted_record' => '#:id (মোছা)',
 ];
