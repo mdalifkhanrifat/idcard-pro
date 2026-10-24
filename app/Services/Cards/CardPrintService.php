@@ -28,6 +28,7 @@ class CardPrintService
         private CardRepositoryInterface $cards,
         private CardPrintRepositoryInterface $prints,
         private CardRequirements $requirements,
+        private CardNotifications $notifications,
     ) {}
 
     /**
@@ -44,7 +45,8 @@ class CardPrintService
     }
 
     /**
-     * Log a printing of several cards at once (a batch); all of them or none are logged.
+     * Log a printing of several cards at once (a batch); all of them or none are logged. Cards printed for the
+     * first time tell their holders they are ready (5.7d), once the printing is saved.
      *
      * @param  array<int, string>  $cardIds  public ids
      * @return Collection<int, CardPrint>
@@ -53,8 +55,11 @@ class CardPrintService
     {
         $cardIds = array_values(array_unique($cardIds));
 
-        return DB::transaction(function () use ($cardIds, $data, $actor): Collection {
+        $firstPrinted = collect();
+        $prints = DB::transaction(function () use ($cardIds, $data, $actor, &$firstPrinted): Collection {
             $cards = $this->assertPrintable($this->cards->lockedByPublicIds($cardIds), $cardIds);
+            // Read under the lock, so of two printings at once only one is the first
+            $firstPrinted = $cards->filter(fn (Card $card) => $card->print_count === 0)->values();
             // What the organization requires before printing, for every card of the batch (or an override with a reason)
             $overridden = $this->requirements->enforceCards($cards, 'print', $data->overrideReason, $actor);
 
@@ -76,6 +81,9 @@ class CardPrintService
 
             return $prints;
         });
+        $this->notifications->firstPrinted($firstPrinted);
+
+        return $prints;
     }
 
     /**

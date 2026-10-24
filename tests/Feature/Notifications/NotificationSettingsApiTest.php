@@ -220,3 +220,65 @@ it('lets an SMS take all the organization\'s languages or only the first, all by
     expect($changes['old'])->toMatchArray(['settings.notifications.sms_languages' => 'all'])
         ->and($changes['attributes'])->toMatchArray(['settings.notifications.sms_languages' => 'first']);
 });
+
+it('keeps an event\'s own settings, as the event declares them: named, checked, partial and audited', function () {
+    Sanctum::actingAs($this->owner);
+    $saved = fn () => $this->tenant->fresh()->notificationSettings()['events'];
+
+    // Offered with names, choices and limits in the reader's language; none for an event without settings
+    $this->getJson('/api/v1/notifications/settings', ['Accept-Language' => 'bn'])
+        ->assertJsonPath('data.options.events.card_ready.options.0.key', 'send_on')
+        ->assertJsonPath('data.options.events.card_ready.options.0.kind', 'choice')
+        ->assertJsonPath('data.options.events.card_ready.options.0.label', 'কখন পাঠাবেন')
+        ->assertJsonPath('data.options.events.card_ready.options.0.default', 'print')
+        ->assertJsonPath('data.options.events.card_ready.options.0.choices', [['key' => 'print', 'name' => 'কার্ড প্রথমবার ছাপার পরে'], ['key' => 'issue', 'name' => 'কার্ড ইস্যুর সাথে সাথে']])
+        ->assertJsonPath('data.options.events.card_expiring.options.0', [
+            'key' => 'days', 'kind' => 'numbers', 'label' => 'মেয়াদ শেষের কত দিন আগে',
+            'hint' => 'সর্বোচ্চ তিনটা রিমাইন্ডার, যেমন ৬০, ৩০ আর ৭ দিন আগে। শুধু কার্ডধারীর এখনকার কার্ডে — বদলানো বা বাতিল কার্ডে নয়।',
+            'default' => [30], 'min' => 1, 'max' => 365, 'max_items' => 3, 'unit' => 'দিন আগে',
+        ])
+        ->assertJsonPath('data.options.events.appointment_booked.options', []);
+
+    // Days kept once each, largest first; the event's other parts stay
+    ($this->put)(['events' => ['card_expiring' => ['enabled' => true, 'options' => ['days' => [7, '60', 30]]]]])->assertOk()
+        ->assertJsonPath('data.notifications.events.card_expiring.options.days', [60, 30, 7]);
+    ($this->put)(['events' => ['card_ready' => ['options' => ['send_on' => 'issue']]]])->assertOk();
+    expect($saved()['card_ready']['options'])->toBe(['send_on' => 'issue'])
+        ->and($saved()['card_expiring'])->toMatchArray(['enabled' => true, 'options' => ['days' => [60, 30, 7]]]);
+    $changes = $this->getJson('/api/v1/audit/activities?filter[log_name]=tenant')->json('data.0.changes');
+    expect($changes['attributes'])->toBe(['settings.notifications.events.card_ready.options.send_on' => 'issue'])
+        ->and($changes['old'] ?? [])->not->toHaveKey('settings.notifications.events.card_expiring.options.days');
+
+    // A change to another part of the event keeps its settings
+    ($this->put)(['events' => ['card_expiring' => ['channels' => ['mail']]]])->assertOk();
+    expect($saved()['card_expiring']['options']['days'])->toBe([60, 30, 7]);
+
+    // Checked as declared, named in the reader's language
+    ($this->put)(['events' => ['card_ready' => ['options' => ['send_on' => 'later', 'colour' => 'red']]]])
+        ->assertJsonValidationErrors(['notifications.events.card_ready.options']);
+    ($this->put)(['events' => ['card_ready' => ['options' => ['send_on' => 'later']]]])
+        ->assertJsonValidationErrors(['notifications.events.card_ready.options.send_on']);
+    ($this->put)(['events' => ['card_expiring' => ['options' => ['days' => [400, 30, 30, 1, 2]]]]])
+        ->assertJsonValidationErrors(['notifications.events.card_expiring.options.days', 'notifications.events.card_expiring.options.days.0', 'notifications.events.card_expiring.options.days.2']);
+    ($this->put)(['events' => ['card_expiring' => ['options' => ['days' => []]]]], ['Accept-Language' => 'bn'])
+        ->assertJsonPath('errors', ['notifications.events.card_expiring.options.days' => ['মেয়াদ শেষের কত দিন আগে-এ কমপক্ষে ১ টি আইটেম থাকতে হবে।']]);
+    // Settings only for events that have them
+    ($this->put)(['events' => ['appointment_booked' => ['options' => ['send_on' => 'issue']]]])
+        ->assertJsonValidationErrors(['notifications.events.appointment_booked']);
+    expect($saved()['card_expiring']['options']['days'])->toBe([60, 30, 7]);
+
+    // What GET gives, PUT takes back unchanged
+    $settings = $this->getJson('/api/v1/notifications/settings')->json('data.notifications');
+    ($this->put)($settings)->assertOk()->assertJsonPath('data.notifications', $settings);
+});
+
+it('completes saved settings of an event: a choice it no longer offers or days out of range take the default', function () {
+    $this->tenant->update(['settings' => ['notifications' => ['events' => [
+        'card_ready' => ['options' => ['send_on' => 'never']],
+        'card_expiring' => ['options' => ['days' => [0, 500, 'x']]],
+    ]]]]);
+
+    expect($this->tenant->fresh()->notificationSettings()['events']['card_ready']['options'])->toBe(['send_on' => 'print'])
+        ->and($this->tenant->fresh()->notificationSettings()['events']['card_expiring']['options'])->toBe(['days' => [30]])
+        ->and(NotificationSettings::option(['events' => ['card_expiring' => ['options' => ['days' => [7]]]]], 'card_expiring', 'days'))->toBe([7]);
+});

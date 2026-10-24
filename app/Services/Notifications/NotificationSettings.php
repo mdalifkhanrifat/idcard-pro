@@ -2,6 +2,8 @@
 
 namespace App\Services\Notifications;
 
+use App\Data\Notifications\EventOption;
+
 /**
  * An organization's notification settings (tenants.settings.notifications), always complete: anything not saved
  * takes the configured default, and channels, languages or events the registry no longer offers are dropped.
@@ -70,6 +72,29 @@ class NotificationSettings
     }
 
     /**
+     * An event's own settings (5.7d), by key; none for an event that has no settings.
+     *
+     * @param  NotificationEvent<object>  $event
+     * @return array<string, EventOption>
+     */
+    public static function optionsOf(NotificationEvent $event): array
+    {
+        return $event instanceof HasEventOptions ? collect($event->eventOptions())->keyBy(fn (EventOption $option): string => $option->key)->all() : [];
+    }
+
+    /**
+     * One of an event's own settings as the organization chose it (or its default).
+     *
+     * @param  array{events: array<string, array{options?: array<string, string|array<int, int>>}>}  $settings  normalized
+     * @return string|array<int, int>
+     */
+    public static function option(array $settings, string $event, string $key): string|array
+    {
+        return $settings['events'][$event]['options'][$key]
+            ?? throw new \InvalidArgumentException("The notification event \"{$event}\" has no setting \"{$key}\".");
+    }
+
+    /**
      * The saved settings with a change applied: top-level values replace, an event replaces that event only.
      * A channel list that is missing means none (a form cannot send an empty list); the languages, which are
      * never empty, stay as they were.
@@ -91,7 +116,7 @@ class NotificationSettings
     /**
      * The saved settings with a partial change applied, for clients that send JSON (the notifications page, an
      * integration): what is not sent stays as it was, a list that is sent replaces the old one (an empty list is
-     * none), an event changes only in what is sent for it, and its texts by language and part.
+     * none), an event changes only in what is sent for it, its texts by language and part, and its own settings by key.
      *
      * @param  array<string, mixed>  $current
      * @param  array<string, mixed>  $change
@@ -101,7 +126,10 @@ class NotificationSettings
     {
         $events = (array) ($current['events'] ?? []);
         foreach ((array) ($change['events'] ?? []) as $key => $eventChange) {
-            $event = [...(array) ($events[$key] ?? []), ...array_diff_key((array) $eventChange, ['templates' => true])];
+            $event = [...(array) ($events[$key] ?? []), ...array_diff_key((array) $eventChange, ['templates' => true, 'options' => true])];
+            if (isset(((array) $eventChange)['options'])) {
+                $event['options'] = [...(array) ($event['options'] ?? []), ...(array) ((array) $eventChange)['options']];
+            }
             foreach ((array) (((array) $eventChange)['templates'] ?? []) as $language => $parts) {
                 $event['templates'][$language] = [...(array) ($event['templates'][$language] ?? []), ...(array) $parts];
             }
@@ -113,7 +141,7 @@ class NotificationSettings
 
     /**
      * @param  array<string, mixed>  $saved
-     * @return array{enabled: bool, channels: array<int, string>, languages: array<int, string>, sms_languages: string, prune_log: bool, log_days: int, events: array<string, array{enabled: bool, channels: array<int, string>, templates: array<string, array{subject: string|null, body: string|null, sms: string|null}>}>}
+     * @return array{enabled: bool, channels: array<int, string>, languages: array<int, string>, sms_languages: string, prune_log: bool, log_days: int, events: array<string, array{enabled: bool, channels: array<int, string>, templates: array<string, array{subject: string|null, body: string|null, sms: string|null}>, options?: array<string, string|array<int, int>>}>}
      */
     public static function normalize(array $saved): array
     {
@@ -138,6 +166,11 @@ class NotificationSettings
                 'channels' => $list($savedEvent['channels'] ?? null, $channels, $event->defaultChannels()),
                 'templates' => $templates,
             ];
+            // Only an event with settings of its own carries them
+            $options = self::optionsOf($event);
+            if ($options !== []) {
+                $events[$key]['options'] = array_map(fn (EventOption $option) => $option->normalize($savedEvent['options'][$option->key] ?? null), $options);
+            }
         }
 
         $chosenLanguages = $list($saved['languages'] ?? null, $languages, (array) $defaults['languages']);
@@ -161,8 +194,8 @@ class NotificationSettings
      * What this installation can send and about what, for a settings form, named in the reader's language: the
      * channels and languages (keys, with their names under `labels`), the choices for an SMS's languages (named
      * too), limits, what joins the languages of one
-     * message, and every event with the placeholders its texts may use (named), its default channels and its
-     * default texts in every language.
+     * message, and every event with the placeholders its texts may use (named), its default channels, its
+     * default texts in every language and its own settings (named, with their choices or limits; none: []).
      *
      * @return array<string, mixed>
      */
@@ -194,6 +227,7 @@ class NotificationSettings
                 'default_templates' => collect($languages)->mapWithKeys(fn (string $language): array => [$language => collect(self::PARTS)->mapWithKeys(
                     fn (string $part): array => [$part => (string) __("notifications.events.{$key}.{$part}", locale: $language)],
                 )->all()])->all(),
+                'options' => array_values(array_map(fn (EventOption $option): array => $option->describe($key), self::optionsOf($event))),
             ])->all(),
         ];
     }

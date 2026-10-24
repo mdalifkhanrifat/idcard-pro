@@ -106,9 +106,9 @@ return [
      * and its default texts (lang/<language>/notifications.php, events.<key>).
      */
     'events' => [
-        // A card was issued and can be collected (sent once it is ready, 5.7)
+        // A card is ready to collect (5.7d: once, after its first printing or when issued — the event's own setting)
         'card_ready' => CardReadyEvent::class,
-        // A card's last day is near (reminder days in 5.7)
+        // A card's last day is near (5.7d: app:send-card-expiry-reminders, on the days before the event's own setting names)
         'card_expiring' => CardExpiringEvent::class,
         // Appointments (5.4e; sent from 5.7): booked, confirmed (approved or restored), moved, cancelled or
         // turned down, and a reminder before it

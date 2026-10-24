@@ -48,6 +48,7 @@ class CardIssueService
         private CardRequirements $requirements,
         private CardBiometricImageService $biometricImages,
         private TenantContext $tenant,
+        private CardNotifications $notifications,
     ) {}
 
     /**
@@ -96,6 +97,8 @@ class CardIssueService
         if ($overridden !== []) {
             $this->requirements->recordOverride($card, 'issue', (string) $data->overrideReason, $overridden, $actor);
         }
+        // Ready on issue, when the organization chose so (5.7d); an imported card never is (importCard())
+        $this->notifications->issued($card);
 
         return $card;
     }

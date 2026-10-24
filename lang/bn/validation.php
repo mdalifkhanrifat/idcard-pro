@@ -312,6 +312,12 @@ return [
         'notifications.events.*.templates.*.subject' => 'ইমেইলের বিষয়',
         'notifications.events.*.templates.*.body' => 'ইমেইলের লেখা',
         'notifications.events.*.templates.*.sms' => 'SMS-এর লেখা',
+        'notifications.events.card_ready.options' => '"কার্ড তৈরি"-র সেটিং',
+        'notifications.events.card_ready.options.send_on' => '"কার্ড তৈরি" কখন যাবে',
+        'notifications.events.card_expiring.options' => '"কার্ডের মেয়াদ শেষ হচ্ছে"-র সেটিং',
+        'notifications.events.card_expiring.options.days' => 'মেয়াদ শেষের কত দিন আগে',
+        'notifications.events.card_expiring.options.days.*' => 'মেয়াদ শেষের কত দিন আগে',
+        'notifications.events.*.options' => 'ঘটনার সেটিং',
         // List filters (cards, cardholders, audit)
         'filter' => 'ফিল্টার',
         'filter.search' => 'খোঁজ',

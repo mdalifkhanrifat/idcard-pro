@@ -71,17 +71,31 @@ return [
     'events' => [
         'card_ready' => [
             'name' => 'Card ready',
-            'description' => 'A card was issued and can be collected.',
+            'description' => 'A card is ready to collect: once, after its first printing or when it is issued, as chosen below.',
             'subject' => 'Your ID card {card.number} is ready',
             'body' => "Dear {holder.name},\n\nYour ID card {card.number} from {organization.name} is ready. {card.validity}\n\nThank you.",
             'sms' => '{organization.name}: your ID card {card.number} is ready. {card.validity}',
+            'options' => [
+                'send_on' => [
+                    'label' => 'Send it',
+                    'hint' => 'Once for each card. Printing it again sends nothing, and neither does importing cards.',
+                    'choices' => ['print' => 'After the card is first printed', 'issue' => 'As soon as the card is issued'],
+                ],
+            ],
         ],
         'card_expiring' => [
             'name' => 'Card expiring',
-            'description' => 'A card\'s last day is near: time to renew it.',
+            'description' => 'A card\'s last day is near: time to renew it. Sent in the morning, once for each of the days chosen below.',
             'subject' => 'Your ID card {card.number} expires on {card.expiry_date}',
             'body' => "Dear {holder.name},\n\nYour ID card {card.number} from {organization.name} expires on {card.expiry_date} ({card.days_left} days from today). Please arrange its renewal in time.\n\nThank you.",
             'sms' => '{organization.name}: your ID card {card.number} expires on {card.expiry_date}. Please arrange its renewal.',
+            'options' => [
+                'days' => [
+                    'label' => 'Days before the last day',
+                    'hint' => 'Up to three reminders, e.g. 60, 30 and 7 days before. Only for a holder\'s current card, not one already replaced or revoked.',
+                    'unit' => 'days before',
+                ],
+            ],
         ],
         'appointment_booked' => [
             'name' => 'Appointment booked',

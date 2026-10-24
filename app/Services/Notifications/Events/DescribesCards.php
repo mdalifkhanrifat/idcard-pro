@@ -33,7 +33,7 @@ trait DescribesCards
 
     protected function cardRecipient(Card $card): NotificationRecipient
     {
-        return NotificationRecipient::forCardholder($card->cardholder);
+        return NotificationRecipient::forCardholder($card->loadMissing('cardholder')->cardholder);
     }
 
     /**

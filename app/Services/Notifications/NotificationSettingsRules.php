@@ -14,7 +14,8 @@ final class NotificationSettingsRules
 {
     /**
      * On or off, channels, languages (and whether an SMS takes them all or only the first), whether old messages leave the log and after how many days, and per event
-     * whether it goes out, on which channels and in whose words (an empty text = the event's default).
+     * whether it goes out, on which channels, in whose words (an empty text = the event's default) and its own
+     * settings, if it has any.
      * Partial (JSON clients): any part may be sent alone, the rest stays; otherwise (a form, which cannot send an
      * empty list) a section is sent whole, its on/off included.
      *
@@ -39,10 +40,11 @@ final class NotificationSettingsRules
             'notifications.log_days' => ['sometimes', 'integer', 'between:'.(int) $days['min'].','.(int) $days['max']],
             'notifications.events' => ['sometimes', 'array:'.implode(',', array_keys(NotificationSettings::events()))],
         ];
-        foreach (array_keys(NotificationSettings::events()) as $event) {
+        foreach (NotificationSettings::events() as $event => $definition) {
             $key = "notifications.events.{$event}";
+            $options = NotificationSettings::optionsOf($definition);
             $rules += [
-                $key => ['sometimes', 'array:enabled,channels,templates'],
+                $key => ['sometimes', 'array:enabled,channels,templates'.($options !== [] ? ',options' : '')],
                 "{$key}.enabled" => [$whole($key), 'boolean'],
                 "{$key}.channels" => ['sometimes', 'array'],
                 "{$key}.channels.*" => ['distinct', Rule::in($channels)],
@@ -52,6 +54,13 @@ final class NotificationSettingsRules
                 $rules["{$key}.templates.{$language}"] = ['sometimes', 'array:'.implode(',', NotificationSettings::PARTS)];
                 foreach (NotificationSettings::PARTS as $part) {
                     $rules["{$key}.templates.{$language}.{$part}"] = ['nullable', 'string', 'max:'.(int) $length[$part]];
+                }
+            }
+            // The event's own settings (5.7d), as it declares them
+            if ($options !== []) {
+                $rules["{$key}.options"] = ['sometimes', 'array:'.implode(',', array_keys($options))];
+                foreach ($options as $option) {
+                    $rules += $option->rules("{$key}.options.{$option->key}");
                 }
             }
         }

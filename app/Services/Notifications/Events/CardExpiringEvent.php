@@ -2,22 +2,28 @@
 
 namespace App\Services\Notifications\Events;
 
+use App\Data\Notifications\EventOption;
 use App\Data\Notifications\NotificationRecipient;
 use App\Models\Card;
 use App\Models\Tenant;
+use App\Services\Notifications\HasEventOptions;
 use App\Services\Notifications\NotificationEvent;
 use App\Services\Reports\ReportValueText;
 use App\Support\Tenancy\TenantContext;
 use Carbon\CarbonImmutable;
 
 /**
- * A card's last day is near: time to renew it.
+ * A card's last day is near: time to renew it (5.7d, CardExpiryReminderService — once for each of the
+ * organization's days before, the nearest when several are due).
  *
  * @implements NotificationEvent<Card>
  */
-class CardExpiringEvent implements NotificationEvent
+class CardExpiringEvent implements HasEventOptions, NotificationEvent
 {
     use DescribesCards;
+
+    /** Days before the card's last day a reminder goes: up to three, 1 to 365, e.g. [60, 30, 7] */
+    public const DAYS = 'days';
 
     public function key(): string
     {
@@ -32,6 +38,11 @@ class CardExpiringEvent implements NotificationEvent
     public function defaultChannels(): array
     {
         return ['mail', 'sms'];
+    }
+
+    public function eventOptions(): array
+    {
+        return [EventOption::numbers(self::DAYS, 1, 365, 3, [30])];
     }
 
     /**

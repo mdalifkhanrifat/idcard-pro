@@ -336,6 +336,12 @@ return [
         'notifications.events.*.templates.*.subject' => 'e-mail subject',
         'notifications.events.*.templates.*.body' => 'e-mail text',
         'notifications.events.*.templates.*.sms' => 'SMS text',
+        'notifications.events.card_ready.options' => 'settings of "Card ready"',
+        'notifications.events.card_ready.options.send_on' => 'when "Card ready" is sent',
+        'notifications.events.card_expiring.options' => 'settings of "Card expiring"',
+        'notifications.events.card_expiring.options.days' => 'days before a card\'s last day',
+        'notifications.events.card_expiring.options.days.*' => 'days before a card\'s last day',
+        'notifications.events.*.options' => 'settings of the event',
         // List filters (cards, cardholders, audit): named as the pages label them
         'filter' => 'filter',
         'filter.search' => 'search',

@@ -31,7 +31,12 @@ it('keeps notifications off until the organization turns them on, and offers eve
         ->and($response->json('data.notifications.events.card_ready'))->toBe([
             'enabled' => false, 'channels' => ['mail', 'sms'],
             'templates' => ['bn' => ['subject' => null, 'body' => null, 'sms' => null], 'en' => ['subject' => null, 'body' => null, 'sms' => null]],
+            // Its own setting (5.7d): ready once first printed, unless the organization chooses on issue
+            'options' => ['send_on' => 'print'],
         ])
+        ->and($response->json('data.notifications.events.card_expiring.options'))->toBe(['days' => [30]])
+        // Events without settings of their own carry none
+        ->and($response->json('data.notifications.events.appointment_booked'))->not->toHaveKey('options')
         ->and($response->json('data.notification_options.channels'))->toBe(['mail', 'sms'])
         ->and($response->json('data.notification_options.languages'))->toBe(['bn', 'en'])
         ->and($response->json('data.notification_options.log_days'))->toBe(['min' => 7, 'max' => 3650])
