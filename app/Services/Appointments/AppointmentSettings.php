@@ -306,7 +306,7 @@ final class AppointmentSettings
             'code_channels' => self::codeChannels(),
             'languages' => self::languages(),
             'labels' => [
-                'booking' => $named('booking', self::bookingModes()),
+                'booking' => $named('booking_modes', self::bookingModes()),
                 'scheduling' => $named('scheduling', self::schedulingModes()),
                 'confirmation' => $named('confirmation', self::confirmationModes()),
                 'verification' => $named('verification', self::verificationMethods()),

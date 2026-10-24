@@ -90,7 +90,6 @@ return [
         'biometric.last_captured_by' => 'Last captured by',
         'family.name' => 'Member name',
         'family.name_local' => 'Member name (local language)',
-        'family.relation' => 'Relation',
         'family.gender' => 'Gender',
         'family.date_of_birth' => 'Date of birth',
         'family.phone' => 'Phone',

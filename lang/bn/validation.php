@@ -374,7 +374,6 @@ return [
         'owner.password' => 'মালিকের পাসওয়ার্ড',
 
         // Master data, custom fields, signatories, templates
-        'code' => 'কোড',
         'label' => 'লেবেল',
         'label_local' => 'লেবেল (বাংলায়)',
         'group' => 'গ্রুপ',
@@ -392,8 +391,6 @@ return [
 
         // Cardholders and their records
         'gender' => 'লিঙ্গ',
-        'date_of_birth' => 'জন্মতারিখ',
-        'national_id' => 'জাতীয় পরিচয়পত্র নম্বর',
         'passport_no' => 'পাসপোর্ট নম্বর',
         'blood_group_id' => 'রক্তের গ্রুপ',
         'weight' => 'ওজন',
@@ -413,10 +410,8 @@ return [
         // Cards
         'template' => 'টেমপ্লেট',
         'card_template' => 'কার্ড টেমপ্লেট',
-        'family_member' => 'পরিবারের সদস্য',
         'reason' => 'কারণ',
         'notes' => 'নোট',
-        'note' => 'নোট',
         'issue_date' => 'ইস্যুর তারিখ',
         'expiry_date' => 'মেয়াদ',
         'rf_card_no' => 'RF কার্ড নং',

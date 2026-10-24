@@ -90,7 +90,6 @@ return [
         'biometric.last_captured_by' => 'শেষ সংগ্রহ করেছেন',
         'family.name' => 'সদস্যের নাম',
         'family.name_local' => 'সদস্যের নাম (বাংলায়)',
-        'family.relation' => 'সম্পর্ক',
         'family.gender' => 'লিঙ্গ',
         'family.date_of_birth' => 'জন্ম তারিখ',
         'family.phone' => 'ফোন',

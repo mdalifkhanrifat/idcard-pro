@@ -8,7 +8,8 @@ return [
         'biometrics' => 'Biometrics capture',
         'card_collection' => 'Card collection',
     ],
-    'booking' => [
+    // How people may book (config appointments.booking) — not 'booking', which holds the booking messages below
+    'booking_modes' => [
         'staff' => 'Staff book for people',
         'public' => 'People book through the public link',
     ],

@@ -8,7 +8,8 @@ return [
         'biometrics' => 'বায়োমেট্রিক নেওয়া',
         'card_collection' => 'কার্ড সংগ্রহ',
     ],
-    'booking' => [
+    // How people may book (config appointments.booking) — not 'booking', which holds the booking messages below
+    'booking_modes' => [
         'staff' => 'কর্মীরা বুক করে দেন',
         'public' => 'পাবলিক লিংকে নিজে বুক করেন',
     ],
