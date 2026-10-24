@@ -29,7 +29,8 @@ beforeEach(function () {
     ]]])->save();
     $this->owner->unsetRelation('tenant');
     $this->inTenant = fn (Closure $callback) => app(TenantContext::class)->run($this->tenant->fresh(), $callback);
-    $this->events = ['appointment_booked', 'appointment_changed', 'appointment_cancelled', 'appointment_reminder'];
+    // Every appointment event of the registry (a new one is checked by itself)
+    $this->events = array_values(array_filter(array_keys(config('notifications.events')), fn (string $key) => str_starts_with($key, 'appointment_')));
     ($this->inTenant)(function () {
         $this->place = AppointmentLocation::factory()->create(['tenant_id' => $this->tenant->id, 'name' => 'Head office', 'name_local' => 'প্রধান কার্যালয়', 'address' => '12 Station Road']);
         $this->holder = Cardholder::factory()->create(['tenant_id' => $this->tenant->id, 'full_name' => 'Jane Doe', 'employee_no' => 'EMP-77', 'email' => 'jane@example.com', 'personal_phone' => '+8801711000000']);

@@ -86,6 +86,13 @@ return [
             // এক ভাগের SMS (বাংলা = Unicode, ৭০ অক্ষর); জায়গা আর বাকিটা ইমেইলে
             'sms' => '{organization.name}: বুকিং {appointment.number}, {appointment.when}।',
         ],
+        'appointment_confirmed' => [
+            'name' => 'অ্যাপয়েন্টমেন্ট নিশ্চিত হয়েছে',
+            'description' => 'অনুমোদনের অপেক্ষায় থাকা অ্যাপয়েন্টমেন্ট নিশ্চিত হয়েছে, বা বাতিলটা ফেরানো হয়েছে।',
+            'subject' => 'আপনার অ্যাপয়েন্টমেন্ট {appointment.number} নিশ্চিত হয়েছে',
+            'body' => "প্রিয় {holder.name},\n\n{appointment.place}-এ {appointment.when}-এর {appointment.service}-এর জন্য আপনার অ্যাপয়েন্টমেন্ট {appointment.number} নিশ্চিত হয়েছে। নম্বরটি সাথে রাখুন।\n\n{organization.name}",
+            'sms' => '{organization.name}: বুকিং {appointment.number}, {appointment.when} নিশ্চিত।',
+        ],
         'appointment_changed' => [
             'name' => 'অ্যাপয়েন্টমেন্ট সরানো হয়েছে',
             'description' => 'অ্যাপয়েন্টমেন্ট অন্য সময়, দিন বা জায়গায় সরানো হয়েছে।',

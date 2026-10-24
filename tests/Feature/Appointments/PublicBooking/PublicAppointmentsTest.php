@@ -4,8 +4,10 @@ use App\Enums\AppointmentStatus;
 use App\Models\Appointment;
 use App\Models\AppointmentLocation;
 use App\Models\FamilyMember;
+use App\Models\NotificationMessage;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Routing\Middleware\ThrottleRequests;
+use Illuminate\Support\Facades\Queue;
 use Laravel\Sanctum\Sanctum;
 
 /*
@@ -172,4 +174,19 @@ it('tells staff the person booked and cancelled it themself, on the page and in 
     expect($rows[Appointment::query()->withoutGlobalScopes()->where('public_id', $mine)->value('number')])->toMatchArray(['appointment.booked_by' => $themself, 'appointment.status_changed_by' => $themself])
         ->and($rows['A-26-90001'])->toMatchArray(['appointment.booked_by' => 'Staff', 'appointment.status_changed_by' => 'Owner']);
     $this->getJson("/api/v1/appointments/{$mine}", ['Accept-Language' => 'bn'])->assertJsonPath('data.status_changed_via.actor', 'ব্যক্তি নিজে (পাবলিক লিংক)');
+});
+
+it('sends the person the same messages for what they do themself as for staff', function () {
+    Queue::fake();
+    $this->jane->forceFill(['email' => 'jane@example.com'])->saveQuietly();
+    $this->tenant->forceFill(['settings' => [...$this->tenant->settings, 'notifications' => ['enabled' => true, 'channels' => ['mail'], 'languages' => ['en'],
+        'events' => array_fill_keys(['appointment_booked', 'appointment_changed', 'appointment_cancelled'], ['enabled' => true, 'channels' => ['mail']])]]])->save();
+
+    $mine = ($this->book)()->assertCreated()->json('data.id');
+    $this->patchJson("{$this->url}/appointments/{$mine}", ['date' => '2026-10-18', 'time' => '11:00'], $this->headers)->assertOk();
+    $this->postJson("{$this->url}/appointments/{$mine}/cancel", [], $this->headers)->assertOk();
+
+    expect(NotificationMessage::query()->withoutGlobalScopes()->orderBy('id')->get()->map(fn (NotificationMessage $m) => [$m->event, $m->address])->all())->toBe([
+        ['appointment_booked', 'jane@example.com'], ['appointment_changed', 'jane@example.com'], ['appointment_cancelled', 'jane@example.com'],
+    ]);
 });

@@ -39,6 +39,7 @@ class AppointmentBookingService
         private AvailabilityService $availability,
         private AppointmentNumbers $numbers,
         private TenantContext $tenant,
+        private AppointmentNotifications $notifications,
     ) {}
 
     /**
@@ -55,7 +56,7 @@ class AppointmentBookingService
         $cardholder = $this->cardholders->findByPublicId($data['cardholder']);
         $member = $this->member($data['family_member'] ?? null, $cardholder, $settings['family_members']);
 
-        return DB::transaction(function () use ($data, $by, $source, $now, $tenant, $settings, $audience, $location, $cardholder, $member): Appointment {
+        $booked = DB::transaction(function () use ($data, $by, $source, $now, $tenant, $settings, $audience, $location, $cardholder, $member): Appointment {
             $location = $this->locations->lockForBooking($location->id);
             $day = $this->bookableDay($location, $data, $audience, $now);
             [$startsAt, $endsAt] = $settings['scheduling'] === 'slot' ? $this->slot($day, $data['time'] ?? null) : [null, null];
@@ -85,6 +86,9 @@ class AppointmentBookingService
 
             return $appointment->load(['location', 'cardholder', 'familyMember', 'bookedBy']);
         });
+        $this->notifications->booked($booked);
+
+        return $booked;
     }
 
     /**
@@ -100,7 +104,8 @@ class AppointmentBookingService
     {
         $target = isset($data['location']) ? $this->locations->findByPublicId($data['location']) : null;
 
-        return DB::transaction(function () use ($appointment, $data, $now, $target, $audience): Appointment {
+        $moved = false;
+        $saved = DB::transaction(function () use ($appointment, $data, $now, $target, $audience, &$moved): Appointment {
             // Both locks before any other read (the appointment, then the place it goes to): MySQL reads the
             // rest as of the first plain read, which must not be older than a booking that held the place
             $appointment = $this->appointments->lockForChange($appointment);
@@ -137,6 +142,12 @@ class AppointmentBookingService
 
             return $this->appointments->withDetails($appointment);
         });
+        // A note alone tells the person nothing new
+        if ($moved) {
+            $this->notifications->moved($saved);
+        }
+
+        return $saved;
     }
 
     /**

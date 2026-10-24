@@ -94,17 +94,11 @@ it('lists what to filter by from the registry, with what the log holds since rem
 
     $meta = $this->getJson('/api/v1/notifications/messages', ['Accept-Language' => 'bn'])->assertOk()->json('meta');
 
-    expect($meta['events'])->toBe([
-        ['key' => 'card_ready', 'name' => 'কার্ড তৈরি'],
-        ['key' => 'card_expiring', 'name' => 'কার্ডের মেয়াদ শেষ হচ্ছে'],
-        ['key' => 'appointment_booked', 'name' => 'অ্যাপয়েন্টমেন্ট বুক হয়েছে'],
-        ['key' => 'appointment_changed', 'name' => 'অ্যাপয়েন্টমেন্ট সরানো হয়েছে'],
-        ['key' => 'appointment_cancelled', 'name' => 'অ্যাপয়েন্টমেন্ট বাতিল'],
-        ['key' => 'appointment_reminder', 'name' => 'অ্যাপয়েন্টমেন্টের রিমাইন্ডার'],
-        ['key' => 'test', 'name' => 'পরীক্ষার বার্তা'],
-        ['key' => 'booking_code', 'name' => 'বুকিংয়ের কোড'],
-        ['key' => 'old_event', 'name' => 'old_event'],
-    ])
+    // The registry's events in its order, then the system's, then what only the log holds
+    expect(array_column($meta['events'], 'key'))->toBe([...array_keys(config('notifications.events')), 'test', 'booking_code', 'old_event'])
+        ->and(collect($meta['events'])->pluck('name', 'key')->only(['card_ready', 'appointment_confirmed', 'booking_code', 'old_event'])->all())->toBe([
+            'card_ready' => 'কার্ড তৈরি', 'appointment_confirmed' => 'অ্যাপয়েন্টমেন্ট নিশ্চিত হয়েছে', 'booking_code' => 'বুকিংয়ের কোড', 'old_event' => 'old_event',
+        ])
         ->and($meta['channels'])->toBe([['key' => 'mail', 'name' => 'ইমেইল'], ['key' => 'sms', 'name' => 'SMS'], ['key' => 'whatsapp', 'name' => 'whatsapp']])
         ->and(array_column($meta['statuses'], 'key'))->toBe(['queued', 'sent', 'failed', 'skipped'])
         ->and($meta['statuses'][1]['name'])->toBe('পাঠানো হয়েছে');

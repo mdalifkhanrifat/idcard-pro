@@ -31,6 +31,7 @@ class AppointmentStatusService
         private AppointmentLocationRepositoryInterface $locations,
         private AppointmentBookingService $booking,
         private TenantContext $tenant,
+        private AppointmentNotifications $notifications,
     ) {}
 
     /**
@@ -39,27 +40,37 @@ class AppointmentStatusService
      */
     public function cancel(Appointment $appointment, ?User $by, ?string $reason = null, ?CarbonImmutable $now = null, AppointmentSource $via = AppointmentSource::Staff): Appointment
     {
-        return DB::transaction(function () use ($appointment, $by, $reason, $now, $via): Appointment {
+        $from = null;
+        $cancelled = DB::transaction(function () use ($appointment, $by, $reason, $now, $via, &$from): Appointment {
             $appointment = $this->appointments->lockForChange($appointment);
             $problem = $this->cancelProblem($appointment);
             if ($problem !== null) {
                 throw ValidationException::withMessages(['status' => $problem]);
             }
+            $from = $appointment->status;
 
             return $this->apply($appointment, AppointmentStatus::Cancelled, $by, $reason, $now, via: $via);
         });
+        $this->notifications->stepped($cancelled, $from);
+
+        return $cancelled;
     }
 
     public function change(Appointment $appointment, AppointmentStatus $to, User $by, ?string $reason = null, ?CarbonImmutable $now = null): Appointment
     {
-        return DB::transaction(function () use ($appointment, $to, $by, $reason, $now): Appointment {
+        $from = null;
+        $changed = DB::transaction(function () use ($appointment, $to, $by, $reason, $now, &$from): Appointment {
             $appointment = $this->appointments->lockForChange($appointment);
             // Restoring takes a place: its lock next, before any other read (see lockForBooking())
             $place = $appointment->status === AppointmentStatus::Cancelled ? $this->locations->lockForBooking($appointment->location_id) : null;
             $now = $this->now($now);
+            $from = $appointment->status;
 
             return $this->apply($appointment, $to, $by, $reason, $now, $this->check($appointment, $to, $now, $place));
         });
+        $this->notifications->stepped($changed, $from);
+
+        return $changed;
     }
 
     /**

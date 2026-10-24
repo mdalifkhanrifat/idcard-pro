@@ -85,6 +85,13 @@ return [
             'body' => "Dear {holder.name},\n\nYour appointment for {appointment.service} at {appointment.place} is booked for {appointment.when} ({appointment.status}). Its number is {appointment.number}; please have it with you.\n\n{organization.name}",
             'sms' => '{organization.name}: appointment {appointment.number} on {appointment.when} at {appointment.place}.',
         ],
+        'appointment_confirmed' => [
+            'name' => 'Appointment confirmed',
+            'description' => 'An appointment waiting for approval was confirmed, or a cancelled one restored.',
+            'subject' => 'Your appointment {appointment.number} is confirmed',
+            'body' => "Dear {holder.name},\n\nYour appointment {appointment.number} for {appointment.service} at {appointment.place} on {appointment.when} is confirmed. Please have its number with you.\n\n{organization.name}",
+            'sms' => '{organization.name}: appointment {appointment.number} on {appointment.when} is confirmed.',
+        ],
         'appointment_changed' => [
             'name' => 'Appointment moved',
             'description' => 'An appointment was moved to another time, day or place.',
