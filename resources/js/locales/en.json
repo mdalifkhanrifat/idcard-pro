@@ -1839,6 +1839,16 @@
                 "remove": "Remove the reminder",
                 "none": "No reminders.",
                 "hint": "{range} At most {max} reminders."
+            },
+            "messages": {
+                "title": "Appointment e-mails",
+                "description": "What an appointment's e-mail carries besides its words.",
+                "calendar": "A calendar file",
+                "calendarHint": "Opens in the person's calendar app; a move or a cancel updates the same event.",
+                "qr": "The number as a QR code",
+                "qrHint": "Shown at the desk and read by the scanner (not in a cancel's e-mail).",
+                "which": "Which messages go, on which channels and in which languages is set on the Notifications page.",
+                "open": "Open notifications"
             }
         },
         "services": {
@@ -2178,7 +2188,8 @@
             "pending": "Your request is sent — the office will confirm it.",
             "moved": "Your appointment is moved.",
             "number": "Appointment number",
-            "hint": "Show this number at the desk."
+            "hint": "Show this number at the desk.",
+            "hintQr": "Show this number (or the QR code in your e-mail) at the desk."
         }
     }
 }

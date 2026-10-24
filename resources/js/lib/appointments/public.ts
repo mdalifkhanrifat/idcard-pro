@@ -21,6 +21,8 @@ export interface PublicBookingInfo {
     session_minutes: number;
     services: Named[];
     places: { id: string; name: string; name_local: string | null; address: string | null; services: string[] }[];
+    /** The person's changes whose e-mail carries the number as a QR code (5.7b): appointment_booked, appointment_changed. */
+    qr_by_mail: string[];
 }
 
 /** The kinds of visit one can book on the link now: offered there and taken by at least one open place. */

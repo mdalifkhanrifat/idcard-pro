@@ -5,6 +5,7 @@ namespace App\Services\Appointments\PublicBooking;
 use App\Models\AppointmentLocation;
 use App\Repositories\Contracts\AppointmentLocationRepositoryInterface;
 use App\Services\Appointments\AppointmentSettings;
+use App\Services\Notifications\NotificationService;
 use App\Support\Tenancy\TenantContext;
 
 /**
@@ -56,6 +57,12 @@ class PublicBookingService
             'session_minutes' => (int) config('appointments.public.session_minutes'),
             'services' => $services->all(),
             'places' => $places->all(),
+            // Which of the person's own changes e-mail them the number as a QR code (5.7b), so the page promises
+            // only what comes: the organization's notifications send that event by e-mail and its e-mails carry it
+            'qr_by_mail' => $settings['messages']['qr'] ? array_values(array_filter(
+                ['appointment_booked', 'appointment_changed'],
+                fn (string $event) => in_array('mail', NotificationService::channelsFor($tenant->notificationSettings(), $event), true),
+            )) : [],
         ];
     }
 }

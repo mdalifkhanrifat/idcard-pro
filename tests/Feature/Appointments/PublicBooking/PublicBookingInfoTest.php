@@ -63,3 +63,17 @@ it('limits requests per address', function () {
     $this->getJson('/api/v1/public/acme/booking')->assertOk();
     $this->getJson('/api/v1/public/acme/booking')->assertTooManyRequests();
 });
+
+it('promises the QR code by e-mail only where the organization sends it', function () {
+    $qr = fn () => $this->getJson('/api/v1/public/acme/booking')->assertOk()->json('data.qr_by_mail');
+    // Notifications off (the default)
+    expect($qr())->toBe([]);
+    $notify = fn (array $events, array $more = []) => $this->tenant->forceFill(['settings' => [...$this->tenant->settings, 'notifications' => ['enabled' => true, 'channels' => ['mail', 'sms'], 'events' => $events, ...$more]]])->save();
+    $notify(['appointment_booked' => ['enabled' => true, 'channels' => ['mail']], 'appointment_changed' => ['enabled' => true, 'channels' => ['sms']]]);
+    expect($qr())->toBe(['appointment_booked']);
+    $notify(['appointment_booked' => ['enabled' => true, 'channels' => ['mail']], 'appointment_changed' => ['enabled' => true, 'channels' => ['mail', 'sms']]]);
+    expect($qr())->toBe(['appointment_booked', 'appointment_changed']);
+    // The organization's e-mails leave the QR code out
+    $this->tenant->forceFill(['settings' => [...$this->tenant->settings, 'appointments' => [...$this->tenant->settings['appointments'], 'messages' => ['qr' => false]]]])->save();
+    expect($qr())->toBe([]);
+});

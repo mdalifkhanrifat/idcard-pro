@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { RouterLink } from 'vue-router';
 import { Copy, ExternalLink, Plus, Trash2 } from 'lucide-vue-next';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiCard from '@/components/ui/UiCard.vue';
@@ -187,6 +188,18 @@ function setReminder(index: number, value: number | string | null | undefined): 
                 </div>
                 <p class="text-xs" :class="error('reminders') ? 'text-danger' : 'text-muted'">{{ error('reminders')?.[0] ?? t('appointments.general.reminders.hint', { range: range('reminder_hours'), max: formatNumber(maxReminders) }) }}</p>
                 <UiButton v-if="settings.reminders.length < maxReminders" variant="secondary" size="sm" data-add-reminder @click="addReminder"><Plus class="size-4" />{{ t('appointments.general.reminders.add') }}</UiButton>
+            </fieldset>
+        </UiCard>
+
+        <!-- What an appointment's e-mail carries besides its words (5.7b) -->
+        <UiCard :title="t('appointments.general.messages.title')" :description="t('appointments.general.messages.description')" data-messages-card>
+            <fieldset :disabled="disabled" class="space-y-3">
+                <UiCheckbox v-model="settings.messages.calendar" :label="t('appointments.general.messages.calendar')" :description="t('appointments.general.messages.calendarHint')" data-setting="messages.calendar" />
+                <UiCheckbox v-model="settings.messages.qr" :label="t('appointments.general.messages.qr')" :description="t('appointments.general.messages.qrHint')" data-setting="messages.qr" />
+                <p class="text-xs text-muted">
+                    {{ t('appointments.general.messages.which') }}
+                    <RouterLink v-if="auth.can('notifications.view') || auth.can('settings.update')" :to="{ name: 'notifications', query: { tab: 'settings' } }" class="text-brand-ink hover:underline" data-messages-link>{{ t('appointments.general.messages.open') }}</RouterLink>
+                </p>
             </fieldset>
         </UiCard>
     </div>

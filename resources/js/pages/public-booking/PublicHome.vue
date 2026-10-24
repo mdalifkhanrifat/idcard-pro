@@ -124,7 +124,7 @@ async function leave(): Promise<void> {
                 <p class="font-semibold text-fg">{{ done.moved ? t('publicBooking.done.moved') : done.appointment.status.key === 'pending' ? t('publicBooking.done.pending') : t('publicBooking.done.booked') }}</p>
                 <p class="mt-1 text-fg">{{ t('publicBooking.done.number') }}: <span class="font-mono font-semibold" data-public-done-number>{{ done.appointment.number }}</span></p>
                 <p class="text-fg">{{ when(done.appointment) }} · {{ done.appointment.location?.name }}</p>
-                <p class="mt-1 text-xs text-muted">{{ t('publicBooking.done.hint') }}</p>
+                <p class="mt-1 text-xs text-muted" data-public-done-hint>{{ t(info.qr_by_mail.includes(done.moved ? 'appointment_changed' : 'appointment_booked') ? 'publicBooking.done.hintQr' : 'publicBooking.done.hint') }}</p>
             </div>
         </div>
 
