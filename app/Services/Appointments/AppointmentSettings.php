@@ -87,7 +87,7 @@ final class AppointmentSettings
 
     /**
      * The saved settings with a change applied: what is not sent stays, a value or list that is sent replaces the
-     * old one (an empty list is none), groups (changes, verification) change only in what is sent, a kind of visit
+     * old one (an empty list is none), groups (changes, verification, messages) change only in what is sent, a kind of visit
      * only in what is sent for it (its name by language), and an organization's own kind sent as null is removed.
      *
      * @param  array<string, mixed>  $current
@@ -96,8 +96,8 @@ final class AppointmentSettings
      */
     public static function patch(array $current, array $change): array
     {
-        $settings = [...$current, ...array_diff_key($change, array_flip(['changes', 'verification', 'services']))];
-        foreach (['changes', 'verification'] as $group) {
+        $settings = [...$current, ...array_diff_key($change, array_flip(['changes', 'verification', 'messages', 'services']))];
+        foreach (['changes', 'verification', 'messages'] as $group) {
             if (array_key_exists($group, $change)) {
                 $settings[$group] = [...(array) ($current[$group] ?? []), ...(array) $change[$group]];
             }
@@ -130,7 +130,7 @@ final class AppointmentSettings
      * The settings, complete and within their limits, whatever is saved.
      *
      * @param  array<string, mixed>  $saved
-     * @return array{enabled: bool, booking: array<int, string>, scheduling: string, slot_minutes: int, confirmation: string, family_members: bool, open_per_service: int, notice_hours: int, days_ahead: int, changes: array{cancel: bool, reschedule: bool, until_hours: int}, verification: array{method: string, code_channels: array<int, string>, code_minutes: int, code_attempts: int, daily_failures: int}, reminders: array<int, int>, number_format: string, services: array<string, array{enabled: bool, custom: bool, name: array<string, string|null>, slots: int, public: bool, position?: int}>}
+     * @return array{enabled: bool, booking: array<int, string>, scheduling: string, slot_minutes: int, confirmation: string, family_members: bool, open_per_service: int, notice_hours: int, days_ahead: int, changes: array{cancel: bool, reschedule: bool, until_hours: int}, verification: array{method: string, code_channels: array<int, string>, code_minutes: int, code_attempts: int, daily_failures: int}, reminders: array<int, int>, messages: array{calendar: bool, qr: bool}, number_format: string, services: array<string, array{enabled: bool, custom: bool, name: array<string, string|null>, slots: int, public: bool, position?: int}>}
      */
     public static function normalize(array $saved): array
     {
@@ -172,6 +172,10 @@ final class AppointmentSettings
                 'daily_failures' => $number($verification['daily_failures'] ?? null, 'daily_failures', (int) $defaults['verification']['daily_failures']),
             ],
             'reminders' => $reminders,
+            'messages' => [
+                'calendar' => (bool) (((array) ($saved['messages'] ?? []))['calendar'] ?? $defaults['messages']['calendar']),
+                'qr' => (bool) (((array) ($saved['messages'] ?? []))['qr'] ?? $defaults['messages']['qr']),
+            ],
             'number_format' => is_string($saved['number_format'] ?? null) && AppointmentNumbers::problem($saved['number_format']) === null ? $saved['number_format'] : (string) $defaults['number_format'],
             'services' => self::normalizeServices((array) ($saved['services'] ?? [])),
         ];

@@ -55,6 +55,11 @@ return [
     'appointment' => [
         'when' => ':date at :time',
         'reason' => 'Reason: :reason.',
+        // In an appointment's e-mail (5.7b): under its QR code, and its calendar file's words
+        'qr' => 'Show this QR code (:number) at the desk.',
+        'calendar_summary' => 'Appointment: :service — :organization',
+        'calendar_description' => 'Appointment number :number, for :person. Show it at the desk.',
+        'calendar_cancelled' => 'Appointment number :number, for :person, is cancelled.',
     ],
 
     'validity' => [

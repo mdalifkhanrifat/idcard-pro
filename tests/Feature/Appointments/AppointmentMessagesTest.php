@@ -6,6 +6,7 @@ use App\Models\AppointmentLocation;
 use App\Models\Cardholder;
 use App\Models\FamilyMember;
 use App\Models\NotificationMessage;
+use App\Services\Notifications\Channels\MailChannel;
 use App\Services\Notifications\NotificationService;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Routing\Middleware\ThrottleRequests;
@@ -128,4 +129,42 @@ it('keeps the booking when its message cannot be logged', function () {
     ($this->book)()->assertCreated()->assertJsonPath('data.status.key', AppointmentStatus::Confirmed->value);
     expect(Appointment::query()->withoutGlobalScopes()->count())->toBe(1);
     Exceptions::assertReported(fn (RuntimeException $failure) => $failure->getMessage() === 'Message log down');
+});
+
+it('e-mails a calendar file and the number as a QR code, updating the same calendar event on a change', function () {
+    Sanctum::actingAs($this->owner);
+    $booked = ($this->book)()->assertCreated()->json('data');
+    $id = Appointment::query()->withoutGlobalScopes()->where('public_id', $booked['id'])->value('id');
+    // Sends the latest e-mail of an event; what it carried
+    $mail = function (string $event) use ($id): array {
+        $message = NotificationMessage::query()->withoutGlobalScopes()->where('appointment_id', $id)->where('event', $event)->where('channel', 'mail')->latest('id')->firstOrFail();
+        app(MailChannel::class)->send($message);
+        $email = app('mailer')->getSymfonyTransport()->messages()->last()->getOriginalMessage();
+        $parts = collect($email->getAttachments())->keyBy(fn ($part) => $part->getFilename());
+
+        return ['html' => $email->getHtmlBody(), 'files' => $parts->keys()->all(), 'ics' => str_replace("\r\n ", '', (string) $parts->first(fn ($part, $name) => str_ends_with((string) $name, '.ics'))?->getBody()), 'png' => (string) $parts->get('qr.png')?->getBody()];
+    };
+
+    $sent = $mail('appointment_booked');
+    expect($sent['files'])->toBe(['qr.png', "appointment-{$booked['number']}.ics"])
+        ->and(substr($sent['png'], 0, 8))->toBe("\x89PNG\r\n\x1a\n")
+        ->and($sent['html'])->toMatch('/<img src="cid:[^"]+"/')->toContain("Show this QR code ({$booked['number']}) at the desk.")
+        ->and($sent['ics'])->toContain("UID:{$booked['id']}@localhost\r\n", "DTSTART:20261018T040000Z\r\nDTEND:20261018T043000Z\r\n", "SUMMARY:Appointment: New card — Acme\r\n", 'LOCATION:Head office', "STATUS:CONFIRMED\r\n");
+    preg_match('/SEQUENCE:(\d+)/', $sent['ics'], $first);
+
+    $this->travel(5)->minutes();
+    $this->postJson("/api/v1/appointments/{$booked['id']}/cancel")->assertOk();
+    $cancelled = $mail('appointment_cancelled');
+    preg_match('/SEQUENCE:(\d+)/', $cancelled['ics'], $later);
+    // The same event, cancelled; no QR code — there is no visit
+    expect($cancelled['files'])->toBe(["appointment-{$booked['number']}.ics"])
+        ->and($cancelled['ics'])->toContain("UID:{$booked['id']}@localhost\r\n", "STATUS:CANCELLED\r\n", 'is cancelled.')
+        ->and((int) $later[1])->toBeGreaterThan((int) $first[1])
+        ->and($cancelled['html'])->not->toContain('cid:');
+
+    // The organization may leave both out
+    ($this->settings)(['messages' => ['calendar' => false, 'qr' => false]]);
+    $this->owner->unsetRelation('tenant');
+    ($this->step)($booked['id'], 'confirmed')->assertOk();
+    expect($mail('appointment_confirmed')['files'])->toBe([]);
 });

@@ -2,9 +2,12 @@
 
 namespace App\Services\Notifications\Events;
 
+use App\Data\Notifications\MailExtras;
 use App\Data\Notifications\NotificationRecipient;
 use App\Models\Appointment;
+use App\Models\NotificationMessage;
 use App\Models\Tenant;
+use App\Services\Notifications\AddsToMail;
 use App\Services\Notifications\NotificationEvent;
 
 /**
@@ -12,7 +15,7 @@ use App\Services\Notifications\NotificationEvent;
  *
  * @implements NotificationEvent<Appointment>
  */
-class AppointmentChangedEvent implements NotificationEvent
+class AppointmentChangedEvent implements AddsToMail, NotificationEvent
 {
     use DescribesAppointments;
 
@@ -58,5 +61,13 @@ class AppointmentChangedEvent implements NotificationEvent
     public function links(object $subject): array
     {
         return ['appointment_id' => $subject->id];
+    }
+
+    /**
+     * A calendar file and the number as a QR code (5.7b).
+     */
+    public function mailExtras(NotificationMessage $message, array $languages): MailExtras
+    {
+        return $this->appointmentMailExtras($message, $languages);
     }
 }

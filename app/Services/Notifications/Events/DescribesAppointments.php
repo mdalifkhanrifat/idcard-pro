@@ -2,17 +2,22 @@
 
 namespace App\Services\Notifications\Events;
 
+use App\Data\Notifications\MailExtras;
 use App\Data\Notifications\NotificationRecipient;
 use App\Enums\AppointmentStatus;
 use App\Models\Appointment;
 use App\Models\AppointmentLocation;
 use App\Models\Cardholder;
+use App\Models\NotificationMessage;
 use App\Models\Tenant;
 use App\Services\Appointments\AppointmentSettings;
 use App\Services\Cards\CardNumberFormat;
 use App\Services\Reports\ReportValueText;
+use App\Support\Calendar\CalendarEvent;
+use App\Support\Calendar\IcsWriter;
 use App\Support\Tenancy\TenantContext;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Traits\Localizable;
 
 /**
  * What every appointment event offers (5.4e): placeholders for the organization, the person (a family member
@@ -23,6 +28,8 @@ use Carbon\CarbonImmutable;
  */
 trait DescribesAppointments
 {
+    use Localizable;
+
     /** The sample's running number and time of day, e.g. A-26-00042 at 10:30 */
     private const SAMPLE_SEQUENCE = 42;
 
@@ -102,5 +109,57 @@ trait DescribesAppointments
             'appointment.when' => $time === '' ? $date : (string) __('notifications.appointment.when', ['date' => $date, 'time' => $time]),
             'appointment.status' => (string) __("appointments.statuses.{$appointment->status->value}"),
         ];
+    }
+
+    /**
+     * What an appointment's e-mail carries (5.7b), as the organization's appointment settings say (`messages`): a
+     * calendar file — the same UID for every message about it, so a move or a cancel updates the event a calendar
+     * app holds (a newer sequence; cancelled when it is) — and, while the visit is still to come, its number as a
+     * QR code read at the desk (5.5e). The file's words in the message's first language; the caption in each.
+     *
+     * @param  array<int, string>  $languages
+     */
+    protected function appointmentMailExtras(NotificationMessage $message, array $languages, bool $forTheVisit = true): MailExtras
+    {
+        $appointment = $message->appointment()->with(['cardholder.tenant', 'familyMember', 'location'])->first();
+        if (! $appointment instanceof Appointment) {
+            return new MailExtras;
+        }
+        $tenant = $appointment->cardholder->tenant;
+        $wanted = $tenant->appointmentSettings()['messages'];
+        $first = $languages[0] ?? (string) $tenant->locale;
+
+        $files = $wanted['calendar'] ? [[
+            'name' => "appointment-{$appointment->number}.ics",
+            'mime' => IcsWriter::MIME,
+            'data' => $this->withLocale($first, fn () => IcsWriter::write($this->calendarEvent($appointment))),
+        ]] : [];
+        $qr = $wanted['qr'] && $forTheVisit && $appointment->status->isOpen() ? (string) $appointment->number : null;
+        $caption = $qr === null ? null : implode(' / ', array_unique(array_map(fn (string $language) => (string) __('notifications.appointment.qr', ['number' => $qr], $language), $languages ?: [$first])));
+
+        return new MailExtras($qr, $caption, $files);
+    }
+
+    private function calendarEvent(Appointment $appointment): CalendarEvent
+    {
+        $values = $this->appointmentValues($appointment);
+        $place = trim($values['appointment.place'].($values['appointment.address'] !== '' ? ', '.$values['appointment.address'] : ''));
+
+        return new CalendarEvent(
+            uid: $appointment->public_id.'@'.(parse_url((string) config('app.url'), PHP_URL_HOST) ?: 'idcard-pro'),
+            // Grows with every change of the appointment (seconds since 2026 — well within a calendar's integer)
+            sequence: max(0, (int) $appointment->updated_at?->getTimestamp() - 1_767_225_600),
+            summary: (string) __('notifications.appointment.calendar_summary', ['service' => $values['appointment.service'], 'organization' => $values['organization.name']]),
+            date: $appointment->date->toDateString(),
+            start: $appointment->starts_at?->toImmutable(),
+            end: $appointment->ends_at?->toImmutable(),
+            location: $place,
+            description: (string) __($appointment->status === AppointmentStatus::Cancelled ? 'notifications.appointment.calendar_cancelled' : 'notifications.appointment.calendar_description', ['number' => $values['appointment.number'], 'person' => $values['holder.name']]),
+            status: match ($appointment->status) {
+                AppointmentStatus::Cancelled => CalendarEvent::CANCELLED,
+                AppointmentStatus::Pending => CalendarEvent::TENTATIVE,
+                default => CalendarEvent::CONFIRMED,
+            },
+        );
     }
 }

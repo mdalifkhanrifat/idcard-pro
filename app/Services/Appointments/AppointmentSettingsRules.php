@@ -29,7 +29,7 @@ final class AppointmentSettingsRules
         $languages = implode(',', AppointmentSettings::languages());
 
         return [
-            'appointments' => ['required', 'array:enabled,booking,scheduling,slot_minutes,confirmation,family_members,open_per_service,notice_hours,days_ahead,changes,verification,reminders,number_format,services'],
+            'appointments' => ['required', 'array:enabled,booking,scheduling,slot_minutes,confirmation,family_members,open_per_service,notice_hours,days_ahead,changes,verification,reminders,messages,number_format,services'],
             'appointments.enabled' => ['sometimes', 'boolean'],
             'appointments.booking' => ['sometimes', 'array'],
             'appointments.booking.*' => ['distinct', Rule::in(AppointmentSettings::bookingModes())],
@@ -41,6 +41,9 @@ final class AppointmentSettingsRules
             'appointments.notice_hours' => ['sometimes', 'integer', $between('notice_hours')],
             'appointments.days_ahead' => ['sometimes', 'integer', $between('days_ahead')],
             'appointments.changes' => ['sometimes', 'array:cancel,reschedule,until_hours'],
+            'appointments.messages' => ['sometimes', 'array:calendar,qr'],
+            'appointments.messages.calendar' => ['sometimes', 'boolean'],
+            'appointments.messages.qr' => ['sometimes', 'boolean'],
             'appointments.changes.cancel' => ['sometimes', 'boolean'],
             'appointments.changes.reschedule' => ['sometimes', 'boolean'],
             'appointments.changes.until_hours' => ['sometimes', 'integer', $between('change_until_hours')],

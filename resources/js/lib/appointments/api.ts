@@ -31,6 +31,8 @@ export interface AppointmentSettings {
     days_ahead: number;
     /** What people may do themselves through the public link, until some hours before. */
     changes: { cancel: boolean; reschedule: boolean; until_hours: number };
+    /** What an appointment's e-mail carries besides its words (5.7b). */
+    messages: { calendar: boolean; qr: boolean };
     verification: { method: string; code_channels: string[]; code_minutes: number; code_attempts: number; daily_failures: number };
     /** Hours before an appointment a reminder goes, largest first (at most three). */
     reminders: number[];

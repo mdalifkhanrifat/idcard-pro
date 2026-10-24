@@ -19,6 +19,15 @@
                 @endforeach
             </td>
         </tr>
+        @if ($qr)
+            {{-- What the event adds (5.7b): e.g. an appointment's number, read at the desk --}}
+            <tr>
+                <td style="padding:0 24px 24px;text-align:center;">
+                    <img src="{{ $message->embedData($qr, 'qr.png', 'image/png') }}" width="180" height="180" alt="{{ $qrCaption }}" style="display:block;margin:0 auto 8px;">
+                    <p style="margin:0;font-size:13px;color:#4b5563;">{{ $qrCaption }}</p>
+                </td>
+            </tr>
+        @endif
     </table>
 </body>
 </html>

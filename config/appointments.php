@@ -148,6 +148,8 @@ return [
         'verification' => ['method' => 'code', 'code_channels' => ['mail', 'sms'], 'code_minutes' => 10, 'code_attempts' => 5, 'daily_failures' => 10],
         // Reminders this many hours before (sent as notifications, when those are on)
         'reminders' => [24],
+        // What an appointment's e-mail carries besides its words (5.7b): a calendar file, the number as a QR code
+        'messages' => ['calendar' => true, 'qr' => true],
         // A booking's short number: {YYYY}, {YY}, {MM} of the day it was booked and one running {SEQ:n}
         'number_format' => 'A-{YY}-{SEQ:5}',
     ],

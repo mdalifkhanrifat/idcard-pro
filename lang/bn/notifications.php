@@ -55,6 +55,11 @@ return [
     'appointment' => [
         'when' => ':date, :time',
         'reason' => 'কারণ: :reason।',
+        // In an appointment's e-mail (5.7b): under its QR code, and its calendar file's words
+        'qr' => 'কাউন্টারে এই QR কোডটি (:number) দেখান।',
+        'calendar_summary' => 'অ্যাপয়েন্টমেন্ট: :service — :organization',
+        'calendar_description' => 'অ্যাপয়েন্টমেন্ট নম্বর :number, :person-এর জন্য। কাউন্টারে দেখান।',
+        'calendar_cancelled' => 'অ্যাপয়েন্টমেন্ট নম্বর :number, :person-এর জন্য — বাতিল হয়েছে।',
     ],
 
     'validity' => [
