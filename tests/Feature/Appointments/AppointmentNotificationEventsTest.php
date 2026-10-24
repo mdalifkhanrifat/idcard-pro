@@ -98,7 +98,9 @@ it('fills an appointment\'s values on the organization\'s clock, the place in th
         'organization.name' => 'Acme Ltd', 'holder.name' => 'Ayesha Doe', 'holder.employee_no' => 'EMP-77',
         'appointment.number' => 'A-26-00042', 'appointment.service' => 'Vehicle pass', 'appointment.place' => 'Head office',
         'appointment.address' => '12 Station Road', 'appointment.date' => '18/10/2026', 'appointment.time' => '10:00',
-        'appointment.when' => '18/10/2026 at 10:00', 'appointment.status' => 'Cancelled', 'appointment.cancel_reason' => 'Reason: Travelling.',
+        'appointment.when' => '18/10/2026 at 10:00', 'appointment.status' => 'Cancelled',
+        // The public booking page is off here: no link sentence
+        'appointment.link' => '', 'appointment.cancel_reason' => 'Reason: Travelling.',
     ]);
     $bn = ($this->values)('appointment_cancelled', $this->appointment, 'bn');
     expect($bn)->toMatchArray([

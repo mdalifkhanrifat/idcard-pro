@@ -341,6 +341,11 @@ return [
         'notifications.events.card_expiring.options' => 'settings of "Card expiring"',
         'notifications.events.card_expiring.options.days' => 'days before a card\'s last day',
         'notifications.events.card_expiring.options.days.*' => 'days before a card\'s last day',
+        'notifications.events.appointment_booked.options.link' => 'whether "Appointment booked" carries the public booking link',
+        'notifications.events.appointment_confirmed.options.link' => 'whether "Appointment confirmed" carries the public booking link',
+        'notifications.events.appointment_changed.options.link' => 'whether "Appointment moved" carries the public booking link',
+        'notifications.events.appointment_cancelled.options.link' => 'whether "Appointment cancelled" carries the public booking link',
+        'notifications.events.appointment_reminder.options.link' => 'whether "Appointment reminder" carries the public booking link',
         'notifications.events.*.options' => 'settings of the event',
         // List filters (cards, cardholders, audit): named as the pages label them
         'filter' => 'filter',

@@ -245,12 +245,15 @@ class NotificationSettings
     }
 
     /**
-     * A text with its placeholders filled in; values are plain text, never markup or code.
+     * A text with its placeholders filled in; values are plain text, never markup or code. A sentence left empty
+     * (e.g. no reason given) leaves no space at the end of its line.
      *
      * @param  array<string, string>  $values
      */
     public static function fill(string $text, array $values): string
     {
-        return (string) preg_replace_callback(self::PLACEHOLDER, fn (array $match): string => $values[$match[1]] ?? $match[0], $text);
+        $filled = (string) preg_replace_callback(self::PLACEHOLDER, fn (array $match): string => $values[$match[1]] ?? $match[0], $text);
+
+        return (string) preg_replace('/[ \t]+$/m', '', $filled);
     }
 }

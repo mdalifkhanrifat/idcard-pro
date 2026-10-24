@@ -8,6 +8,7 @@ use App\Models\Appointment;
 use App\Models\NotificationMessage;
 use App\Models\Tenant;
 use App\Services\Notifications\AddsToMail;
+use App\Services\Notifications\HasEventOptions;
 use App\Services\Notifications\NotificationEvent;
 
 /**
@@ -15,7 +16,7 @@ use App\Services\Notifications\NotificationEvent;
  *
  * @implements NotificationEvent<Appointment>
  */
-class AppointmentCancelledEvent implements AddsToMail, NotificationEvent
+class AppointmentCancelledEvent implements AddsToMail, HasEventOptions, NotificationEvent
 {
     use DescribesAppointments;
 
@@ -42,7 +43,7 @@ class AppointmentCancelledEvent implements AddsToMail, NotificationEvent
         $reason = trim((string) $subject->cancel_reason);
 
         // A whole sentence, empty when no reason was given
-        return [...$this->appointmentValues($subject), 'appointment.cancel_reason' => $reason === '' ? '' : (string) __('notifications.appointment.reason', ['reason' => $reason])];
+        return [...$this->appointmentValues($subject, bookAgain: true), 'appointment.cancel_reason' => $reason === '' ? '' : (string) __('notifications.appointment.reason', ['reason' => $reason])];
     }
 
     public function sample(Tenant $tenant): Appointment

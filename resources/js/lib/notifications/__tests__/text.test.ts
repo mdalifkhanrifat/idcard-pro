@@ -2,6 +2,10 @@ import { describe, expect, it } from 'vitest';
 import { composeMessage, fillPlaceholders, smsParts, unknownPlaceholders } from '../text';
 
 describe('fillPlaceholders', () => {
+    it('leaves no space at a line\'s end where a sentence is empty, like the server', () => {
+        expect(fillPlaceholders('Cancelled. {reason}\n\nBook again. {link}', { reason: '', link: '' })).toBe('Cancelled.\n\nBook again.');
+    });
+
     it('fills known placeholders and leaves unknown ones as written, like the server', () => {
         expect(fillPlaceholders('Hi {holder.name}, card {card.number} {nope} {Holder.name} { card.number }', { 'holder.name': 'Rahim', 'card.number': 'EMP/26000123' }))
             .toBe('Hi Rahim, card EMP/26000123 {nope} {Holder.name} { card.number }');

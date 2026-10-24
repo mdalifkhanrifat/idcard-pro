@@ -2,6 +2,7 @@
 
 namespace App\Services\Notifications\Events;
 
+use App\Data\Notifications\EventOption;
 use App\Data\Notifications\MailExtras;
 use App\Data\Notifications\NotificationRecipient;
 use App\Enums\AppointmentStatus;
@@ -12,6 +13,7 @@ use App\Models\NotificationMessage;
 use App\Models\Tenant;
 use App\Services\Appointments\AppointmentSettings;
 use App\Services\Cards\CardNumberFormat;
+use App\Services\Notifications\NotificationSettings;
 use App\Services\Reports\ReportValueText;
 use App\Support\Calendar\CalendarEvent;
 use App\Support\Calendar\IcsWriter;
@@ -30,6 +32,13 @@ trait DescribesAppointments
 {
     use Localizable;
 
+    /** Its own setting: the public booking link in its messages, or not */
+    public const LINK = 'link';
+
+    public const LINK_INCLUDE = 'include';
+
+    public const LINK_LEAVE_OUT = 'leave_out';
+
     /** The sample's running number and time of day, e.g. A-26-00042 at 10:30 */
     private const SAMPLE_SEQUENCE = 42;
 
@@ -40,7 +49,42 @@ trait DescribesAppointments
      */
     protected function appointmentPlaceholders(): array
     {
-        return ['organization.name', 'holder.name', 'holder.employee_no', 'appointment.number', 'appointment.service', 'appointment.place', 'appointment.address', 'appointment.date', 'appointment.time', 'appointment.when', 'appointment.status'];
+        return ['organization.name', 'holder.name', 'holder.employee_no', 'appointment.number', 'appointment.service', 'appointment.place', 'appointment.address', 'appointment.date', 'appointment.time', 'appointment.when', 'appointment.status', 'appointment.link'];
+    }
+
+    /**
+     * Every appointment event's own setting (5.7e): whether its messages carry the public booking link (the
+     * organization may leave it out without writing its own texts).
+     *
+     * @return array<int, EventOption>
+     */
+    public function eventOptions(): array
+    {
+        return [EventOption::choice(self::LINK, [self::LINK_INCLUDE, self::LINK_LEAVE_OUT], self::LINK_INCLUDE)];
+    }
+
+    /**
+     * The public booking link as a sentence (5.7e), empty while the page is not open or the event leaves it out:
+     * for a visit still to come what the person may do there — move it, cancel it, both, or see it as the
+     * organization's settings allow; after a cancel, where to book again. The page never promises what is off.
+     */
+    protected function appointmentLink(Appointment $appointment, bool $bookAgain = false): string
+    {
+        $tenant = $appointment->cardholder->tenant;
+        $url = AppointmentSettings::publicUrl($tenant);
+        if ($url === null || NotificationSettings::option($tenant->notificationSettings(), $this->key(), self::LINK) !== self::LINK_INCLUDE) {
+            return '';
+        }
+        $changes = $tenant->appointmentSettings()['changes'];
+        $what = match (true) {
+            $bookAgain => 'book',
+            $changes['cancel'] && $changes['reschedule'] => 'move_or_cancel',
+            $changes['cancel'] => 'cancel',
+            $changes['reschedule'] => 'move',
+            default => 'see',
+        };
+
+        return (string) __("notifications.appointment.link.{$what}", ['url' => $url]);
     }
 
     protected function appointmentRecipient(Appointment $appointment): NotificationRecipient
@@ -84,7 +128,7 @@ trait DescribesAppointments
     /**
      * @return array<string, string>
      */
-    protected function appointmentValues(Appointment $appointment): array
+    protected function appointmentValues(Appointment $appointment, bool $bookAgain = false): array
     {
         $text = app(ReportValueText::class);
         $appointment->loadMissing(['cardholder.tenant', 'familyMember', 'location']);
@@ -108,6 +152,7 @@ trait DescribesAppointments
             // Right also for a day booked (served in turn): the day alone
             'appointment.when' => $time === '' ? $date : (string) __('notifications.appointment.when', ['date' => $date, 'time' => $time]),
             'appointment.status' => (string) __("appointments.statuses.{$appointment->status->value}"),
+            'appointment.link' => $this->appointmentLink($appointment, $bookAgain),
         ];
     }
 

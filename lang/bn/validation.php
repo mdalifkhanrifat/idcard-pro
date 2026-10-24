@@ -317,6 +317,11 @@ return [
         'notifications.events.card_expiring.options' => '"কার্ডের মেয়াদ শেষ হচ্ছে"-র সেটিং',
         'notifications.events.card_expiring.options.days' => 'মেয়াদ শেষের কত দিন আগে',
         'notifications.events.card_expiring.options.days.*' => 'মেয়াদ শেষের কত দিন আগে',
+        'notifications.events.appointment_booked.options.link' => '"অ্যাপয়েন্টমেন্ট বুক হয়েছে"-এ পাবলিক বুকিংয়ের লিংক',
+        'notifications.events.appointment_confirmed.options.link' => '"অ্যাপয়েন্টমেন্ট নিশ্চিত হয়েছে"-এ পাবলিক বুকিংয়ের লিংক',
+        'notifications.events.appointment_changed.options.link' => '"অ্যাপয়েন্টমেন্ট সরানো হয়েছে"-এ পাবলিক বুকিংয়ের লিংক',
+        'notifications.events.appointment_cancelled.options.link' => '"অ্যাপয়েন্টমেন্ট বাতিল"-এ পাবলিক বুকিংয়ের লিংক',
+        'notifications.events.appointment_reminder.options.link' => '"অ্যাপয়েন্টমেন্টের রিমাইন্ডার"-এ পাবলিক বুকিংয়ের লিংক',
         'notifications.events.*.options' => 'ঘটনার সেটিং',
         // List filters (cards, cardholders, audit)
         'filter' => 'ফিল্টার',

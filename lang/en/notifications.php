@@ -39,6 +39,7 @@ return [
         'appointment.when' => 'Date and time (the day alone when a day is booked)',
         'appointment.status' => 'Appointment status',
         'appointment.cancel_reason' => 'Reason for cancelling (a sentence; empty when none was given)',
+        'appointment.link' => 'Link to the public booking page (a sentence; empty while the page is off)',
     ],
 
     // Made-up details for previews of the texts (never a real person's)
@@ -55,11 +56,28 @@ return [
     'appointment' => [
         'when' => ':date at :time',
         'reason' => 'Reason: :reason.',
+        // The public booking link as a sentence (5.7e): what the person may do there, as the organization allows
+        'link' => [
+            'move_or_cancel' => 'To move or cancel it yourself: :url',
+            'cancel' => 'To cancel it yourself: :url',
+            'move' => 'To move it yourself: :url',
+            'see' => 'To see your appointments: :url',
+            'book' => 'Book online: :url',
+        ],
         // In an appointment's e-mail (5.7b): under its QR code, and its calendar file's words
         'qr' => 'Show this QR code (:number) at the desk.',
         'calendar_summary' => 'Appointment: :service — :organization',
         'calendar_description' => 'Appointment number :number, for :person. Show it at the desk.',
         'calendar_cancelled' => 'Appointment number :number, for :person, is cancelled.',
+    ],
+
+    // Settings several events share (5.7e), named once; an event may name its own under events.<key>.options
+    'options' => [
+        'link' => [
+            'label' => 'Public booking link',
+            'hint' => 'The {appointment.link} sentence in this event\'s messages: where the person can move or cancel the appointment (or book another). Empty anyway while the public booking page is off.',
+            'choices' => ['include' => 'Put it in the messages', 'leave_out' => 'Leave it out'],
+        ],
     ],
 
     'validity' => [
@@ -101,35 +119,35 @@ return [
             'name' => 'Appointment booked',
             'description' => 'An appointment was booked (by staff, through the public link or by another system).',
             'subject' => 'Your appointment {appointment.number} on {appointment.when}',
-            'body' => "Dear {holder.name},\n\nYour appointment for {appointment.service} at {appointment.place} is booked for {appointment.when} ({appointment.status}). Its number is {appointment.number}; please have it with you.\n\n{organization.name}",
+            'body' => "Dear {holder.name},\n\nYour appointment for {appointment.service} at {appointment.place} is booked for {appointment.when} ({appointment.status}). Its number is {appointment.number}; please have it with you. {appointment.link}\n\n{organization.name}",
             'sms' => '{organization.name}: appointment {appointment.number} on {appointment.when} at {appointment.place}.',
         ],
         'appointment_confirmed' => [
             'name' => 'Appointment confirmed',
             'description' => 'An appointment waiting for approval was confirmed, or a cancelled one restored.',
             'subject' => 'Your appointment {appointment.number} is confirmed',
-            'body' => "Dear {holder.name},\n\nYour appointment {appointment.number} for {appointment.service} at {appointment.place} on {appointment.when} is confirmed. Please have its number with you.\n\n{organization.name}",
+            'body' => "Dear {holder.name},\n\nYour appointment {appointment.number} for {appointment.service} at {appointment.place} on {appointment.when} is confirmed. Please have its number with you. {appointment.link}\n\n{organization.name}",
             'sms' => '{organization.name}: appointment {appointment.number} on {appointment.when} is confirmed.',
         ],
         'appointment_changed' => [
             'name' => 'Appointment moved',
             'description' => 'An appointment was moved to another time, day or place.',
             'subject' => 'Your appointment {appointment.number} is now on {appointment.when}',
-            'body' => "Dear {holder.name},\n\nYour appointment {appointment.number} for {appointment.service} has been moved. It is now on {appointment.when} at {appointment.place}.\n\n{organization.name}",
+            'body' => "Dear {holder.name},\n\nYour appointment {appointment.number} for {appointment.service} has been moved. It is now on {appointment.when} at {appointment.place}. {appointment.link}\n\n{organization.name}",
             'sms' => '{organization.name}: appointment {appointment.number} moved to {appointment.when} at {appointment.place}.',
         ],
         'appointment_cancelled' => [
             'name' => 'Appointment cancelled',
             'description' => 'An appointment was cancelled, or turned down while waiting for approval.',
             'subject' => 'Your appointment {appointment.number} is cancelled',
-            'body' => "Dear {holder.name},\n\nYour appointment {appointment.number} for {appointment.service} on {appointment.when} has been cancelled. {appointment.cancel_reason}\n\nYou are welcome to book another time.\n\n{organization.name}",
+            'body' => "Dear {holder.name},\n\nYour appointment {appointment.number} for {appointment.service} on {appointment.when} has been cancelled. {appointment.cancel_reason}\n\nYou are welcome to book another time. {appointment.link}\n\n{organization.name}",
             'sms' => '{organization.name}: appointment {appointment.number} on {appointment.when} is cancelled.',
         ],
         'appointment_reminder' => [
             'name' => 'Appointment reminder',
             'description' => 'An appointment is near (the organization\'s reminder hours before it).',
             'subject' => 'Reminder: your appointment on {appointment.when}',
-            'body' => "Dear {holder.name},\n\nA reminder of your appointment {appointment.number} for {appointment.service} on {appointment.when} at {appointment.place}. Please have its number with you.\n\n{organization.name}",
+            'body' => "Dear {holder.name},\n\nA reminder of your appointment {appointment.number} for {appointment.service} on {appointment.when} at {appointment.place}. Please have its number with you. {appointment.link}\n\n{organization.name}",
             'sms' => '{organization.name}: reminder, appointment {appointment.number} on {appointment.when} at {appointment.place}.',
         ],
     ],

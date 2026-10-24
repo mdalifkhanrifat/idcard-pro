@@ -103,6 +103,8 @@ return [
      * identity checks per employee number per hour (the code's own tries are the organization's setting).
      */
     'public' => [
+        // The page's address after the app's URL, then the organization's slug (resources/js/router: /book/:organization)
+        'path' => '/book/',
         'session_minutes' => (int) env('PUBLIC_BOOKING_SESSION_MINUTES', 30),
         'code_length' => 6,
         'per_minute' => (int) env('PUBLIC_BOOKING_PER_MINUTE', 30),

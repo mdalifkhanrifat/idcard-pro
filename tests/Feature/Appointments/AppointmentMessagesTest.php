@@ -168,3 +168,54 @@ it('e-mails a calendar file and the number as a QR code, updating the same calen
     ($this->step)($booked['id'], 'confirmed')->assertOk();
     expect($mail('appointment_confirmed')['files'])->toBe([]);
 });
+
+it('puts the public booking page in the e-mails while it is open, saying what the person may do there', function () {
+    Sanctum::actingAs($this->owner);
+    config(['app.url' => 'https://idcard.example/']);
+    $all = ['appointment_booked', 'appointment_confirmed', 'appointment_changed', 'appointment_cancelled'];
+    $events = fn (array $changed = []) => ['events' => [...array_fill_keys($all, ['enabled' => true, 'channels' => ['mail', 'sms']]), 'appointment_changed' => ['enabled' => true, 'channels' => ['mail', 'sms'], ...$changed]]];
+    // The latest message of an event on a channel: its words
+    $body = fn (string $event, string $channel = 'mail') => (string) NotificationMessage::query()->withoutGlobalScopes()->where('event', $event)->where('channel', $channel)->latest('id')->value('body');
+
+    // The page is off: no sentence, nothing left of it
+    $first = ($this->book)()->assertCreated()->json('data');
+    expect($body('appointment_booked'))->not->toContain('/book/')->toContain("please have it with you.\n\nAcme");
+
+    // Open: on a cancel, where to book again; on a booking, moving and cancelling as the settings allow
+    ($this->settings)(['booking' => ['staff', 'public']], $events());
+    $this->postJson("/api/v1/appointments/{$first['id']}/cancel")->assertOk();
+    expect($body('appointment_cancelled'))->toContain('You are welcome to book another time. Book online: https://idcard.example/book/acme');
+    $booked = ($this->book)()->assertCreated()->json('data');
+    expect($body('appointment_booked'))->toContain('please have it with you. To move or cancel it yourself: https://idcard.example/book/acme')
+        // Not in an SMS by default: it would no longer fit one part
+        ->and($body('appointment_booked', 'sms'))->not->toContain('/book/');
+
+    // A link on this application's own page in the e-mail; another address stays text
+    $message = NotificationMessage::query()->withoutGlobalScopes()->where('event', 'appointment_booked')->where('channel', 'mail')->latest('id')->firstOrFail();
+    $message->forceFill(['body' => $message->body."\n\nSee https://elsewhere.example/book/acme."])->save();
+    app(MailChannel::class)->send($message);
+    $html = app('mailer')->getSymfonyTransport()->messages()->last()->getOriginalMessage()->getHtmlBody();
+    expect($html)->toContain('<a href="https://idcard.example/book/acme" style="color:#0f766e;word-break:break-all;">https://idcard.example/book/acme</a>')
+        ->not->toContain('<a href="https://elsewhere');
+
+    // Only cancelling allowed: it says so
+    ($this->settings)(['booking' => ['staff', 'public'], 'changes' => ['cancel' => true, 'reschedule' => false]], $events());
+    $this->patchJson("/api/v1/appointments/{$booked['id']}", ['time' => '11:00'])->assertOk();
+    expect($body('appointment_changed'))->toEndWith("at Head office. To cancel it yourself: https://idcard.example/book/acme\n\nAcme");
+    // Neither: where to see it
+    ($this->settings)(['booking' => ['staff', 'public'], 'changes' => ['cancel' => false, 'reschedule' => false]], $events());
+    $this->patchJson("/api/v1/appointments/{$booked['id']}", ['time' => '11:30'])->assertOk();
+    expect($body('appointment_changed'))->toContain('To see your appointments: https://idcard.example/book/acme');
+
+    // The organization leaves it out of one event; the others keep it
+    ($this->settings)(['booking' => ['staff', 'public']], $events(['options' => ['link' => 'leave_out']]));
+    $this->patchJson("/api/v1/appointments/{$booked['id']}", ['time' => '12:00'])->assertOk();
+    $this->postJson("/api/v1/appointments/{$booked['id']}/cancel")->assertOk();
+    expect($body('appointment_changed'))->not->toContain('/book/')
+        ->and($body('appointment_cancelled'))->toContain('Book online: https://idcard.example/book/acme');
+
+    // In Bangla too
+    ($this->settings)(['booking' => ['staff', 'public']], ['languages' => ['bn'], ...$events()]);
+    ($this->book)()->assertCreated();
+    expect($body('appointment_booked'))->toContain('সাথে রাখুন। নিজে সরাতে বা বাতিল করতে: https://idcard.example/book/acme');
+});

@@ -8,6 +8,7 @@ use App\Models\Appointment;
 use App\Models\NotificationMessage;
 use App\Models\Tenant;
 use App\Services\Notifications\AddsToMail;
+use App\Services\Notifications\HasEventOptions;
 use App\Services\Notifications\NotificationEvent;
 
 /**
@@ -15,7 +16,7 @@ use App\Services\Notifications\NotificationEvent;
  *
  * @implements NotificationEvent<Appointment>
  */
-class AppointmentChangedEvent implements AddsToMail, NotificationEvent
+class AppointmentChangedEvent implements AddsToMail, HasEventOptions, NotificationEvent
 {
     use DescribesAppointments;
 

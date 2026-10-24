@@ -35,8 +35,8 @@ it('keeps notifications off until the organization turns them on, and offers eve
             'options' => ['send_on' => 'print'],
         ])
         ->and($response->json('data.notifications.events.card_expiring.options'))->toBe(['days' => [30]])
-        // Events without settings of their own carry none
-        ->and($response->json('data.notifications.events.appointment_booked'))->not->toHaveKey('options')
+        // The appointment events' public booking link (5.7e), in by default
+        ->and($response->json('data.notifications.events.appointment_booked.options'))->toBe(['link' => 'include'])
         ->and($response->json('data.notification_options.channels'))->toBe(['mail', 'sms'])
         ->and($response->json('data.notification_options.languages'))->toBe(['bn', 'en'])
         ->and($response->json('data.notification_options.log_days'))->toBe(['min' => 7, 'max' => 3650])
@@ -151,8 +151,12 @@ it('takes a new event from the registry alone: settings, rules and options follo
     app()->instance('test.badge_lost', $event);
     config(['notifications.events.badge_lost' => 'test.badge_lost']);
 
-    $this->getJson('/api/v1/settings')
+    $settings = $this->getJson('/api/v1/settings')
         ->assertJsonPath('data.notifications.events.badge_lost.channels', ['sms'])
+        ->assertJsonPath('data.notification_options.events.badge_lost.options', []);
+    // An event without settings of its own carries none
+    expect($settings->json('data.notifications.events.badge_lost'))->not->toHaveKey('options');
+    $this->getJson('/api/v1/settings')
         ->assertJsonPath('data.notification_options.events.badge_lost.placeholders', [['key' => 'holder.name', 'label' => 'Card holder\'s name']]);
     // Its sample comes by itself, in every language
     $this->getJson('/api/v1/notifications/settings')

@@ -234,6 +234,25 @@ final class AppointmentSettings
     private static array $names = [];
 
     /**
+     * Whether people can book through the organization's public link (5.6): an active organization with appointments
+     * on that books through it — the one rule for the link itself and for every mention of it (e.g. in messages).
+     */
+    public static function opensPublicly(Tenant $tenant): bool
+    {
+        $settings = $tenant->appointmentSettings();
+
+        return $tenant->isActive() && $settings['enabled'] && in_array('public', $settings['booking'], true);
+    }
+
+    /**
+     * The organization's public booking page (e.g. https://idcard.example/book/acme), or null while it is not open.
+     */
+    public static function publicUrl(Tenant $tenant): ?string
+    {
+        return self::opensPublicly($tenant) ? rtrim((string) config('app.url'), '/').(string) config('appointments.public.path').$tenant->slug : null;
+    }
+
+    /**
      * An organization's kinds of visit (in their order) named in the current language — worked out once for the
      * same settings, so a long list or report does not normalize the settings for every row.
      *

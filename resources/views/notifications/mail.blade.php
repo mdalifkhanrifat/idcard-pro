@@ -15,7 +15,7 @@
         <tr>
             <td style="padding:8px 24px 24px;font-size:15px;line-height:1.6;">
                 @foreach ($paragraphs as $paragraph)
-                    <p style="margin:0 0 14px;">{!! nl2br(e($paragraph)) !!}</p>
+                    <p style="margin:0 0 14px;">{{ $paragraph }}</p>
                 @endforeach
             </td>
         </tr>

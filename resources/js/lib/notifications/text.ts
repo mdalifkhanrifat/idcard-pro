@@ -7,9 +7,9 @@
 /** {holder.name}, {card.number}… — the server's pattern, so a preview fills exactly what a message will. */
 const PLACEHOLDER = /\{([a-z0-9_]+(?:\.[a-z0-9_]+)*)\}/g;
 
-/** A text with its placeholders filled in; unknown ones stay as written, values are never read again. */
+/** A text with its placeholders filled in; unknown ones stay as written, values are never read again; no space left at a line's end (as the server). */
 export function fillPlaceholders(text: string, values: Record<string, string>): string {
-    return text.replace(PLACEHOLDER, (match, key: string) => (Object.prototype.hasOwnProperty.call(values, key) ? values[key] : match));
+    return text.replace(PLACEHOLDER, (match, key: string) => (Object.prototype.hasOwnProperty.call(values, key) ? values[key] : match)).replace(/[ \t]+$/gm, '');
 }
 
 /** Placeholders a text uses that are not offered (e.g. a misspelt {card.numbr}), each once, in order. */

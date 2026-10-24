@@ -2,6 +2,7 @@
 
 namespace App\Data\Notifications;
 
+use Illuminate\Support\Facades\Lang;
 use Illuminate\Validation\Rule;
 
 /**
@@ -9,7 +10,8 @@ use Illuminate\Validation\Rule;
  * day it is reminded of: declared by the event (App\Services\Notifications\HasEventOptions), saved under
  * tenants.settings.notifications.events.<event>.options.<key>, and from there checked, completed, named and offered
  * to the notifications page with nothing written for it anywhere else. Its name, hint and choices are read from
- * lang/{en,bn}/notifications.php → events.<event>.options.<key>.
+ * lang/{en,bn}/notifications.php → events.<event>.options.<key>, or options.<key> for a setting several events
+ * share (e.g. the appointment events' public booking link).
  *
  * Kinds: `choice` (one of `choices`) and `numbers` (a list of whole numbers from `min` to `max`, at most `maxItems`,
  * kept largest first, e.g. days before).
@@ -92,7 +94,8 @@ final readonly class EventOption
      */
     public function describe(string $event): array
     {
-        $lang = "notifications.events.{$event}.options.{$this->key}";
+        // The event's own words, or those several events share (notifications.options.<key>)
+        $lang = Lang::has("notifications.events.{$event}.options.{$this->key}.label") ? "notifications.events.{$event}.options.{$this->key}" : "notifications.options.{$this->key}";
         $description = ['key' => $this->key, 'kind' => $this->kind, 'label' => (string) __("{$lang}.label"), 'hint' => (string) __("{$lang}.hint"), 'default' => $this->default];
         if ($this->kind === self::CHOICE) {
             return [...$description, 'choices' => array_map(fn (string $choice): array => ['key' => $choice, 'name' => (string) __("{$lang}.choices.{$choice}")], $this->choices)];

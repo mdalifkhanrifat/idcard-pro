@@ -237,7 +237,9 @@ it('keeps an event\'s own settings, as the event declares them: named, checked, 
             'hint' => 'সর্বোচ্চ তিনটা রিমাইন্ডার, যেমন ৬০, ৩০ আর ৭ দিন আগে। শুধু কার্ডধারীর এখনকার কার্ডে — বদলানো বা বাতিল কার্ডে নয়।',
             'default' => [30], 'min' => 1, 'max' => 365, 'max_items' => 3, 'unit' => 'দিন আগে',
         ])
-        ->assertJsonPath('data.options.events.appointment_booked.options', []);
+        // A setting several events share is named once (notifications.options.<key>)
+        ->assertJsonPath('data.options.events.appointment_booked.options.0.label', 'পাবলিক বুকিংয়ের লিংক')
+        ->assertJsonPath('data.options.events.appointment_reminder.options.0.choices.1', ['key' => 'leave_out', 'name' => 'বাদ দিন']);
 
     // Days kept once each, largest first; the event's other parts stay
     ($this->put)(['events' => ['card_expiring' => ['enabled' => true, 'options' => ['days' => [7, '60', 30]]]]])->assertOk()
@@ -262,9 +264,9 @@ it('keeps an event\'s own settings, as the event declares them: named, checked, 
         ->assertJsonValidationErrors(['notifications.events.card_expiring.options.days', 'notifications.events.card_expiring.options.days.0', 'notifications.events.card_expiring.options.days.2']);
     ($this->put)(['events' => ['card_expiring' => ['options' => ['days' => []]]]], ['Accept-Language' => 'bn'])
         ->assertJsonPath('errors', ['notifications.events.card_expiring.options.days' => ['মেয়াদ শেষের কত দিন আগে-এ কমপক্ষে ১ টি আইটেম থাকতে হবে।']]);
-    // Settings only for events that have them
+    // Only the settings an event declares
     ($this->put)(['events' => ['appointment_booked' => ['options' => ['send_on' => 'issue']]]])
-        ->assertJsonValidationErrors(['notifications.events.appointment_booked']);
+        ->assertJsonValidationErrors(['notifications.events.appointment_booked.options']);
     expect($saved()['card_expiring']['options']['days'])->toBe([60, 30, 7]);
 
     // What GET gives, PUT takes back unchanged
