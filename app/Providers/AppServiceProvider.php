@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Models\User;
 use App\Services\Appointments\AppointmentLoad;
 use App\Services\Appointments\BookedAppointmentLoad;
+use App\Services\Audit\AuditChangeDescriber;
 use App\Services\Cards\CardRequirements;
 use App\Support\Pdf\DisabledPdfRenderer;
 use App\Support\Pdf\GotenbergPdfRenderer;
@@ -30,6 +31,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->scoped(TenantContext::class);
         // One per request or job: requirements read the organization's settings once
         $this->app->scoped(CardRequirements::class);
+        // One per request or job: the audit's field names are looked up once per language
+        $this->app->scoped(AuditChangeDescriber::class);
         // What is already booked at a place (bookings come with 5.4)
         $this->app->bind(AppointmentLoad::class, BookedAppointmentLoad::class);
 

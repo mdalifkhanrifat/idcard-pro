@@ -9,12 +9,12 @@ use App\Data\Reports\ReportQuery;
 use App\Models\Cardholder;
 use App\Models\User;
 use App\Repositories\Contracts\ActivityRepositoryInterface;
+use App\Services\Audit\AuditChangeDescriber;
 use App\Services\Reports\Concerns\DescribesColumns;
 use App\Services\Reports\Report;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\LazyCollection;
-use Illuminate\Support\Str;
 use Spatie\Activitylog\Models\Activity;
 
 /**
@@ -27,7 +27,7 @@ class AuditChangeReport implements Report
 {
     use DescribesColumns;
 
-    public function __construct(private ActivityRepositoryInterface $activities) {}
+    public function __construct(private ActivityRepositoryInterface $activities, private AuditChangeDescriber $describer) {}
 
     public function key(): string
     {
@@ -142,32 +142,18 @@ class AuditChangeReport implements Report
     }
 
     /**
-     * What changed, in words: "field: old → new" for a record's fields, else what an event recorded
-     * ("report: cardholders; format: csv").
+     * What changed, in words: "Full name: old → new" for a record's fields (named as the audit page names them),
+     * else what an event recorded ("report: cardholders; format: csv").
      */
     private function changes(Activity $activity): ?string
     {
-        $fields = $activity->attribute_changes?->toArray() ?? [];
-        if ($fields !== []) {
-            $new = (array) ($fields['attributes'] ?? []);
-            $old = (array) ($fields['old'] ?? []);
-            $parts = array_map(fn (string $key) => array_key_exists($key, $old)
-                ? "{$key}: {$this->text($old[$key])} → {$this->text($new[$key] ?? null)}"
-                : "{$key}: {$this->text($new[$key] ?? null)}", array_keys($new + $old));
-        } else {
-            $parts = array_map(fn (string $key, mixed $value) => "{$key}: {$this->text($value)}", array_keys($properties = $activity->properties?->toArray() ?? []), $properties);
-        }
+        $fields = $this->describer->fields($activity);
+        $parts = $fields !== null
+            ? array_map(fn (array $field): string => $field['old'] !== null
+                ? "{$field['label']}: {$field['old']} → ".($field['new'] ?? '—')
+                : "{$field['label']}: {$field['new']}", $fields)
+            : array_map(fn (string $key, mixed $value): string => "{$key}: {$this->describer->text($key, $value)}", array_keys($properties = $activity->properties?->toArray() ?? []), $properties);
 
         return $parts === [] ? null : implode('; ', $parts);
-    }
-
-    private function text(mixed $value): string
-    {
-        return match (true) {
-            $value === null, $value === '' => '—',
-            is_bool($value) => (string) __('reports.values.'.($value ? 'yes' : 'no')),
-            is_array($value) => Str::limit((string) json_encode($value, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES), 200),
-            default => Str::limit((string) $value, 200),
-        };
     }
 }

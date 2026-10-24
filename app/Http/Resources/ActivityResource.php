@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Cardholder;
+use App\Services\Audit\AuditChangeDescriber;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Spatie\Activitylog\Models\Activity;
@@ -26,6 +27,8 @@ class ActivityResource extends JsonResource
             'causer' => $this->causer(),
             // Field changes of a record, else what an event recorded (an override's reason, a download's report...)
             'changes' => $this->recorded(),
+            // The same field changes for people: each field's name in the reader's language, old and new as text
+            'fields' => app(AuditChangeDescriber::class)->fields($this->resource),
             'created_at' => $this->created_at,
         ];
     }

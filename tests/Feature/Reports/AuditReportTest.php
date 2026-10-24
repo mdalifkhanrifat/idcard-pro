@@ -27,7 +27,7 @@ it('lists the changes the audit page lists, what changed in words', function () 
 
     $row = $this->getJson('/api/v1/reports/audit-changes?filter[event]=updated&filter[log_name]=cardholders&columns[]=audit.who&columns[]=audit.module&columns[]=audit.event&columns[]=audit.subject&columns[]=audit.changes')->json('data.0.values');
     expect($row)->toMatchArray(['audit.who' => $this->owner->name, 'audit.module' => 'Cardholders', 'audit.event' => 'Updated', 'audit.subject' => 'Cardholder'])
-        ->and($row['audit.changes'])->toContain('full_name: Jane Doe → Janet Doe');
+        ->and($row['audit.changes'])->toContain('Full name: Jane Doe → Janet Doe');
 
     $filters = collect(collect($this->getJson('/api/v1/reports')->json('data'))->keyBy('key')['audit_changes']['filters'])->keyBy('key');
     expect(array_column($filters['log_name']['options'], 'label'))->toContain('Cardholders');

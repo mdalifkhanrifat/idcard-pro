@@ -371,6 +371,9 @@ return [
         'filter.expiring_days' => 'expiring within (days)',
         'per_page' => 'rows per page',
         'sort' => 'sort order',
+        'card_number_format' => 'card number format',
+        'card_number_on_reissue' => 'card number on reissue',
+        'reports.*.columns' => 'columns shown by default',
     ],
 
 ];

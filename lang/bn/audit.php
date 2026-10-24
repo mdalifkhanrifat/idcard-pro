@@ -1,0 +1,105 @@
+<?php
+
+return [
+    // যে মান audit কখনো দেখায় না (config audit.hidden)
+    'hidden' => '(লুকানো)',
+
+    // রেকর্ডের ঘরের audit-এর নিজের নাম, log-এর নাম ধরে; '*' যেকোনো log-এর জন্য। এখানে না থাকলে নাম আসে রিপোর্ট,
+    // কার্ডধারীর তালিকা বা validation থেকে (App\Services\Audit\AuditChangeDescriber)।
+    'fields' => [
+        '*' => [
+            'name' => 'নাম',
+            'name_local' => 'নাম (স্থানীয় ভাষায়)',
+            'is_active' => 'চালু',
+            'phone' => 'ফোন',
+            'locale' => 'ভাষা',
+            'title' => 'শিরোনাম',
+            'original_name' => 'ফাইলের নাম',
+            'replaced_at' => 'বদলানোর সময়',
+            'card_type_id' => 'কার্ডের ধরন',
+            'password' => 'পাসওয়ার্ড',
+            'authority_type_id' => 'কর্তৃপক্ষের ধরন',
+        ],
+        'user' => [
+            'username' => 'ইউজারনেম',
+            'roles' => 'রোল',
+        ],
+        'roles' => [
+            'name' => 'রোলের নাম',
+            'permissions' => 'পারমিশন',
+        ],
+        'tenant' => [
+            'slug' => 'সংক্ষিপ্ত নাম (লিংকে)',
+            'legal_name' => 'আইনি নাম',
+            'timezone' => 'সময়-অঞ্চল',
+            'primary_color' => 'প্রধান রং',
+            'logo_path' => 'লোগো',
+        ],
+        'appointments' => [
+            'number' => 'বুকিং নম্বর',
+            'starts_at' => 'শুরুর সময়',
+            'ends_at' => 'শেষের সময়',
+            'cancel_reason' => 'বাতিলের কারণ',
+        ],
+        'biometrics' => [
+            'modality' => 'ধরন',
+            'position' => 'অবস্থান',
+            'unavailable_reason' => 'না নেওয়ার কারণ',
+            'driver' => 'নেওয়ার উপায়',
+            'quality' => 'মান',
+            'low_quality' => 'কম মান',
+        ],
+        'cards' => [
+            'number' => 'কার্ড নম্বর',
+            'rf_card_no' => 'RF কার্ড নম্বর',
+            'card_template_id' => 'টেমপ্লেট',
+            'template_version' => 'টেমপ্লেটের সংস্করণ',
+            'issue_date' => 'ইস্যুর তারিখ',
+            'expiry_date' => 'মেয়াদ শেষের তারিখ',
+            'status_note' => 'অবস্থার নোট',
+        ],
+        'card_templates' => [
+            'orientation' => 'দিক',
+            'width' => 'প্রস্থ',
+            'height' => 'উচ্চতা',
+            'size_unit' => 'মাপের একক',
+            'validity_months' => 'মেয়াদ (মাস)',
+            'version' => 'সংস্করণ',
+        ],
+        'cardholder_files' => [
+            'collection' => 'ফাইলের ধরন',
+        ],
+        'custom_fields' => [
+            'entity' => 'কিসের ঘর',
+            'key' => 'চাবি (key)',
+            'label' => 'লেবেল',
+            'type' => 'ধরন',
+            'is_required' => 'আবশ্যক',
+        ],
+        'family_members' => [
+            'relation' => 'সম্পর্ক',
+            'card_no' => 'কার্ড নম্বর',
+        ],
+        'master_data' => [
+            'type' => 'তালিকা',
+        ],
+        'qualifications' => [
+            'kind' => 'ধরন',
+            'institution' => 'প্রতিষ্ঠান',
+            'year' => 'বছর',
+            'result' => 'ফলাফল',
+        ],
+        'signatories' => [
+            'signature_path' => 'স্বাক্ষরের ছবি',
+            'effective_from' => 'যেদিন থেকে কার্যকর',
+            'effective_to' => 'যেদিন পর্যন্ত কার্যকর',
+        ],
+        'fonts' => [
+            'family' => 'ফন্টের পরিবার',
+            'style' => 'ধরন (স্টাইল)',
+        ],
+        'images' => [
+            'path' => 'ছবির ফাইল',
+        ],
+    ],
+];

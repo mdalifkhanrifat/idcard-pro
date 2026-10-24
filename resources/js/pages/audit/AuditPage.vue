@@ -23,6 +23,8 @@ interface ActivityRow {
     causer: { kind: 'user' | 'cardholder'; name: string | null; email: string | null; employee_no?: string | null } | null;
     /** Field changes, or what an event recorded (e.g. requirements_overridden: moment, reason, requirements). */
     changes: { attributes?: Record<string, unknown>; old?: Record<string, unknown>; reason?: string; moment?: string; report?: string; format?: string; rows?: number; print?: boolean; messages?: number; days?: number; address?: string } | null;
+    /** The field changes for people (6.0): each field's name in the reader's language, old and new as text; null for an event. */
+    fields: { key: string; label: string; old: string | null; new: string | null }[] | null;
     created_at: string;
 }
 interface LoginRow {
@@ -72,8 +74,9 @@ const tone = (event: string) =>
     ({ succeeded: 'success', created: 'success', failed: 'danger', locked: 'danger', blocked: 'danger', deleted: 'danger', two_factor_failed: 'warning', updated: 'brand', requirements_overridden: 'warning' })[event] as
         | 'success' | 'danger' | 'warning' | 'brand' | undefined;
 
+/** The changed fields by name (named by the server, so new fields and settings need nothing here). */
 function changedFields(row: ActivityRow): string[] {
-    return Object.keys(row.changes?.attributes ?? {});
+    return (row.fields ?? []).map((field) => field.label);
 }
 
 function browser(ua: string): string {
@@ -115,7 +118,7 @@ const loginReportQuery = computed(() => Object.fromEntries(Object.entries(logins
                                 <span v-if="row.causer?.kind === 'cardholder'" class="text-muted" data-audit-cardholder> ({{ t('audit.cardholderSelf') }}<template v-if="row.causer.employee_no"> · <span class="whitespace-nowrap">{{ row.causer.employee_no }}</span></template>)</span>
                                 <template v-if="row.log_name || row.subject_type"> · {{ logLabel(row.log_name ?? '', row.subject_type) }}</template>
                             </p>
-                            <p v-if="changedFields(row).length" class="truncate text-xs text-muted">{{ changedFields(row).join(', ') }}</p>
+                            <p v-if="changedFields(row).length" class="truncate text-xs text-muted" :title="changedFields(row).join(', ')" data-audit-fields>{{ changedFields(row).join(', ') }}</p>
                             <p v-if="row.event === 'exported' && row.changes?.report" class="text-xs text-muted" data-audit-export>
                                 {{ t('audit.exportDetail', { report: reportName(row.changes.report), format: (row.changes.format ?? '').toUpperCase() + (row.changes.print ? ` (${t('audit.printed')})` : ''), rows: n(row.changes.rows ?? 0) }) }}
                             </p>

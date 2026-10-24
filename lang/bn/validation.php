@@ -368,6 +368,7 @@ return [
         'primary_color' => 'প্রধান রং',
         'card_number_format' => 'কার্ড নম্বরের ফরম্যাট',
         'card_number_on_reissue' => 'আবার ইস্যুতে কার্ড নম্বর',
+        'reports.*.columns' => 'ডিফল্টে যে ঘর দেখায়',
         'owner.name' => 'মালিকের নাম',
         'owner.email' => 'মালিকের ইমেইল',
         'owner.password' => 'মালিকের পাসওয়ার্ড',
