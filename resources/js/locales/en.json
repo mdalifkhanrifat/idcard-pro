@@ -1654,7 +1654,11 @@
             "noChannel": "Turned on, but none of its channels is on for the organization: nothing would be sent. Tick a channel the organization uses.",
             "textErrors": "Its texts have a mistake: open the texts to see it.",
             "edit": "Edit texts",
-            "view": "View texts"
+            "view": "View texts",
+            "options": {
+                "add": "Add another",
+                "remove": "Remove"
+            }
         },
         "general": {
             "title": "General",

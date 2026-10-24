@@ -13,6 +13,27 @@ export interface NotificationEventSettings {
     channels: string[];
     /** Language => its own texts. */
     templates: Record<string, NotificationTexts>;
+    /** Its own settings, for an event that has them (EventOptionDescription.key => value). */
+    options?: Record<string, EventOptionValue>;
+}
+
+/** A value of an event's own setting: one choice, or a list of whole numbers (largest first). */
+export type EventOptionValue = string | number[];
+
+/** An event's own setting as the server describes it (e.g. when "card ready" goes, days before a card's last day). */
+export interface EventOptionDescription {
+    key: string;
+    kind: 'choice' | 'numbers';
+    label: string;
+    hint: string;
+    default: EventOptionValue;
+    /** For a choice. */
+    choices?: { key: string; name: string }[];
+    /** For numbers: each from min to max, at most max_items of them, each followed by unit (e.g. "days before"). */
+    min?: number;
+    max?: number;
+    max_items?: number;
+    unit?: string;
 }
 
 /** tenants.settings.notifications, always complete (the server fills in defaults). */
@@ -38,6 +59,8 @@ export interface NotificationEventOption {
     default_channels: string[];
     /** Language => the default texts. */
     default_templates: Record<string, Record<NotificationPart, string>>;
+    /** Its own settings (none: []). */
+    options: EventOptionDescription[];
 }
 
 /** What this installation can send and about what (the registry): the page is drawn from this alone. */

@@ -7,11 +7,13 @@ import UiButton from '@/components/ui/UiButton.vue';
 import UiCard from '@/components/ui/UiCard.vue';
 import UiCheckbox from '@/components/ui/UiCheckbox.vue';
 import type { NotificationOptions, NotificationSamples, NotificationSettings, NotificationTexts } from '@/lib/notifications/api';
+import NotificationEventOptions from '@/pages/notifications/NotificationEventOptions.vue';
 import NotificationTemplateDialog from '@/pages/notifications/NotificationTemplateDialog.vue';
 
 /**
  * Every event of the registry as the organization sets it: on or off, its channels (warned when the organization
- * does not send on them), and its texts in the editor. Changes go to the page's draft.
+ * does not send on them), its own settings while it is on (e.g. when "card ready" goes), and its texts in the
+ * editor. Changes go to the page's draft.
  */
 const props = defineProps<{ options: NotificationOptions; samples: NotificationSamples; errors: Record<string, string[]>; disabled?: boolean }>();
 const settings = defineModel<NotificationSettings>({ required: true });
@@ -30,7 +32,10 @@ const events = computed(() =>
             ownTexts: Object.values(event.templates).some((texts) => Object.values(texts).some((text) => !!text)),
             // Turned on but the organization sends on none of its channels: nothing would go
             noChannel: event.enabled && goesOn.length === 0,
-            textErrors: Object.keys(props.errors).some((field) => field.startsWith(`notifications.events.${key}.`)),
+            // Mistakes in its texts only (its settings show theirs at the field)
+            textErrors: Object.keys(props.errors).some((field) => field.startsWith(`notifications.events.${key}.templates`)),
+            // Its own settings: shown while it is on, or when one of them has a mistake
+            showOptions: option.options.length > 0 && !!event.options && (event.enabled || Object.keys(props.errors).some((field) => field.startsWith(`notifications.events.${key}.options`))),
         };
     }),
 );
@@ -83,6 +88,8 @@ function applyTexts(templates: Record<string, NotificationTexts>): void {
                         </label>
                     </div>
                 </fieldset>
+
+                <NotificationEventOptions v-if="item.showOptions && item.event.options" v-model="item.event.options" :event-key="item.key" :options="item.option.options" :errors="errors" :disabled="disabled" />
 
                 <p v-if="item.noChannel" class="flex items-start gap-2 text-sm text-warning" data-warning="no-channel">
                     <AlertTriangle class="mt-0.5 size-4 shrink-0" />{{ t('notifications.events.noChannel') }}
