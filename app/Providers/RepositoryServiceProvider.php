@@ -23,6 +23,7 @@ use App\Repositories\Contracts\FamilyMemberRepositoryInterface;
 use App\Repositories\Contracts\LoginEventRepositoryInterface;
 use App\Repositories\Contracts\MasterDataRepositoryInterface;
 use App\Repositories\Contracts\NotificationMessageRepositoryInterface;
+use App\Repositories\Contracts\NotificationOnceRepositoryInterface;
 use App\Repositories\Contracts\PasswordResetTokenRepositoryInterface;
 use App\Repositories\Contracts\QualificationRepositoryInterface;
 use App\Repositories\Contracts\RoleRepositoryInterface;
@@ -52,6 +53,7 @@ use App\Repositories\Eloquent\FamilyMemberRepository;
 use App\Repositories\Eloquent\LoginEventRepository;
 use App\Repositories\Eloquent\MasterDataRepository;
 use App\Repositories\Eloquent\NotificationMessageRepository;
+use App\Repositories\Eloquent\NotificationOnceRepository;
 use App\Repositories\Eloquent\PasswordResetTokenRepository;
 use App\Repositories\Eloquent\QualificationRepository;
 use App\Repositories\Eloquent\RoleRepository;
@@ -90,6 +92,7 @@ class RepositoryServiceProvider extends ServiceProvider
         CardRepositoryInterface::class => CardRepository::class,
         CardPrintRepositoryInterface::class => CardPrintRepository::class,
         NotificationMessageRepositoryInterface::class => NotificationMessageRepository::class,
+        NotificationOnceRepositoryInterface::class => NotificationOnceRepository::class,
         CardVerificationRepositoryInterface::class => CardVerificationRepository::class,
         TenantImageRepositoryInterface::class => TenantImageRepository::class,
         CardSequenceRepositoryInterface::class => CardSequenceRepository::class,

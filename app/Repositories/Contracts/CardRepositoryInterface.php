@@ -59,6 +59,15 @@ interface CardRepositoryInterface extends RepositoryInterface
     public function summary(int $expiringDays): array;
 
     /**
+     * Current cards of active cardholders whose last day is from `$from` to `$to` (the organization's dates, both
+     * included) — the Expired report's "expiring" rule — with their holder, family member and template, read a
+     * chunk at a time (reminders before a card's last day, 5.7d).
+     *
+     * @return LazyCollection<int, Card>
+     */
+    public function expiringBetween(string $from, string $to): LazyCollection;
+
+    /**
      * Every card of a cardholder and their family members, newest first.
      *
      * @return Collection<int, Card>

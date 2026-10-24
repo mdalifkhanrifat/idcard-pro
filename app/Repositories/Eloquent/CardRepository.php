@@ -3,6 +3,7 @@
 namespace App\Repositories\Eloquent;
 
 use App\Data\Cards\CardFilter;
+use App\Enums\CardholderStatus;
 use App\Enums\CardStatus;
 use App\Models\Card;
 use App\Models\CardAsset;
@@ -111,9 +112,7 @@ class CardRepository extends EloquentRepository implements CardRepositoryInterfa
             ->when($filter->createdFrom, fn (Builder $q, string $date) => $q->where('created_at', '>=', app(TenantContext::class)->dayStart($date)))
             ->when($filter->createdTo, fn (Builder $q, string $date) => $q->where('created_at', '<', app(TenantContext::class)->dayStart($date)->addDay()))
             ->when($filter->validity === 'expired', fn (Builder $q) => $q->where('status', CardStatus::Active)->whereDate('expiry_date', '<', $today))
-            ->when($filter->validity === 'expiring', fn (Builder $q) => $q->where('status', CardStatus::Active)
-                ->whereDate('expiry_date', '>=', $today)
-                ->whereDate('expiry_date', '<=', app(TenantContext::class)->today()->addDays($filter->expiringDays)->toDateString()))
+            ->when($filter->validity === 'expiring', fn (Builder $q) => $this->whereExpiring($q, $today, app(TenantContext::class)->today()->addDays($filter->expiringDays)->toDateString()))
             ->when($filter->validity === 'valid', fn (Builder $q) => $this->whereValid($q))
             ->when($filter->printed === 'pending', fn (Builder $q) => $q->where('print_count', 0))
             ->when($filter->printed === 'printed', fn (Builder $q) => $q->where('print_count', '>', 0))
@@ -140,6 +139,27 @@ class CardRepository extends EloquentRepository implements CardRepositoryInterfa
             ->where(fn (Builder $w) => $w->whereNull('expiry_date')->orWhereDate('expiry_date', '>=', app(TenantContext::class)->today()->toDateString()));
     }
 
+    /**
+     * Current (active) cards whose last day is from `$from` to `$to`, both included: "expiring" for the Expired
+     * report, the cards overview and the reminders before a card's last day — one rule. Replaced and revoked cards
+     * no longer need renewing.
+     *
+     * @param  Builder<Card>  $query
+     * @return Builder<Card>
+     */
+    private function whereExpiring(Builder $query, string $from, string $to): Builder
+    {
+        return $query->where('status', CardStatus::Active)->whereDate('expiry_date', '>=', $from)->whereDate('expiry_date', '<=', $to);
+    }
+
+    public function expiringBetween(string $from, string $to): LazyCollection
+    {
+        return $this->whereExpiring($this->query(), $from, $to)
+            ->whereHas('cardholder', fn (Builder $c) => $c->where('status', CardholderStatus::Active))
+            ->with(['cardholder.tenant', 'familyMember', 'template'])
+            ->lazyById(200);
+    }
+
     public function summary(int $expiringDays): array
     {
         $today = app(TenantContext::class)->today()->toDateString();
@@ -148,7 +168,7 @@ class CardRepository extends EloquentRepository implements CardRepositoryInterfa
         return [
             'active' => $active()->count(),
             'expired' => $active()->whereDate('expiry_date', '<', $today)->count(),
-            'expiring' => $active()->whereDate('expiry_date', '>=', $today)->whereDate('expiry_date', '<=', app(TenantContext::class)->today()->addDays($expiringDays)->toDateString())->count(),
+            'expiring' => $this->whereExpiring($this->query(), $today, app(TenantContext::class)->today()->addDays($expiringDays)->toDateString())->count(),
             'revoked' => $this->query()->where('status', CardStatus::Revoked)->count(),
             // Valid cards never printed (legacy "PENDING")
             'pending' => $this->whereValid($this->query())->where('print_count', 0)->count(),

@@ -14,3 +14,5 @@ Schedule::command('model:prune')->daily();
 Schedule::command('app:prune-notification-log')->daily()->withoutOverlapping();
 // Reminders before appointments, once each, as each organization set them (5.7c)
 Schedule::command('app:send-appointment-reminders')->everyFiveMinutes()->withoutOverlapping()->onOneServer();
+// Reminders before cards' last days, once each, in each organization's morning (5.7d)
+Schedule::command('app:send-card-expiry-reminders')->hourly()->withoutOverlapping()->onOneServer();

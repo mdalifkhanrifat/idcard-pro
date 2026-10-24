@@ -114,4 +114,15 @@ return [
     // active: the holder's current card; replaced: a newer card was issued; revoked: cancelled (e.g. reported lost)
     'statuses' => ['active', 'replaced', 'revoked'],
 
+    /*
+     * Reminders before a card's last day (5.7d, app:send-card-expiry-reminders every hour; the days are the
+     * card_expiring event's own setting): sent from this hour of the organization's morning, so nobody is woken by
+     * one; a reminder found up to `grace_days` late still goes (the scheduler was down), older ones do not — so
+     * turning the reminders on does not send one to every card already inside its days.
+     */
+    'expiry_reminders' => [
+        'from_hour' => (int) env('CARD_EXPIRY_REMINDERS_FROM_HOUR', 9),
+        'grace_days' => (int) env('CARD_EXPIRY_REMINDERS_GRACE_DAYS', 2),
+    ],
+
 ];

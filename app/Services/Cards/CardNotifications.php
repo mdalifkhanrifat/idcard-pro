@@ -13,7 +13,7 @@ use Throwable;
  * Which message a card's change sends its holder (5.7d) — one place, called once the change is saved: "card
  * ready" once per card, when it is first printed or, as the organization chose (the event's own setting
  * `send_on`), when it is issued. Printing a card again sends nothing (it was ready already), and neither does
- * importing one. Each goes as the organization's notification settings say (off: nothing); a message that
+ * importing one. And reminders before a card's last day (CardExpiryReminderService). Each goes as the organization's notification settings say (off: nothing); a message that
  * cannot be logged never undoes the issue or the print: it is reported and the change stands.
  */
 class CardNotifications
@@ -43,6 +43,14 @@ class CardNotifications
         foreach ($cards as $card) {
             $this->send('card_ready', $card);
         }
+    }
+
+    /**
+     * A reminder before the card's last day (CardExpiryReminderService).
+     */
+    public function expiring(Card $card): void
+    {
+        $this->send('card_expiring', $card);
     }
 
     private function readyOn(): string
