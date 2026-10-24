@@ -64,6 +64,33 @@ class CardholderRepository extends EloquentRepository implements CardholderRepos
         return ['cardholders' => $cardholders, 'no_card' => $cardholders - $pending - $printed, 'pending' => $pending, 'printed' => $printed];
     }
 
+    public function biometricReport(CardholderFilter $filter): LengthAwarePaginator
+    {
+        return $this->withBiometricRelations($this->filtered($filter))
+            ->paginate(ListPage::clamp($filter->perPage))
+            ->withQueryString();
+    }
+
+    public function biometricReportRows(CardholderFilter $filter): LazyCollection
+    {
+        return $this->withBiometricRelations($this->filtered($filter))->lazy(500);
+    }
+
+    public function biometricTotals(CardholderFilter $filter): array
+    {
+        // Only the grouped column and a count: safe under MySQL's only_full_group_by
+        $counts = $this->filtered($filter)->reorder()
+            ->selectRaw('biometric_status, count(*) as people')
+            ->groupBy('biometric_status')
+            ->pluck('people', 'biometric_status');
+        $totals = ['cardholders' => (int) $counts->sum()];
+        foreach (BiometricStatus::cases() as $status) {
+            $totals[$status->value] = (int) ($counts[$status->value] ?? 0);
+        }
+
+        return $totals;
+    }
+
     public function findForBooking(string $search, int $limit): Collection
     {
         return $this->filtered(new CardholderFilter(search: $search))
@@ -128,6 +155,21 @@ class CardholderRepository extends EloquentRepository implements CardholderRepos
             ...Cardholder::lookupRelations(),
             'currentCard:id,public_id,cardholder_id,number,print_count,last_printed_at',
             'creator:id,name',
+        ]);
+    }
+
+    /**
+     * A report row's relations and the cardholder's own current captures with who took them.
+     *
+     * @param  Builder<Cardholder>  $query
+     * @return Builder<Cardholder>
+     */
+    private function withBiometricRelations(Builder $query): Builder
+    {
+        return $this->withReportRelations($query)->with([
+            'biometricCaptures' => fn ($captures) => $captures->current()->whereNull('family_member_id')
+                ->select(['id', 'cardholder_id', 'family_member_id', 'modality', 'position', 'status', 'unavailable_reason', 'captured_by', 'captured_at']),
+            'biometricCaptures.capturer:id,name',
         ]);
     }
 

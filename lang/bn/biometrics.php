@@ -1,6 +1,34 @@
 <?php
 
 return [
+    // পাতার নামই (resources/js/locales → biometrics.*), রিপোর্ট আর বার্তার জন্য
+    'modalities' => [
+        'fingerprint' => 'আঙুলের ছাপ',
+        'face' => 'মুখ',
+        'iris' => 'চোখের মণি',
+    ],
+    'positions' => [
+        'right_thumb' => 'ডান বুড়ো আঙুল',
+        'right_index' => 'ডান তর্জনী',
+        'right_middle' => 'ডান মধ্যমা',
+        'right_ring' => 'ডান অনামিকা',
+        'right_little' => 'ডান কনিষ্ঠা',
+        'left_thumb' => 'বাঁ বুড়ো আঙুল',
+        'left_index' => 'বাঁ তর্জনী',
+        'left_middle' => 'বাঁ মধ্যমা',
+        'left_ring' => 'বাঁ অনামিকা',
+        'left_little' => 'বাঁ কনিষ্ঠা',
+        'face' => 'মুখ',
+        'right_iris' => 'ডান চোখ',
+        'left_iris' => 'বাঁ চোখ',
+    ],
+    'reasons' => [
+        'missing' => 'নেই',
+        'injured' => 'আঘাতপ্রাপ্ত',
+        'bandaged' => 'ব্যান্ডেজ করা',
+        'unreadable' => 'পড়া যায় না',
+        'other' => 'অন্য কারণ',
+    ],
     'settings' => [
         'nothing_on' => 'কমপক্ষে এক ধরনের বায়োমেট্রিক চালু করুন, নয়তো বায়োমেট্রিক বন্ধ রাখুন।',
         'positions_needed' => 'কমপক্ষে একটা অবস্থান বাছাই করুন।',

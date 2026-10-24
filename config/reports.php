@@ -2,6 +2,7 @@
 
 use App\Services\Reports\Definitions\AppointmentReport;
 use App\Services\Reports\Definitions\AuditChangeReport;
+use App\Services\Reports\Definitions\BiometricStatusReport;
 use App\Services\Reports\Definitions\CardholderReport;
 use App\Services\Reports\Definitions\CardPrintReport;
 use App\Services\Reports\Definitions\CardReport;
@@ -44,6 +45,8 @@ return [
         'cards' => CardReport::class,
         // Legacy "Family Info" list: every family member of every cardholder
         'family_members' => FamilyMemberReport::class,
+        // Who still needs which biometrics (5.8): each kind of the registry a column, as the settings ask
+        'biometric_status' => BiometricStatusReport::class,
         // Legacy "Education Info" and "Other Course" lists: education and training of every cardholder
         'qualifications' => QualificationReport::class,
         // Legacy "User" and "Admin" lists: the organization's users as the user list finds them

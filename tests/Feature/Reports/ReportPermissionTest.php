@@ -78,6 +78,13 @@ it('opens the card reports, the print history and expired cards included, only w
         ->and(($this->access)(($this->roleWith)(['reports.view', 'cardholders.view'])))->toBe(($this->only)(['cardholders', 'family_members', 'qualifications'], [true, 200, 403], [false, 403, 403]));
 });
 
+it('opens the biometric status report only to those who see both cardholders and biometrics', function () {
+    $people = ['cardholders', 'family_members', 'qualifications'];
+
+    expect(($this->access)(($this->roleWith)(['reports.view', 'reports.export', 'cardholders.view', 'biometrics.view'])))->toBe(($this->only)([...$people, 'biometric_status'], [true, 200, 200], [false, 403, 403]))
+        ->and(($this->access)(($this->roleWith)(['reports.view', 'reports.export', 'biometrics.view'])))->toBe(($this->only)([], [], [false, 403, 403]));
+});
+
 it('opens the appointments report only with appointments.view', function () {
     expect(($this->access)(($this->roleWith)(['reports.view', 'reports.export', 'appointments.view'])))->toBe(($this->only)(['appointments'], [true, 200, 200], [false, 403, 403]))
         ->and(($this->access)(($this->roleWith)(['reports.view', 'reports.export', 'settings.update'])))->toBe(($this->only)([], [], [false, 403, 403]));

@@ -1,6 +1,34 @@
 <?php
 
 return [
+    // Names as the pages give them (resources/js/locales → biometrics.*), for reports and messages
+    'modalities' => [
+        'fingerprint' => 'Fingerprint',
+        'face' => 'Face',
+        'iris' => 'Iris',
+    ],
+    'positions' => [
+        'right_thumb' => 'Right thumb',
+        'right_index' => 'Right index',
+        'right_middle' => 'Right middle',
+        'right_ring' => 'Right ring',
+        'right_little' => 'Right little',
+        'left_thumb' => 'Left thumb',
+        'left_index' => 'Left index',
+        'left_middle' => 'Left middle',
+        'left_ring' => 'Left ring',
+        'left_little' => 'Left little',
+        'face' => 'Face',
+        'right_iris' => 'Right eye',
+        'left_iris' => 'Left eye',
+    ],
+    'reasons' => [
+        'missing' => 'Missing',
+        'injured' => 'Injured',
+        'bandaged' => 'Bandaged',
+        'unreadable' => 'Cannot be read',
+        'other' => 'Other',
+    ],
     'settings' => [
         'nothing_on' => 'Turn on at least one kind of capture, or turn biometrics off.',
         'positions_needed' => 'Choose at least one position to capture.',

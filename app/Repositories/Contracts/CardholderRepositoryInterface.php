@@ -42,6 +42,26 @@ interface CardholderRepositoryInterface extends RepositoryInterface
     public function reportTotals(CardholderFilter $filter): array;
 
     /**
+     * The list's criteria with each cardholder's own current captures (what was taken or marked unavailable, when
+     * and by whom — never images or templates) for the biometric status report (5.8).
+     *
+     * @return LengthAwarePaginator<int, Cardholder>
+     */
+    public function biometricReport(CardholderFilter $filter): LengthAwarePaginator;
+
+    /**
+     * @return LazyCollection<int, Cardholder>
+     */
+    public function biometricReportRows(CardholderFilter $filter): LazyCollection;
+
+    /**
+     * How many cardholders the criteria find, in all and per biometric status.
+     *
+     * @return array<string, int> cardholders => n, then BiometricStatus value => n (each status, 0 when none)
+     */
+    public function biometricTotals(CardholderFilter $filter): array;
+
+    /**
      * Whether any cardholder references the master data item.
      */
     public function usesMasterDataItem(MasterDataItem $item): bool;
