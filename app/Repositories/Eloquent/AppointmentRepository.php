@@ -165,4 +165,14 @@ class AppointmentRepository extends EloquentRepository implements AppointmentRep
             ->mapWithKeys(fn (mixed $people, mixed $date) => [substr((string) $date, 0, 10) => (int) $people])
             ->all();
     }
+
+    public function confirmedBetween(string $from, string $to): Collection
+    {
+        return $this->query()
+            ->where('status', AppointmentStatus::Confirmed)
+            ->whereBetween('date', [$from, $to])
+            ->with(['location', 'cardholder'])
+            ->orderBy('id')
+            ->get();
+    }
 }

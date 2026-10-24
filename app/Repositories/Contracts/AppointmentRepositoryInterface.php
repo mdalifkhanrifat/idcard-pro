@@ -105,4 +105,12 @@ interface AppointmentRepositoryInterface extends RepositoryInterface
      * family member's), this family member, or at this place: such records are kept.
      */
     public function existsFor(?int $cardholderId = null, ?int $familyMemberId = null, ?int $locationId = null): bool;
+
+    /**
+     * Confirmed appointments on the organization's days from–to (Y-m-d), with their place (its hours give a
+     * whole day's start) and the person — what reminders are chosen from (5.7c).
+     *
+     * @return Collection<int, Appointment>
+     */
+    public function confirmedBetween(string $from, string $to): Collection;
 }

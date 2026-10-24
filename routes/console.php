@@ -12,3 +12,5 @@ Artisan::command('inspire', function () {
 Schedule::command('model:prune')->daily();
 // Sent messages past the days an organization keeps them, only where it chose to have them deleted
 Schedule::command('app:prune-notification-log')->daily()->withoutOverlapping();
+// Reminders before appointments, once each, as each organization set them (5.7c)
+Schedule::command('app:send-appointment-reminders')->everyFiveMinutes()->withoutOverlapping()->onOneServer();

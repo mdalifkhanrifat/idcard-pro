@@ -54,6 +54,10 @@ return [
      * (null: every kind, those added later too). Days are ISO keys, Monday first; hours "HH:MM" from–to.
      */
     'weekdays' => ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'],
+
+    // Reminders (5.7c, app:send-appointment-reminders every five minutes): one found this many minutes late at
+    // most is still sent (the scheduler was down a while); older ones are let go, not sent in a heap
+    'reminder_grace_minutes' => (int) env('APPOINTMENT_REMINDER_GRACE_MINUTES', 120),
     'locations' => [
         // A new place's hours: Sunday to Thursday, 9 to 5 (a working week of Bangladesh; change it for another)
         'hours' => [

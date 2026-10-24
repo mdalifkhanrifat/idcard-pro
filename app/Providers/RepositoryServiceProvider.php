@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Repositories\Contracts\ActivityRepositoryInterface;
 use App\Repositories\Contracts\AppointmentClosureRepositoryInterface;
 use App\Repositories\Contracts\AppointmentLocationRepositoryInterface;
+use App\Repositories\Contracts\AppointmentReminderRepositoryInterface;
 use App\Repositories\Contracts\AppointmentRepositoryInterface;
 use App\Repositories\Contracts\BiometricCaptureRepositoryInterface;
 use App\Repositories\Contracts\CardBiometricImageRepositoryInterface;
@@ -33,6 +34,7 @@ use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Repositories\Eloquent\ActivityRepository;
 use App\Repositories\Eloquent\AppointmentClosureRepository;
 use App\Repositories\Eloquent\AppointmentLocationRepository;
+use App\Repositories\Eloquent\AppointmentReminderRepository;
 use App\Repositories\Eloquent\AppointmentRepository;
 use App\Repositories\Eloquent\BiometricCaptureRepository;
 use App\Repositories\Eloquent\CardBiometricImageRepository;
@@ -83,6 +85,7 @@ class RepositoryServiceProvider extends ServiceProvider
         AppointmentLocationRepositoryInterface::class => AppointmentLocationRepository::class,
         AppointmentClosureRepositoryInterface::class => AppointmentClosureRepository::class,
         AppointmentRepositoryInterface::class => AppointmentRepository::class,
+        AppointmentReminderRepositoryInterface::class => AppointmentReminderRepository::class,
         TenantFontRepositoryInterface::class => TenantFontRepository::class,
         CardRepositoryInterface::class => CardRepository::class,
         CardPrintRepositoryInterface::class => CardPrintRepository::class,
