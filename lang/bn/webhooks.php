@@ -21,6 +21,8 @@ return [
         'appointment.cancelled' => 'অ্যাপয়েন্টমেন্ট বাতিল',
         'appointment.status_changed' => 'অ্যাপয়েন্টমেন্টের অবস্থা বদল',
     ],
+    'other_events' => ['webhook.test' => 'পরীক্ষা'],
+    'statuses' => ['queued' => 'অপেক্ষায়', 'delivered' => 'পৌঁছেছে', 'failed' => 'ব্যর্থ'],
     'too_many' => 'একটা প্রতিষ্ঠানে সর্বোচ্চ :maxটা webhook রাখা যায়।',
     'address' => [
         'invalid' => 'এটা ওয়েব ঠিকানা নয় (যেমন https://hr.example.com/hooks)।',
@@ -37,5 +39,6 @@ return [
         'certificate' => 'ঠিকানার নিরাপত্তা সনদে ভরসা করা যায়নি।',
         'redirected' => 'ঠিকানা অন্য জায়গায় যেতে বলেছে। তা অনুসরণ করা হয় না: শেষের ঠিকানাটাই সেভ করুন।',
         'rejected' => 'ঠিকানা ভুল জানিয়ে উত্তর দিয়েছে।',
+        'disabled' => 'কিছু পাঠানো হয়নি: তার আগেই webhook বন্ধ বা মোছা হয়েছে।',
     ],
 ];

@@ -32,7 +32,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  * @property-read Webhook $webhook
  */
-#[Fillable(['webhook_id', 'event', 'payload', 'status', 'attempts', 'response_code', 'failure', 'delivered_at'])]
+#[Fillable(['public_id', 'webhook_id', 'event', 'payload', 'status', 'attempts', 'response_code', 'failure', 'delivered_at'])]
 class WebhookDelivery extends Model
 {
     /** @use HasFactory<WebhookDeliveryFactory> */

@@ -459,6 +459,8 @@ return [
             'pruned' => 'Old entries deleted',
             'resent' => 'Sent again',
             'test_sent' => 'Test message',
+            'tested' => 'Test sent',
+            'disabled' => 'Turned off by itself',
         ],
         'in_turn' => 'In turn',
     ],

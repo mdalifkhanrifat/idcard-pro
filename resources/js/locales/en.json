@@ -243,7 +243,9 @@
             "exported": "Downloaded",
             "pruned": "Old entries deleted",
             "resent": "Sent again",
-            "test_sent": "Test message"
+            "test_sent": "Test message",
+            "tested": "Test sent",
+            "disabled": "Turned off by itself"
         },
         "reason": "Reason: {reason}",
         "exportDetail": "{report} · {format} · {rows} rows",

@@ -5,17 +5,20 @@ namespace App\Http\Controllers\Api\V1;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Webhooks\ListWebhooksRequest;
 use App\Http\Requests\Webhooks\SaveWebhookRequest;
+use App\Http\Resources\WebhookDeliveryResource;
 use App\Http\Resources\WebhookResource;
 use App\Models\Webhook;
+use App\Services\Webhooks\WebhookDeliveryService;
 use App\Services\Webhooks\WebhookEvents;
 use App\Services\Webhooks\WebhookService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
 
 class WebhookController extends Controller
 {
-    public function __construct(private WebhookService $webhooks) {}
+    public function __construct(private WebhookService $webhooks, private WebhookDeliveryService $deliveries) {}
 
     /**
      * Filters: filter[search|enabled]. Sorts: name, created_at (prefix "-" for descending). meta.events: what can be
@@ -52,6 +55,16 @@ class WebhookController extends Controller
         Gate::authorize('integrations.manage');
 
         return $this->withSecret($this->webhooks->rotateSecret($webhook), 200);
+    }
+
+    /**
+     * Sends a test delivery now, and answers with how it went.
+     */
+    public function test(Request $request, Webhook $webhook): WebhookDeliveryResource
+    {
+        Gate::authorize('integrations.manage');
+
+        return new WebhookDeliveryResource($this->deliveries->test($webhook, $request->user()));
     }
 
     public function destroy(Webhook $webhook): JsonResponse

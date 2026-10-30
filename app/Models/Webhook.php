@@ -26,10 +26,12 @@ use Spatie\Activitylog\Support\LogOptions;
  * @property string $secret
  * @property Carbon|null $secret_rotated_at
  * @property bool $enabled
+ * @property int $failure_count deliveries failed in a row
+ * @property Carbon|null $disabled_at when it turned itself off
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  */
-#[Fillable(['name', 'url', 'events', 'secret', 'enabled'])]
+#[Fillable(['name', 'url', 'events', 'secret', 'enabled', 'failure_count', 'disabled_at'])]
 #[Hidden(['secret'])]
 class Webhook extends Model
 {
@@ -41,6 +43,7 @@ class Webhook extends Model
      */
     protected $attributes = [
         'enabled' => true,
+        'failure_count' => 0,
     ];
 
     /**
@@ -66,6 +69,7 @@ class Webhook extends Model
             'secret' => 'encrypted',
             'secret_rotated_at' => 'datetime',
             'enabled' => 'boolean',
+            'disabled_at' => 'datetime',
         ];
     }
 

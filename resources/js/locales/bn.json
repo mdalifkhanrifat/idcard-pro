@@ -243,7 +243,9 @@
             "exported": "ডাউনলোড (রপ্তানি)",
             "resent": "আবার পাঠানো",
             "test_sent": "পরীক্ষার বার্তা",
-            "pruned": "পুরনো সারি মোছা"
+            "pruned": "পুরনো সারি মোছা",
+            "tested": "পরীক্ষা পাঠানো",
+            "disabled": "নিজে বন্ধ হয়েছে"
         },
         "reason": "কারণ: {reason}",
         "exportDetail": "{report} · {format} · {rows}টা সারি",

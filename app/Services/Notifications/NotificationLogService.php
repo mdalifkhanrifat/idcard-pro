@@ -27,9 +27,15 @@ class NotificationLogService
     public const BOOKING_CODE_EVENT = 'booking_code';
 
     /**
+     * A webhook failed so often that it turned itself off (6.2), to the people who look after it — sent whatever
+     * the settings: nobody else would notice.
+     */
+    public const WEBHOOK_DISABLED_EVENT = 'webhook_disabled';
+
+    /**
      * Messages not of the registry's events, named by lang/<language>/notifications.php → <key>.name.
      */
-    public const SYSTEM_EVENTS = [self::TEST_EVENT, self::BOOKING_CODE_EVENT];
+    public const SYSTEM_EVENTS = [self::TEST_EVENT, self::BOOKING_CODE_EVENT, self::WEBHOOK_DISABLED_EVENT];
 
     public function __construct(
         private NotificationMessageRepositoryInterface $messages,

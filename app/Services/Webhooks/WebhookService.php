@@ -10,7 +10,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Str;
 
 /**
- * An organization's webhooks: where it wants to be told, about what. Sending comes with the delivery engine (6.2b).
+ * An organization's webhooks: where it wants to be told, about what. Sending is WebhookDeliveryService's.
  */
 class WebhookService
 {
@@ -48,6 +48,10 @@ class WebhookService
     {
         if (isset($data['events'])) {
             $data['events'] = array_values(array_unique($data['events']));
+        }
+        // Turned on again: a clean start, whatever had turned it off
+        if (($data['enabled'] ?? false) && ! $webhook->enabled) {
+            $data += ['failure_count' => 0, 'disabled_at' => null];
         }
 
         /** @var Webhook $updated */

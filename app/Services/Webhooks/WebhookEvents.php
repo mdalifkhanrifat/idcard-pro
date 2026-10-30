@@ -16,6 +16,14 @@ class WebhookEvents
     }
 
     /**
+     * An event's name in the reader's language; its key once it has none (no longer in the list).
+     */
+    public static function name(string $event): string
+    {
+        return (string) ([...(array) __('webhooks.events'), ...(array) __('webhooks.other_events')][$event] ?? $event);
+    }
+
+    /**
      * Grouped as the page shows them. The event names hold dots, so the list is read whole.
      *
      * @return array<int, array{key: string, name: string, events: array<int, array{key: string, name: string}>}>

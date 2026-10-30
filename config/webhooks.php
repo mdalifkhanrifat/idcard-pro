@@ -18,6 +18,10 @@
 | An address is given `connect_timeout` seconds to connect and `timeout` seconds to answer. Whatever it answers beyond
 | the status is thrown away.
 |
+| Deliveries wait on a `queue` of their own, which the worker must listen to after the default one. A delivery is tried
+| once and then after each of `retry.backoff` seconds, about nine hours in all. After `disable_after` deliveries in a
+| row have failed the webhook turns itself off.
+|
 */
 
 return [
@@ -37,5 +41,14 @@ return [
     'connect_timeout' => 5,
 
     'timeout' => 15,
+
+    'queue' => 'webhooks',
+
+    'retry' => ['backoff' => [60, 300, 1800, 7200, 21600]],
+
+    'disable_after' => 20,
+
+    // Test deliveries by hand, per user and minute
+    'test_per_minute' => 5,
 
 ];

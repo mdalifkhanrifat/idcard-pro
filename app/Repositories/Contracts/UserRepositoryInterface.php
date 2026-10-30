@@ -5,6 +5,7 @@ namespace App\Repositories\Contracts;
 use App\Data\Users\UserFilter;
 use App\Models\User;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\LazyCollection;
 
 /**
@@ -40,6 +41,13 @@ interface UserRepositoryInterface extends RepositoryInterface
      * Number of active users holding the role, excluding the given user.
      */
     public function countActiveWithRole(string $role, User $except): int;
+
+    /**
+     * People of the organization who may do something, however they came by it; no integration account.
+     *
+     * @return Collection<int, User>
+     */
+    public function activeWithPermission(string $permission): Collection;
 
     /**
      * Find a sign-in candidate by e-mail or username, ignoring the current tenant scope. Only people sign in.

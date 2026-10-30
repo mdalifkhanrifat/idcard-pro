@@ -146,6 +146,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                 Route::delete('integrations/{integration}/tokens/{token}', [IntegrationTokenController::class, 'destroy'])->whereNumber('token')->name('integrations.tokens.destroy');
                 Route::apiResource('webhooks', WebhookController::class);
                 Route::post('webhooks/{webhook}/secret', [WebhookController::class, 'rotateSecret'])->name('webhooks.secret');
+                Route::post('webhooks/{webhook}/test', [WebhookController::class, 'test'])
+                    ->middleware('throttle:'.(int) config('webhooks.test_per_minute').',1')->name('webhooks.test');
             });
             Route::apiResource('roles', RoleController::class)->except('show');
             Route::get('permissions', [PermissionController::class, 'index'])->name('permissions.index');

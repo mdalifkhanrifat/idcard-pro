@@ -37,6 +37,7 @@ return [
             'events' => 'ঘটনা',
             'enabled' => 'চালু',
             'secret_rotated_at' => 'সইয়ের চাবি বদল',
+            'failure_count' => 'পরপর ব্যর্থ পাঠানো',
         ],
         'roles' => [
             'name' => 'রোলের নাম',

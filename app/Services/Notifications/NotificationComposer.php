@@ -41,17 +41,22 @@ class NotificationComposer
      * in.
      *
      * @param  string  $key  e.g. "notifications.test"
-     * @param  array<string, string>  $values  placeholder => value
+     * @param  array<string, string>|Closure(): array<string, string>  $values  placeholder => value; a closure when a value
+     *                                                                          is written differently per language (a number's digits)
      * @param  array<int, string>  $languages
      * @param  array<int, string>|null  $smsLanguages  those of $languages the short text is in (null = all)
      * @return array{languages: array<int, string>, sms_languages: array<int, string>, subject: string, body: string, sms: string}
      */
-    public function composeText(string $key, array $values, array $languages, ?array $smsLanguages = null): array
+    public function composeText(string $key, array|Closure $values, array $languages, ?array $smsLanguages = null): array
     {
-        return $this->assemble($languages, $smsLanguages ?? $languages, fn (string $language): array => array_map(
-            fn (string $part): string => NotificationSettings::fill((string) __("{$key}.{$part}", locale: $language), $values),
-            array_combine(NotificationSettings::PARTS, NotificationSettings::PARTS),
-        ));
+        return $this->assemble($languages, $smsLanguages ?? $languages, function (string $language) use ($key, $values): array {
+            $filled = $values instanceof Closure ? $values() : $values;
+
+            return array_map(
+                fn (string $part): string => NotificationSettings::fill((string) __("{$key}.{$part}", locale: $language), $filled),
+                array_combine(NotificationSettings::PARTS, NotificationSettings::PARTS),
+            );
+        });
     }
 
     /**

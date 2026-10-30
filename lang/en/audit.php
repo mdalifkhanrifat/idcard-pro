@@ -37,6 +37,7 @@ return [
             'events' => 'Events',
             'enabled' => 'On',
             'secret_rotated_at' => 'Signing secret changed',
+            'failure_count' => 'Deliveries failed in a row',
         ],
         'roles' => [
             'name' => 'Role name',

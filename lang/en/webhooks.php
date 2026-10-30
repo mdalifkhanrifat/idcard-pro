@@ -21,6 +21,8 @@ return [
         'appointment.cancelled' => 'Appointment cancelled',
         'appointment.status_changed' => 'Appointment status changed',
     ],
+    'other_events' => ['webhook.test' => 'Test'],
+    'statuses' => ['queued' => 'Waiting', 'delivered' => 'Delivered', 'failed' => 'Failed'],
     'too_many' => 'An organization can have at most :max webhooks.',
     'address' => [
         'invalid' => 'This is not a web address (like https://hr.example.com/hooks).',
@@ -37,5 +39,6 @@ return [
         'certificate' => 'The security certificate of the address could not be trusted.',
         'redirected' => 'The address answered with a move elsewhere. Moves are not followed: save the final address.',
         'rejected' => 'The address answered with an error.',
+        'disabled' => 'Nothing was sent: the webhook was turned off or deleted first.',
     ],
 ];

@@ -10,6 +10,7 @@ use App\Support\ListPage;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\LazyCollection;
 
 /**
@@ -78,6 +79,11 @@ class UserRepository extends EloquentRepository implements UserRepositoryInterfa
             ->when($filter->createdTo, fn (Builder $q, string $date) => $q->where('created_at', '<', $tenant->dayStart($date)->addDay()))
             ->orderBy($filter->sort, $filter->descending ? 'desc' : 'asc')
             ->orderBy('id', 'desc');
+    }
+
+    public function activeWithPermission(string $permission): Collection
+    {
+        return $this->query()->people()->where('status', UserStatus::Active)->permission($permission)->get();
     }
 
     public function countActiveWithRole(string $role, User $except): int

@@ -4,6 +4,7 @@ use App\Enums\NotificationStatus;
 use App\Models\Card;
 use App\Models\FamilyMember;
 use App\Models\NotificationMessage;
+use App\Services\Notifications\NotificationLogService;
 use App\Support\Tenancy\TenantContext;
 use Carbon\CarbonImmutable;
 use Laravel\Sanctum\Sanctum;
@@ -95,7 +96,7 @@ it('lists what to filter by from the registry, with what the log holds since rem
     $meta = $this->getJson('/api/v1/notifications/messages', ['Accept-Language' => 'bn'])->assertOk()->json('meta');
 
     // The registry's events in its order, then the system's, then what only the log holds
-    expect(array_column($meta['events'], 'key'))->toBe([...array_keys(config('notifications.events')), 'test', 'booking_code', 'old_event'])
+    expect(array_column($meta['events'], 'key'))->toBe([...array_keys(config('notifications.events')), ...NotificationLogService::SYSTEM_EVENTS, 'old_event'])
         ->and(collect($meta['events'])->pluck('name', 'key')->only(['card_ready', 'appointment_confirmed', 'booking_code', 'old_event'])->all())->toBe([
             'card_ready' => 'কার্ড তৈরি', 'appointment_confirmed' => 'অ্যাপয়েন্টমেন্ট নিশ্চিত হয়েছে', 'booking_code' => 'বুকিংয়ের কোড', 'old_event' => 'old_event',
         ])

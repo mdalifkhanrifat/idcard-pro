@@ -153,6 +153,14 @@ return [
     ],
 
     // A message sent by hand to check a channel (not an event of the registry)
+    // A webhook failed so often that it turned itself off (6.2)
+    'webhook_disabled' => [
+        'name' => 'Webhook turned off',
+        'subject' => '{organization.name}: webhook "{webhook}" was turned off',
+        'body' => "The webhook \"{webhook}\" of {organization.name} was turned off after {failures} deliveries in a row failed. Nothing more is sent to it.\n\nCheck the address, send a test from the Integrations page, and turn it on again.",
+        'sms' => '{organization.name}: webhook "{webhook}" was turned off after {failures} failures.',
+    ],
+
     // A one-time code proving who a person is on the public booking link (5.6)
     'booking_code' => [
         'name' => 'Booking code',

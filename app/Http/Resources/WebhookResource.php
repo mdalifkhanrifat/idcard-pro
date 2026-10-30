@@ -22,6 +22,8 @@ class WebhookResource extends JsonResource
             'url' => $this->url,
             'events' => $this->events,
             'enabled' => $this->enabled,
+            'failure_count' => $this->failure_count,
+            'disabled_at' => $this->disabled_at,
             'secret_rotated_at' => $this->secret_rotated_at,
             'created_at' => $this->created_at,
         ];

@@ -17,4 +17,9 @@ interface WebhookRepositoryInterface extends RepositoryInterface
     public function list(WebhookFilter $filter): LengthAwarePaginator;
 
     public function count(): int;
+
+    /**
+     * The webhook held until the transaction ends, deleted or not: a failure is counted on it either way.
+     */
+    public function lockForFailure(int $id): Webhook;
 }

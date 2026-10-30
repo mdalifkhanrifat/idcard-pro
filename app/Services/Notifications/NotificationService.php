@@ -9,7 +9,9 @@ use App\Models\Cardholder;
 use App\Models\NotificationMessage;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Models\Webhook;
 use App\Repositories\Contracts\NotificationMessageRepositoryInterface;
+use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Services\Reports\ReportValueText;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Support\Collection;
@@ -31,6 +33,7 @@ class NotificationService
         private NotificationMessageRepositoryInterface $messages,
         private NotificationComposer $composer,
         private TenantContext $tenantContext,
+        private UserRepositoryInterface $users,
     ) {}
 
     /**
@@ -191,12 +194,35 @@ class NotificationService
         $settings = $this->tenant()->notificationSettings();
         $words = $this->composer->composeText(
             'notifications.booking_code',
-            ['organization.name' => (string) $this->tenant()->name, 'code' => $code, 'minutes' => app(ReportValueText::class)->number($minutes)],
+            fn (): array => ['organization.name' => (string) $this->tenant()->name, 'code' => $code, 'minutes' => app(ReportValueText::class)->number($minutes)],
             $settings['languages'],
             NotificationSettings::smsLanguagesOf($settings),
         );
 
         return $this->queue(['event' => NotificationLogService::BOOKING_CODE_EVENT, 'channel' => $channel, ...self::wordsFor($channel, $words)], $recipient);
+    }
+
+    /**
+     * Tells each active person allowed to look after integrations that a webhook turned itself off, by e-mail or
+     * whichever of the organization's channels reaches them, in its languages, whatever the settings.
+     */
+    public function sendWebhookDisabled(Webhook $webhook): void
+    {
+        $settings = $this->tenant()->notificationSettings();
+        $words = $this->composer->composeText(
+            'notifications.webhook_disabled',
+            fn (): array => ['organization.name' => (string) $this->tenant()->name, 'webhook' => $webhook->name, 'failures' => app(ReportValueText::class)->number($webhook->failure_count)],
+            $settings['languages'],
+            NotificationSettings::smsLanguagesOf($settings),
+        );
+
+        foreach ($this->users->activeWithPermission('integrations.manage') as $user) {
+            $recipient = NotificationRecipient::forUser($user);
+            $channels = array_filter($settings['channels'], fn (string $channel): bool => $recipient->addressFor($channel) !== null);
+            foreach ($channels as $channel) {
+                $this->queue(['event' => NotificationLogService::WEBHOOK_DISABLED_EVENT, 'channel' => $channel, ...self::wordsFor($channel, $words)], $recipient);
+            }
+        }
     }
 
     /**

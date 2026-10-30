@@ -15,6 +15,8 @@ enum WebhookFailure: string
     case Certificate = 'certificate';
     case Redirected = 'redirected';
     case Rejected = 'rejected';
+    // Turned off or deleted before its turn came: nothing was sent, and it is no fault of the address
+    case Disabled = 'disabled';
 
     public function label(): string
     {

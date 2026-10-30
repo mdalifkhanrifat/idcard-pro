@@ -36,4 +36,9 @@ class WebhookRepository extends EloquentRepository implements WebhookRepositoryI
     {
         return $this->query()->count();
     }
+
+    public function lockForFailure(int $id): Webhook
+    {
+        return $this->query()->withTrashed()->lockForUpdate()->findOrFail($id);
+    }
 }
