@@ -124,7 +124,7 @@ class BiometricCapture extends Model
      */
     public function capturer(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'captured_by');
+        return $this->belongsTo(User::class, 'captured_by')->withTrashed();
     }
 
     /**

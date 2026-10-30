@@ -78,6 +78,6 @@ class CardPrint extends Model
      */
     public function printer(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'printed_by');
+        return $this->belongsTo(User::class, 'printed_by')->withTrashed();
     }
 }

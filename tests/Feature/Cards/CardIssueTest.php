@@ -17,6 +17,17 @@ beforeEach(function () {
     $this->year = now()->format('y');
 });
 
+it('still names who issued a card after that user is deleted', function () {
+    $operator = tenantUser($this->tenant, 'Operator');
+    Sanctum::actingAs($operator);
+    $id = $this->postJson($this->url, ['template' => $this->template->public_id, 'reason' => 'new', 'issue_date' => '2026-03-01'])->assertCreated()->json('data.id');
+
+    Sanctum::actingAs($this->owner);
+    $this->deleteJson("/api/v1/users/{$operator->public_id}")->assertNoContent();
+
+    $this->getJson("/api/v1/cards/{$id}")->assertOk()->assertJsonPath('data.issued_by', $operator->name);
+});
+
 it('issues a card with a new number, the design snapshot and the expiry from the template', function () {
     Sanctum::actingAs($this->owner);
     $signatory = app(TenantContext::class)->run($this->tenant, fn () => Signatory::factory()->create(['tenant_id' => $this->tenant->id, 'authority_type_id' => $this->template->authority_type_id ?? masterItem($this->tenant, ['type' => 'authority_type', 'name' => 'HQ'])->id]));

@@ -94,7 +94,7 @@ class Appointment extends Model
      */
     public function bookedBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'booked_by_id');
+        return $this->belongsTo(User::class, 'booked_by_id')->withTrashed();
     }
 
     /**
@@ -102,7 +102,7 @@ class Appointment extends Model
      */
     public function statusChangedBy(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'status_changed_by_id');
+        return $this->belongsTo(User::class, 'status_changed_by_id')->withTrashed();
     }
 
     /**

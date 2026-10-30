@@ -13,6 +13,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Support\LazyCollection;
 use Spatie\Activitylog\Models\Activity;
 
@@ -52,7 +53,7 @@ class ActivityRepository implements ActivityRepositoryInterface
         return $this->forTenant()
             ->when($filter->logName, fn (Builder $q, string $v) => $q->where('log_name', $v))
             ->when($filter->event, fn (Builder $q, string $v) => $q->where('event', $v))
-            ->when($filter->causerPublicId, fn (Builder $q, string $v) => $q->whereIn('causer_id', User::query()->where('public_id', $v)->select('id')))
+            ->when($filter->causerPublicId, fn (Builder $q, string $v) => $q->whereIn('causer_id', User::withTrashed()->where('public_id', $v)->select('id')))
             ->when($filter->dateFrom, fn (Builder $q, string $v) => $q->where('created_at', '>=', app(TenantContext::class)->dayStart($v)))
             ->when($filter->dateTo, fn (Builder $q, string $v) => $q->where('created_at', '<', app(TenantContext::class)->dayStart($v)->addDay()));
     }
@@ -76,14 +77,14 @@ class ActivityRepository implements ActivityRepositoryInterface
     private function causers(): array
     {
         return ['causer' => fn (MorphTo $causer): MorphTo => $causer->constrain([
-            User::class => fn (Builder $query) => $query->select('id', 'name', 'email'),
+            User::class => fn (Builder $query) => $query->withoutGlobalScope(SoftDeletingScope::class)->select('id', 'name', 'email'),
             Cardholder::class => fn (Builder $query) => $query->select('id', 'full_name', 'employee_no'),
         ])];
     }
 
     /**
-     * What this organization's audit shows: changes made by its users (User::query() is tenant-scoped) and by its
-     * cardholders acting for themselves (the public booking link; Cardholder::query() is tenant-scoped too), and
+     * What this organization's audit shows: changes made by its users (tenant-scoped; a deleted user's work stays
+     * on record, with their name) and by its cardholders acting for themselves (the public booking link; Cardholder::query() is tenant-scoped too), and
      * what the system did to the organization itself with no one acting (e.g. deleting old sent messages, a
      * setting changed from the server's console). Nothing of another organization.
      *
@@ -94,7 +95,7 @@ class ActivityRepository implements ActivityRepositoryInterface
         $tenantId = app(TenantContext::class)->id();
 
         return Activity::query()->where(function (Builder $query) use ($tenantId): void {
-            $query->where(fn (Builder $byUsers) => $byUsers->where('causer_type', (new User)->getMorphClass())->whereIn('causer_id', User::query()->select('id')))
+            $query->where(fn (Builder $byUsers) => $byUsers->where('causer_type', (new User)->getMorphClass())->whereIn('causer_id', User::withTrashed()->select('id')))
                 ->orWhere(fn (Builder $byCardholders) => $byCardholders->where('causer_type', (new Cardholder)->getMorphClass())->whereIn('causer_id', Cardholder::query()->select('id')))
                 ->when($tenantId !== null, fn (Builder $query) => $query->orWhere(fn (Builder $bySystem) => $bySystem
                     ->whereNull('causer_id')

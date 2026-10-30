@@ -110,7 +110,7 @@ class NotificationMessage extends Model
      */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class)->withTrashed();
     }
 
     /**
@@ -138,7 +138,7 @@ class NotificationMessage extends Model
      */
     public function sender(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'sent_by');
+        return $this->belongsTo(User::class, 'sent_by')->withTrashed();
     }
 
     /**

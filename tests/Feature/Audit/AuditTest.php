@@ -27,6 +27,24 @@ it('shows only changes made by users of the current organization', function () {
         ->assertJsonPath('data.0.causer.email', 'a@example.com');
 });
 
+it('keeps what a user did after that user is deleted, with their name, on the page and by the who filter', function () {
+    $operator = tenantUser($this->tenant, 'Operator');
+
+    Sanctum::actingAs($operator);
+    $this->postJson('/api/v1/cardholders', ['full_name' => 'Made Before Leaving'])->assertCreated();
+
+    Sanctum::actingAs($this->owner);
+    $this->deleteJson("/api/v1/users/{$operator->public_id}")->assertNoContent();
+
+    $this->getJson('/api/v1/audit/activities?filter[log_name]=cardholders')
+        ->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.causer.name', $operator->name);
+    $this->getJson("/api/v1/audit/activities?filter[causer]={$operator->public_id}&filter[log_name]=cardholders")
+        ->assertJsonCount(1, 'data');
+    expect($this->getJson('/api/v1/reports/audit-changes?filter[log_name]=cardholders&columns[]=audit.who')->json('data.0.values')['audit.who'])->toBe($operator->name);
+});
+
 it('lists in the filter every kind of record this organization changed, including new modules', function () {
     Sanctum::actingAs($this->otherOwner);
     $this->postJson('/api/v1/cardholders', ['full_name' => 'Beta Person'])->assertCreated();
