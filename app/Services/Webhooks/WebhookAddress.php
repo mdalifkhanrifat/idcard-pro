@@ -2,6 +2,8 @@
 
 namespace App\Services\Webhooks;
 
+use Symfony\Component\HttpFoundation\IpUtils;
+
 /**
  * Whether an address may be told anything. A webhook makes this server call out, so an address must not lead back
  * inside: to itself, its database, or the network around it (server-side request forgery).
@@ -15,6 +17,9 @@ class WebhookAddress
     private const INNER_NAMES = ['localhost', 'localhost.localdomain', 'ip6-localhost', 'ip6-loopback'];
 
     private const INNER_ENDINGS = ['.localhost', '.local', '.internal', '.intranet', '.lan', '.home', '.corp'];
+
+    /** Not reachable on the public internet either, though IpUtils::PRIVATE_SUBNETS leaves them out. */
+    private const ALSO_INNER = ['192.0.0.0/24', '192.88.99.0/24', '224.0.0.0/4', '100::/64', 'fec0::/10', 'ff00::/8'];
 
     /**
      * What is wrong with the address, in the reader's language; null when it may be used.
@@ -30,6 +35,10 @@ class WebhookAddress
         }
         if (isset($parts['user']) || isset($parts['pass'])) {
             return (string) __('webhooks.address.credentials');
+        }
+        $onlyHosts = (array) config('webhooks.only_hosts');
+        if ($onlyHosts !== [] && ! in_array($host, $onlyHosts, true)) {
+            return (string) __('webhooks.address.only_hosts');
         }
         if ((bool) config('webhooks.allow_private')) {
             return null;
@@ -57,15 +66,11 @@ class WebhookAddress
     }
 
     /**
-     * Also what a resolved address must be at delivery.
+     * Also what a resolved address must be at delivery. An IPv4 address carried inside IPv6 (mapped, 6to4, NAT64,
+     * Teredo) is never public here, whatever it carries.
      */
     public static function isPublic(string $ip): bool
     {
-        // An IPv4 address written inside IPv6 is that IPv4 address
-        if (str_starts_with(strtolower($ip), '::ffff:')) {
-            $ip = substr($ip, 7);
-        }
-
-        return filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false;
+        return filter_var($ip, FILTER_VALIDATE_IP) !== false && ! IpUtils::isPrivateIp($ip) && ! IpUtils::checkIp($ip, self::ALSO_INNER);
     }
 }

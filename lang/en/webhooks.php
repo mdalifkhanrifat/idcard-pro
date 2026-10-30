@@ -27,5 +27,15 @@ return [
         'credentials' => 'Put no name or password in the address; deliveries are signed instead.',
         'https' => 'Use https, so what is sent cannot be read on the way.',
         'inner' => 'This address leads inside a private network. Only a public address can be used.',
+        'only_hosts' => 'This installation sends only to its own test receiver.',
+    ],
+    'failures' => [
+        'refused' => 'Nothing was sent: this address may not be used.',
+        'unresolved' => 'This address could not be found.',
+        'timeout' => 'The address did not answer in time.',
+        'unreachable' => 'Could not connect to the address.',
+        'certificate' => 'The security certificate of the address could not be trusted.',
+        'redirected' => 'The address answered with a move elsewhere. Moves are not followed: save the final address.',
+        'rejected' => 'The address answered with an error.',
     ],
 ];

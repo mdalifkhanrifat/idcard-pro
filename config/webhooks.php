@@ -12,6 +12,12 @@
 | It belongs to the installation, never to an organization: it is what keeps a webhook from reaching this server's
 | own services.
 |
+| `only_hosts`, when it names any, is the only place this installation sends to: a development machine lists its own
+| receiver, so nothing can leave it whatever address an organization saves. Empty in production.
+|
+| An address is given `connect_timeout` seconds to connect and `timeout` seconds to answer. Whatever it answers beyond
+| the status is thrown away.
+|
 */
 
 return [
@@ -25,5 +31,11 @@ return [
     'max_per_organization' => 20,
 
     'allow_private' => (bool) env('WEBHOOKS_ALLOW_PRIVATE', false),
+
+    'only_hosts' => array_values(array_filter(array_map(trim(...), explode(',', strtolower((string) env('WEBHOOKS_ONLY_HOSTS', '')))))),
+
+    'connect_timeout' => 5,
+
+    'timeout' => 15,
 
 ];
