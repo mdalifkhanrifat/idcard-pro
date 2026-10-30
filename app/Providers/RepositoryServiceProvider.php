@@ -20,6 +20,7 @@ use App\Repositories\Contracts\CardTemplateRepositoryInterface;
 use App\Repositories\Contracts\CardVerificationRepositoryInterface;
 use App\Repositories\Contracts\CustomFieldRepositoryInterface;
 use App\Repositories\Contracts\FamilyMemberRepositoryInterface;
+use App\Repositories\Contracts\IntegrationRepositoryInterface;
 use App\Repositories\Contracts\LoginEventRepositoryInterface;
 use App\Repositories\Contracts\MasterDataRepositoryInterface;
 use App\Repositories\Contracts\NotificationMessageRepositoryInterface;
@@ -50,6 +51,7 @@ use App\Repositories\Eloquent\CardTemplateRepository;
 use App\Repositories\Eloquent\CardVerificationRepository;
 use App\Repositories\Eloquent\CustomFieldRepository;
 use App\Repositories\Eloquent\FamilyMemberRepository;
+use App\Repositories\Eloquent\IntegrationRepository;
 use App\Repositories\Eloquent\LoginEventRepository;
 use App\Repositories\Eloquent\MasterDataRepository;
 use App\Repositories\Eloquent\NotificationMessageRepository;
@@ -99,6 +101,7 @@ class RepositoryServiceProvider extends ServiceProvider
         CardTemplateRepositoryInterface::class => CardTemplateRepository::class,
         CardTemplateElementRepositoryInterface::class => CardTemplateElementRepository::class,
         UserRepositoryInterface::class => UserRepository::class,
+        IntegrationRepositoryInterface::class => IntegrationRepository::class,
         RoleRepositoryInterface::class => RoleRepository::class,
         TenantRepositoryInterface::class => TenantRepository::class,
         ActivityRepositoryInterface::class => ActivityRepository::class,

@@ -21,6 +21,8 @@ return [
             'authority_type_id' => 'কর্তৃপক্ষের ধরন',
         ],
         'user' => [
+            'kind' => 'অ্যাকাউন্টের ধরন',
+            'description' => 'বিবরণ',
             'username' => 'ইউজারনেম',
             'roles' => 'রোল',
         ],
@@ -105,6 +107,9 @@ return [
     // যেসব মানের নাম অ্যাপ শুধু পাতায় দেয় (config audit.values)
     'values' => [
         'locale' => ['en' => 'ইংরেজি', 'bn' => 'বাংলা'],
+        'user_kind' => ['person' => 'ব্যক্তি', 'integration' => 'ইন্টিগ্রেশন'],
+        'permission_module' => ['users' => 'ইউজার', 'roles' => 'রোল', 'audit' => 'অডিট লগ', 'settings' => 'প্রতিষ্ঠানের সেটিংস', 'master_data' => 'মাস্টার ডেটা', 'cardholders' => 'কার্ডধারী', 'signatories' => 'সইকারী', 'templates' => 'কার্ড টেমপ্লেট', 'fonts' => 'ফন্ট', 'images' => 'ছবির লাইব্রেরি', 'cards' => 'ইস্যু হওয়া কার্ড', 'biometrics' => 'বায়োমেট্রিক', 'reports' => 'রিপোর্ট', 'notifications' => 'নোটিফিকেশন', 'appointments' => 'অ্যাপয়েন্টমেন্ট', 'integrations' => 'ইন্টিগ্রেশন'],
+        'permission_ability' => ['view' => 'দেখা', 'create' => 'তৈরি', 'update' => 'সম্পাদনা', 'delete' => 'মোছা', 'import' => 'ইমপোর্ট', 'issue' => 'ইস্যু', 'print' => 'প্রিন্ট', 'revoke' => 'বাতিল', 'enroll' => 'নেওয়া', 'override_requirements' => 'শর্ত পার করা', 'export' => 'রপ্তানি', 'send' => 'পাঠানো', 'book' => 'বুক করা', 'manage' => 'পরিচালনা'],
         'tenant_status' => ['active' => 'সক্রিয়', 'suspended' => 'স্থগিত'],
         'custom_field_type' => ['text' => 'টেক্সট', 'textarea' => 'বড় টেক্সট', 'number' => 'সংখ্যা', 'date' => 'তারিখ', 'select' => 'ড্রপডাউন', 'checkbox' => 'হ্যাঁ / না'],
         'custom_field_entity' => ['cardholder' => 'কার্ডধারী', 'family_member' => 'পরিবারের সদস্য'],

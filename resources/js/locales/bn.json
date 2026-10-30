@@ -169,7 +169,8 @@
             "biometrics": "বায়োমেট্রিক",
             "reports": "রিপোর্ট",
             "notifications": "নোটিফিকেশন",
-            "appointments": "অ্যাপয়েন্টমেন্ট"
+            "appointments": "অ্যাপয়েন্টমেন্ট",
+            "integrations": "ইন্টিগ্রেশন"
         },
         "abilities": {
             "view": "দেখা",

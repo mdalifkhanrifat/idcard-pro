@@ -169,7 +169,8 @@
             "biometrics": "Biometrics",
             "reports": "Reports",
             "notifications": "Notifications",
-            "appointments": "Appointments"
+            "appointments": "Appointments",
+            "integrations": "Integrations"
         },
         "abilities": {
             "view": "View",

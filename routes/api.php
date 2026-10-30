@@ -29,6 +29,7 @@ use App\Http\Controllers\Api\V1\CardTemplateElementController;
 use App\Http\Controllers\Api\V1\CardVerificationController;
 use App\Http\Controllers\Api\V1\CustomFieldController;
 use App\Http\Controllers\Api\V1\FamilyMemberController;
+use App\Http\Controllers\Api\V1\IntegrationController;
 use App\Http\Controllers\Api\V1\MasterDataController;
 use App\Http\Controllers\Api\V1\NotificationMessageController;
 use App\Http\Controllers\Api\V1\NotificationSettingsController;
@@ -121,19 +122,22 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::prefix('auth')->name('auth.')->group(function () {
             Route::post('logout', [SessionController::class, 'destroy'])->name('logout');
             Route::get('me', [CurrentUserController::class, 'show'])->name('me');
-            Route::put('me', [CurrentUserController::class, 'update'])->name('me.update');
-            Route::put('password', [PasswordController::class, 'update'])->name('password.update');
-            Route::post('two-factor', [TwoFactorController::class, 'store'])->name('two-factor.enable');
-            Route::post('two-factor/confirm', [TwoFactorController::class, 'confirm'])->name('two-factor.confirm');
-            Route::delete('two-factor', [TwoFactorController::class, 'destroy'])->name('two-factor.disable');
-            Route::get('tokens', [ApiTokenController::class, 'index'])->name('tokens.index');
-            Route::post('tokens', [ApiTokenController::class, 'store'])->name('tokens.store');
-            Route::delete('tokens/{tokenId}', [ApiTokenController::class, 'destroy'])->name('tokens.destroy');
+            Route::middleware('person')->group(function () {
+                Route::put('me', [CurrentUserController::class, 'update'])->name('me.update');
+                Route::put('password', [PasswordController::class, 'update'])->name('password.update');
+                Route::post('two-factor', [TwoFactorController::class, 'store'])->name('two-factor.enable');
+                Route::post('two-factor/confirm', [TwoFactorController::class, 'confirm'])->name('two-factor.confirm');
+                Route::delete('two-factor', [TwoFactorController::class, 'destroy'])->name('two-factor.disable');
+                Route::get('tokens', [ApiTokenController::class, 'index'])->name('tokens.index');
+                Route::post('tokens', [ApiTokenController::class, 'store'])->name('tokens.store');
+                Route::delete('tokens/{tokenId}', [ApiTokenController::class, 'destroy'])->name('tokens.destroy');
+            });
         });
 
         // Tenant-scoped administration
         Route::middleware('tenant.required')->group(function () {
             Route::apiResource('users', UserController::class);
+            Route::apiResource('integrations', IntegrationController::class)->middleware('person');
             Route::apiResource('roles', RoleController::class)->except('show');
             Route::get('permissions', [PermissionController::class, 'index'])->name('permissions.index');
             Route::get('audit/activities', [AuditController::class, 'activities'])->name('audit.activities');

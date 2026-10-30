@@ -11,6 +11,7 @@ use App\Enums\QualificationKind;
 use App\Enums\TemplateAudience;
 use App\Enums\TemplateOrientation;
 use App\Enums\TenantStatus;
+use App\Enums\UserKind;
 use App\Enums\UserStatus;
 use App\Models\AppointmentLocation;
 use App\Models\Cardholder;
@@ -54,6 +55,7 @@ return [
         CardholderStatus::class => 'reports.values.cardholder_status',
         CustomFieldType::class => 'audit.values.custom_field_type',
         EmploymentType::class => 'cards.values.employment_type',
+        UserKind::class => 'audit.values.user_kind',
         FamilyRelation::class => 'cards.values.relation',
         QualificationKind::class => 'reports.values.qualification_kind',
         TemplateAudience::class => 'reports.values.audience',
@@ -94,6 +96,11 @@ return [
         'settings.appointments.verification.method' => 'appointments.verification',
         'settings.appointments.verification.code_channels' => 'notifications.channels',
         'settings.reports.*.columns' => 'reports.columns',
+    ],
+
+    // Values of two parts joined by a dot ("cards.view"), each part named by its own lang array: "Issued cards: View"
+    'joined' => [
+        'roles.permissions' => ['audit.values.permission_module', 'audit.values.permission_ability'],
     ],
 
     // A reference ("rank_id", "location_id") is named by the record it points to (its model's relation named after

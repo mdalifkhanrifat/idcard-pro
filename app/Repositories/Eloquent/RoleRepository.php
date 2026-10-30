@@ -2,11 +2,14 @@
 
 namespace App\Repositories\Eloquent;
 
+use App\Enums\UserKind;
 use App\Models\Role;
+use App\Models\User;
 use App\Repositories\Contracts\RoleRepositoryInterface;
 use App\Support\ListPage;
 use App\Support\Permissions\PermissionRegistry;
 use App\Support\Tenancy\TenantContext;
+use Closure;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
@@ -22,7 +25,7 @@ class RoleRepository implements RoleRepositoryInterface
 
     public function all(): Collection
     {
-        return $this->query()->with('permissions')->withCount('users')->orderBy('name')->get();
+        return $this->query()->with('permissions')->withCount(['users' => $this->people()])->orderBy('name')->get();
     }
 
     public function report(?string $search, string $sort, bool $descending, int $perPage): LengthAwarePaginator
@@ -36,13 +39,23 @@ class RoleRepository implements RoleRepositoryInterface
     }
 
     /**
+     * The people in a role, for its count: integration accounts are not "users" to read about.
+     *
+     * @return Closure(Builder<User>): Builder<User>
+     */
+    private function people(): Closure
+    {
+        return fn (Builder $query): Builder => $query->where('kind', UserKind::Person);
+    }
+
+    /**
      * @return Builder<Role>
      */
     private function reportQuery(?string $search, string $sort, bool $descending): Builder
     {
         return $this->query()
             ->with('permissions')
-            ->withCount(['users', 'permissions'])
+            ->withCount(['users' => $this->people(), 'permissions'])
             ->when($search, fn (Builder $q, string $value) => $q->where('name', 'like', "%{$value}%"))
             ->orderBy($sort, $descending ? 'desc' : 'asc')
             ->orderBy('id');

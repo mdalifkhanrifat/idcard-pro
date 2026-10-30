@@ -59,6 +59,7 @@ class UserRepository extends EloquentRepository implements UserRepositoryInterfa
         $tenant = app(TenantContext::class);
 
         return $this->query()
+            ->people()
             ->when($filter->search, fn (Builder $q, string $search) => $q->where(fn (Builder $w) => $w
                 ->where('name', 'like', "%{$search}%")
                 ->orWhere('email', 'like', "%{$search}%")
@@ -94,6 +95,7 @@ class UserRepository extends EloquentRepository implements UserRepositoryInterfa
 
         return User::query()
             ->withoutGlobalScopes()
+            ->people()
             ->whereNull('deleted_at')
             ->where($column, $column === 'email' ? strtolower($identifier) : $identifier)
             ->when(

@@ -2,11 +2,14 @@
 
 namespace App\Models;
 
+use App\Enums\UserKind;
 use App\Enums\UserStatus;
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -23,8 +26,10 @@ use Spatie\Permission\Traits\HasRoles;
  * @property string $public_id
  * @property int|null $tenant_id
  * @property bool $is_platform_admin
+ * @property UserKind $kind
  * @property string $name
- * @property string $email
+ * @property string|null $description
+ * @property string|null $email
  * @property string|null $username
  * @property string|null $phone
  * @property string|null $locale
@@ -40,7 +45,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Carbon|null $two_factor_confirmed_at
  * @property-read Tenant|null $tenant
  */
-#[Fillable(['tenant_id', 'name', 'email', 'username', 'phone', 'locale', 'avatar_path', 'status', 'password'])]
+#[Fillable(['tenant_id', 'kind', 'name', 'description', 'email', 'username', 'phone', 'locale', 'avatar_path', 'status', 'password'])]
 #[Hidden(['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'])]
 class User extends Authenticatable
 {
@@ -52,6 +57,7 @@ class User extends Authenticatable
      */
     protected $attributes = [
         'is_platform_admin' => false,
+        'kind' => 'person',
         'status' => 'active',
         'failed_login_attempts' => 0,
     ];
@@ -86,8 +92,34 @@ class User extends Authenticatable
             'two_factor_recovery_codes' => 'encrypted:array',
             'two_factor_confirmed_at' => 'datetime',
             'is_platform_admin' => 'boolean',
+            'kind' => UserKind::class,
             'status' => UserStatus::class,
         ];
+    }
+
+    /**
+     * People only, without the organization's integration accounts.
+     *
+     * @param  Builder<User>  $query
+     */
+    #[Scope]
+    protected function people(Builder $query): void
+    {
+        $query->where($query->qualifyColumn('kind'), UserKind::Person);
+    }
+
+    /**
+     * @param  Builder<User>  $query
+     */
+    #[Scope]
+    protected function integrations(Builder $query): void
+    {
+        $query->where($query->qualifyColumn('kind'), UserKind::Integration);
+    }
+
+    public function isIntegration(): bool
+    {
+        return $this->kind === UserKind::Integration;
     }
 
     public function isActive(): bool
@@ -108,7 +140,7 @@ class User extends Authenticatable
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['name', 'email', 'username', 'phone', 'status', 'locale'])
+            ->logOnly(['kind', 'name', 'description', 'email', 'username', 'phone', 'status', 'locale'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->useLogName('user');

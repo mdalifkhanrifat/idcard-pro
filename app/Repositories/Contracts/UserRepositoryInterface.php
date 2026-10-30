@@ -42,7 +42,7 @@ interface UserRepositoryInterface extends RepositoryInterface
     public function countActiveWithRole(string $role, User $except): int;
 
     /**
-     * Find a sign-in candidate by e-mail or username, ignoring the current tenant scope.
+     * Find a sign-in candidate by e-mail or username, ignoring the current tenant scope. Only people sign in.
      * A null tenant id means a platform administrator.
      */
     public function findForLogin(?int $tenantId, string $identifier): ?User;

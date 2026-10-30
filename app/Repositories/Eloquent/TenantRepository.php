@@ -3,6 +3,7 @@
 namespace App\Repositories\Eloquent;
 
 use App\Data\Tenants\TenantFilter;
+use App\Enums\UserKind;
 use App\Models\Tenant;
 use App\Repositories\Contracts\TenantRepositoryInterface;
 use App\Support\ListPage;
@@ -22,7 +23,7 @@ class TenantRepository extends EloquentRepository implements TenantRepositoryInt
     public function list(TenantFilter $filter): LengthAwarePaginator
     {
         return $this->query()
-            ->withCount('users')
+            ->withCount(['users' => fn (Builder $q) => $q->where('kind', UserKind::Person)])
             ->when($filter->name, fn (Builder $q, string $name) => $q->where('name', 'like', "%{$name}%"))
             ->when($filter->slug, fn (Builder $q, string $slug) => $q->where('slug', $slug))
             ->when($filter->status, fn (Builder $q, string $status) => $q->where('status', $status))

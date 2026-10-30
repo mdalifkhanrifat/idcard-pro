@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\EnsurePerson;
 use App\Http\Middleware\EnsurePlatformAdmin;
 use App\Http\Middleware\RequirePublicBookingSession;
 use App\Http\Middleware\RequireTenant;
@@ -27,6 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant' => ResolveTenant::class,
             'tenant.required' => RequireTenant::class,
             'platform.admin' => EnsurePlatformAdmin::class,
+            'person' => EnsurePerson::class,
             'public.booking' => ResolvePublicBookingTenant::class,
             'public.booking.session' => RequirePublicBookingSession::class,
         ]);

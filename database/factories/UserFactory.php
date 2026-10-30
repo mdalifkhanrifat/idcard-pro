@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\UserKind;
 use App\Enums\UserStatus;
 use App\Models\Tenant;
 use App\Models\User;
@@ -51,6 +52,14 @@ class UserFactory extends Factory
     public function inactive(): static
     {
         return $this->state(fn (array $attributes) => ['status' => UserStatus::Inactive]);
+    }
+
+    /**
+     * An organization's account for another system.
+     */
+    public function integration(): static
+    {
+        return $this->state(fn (array $attributes) => ['kind' => UserKind::Integration, 'email' => null, 'username' => null, 'email_verified_at' => null]);
     }
 
     public function platformAdmin(): static

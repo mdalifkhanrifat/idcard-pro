@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
@@ -54,6 +55,11 @@ class AppServiceProvider extends ServiceProvider
 
         // Platform administrators may do anything inside the tenant they are acting on.
         Gate::before(fn (User $user) => $user->is_platform_admin ? true : null);
+
+        // Users and integration accounts share a table but are managed apart: the users API can never reach an
+        // account (its role, password or status), nor the other way round
+        Route::bind('user', fn (string $id) => User::query()->people()->where('public_id', $id)->firstOrFail());
+        Route::bind('integration', fn (string $id) => User::query()->integrations()->where('public_id', $id)->firstOrFail());
 
         // Password complexity. `uncompromised()` is intentionally not used: it sends
         // password hash prefixes to an external service (haveibeenpwned.com).
