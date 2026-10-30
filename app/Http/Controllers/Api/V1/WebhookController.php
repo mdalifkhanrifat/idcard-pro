@@ -27,7 +27,7 @@ class WebhookController extends Controller
     public function index(ListWebhooksRequest $request): AnonymousResourceCollection
     {
         return WebhookResource::collection($this->webhooks->list($request->toFilter()))
-            ->additional(['meta' => ['events' => WebhookEvents::options()]]);
+            ->additional(['meta' => ['events' => WebhookEvents::options($request->user())]]);
     }
 
     /**
@@ -35,7 +35,7 @@ class WebhookController extends Controller
      */
     public function store(SaveWebhookRequest $request): JsonResponse
     {
-        return $this->withSecret($this->webhooks->create($request->validated()), 201);
+        return $this->withSecret($this->webhooks->create($request->validated(), $request->user()), 201);
     }
 
     public function show(Webhook $webhook): WebhookResource
@@ -47,7 +47,7 @@ class WebhookController extends Controller
 
     public function update(SaveWebhookRequest $request, Webhook $webhook): WebhookResource
     {
-        return new WebhookResource($this->webhooks->update($webhook, $request->validated()));
+        return new WebhookResource($this->webhooks->update($webhook, $request->validated(), $request->user()));
     }
 
     public function rotateSecret(Webhook $webhook): JsonResponse

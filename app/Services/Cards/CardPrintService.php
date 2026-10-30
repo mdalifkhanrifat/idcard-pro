@@ -82,6 +82,7 @@ class CardPrintService
             return $prints;
         });
         $this->notifications->firstPrinted($firstPrinted);
+        $this->notifications->printed($prints->pluck('card'));
 
         return $prints;
     }

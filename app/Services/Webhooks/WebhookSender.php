@@ -37,7 +37,7 @@ class WebhookSender
             return new WebhookResult($pin);
         }
 
-        $body = $delivery->body();
+        $body = $delivery->payload;
         $timestamp = (string) now()->getTimestamp();
 
         try {

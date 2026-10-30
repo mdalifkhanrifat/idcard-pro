@@ -21,7 +21,7 @@ class WebhookDeliveryFactory extends Factory
             'tenant_id' => Tenant::factory(),
             'webhook_id' => Webhook::factory(),
             'event' => 'cardholder.created',
-            'payload' => ['id' => fake()->uuid(), 'event' => 'cardholder.created', 'occurred_at' => now()->toIso8601String(), 'tenant' => 'alpha', 'data' => []],
+            'payload' => json_encode(['id' => fake()->uuid(), 'event' => 'cardholder.created', 'occurred_at' => now()->toIso8601String(), 'tenant' => 'alpha', 'data' => (object) []]),
         ];
     }
 }

@@ -14,7 +14,7 @@ return new class extends Migration
             $table->foreignId('tenant_id')->constrained()->cascadeOnDelete();
             $table->foreignId('webhook_id')->constrained()->cascadeOnDelete();
             $table->string('event', 60);
-            // Text, not JSON: MySQL would reorder the keys of what a receiver is told
+            // The exact text sent: a JSON column would reorder its keys in MySQL
             $table->longText('payload');
             $table->string('status', 20)->default('queued');
             $table->unsignedSmallInteger('attempts')->default(0);

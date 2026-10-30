@@ -5,6 +5,7 @@ namespace App\Repositories\Contracts;
 use App\Data\Webhooks\WebhookFilter;
 use App\Models\Webhook;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 /**
  * @extends RepositoryInterface<Webhook>
@@ -17,6 +18,13 @@ interface WebhookRepositoryInterface extends RepositoryInterface
     public function list(WebhookFilter $filter): LengthAwarePaginator;
 
     public function count(): int;
+
+    /**
+     * The webhooks that are on and chose this event.
+     *
+     * @return Collection<int, Webhook>
+     */
+    public function listeningTo(string $event): Collection;
 
     /**
      * The webhook held until the transaction ends, deleted or not: a failure is counted on it either way.

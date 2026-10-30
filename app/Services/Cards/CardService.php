@@ -17,7 +17,10 @@ use Illuminate\Validation\ValidationException;
  */
 class CardService
 {
-    public function __construct(private CardRepositoryInterface $cards) {}
+    public function __construct(
+        private CardRepositoryInterface $cards,
+        private CardNotifications $notifications,
+    ) {}
 
     /**
      * @return LengthAwarePaginator<int, Card>
@@ -59,7 +62,12 @@ class CardService
             $changes['expiry_date'] = $expiry;
         }
 
-        return $this->cards->update($card, $changes);
+        $updated = $this->cards->update($card, $changes);
+        if ($updated->wasChanged()) {
+            $this->notifications->updated($updated);
+        }
+
+        return $updated;
     }
 
     /**
@@ -71,12 +79,15 @@ class CardService
             throw new BusinessRuleException(__('cards.lifecycle.not_active'));
         }
 
-        return $this->cards->update($card, [
+        $revoked = $this->cards->update($card, [
             'status' => CardStatus::Revoked,
             'status_changed_at' => now(),
             'status_note' => $note,
             'active_number_key' => null,
             'active_holder_key' => null,
         ]);
+        $this->notifications->revoked($revoked);
+
+        return $revoked;
     }
 }

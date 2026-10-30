@@ -32,6 +32,13 @@ return [
         'appointment' => ['appointment.booked', 'appointment.confirmed', 'appointment.moved', 'appointment.cancelled', 'appointment.status_changed'],
     ],
 
+    // What a person must be allowed to see to send a group's events somewhere: a webhook hands that data over
+    'requires' => [
+        'cardholder' => 'cardholders.view',
+        'card' => 'cards.view',
+        'appointment' => 'appointments.view',
+    ],
+
     'max_per_organization' => 20,
 
     'allow_private' => (bool) env('WEBHOOKS_ALLOW_PRIVATE', false),

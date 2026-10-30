@@ -22,7 +22,7 @@ use Illuminate\Support\Carbon;
  * @property int $tenant_id
  * @property int $webhook_id
  * @property string $event
- * @property array<string, mixed> $payload
+ * @property string $payload the exact JSON sent and signed; decoded, an empty object would come back a list
  * @property WebhookDeliveryStatus $status
  * @property int $attempts
  * @property int|null $response_code
@@ -65,7 +65,6 @@ class WebhookDelivery extends Model
     protected function casts(): array
     {
         return [
-            'payload' => 'array',
             'status' => WebhookDeliveryStatus::class,
             'failure' => WebhookFailure::class,
             'delivered_at' => 'datetime',
@@ -80,13 +79,5 @@ class WebhookDelivery extends Model
     public function webhook(): BelongsTo
     {
         return $this->belongsTo(Webhook::class)->withTrashed();
-    }
-
-    /**
-     * The exact text sent and signed.
-     */
-    public function body(): string
-    {
-        return json_encode($this->payload, JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
     }
 }

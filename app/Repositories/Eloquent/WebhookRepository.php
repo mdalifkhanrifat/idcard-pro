@@ -8,6 +8,7 @@ use App\Repositories\Contracts\WebhookRepositoryInterface;
 use App\Support\ListPage;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 
 /**
  * @extends EloquentRepository<Webhook>
@@ -35,6 +36,15 @@ class WebhookRepository extends EloquentRepository implements WebhookRepositoryI
     public function count(): int
     {
         return $this->query()->count();
+    }
+
+    public function listeningTo(string $event): Collection
+    {
+        // An organization has a handful at most: read here rather than one JSON query per database
+        return $this->query()->where('enabled', true)->get()
+            ->filter(fn (Webhook $webhook): bool => in_array($event, $webhook->events, true))
+            ->values()
+            ->toBase();
     }
 
     public function lockForFailure(int $id): Webhook

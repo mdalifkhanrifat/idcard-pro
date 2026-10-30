@@ -188,6 +188,7 @@ class CardIssueService
                 $this->printing->recordPast($card, $data->lastPrintedAt, CardPrint::METHOD_IMPORT);
                 $card->refresh();
             }
+            $this->notifications->imported($card);
 
             return $card;
         });
@@ -247,6 +248,7 @@ class CardIssueService
 
         if ($current !== null) {
             $this->cards->update($current, ['replaced_by_id' => $card->id]);
+            $this->notifications->updated($current);
         }
         $this->cards->recordAssets($card, $this->assets($card->layout));
         if ($keepBiometrics) {

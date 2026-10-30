@@ -12,6 +12,7 @@ use App\Repositories\Contracts\CardRepositoryInterface;
 use App\Repositories\Contracts\MasterDataRepositoryInterface;
 use App\Services\Biometrics\BiometricService;
 use App\Services\CustomFields\CustomFieldService;
+use App\Services\Webhooks\WebhookNotifier;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 /**
@@ -27,6 +28,7 @@ class CardholderService
         private CardRepositoryInterface $cards,
         private BiometricService $biometrics,
         private AppointmentRepositoryInterface $appointments,
+        private WebhookNotifier $webhooks,
     ) {}
 
     /**
@@ -49,6 +51,7 @@ class CardholderService
     {
         $cardholder = $this->cardholders->create($this->withCustomFields($this->resolveLookups($data), null));
         $cardholder->forceFill(['created_by' => $actor?->id])->save();
+        $this->webhooks->tell('cardholder.created', $cardholder);
 
         return $this->withDetails($cardholder);
     }
@@ -58,7 +61,12 @@ class CardholderService
      */
     public function update(Cardholder $cardholder, array $data): Cardholder
     {
-        return $this->withDetails($this->cardholders->update($cardholder, $this->withCustomFields($this->resolveLookups($data), $cardholder)));
+        $updated = $this->cardholders->update($cardholder, $this->withCustomFields($this->resolveLookups($data), $cardholder));
+        if ($updated->wasChanged()) {
+            $this->webhooks->tell('cardholder.updated', $updated);
+        }
+
+        return $this->withDetails($updated);
     }
 
     /**
@@ -80,6 +88,7 @@ class CardholderService
         $biometricLocations = $this->biometrics->storedLocations($cardholder);
 
         $this->cardholders->delete($cardholder);
+        $this->webhooks->tell('cardholder.deleted', $cardholder);
         $this->files->deleteStored($locations);
         $this->biometrics->deleteStored($biometricLocations);
     }

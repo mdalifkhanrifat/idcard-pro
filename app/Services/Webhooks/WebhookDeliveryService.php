@@ -168,7 +168,10 @@ class WebhookDeliveryService
             'public_id' => $id,
             'webhook_id' => $webhook->id,
             'event' => $event,
-            'payload' => ['id' => $id, 'event' => $event, 'occurred_at' => now()->utc()->toIso8601ZuluString(), 'tenant' => $tenant->slug, 'data' => $data],
+            'payload' => json_encode(
+                ['id' => $id, 'event' => $event, 'occurred_at' => now()->utc()->toIso8601ZuluString(), 'tenant' => $tenant->slug, 'data' => $data],
+                JSON_THROW_ON_ERROR | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES,
+            ),
         ]);
     }
 

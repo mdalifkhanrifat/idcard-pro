@@ -26,7 +26,7 @@ beforeEach(function () {
     $this->attempt = function (string $url = 'https://hr.example.com/hooks', array $payload = []): array {
         return app(TenantContext::class)->run($this->tenant, function () use ($url, $payload) {
             $webhook = Webhook::factory()->create(['tenant_id' => $this->tenant->id, 'url' => $url, 'secret' => 'whsec_test']);
-            $delivery = WebhookDelivery::factory()->create(['tenant_id' => $this->tenant->id, 'webhook_id' => $webhook->id, 'event' => 'card.issued', ...($payload === [] ? [] : ['payload' => $payload])]);
+            $delivery = WebhookDelivery::factory()->create(['tenant_id' => $this->tenant->id, 'webhook_id' => $webhook->id, 'event' => 'card.issued', ...($payload === [] ? [] : ['payload' => json_encode($payload, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)])]);
 
             return [app(WebhookSender::class)->send($webhook, $delivery), $delivery];
         });
@@ -205,14 +205,18 @@ it('lets any host through when the installation lists none', function () {
         ->and(WebhookAddress::problem('https://hr.example.com/x'))->toBeNull();
 });
 
-it('keeps a payload in the order it was written, and a deleted webhook readable', function () {
+it('keeps a payload as the exact text written, and a deleted webhook readable', function () {
     ($this->resolves)(['93.184.216.34']);
     Http::fake(['*' => Http::response('', 200)]);
-    [, $delivery] = ($this->attempt)(payload: ['id' => 'x', 'event' => 'card.issued', 'occurred_at' => 'now', 'tenant' => 'alpha', 'data' => ['z' => 1, 'a' => 2]]);
+    [, $delivery] = ($this->attempt)();
+    $text = '{"z":1,"custom_fields":{},"a":"রহিম"}';
 
-    $fresh = app(TenantContext::class)->run($this->tenant, fn () => WebhookDelivery::query()->findOrFail($delivery->id));
-    expect(array_keys($fresh->payload))->toBe(['id', 'event', 'occurred_at', 'tenant', 'data'])
-        ->and(array_keys($fresh->payload['data']))->toBe(['z', 'a'])
+    $fresh = app(TenantContext::class)->run($this->tenant, function () use ($delivery, $text) {
+        $delivery->update(['payload' => $text]);
+
+        return WebhookDelivery::query()->findOrFail($delivery->id);
+    });
+    expect($fresh->payload)->toBe($text)
         ->and($fresh->status->value)->toBe('queued')
         ->and($fresh->attempts)->toBe(0);
 

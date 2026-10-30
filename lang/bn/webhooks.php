@@ -23,6 +23,7 @@ return [
     ],
     'other_events' => ['webhook.test' => 'পরীক্ষা'],
     'statuses' => ['queued' => 'অপেক্ষায়', 'delivered' => 'পৌঁছেছে', 'failed' => 'ব্যর্থ'],
+    'beyond_reach' => 'এই তথ্য আপনার নিজের দেখার অনুমতি নেই, তাই কোনো ঠিকানায় পাঠাতে পারবেন না: :events।',
     'too_many' => 'একটা প্রতিষ্ঠানে সর্বোচ্চ :maxটা webhook রাখা যায়।',
     'address' => [
         'invalid' => 'এটা ওয়েব ঠিকানা নয় (যেমন https://hr.example.com/hooks)।',

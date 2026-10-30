@@ -23,6 +23,7 @@ return [
     ],
     'other_events' => ['webhook.test' => 'Test'],
     'statuses' => ['queued' => 'Waiting', 'delivered' => 'Delivered', 'failed' => 'Failed'],
+    'beyond_reach' => 'You may not see this data yourself, so you cannot send it to an address: :events.',
     'too_many' => 'An organization can have at most :max webhooks.',
     'address' => [
         'invalid' => 'This is not a web address (like https://hr.example.com/hooks).',

@@ -46,7 +46,7 @@ it('logs a delivery in the fixed shape and hands it to its own queue, once saved
 
     expect($delivery->status)->toBe(WebhookDeliveryStatus::Queued)
         ->and($delivery->attempts)->toBe(0)
-        ->and($delivery->payload)->toBe([
+        ->and(json_decode($delivery->payload, true))->toBe([
             'id' => $delivery->public_id,
             'event' => 'card.issued',
             'occurred_at' => '2026-10-30T10:00:00Z',
