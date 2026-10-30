@@ -40,6 +40,12 @@ function label(group: 'modules' | 'abilities', key: string): string {
     return te(`roles.${group}.${key}`) ? t(`roles.${group}.${key}`) : key;
 }
 
+/** "cards.view" as the reader names it: "Issued cards: View" (the audit log says the same). */
+function permissionName(permission: string): string {
+    const [module, ability] = permission.split('.');
+    return `${label('modules', module)}: ${label('abilities', ability)}`;
+}
+
 function edit(role: Role | null): void {
     editing.value = role;
     form.name = role?.name ?? '';
@@ -111,7 +117,7 @@ async function remove(role: Role): Promise<void> {
                     <UiBadge v-if="role.is_system" tone="warning"><Lock class="size-3" />{{ t('roles.system') }}</UiBadge>
                 </div>
                 <div class="mt-4 flex flex-1 flex-wrap content-start gap-1">
-                    <UiBadge v-for="p in role.permissions" :key="p">{{ p }}</UiBadge>
+                    <UiBadge v-for="p in role.permissions" :key="p" data-role-permission>{{ permissionName(p) }}</UiBadge>
                 </div>
                 <div v-if="!role.is_system" class="mt-4 flex gap-2 border-t border-line pt-4">
                     <UiButton v-if="auth.can('roles.update')" size="sm" variant="secondary" @click="edit(role)"><Pencil class="size-3.5" />{{ t('common.edit') }}</UiButton>
