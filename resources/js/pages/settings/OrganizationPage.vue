@@ -57,6 +57,9 @@ const canOpenNotifications = computed(() => auth.can(['notifications.view', 'set
 const appointments = ref<AppointmentSettingsResponse | null>(null);
 const canSeeAppointments = computed(() => auth.can(['appointments.view', 'settings.update']));
 
+/** How long integration tokens last (6.1). */
+const integrations = reactive({ token_days: 365 as number | string, max_token_days: 1095 as number | string });
+
 const sampleCode = ref('EMP');
 const numberPreview = ref('');
 const previewError = ref('');
@@ -86,6 +89,7 @@ onMounted(async () => {
     }
     logoPreview.value = data.data.logo_url;
     Object.assign(cardSize, data.data.default_card_size ?? {});
+    Object.assign(integrations, data.data.integrations ?? {});
 });
 
 watch(() => form.primary_color, (color) => applyBrand(color));
@@ -128,6 +132,8 @@ async function save(): Promise<void> {
     if (biometrics.value) {
         appendBiometricSettings(body, biometrics.value);
     }
+    body.append('integrations[token_days]', String(integrations.token_days));
+    body.append('integrations[max_token_days]', String(integrations.max_token_days));
     if (logo.value) {
         body.append('logo', logo.value);
     }
@@ -255,6 +261,12 @@ async function save(): Promise<void> {
                     </fieldset>
                 </UiCard>
                 <BiometricSettingsCard v-if="biometrics && biometricOptions" v-model="biometrics" :options="biometricOptions" :errors="errors" :disabled="!canEdit" />
+                <UiCard :title="t('settings.integrations.title')" :description="t('settings.integrations.description')" data-integration-settings>
+                    <fieldset :disabled="!canEdit" class="grid gap-4 sm:grid-cols-2">
+                        <UiInput v-model="integrations.token_days" type="number" min="1" :label="t('settings.integrations.tokenDays')" :error="errors['integrations.token_days']" />
+                        <UiInput v-model="integrations.max_token_days" type="number" min="1" :label="t('settings.integrations.maxTokenDays')" :error="errors['integrations.max_token_days']" />
+                    </fieldset>
+                </UiCard>
                 <UiCard v-if="notifications && notificationOptions" :title="t('notifications.summary.title')" :description="t('notifications.summary.description')" data-notification-card>
                     <template v-if="canOpenNotifications" #actions>
                         <RouterLink to="/notifications" class="inline-flex shrink-0 items-center gap-1 text-sm font-medium text-brand-ink hover:underline" data-open-notifications>

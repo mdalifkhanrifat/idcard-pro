@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Repositories\Contracts\IntegrationRepositoryInterface;
 use App\Services\Roles\PermissionCeiling;
 use App\Support\Audit\RecordedChanges;
+use App\Support\Permissions\PermissionRegistry;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -37,6 +38,20 @@ class IntegrationService
     public function list(IntegrationFilter $filter): LengthAwarePaginator
     {
         return $this->integrations->list($filter);
+    }
+
+    /**
+     * What the integrations page offers this person: the roles they can give an account (never Owner), and how long
+     * a token may last here.
+     *
+     * @return array{assignable_roles: array<int, string>, token_days: int, max_token_days: int}
+     */
+    public function options(User $actor): array
+    {
+        return [
+            'assignable_roles' => array_values(array_diff($this->ceiling->assignableRoles($actor), [PermissionRegistry::OWNER_ROLE])),
+            ...$this->tenant->get()->integrationSettings(),
+        ];
     }
 
     /**

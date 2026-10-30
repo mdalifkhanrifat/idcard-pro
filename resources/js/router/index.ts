@@ -37,6 +37,7 @@ const routes: RouteRecordRaw[] = [
         children: [
             { path: '', name: 'dashboard', component: () => import('@/pages/DashboardPage.vue'), meta: { title: 'nav.dashboard' } },
             { path: 'users', name: 'users', component: () => import('@/pages/users/UsersPage.vue'), meta: { permission: 'users.view', title: 'nav.users' } },
+            { path: 'integrations', name: 'integrations', component: () => import('@/pages/integrations/IntegrationsPage.vue'), meta: { permission: 'integrations.manage' } },
             { path: 'roles', name: 'roles', component: () => import('@/pages/roles/RolesPage.vue'), meta: { permission: 'roles.view', title: 'nav.roles' } },
             { path: 'cardholders/import', name: 'cardholders.import', component: () => import('@/pages/cardholders/CardholderImportPage.vue'), meta: { permission: 'cardholders.import', title: 'cardholders.import.title' } },
             { path: 'cardholders/new', name: 'cardholders.create', component: () => import('@/pages/cardholders/CardholderFormPage.vue'), meta: { permission: 'cardholders.create', title: 'cardholders.new' } },

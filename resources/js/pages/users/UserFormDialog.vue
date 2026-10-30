@@ -10,7 +10,7 @@ import { http, toApiError } from '@/lib/http';
 import { useUiStore } from '@/stores/ui';
 import type { User } from '@/types';
 
-const props = defineProps<{ user: User | null; roles: string[] }>();
+const props = defineProps<{ user: User | null; roles: string[]; assignable?: string[] }>();
 const open = defineModel<boolean>('open', { default: false });
 const emit = defineEmits<{ saved: [] }>();
 const { t } = useI18n();
@@ -77,8 +77,9 @@ async function submit(): Promise<void> {
             <div class="sm:col-span-2">
                 <p class="mb-2 text-sm font-medium text-fg">{{ t('users.roles') }}</p>
                 <div class="grid gap-2 sm:grid-cols-2">
-                    <UiCheckbox v-for="role in roles" :key="role" v-model="form.roles" :value="role" :label="role" />
+                    <UiCheckbox v-for="role in roles" :key="role" v-model="form.roles" :value="role" :label="role" :disabled="assignable !== undefined && !assignable.includes(role)" />
                 </div>
+                <p v-if="assignable && roles.some((role) => !assignable?.includes(role))" class="mt-2 text-xs text-muted">{{ t('users.rolesBeyondOwn') }}</p>
                 <p v-if="errors.roles" class="mt-1 text-xs text-danger">{{ errors.roles[0] }}</p>
             </div>
             <UiInput

@@ -5,7 +5,7 @@ import { useI18n } from 'vue-i18n';
 import { DropdownMenuContent, DropdownMenuItem, DropdownMenuPortal, DropdownMenuRoot, DropdownMenuSeparator, DropdownMenuTrigger } from 'reka-ui';
 import {
     BadgeCheck, BellRing, Building2, CalendarClock, CalendarCog, Database, ChevronDown, ContactRound, CreditCard, FileBarChart, Images, LayoutDashboard, LayoutTemplate, ListPlus,
-    LogOut, Menu, ScrollText, Settings, ShieldCheck, Signature, Type, UserCog, Users, X,
+    LogOut, Menu, ScrollText, Settings, ShieldCheck, Signature, Type, UserCog, Users, X, Plug,
 } from 'lucide-vue-next';
 import LocaleThemeSwitch from '@/components/LocaleThemeSwitch.vue';
 import { useAuthStore } from '@/stores/auth';
@@ -62,6 +62,7 @@ const sections = computed<{ title?: string; items: NavItem[] }[]>(() => {
             items: [
                 { to: '/users', label: t('nav.users'), icon: Users, permission: 'users.view' },
                 { to: '/roles', label: t('nav.roles'), icon: ShieldCheck, permission: 'roles.view' },
+                { to: '/integrations', label: t('nav.integrations'), icon: Plug, permission: 'integrations.manage' },
                 { to: '/audit', label: t('nav.audit'), icon: ScrollText, permission: 'audit.view' },
                 { to: '/notifications', label: t('nav.notifications'), icon: BellRing, permission: ['notifications.view', 'settings.update'] },
                 { to: '/appointments/settings', label: t('nav.appointmentSettings'), icon: CalendarCog, permission: ['appointments.view', 'settings.update'] },

@@ -18,11 +18,13 @@ class IntegrationController extends Controller
     public function __construct(private IntegrationService $integrations) {}
 
     /**
-     * Filters: filter[search|status|role]. Sorts: name, created_at (prefix "-" for descending).
+     * Filters: filter[search|status|role]. Sorts: name, created_at (prefix "-" for descending). meta says which
+     * roles this person can give an account and how long a token lasts here.
      */
     public function index(ListIntegrationsRequest $request): AnonymousResourceCollection
     {
-        return IntegrationResource::collection($this->integrations->list($request->toFilter()));
+        return IntegrationResource::collection($this->integrations->list($request->toFilter()))
+            ->additional(['meta' => $this->integrations->options($request->user())]);
     }
 
     public function store(SaveIntegrationRequest $request): JsonResponse

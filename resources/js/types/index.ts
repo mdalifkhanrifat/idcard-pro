@@ -20,6 +20,7 @@ export interface Tenant {
     card_number_on_reissue?: 'keep' | 'new';
     /** Landscape default for new templates, in mm. */
     default_card_size?: { width: number; height: number };
+    integrations?: { token_days: number; max_token_days: number };
     /** Public card verification (3.7), chosen by the organization. */
     verification?: TenantVerification;
     /** Details the verification page may show. */

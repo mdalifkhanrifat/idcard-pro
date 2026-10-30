@@ -109,7 +109,8 @@
         "cardsSection": "Cards",
         "fonts": "Fonts",
         "imageLibrary": "Image library",
-        "appointmentSettings": "Appointment settings"
+        "appointmentSettings": "Appointment settings",
+        "integrations": "Integrations"
     },
     "dashboard": {
         "welcome": "Welcome, {name}",
@@ -143,7 +144,8 @@
         "filterTwoFactor": "2-step verification",
         "filterLocked": "Lock state",
         "created": "Created",
-        "deleteConfirm": "Delete {name}? They will lose access immediately."
+        "deleteConfirm": "Delete {name}? They will lose access immediately.",
+        "rolesBeyondOwn": "Roles beyond your own permissions cannot be given or taken away here."
     },
     "roles": {
         "title": "Roles & permissions",
@@ -372,6 +374,12 @@
                 "issue": "The image captured when the card is issued stays on that card, like the photo and signature. A later capture changes only new cards. The card keeps its own encrypted copy of the image (never the template).",
                 "print": "Each print uses the person's latest capture, so a reprint of the same card can show a newer image."
             }
+        },
+        "integrations": {
+            "title": "Integration tokens",
+            "description": "How long the tokens of integration accounts last. Every token has an end.",
+            "tokenDays": "Usual length (days)",
+            "maxTokenDays": "Longest allowed (days)"
         }
     },
     "account": {
@@ -2201,6 +2209,55 @@
             "number": "Appointment number",
             "hint": "Show this number at the desk.",
             "hintQr": "Show this number (or the QR code in your e-mail) at the desk."
+        }
+    },
+    "integrations": {
+        "title": "Integrations",
+        "subtitle": "Accounts other systems (HR, access control and the like) use to reach this organization through the API.",
+        "new": "New integration",
+        "editTitle": "Edit integration",
+        "name": "Name",
+        "nameHint": "The system it stands for: this name shows in the audit log.",
+        "description": "Description",
+        "role": "Role",
+        "chooseRole": "Choose a role",
+        "addresses": "Addresses it works from",
+        "addressesHint": "One address or range a line, like 203.0.113.7 or 203.0.113.0/24. Empty: any address.",
+        "beyondReach": "This account holds more than you do, so you can correct its name and description only.",
+        "searchPlaceholder": "Search by name or description",
+        "deleteConfirm": "Delete {name}? Its tokens stop for good; the audit log keeps its name.",
+        "empty": "No integrations yet",
+        "emptyHint": "Make one for each system, so each has its own role and tokens.",
+        "tokenCount": "No active tokens | {count} active token | {count} active tokens",
+        "lastUsed": "Used {when}",
+        "neverUsed": "Not used yet",
+        "tokens": {
+            "open": "Tokens",
+            "title": "Tokens of {name}",
+            "onlyOnce": "Copy this token now. It is not kept in readable form and cannot be shown again.",
+            "copy": "Copy",
+            "copied": "Copied",
+            "copyFailed": "Could not copy; select the token and copy it by hand.",
+            "name": "Token name",
+            "nameHint": "Where it is used, like “Production server”.",
+            "days": "Lasts (days)",
+            "daysHint": "At most {days}",
+            "make": "Make token",
+            "list": "Tokens",
+            "none": "No tokens yet.",
+            "expired": "Ended",
+            "endsSoon": "Ends soon",
+            "ends": "Ends {date}",
+            "used": "used {when}",
+            "neverUsed": "not used yet",
+            "revoke": "Revoke",
+            "revoked": "Token revoked",
+            "revokeConfirm": "Revoke {name}? Whatever uses it stops working at once.",
+            "beyondReach": "This account holds more than you do, so you cannot make it a token. You can still revoke one.",
+            "howTo": "How to use it",
+            "howToText": "Send the token in the Authorization header of every request, and ask for JSON. It acts with this account’s role, inside this organization only.",
+            "loadFailed": "The tokens could not be loaded.",
+            "retry": "Try again"
         }
     }
 }

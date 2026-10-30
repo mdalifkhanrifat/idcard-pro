@@ -20,11 +20,13 @@ class UserController extends Controller
 
     /**
      * Filters: filter[search|status|role|two_factor|locked|created_from|created_to].
-     * Sorts: name, email, last_login_at, created_at (prefix "-" for descending).
+     * Sorts: name, email, last_login_at, created_at (prefix "-" for descending). meta.assignable_roles: the roles
+     * this person can give.
      */
     public function index(ListUsersRequest $request): AnonymousResourceCollection
     {
-        return UserResource::collection($this->users->list($request->toFilter()));
+        return UserResource::collection($this->users->list($request->toFilter()))
+            ->additional(['meta' => ['assignable_roles' => $this->users->assignableRoles($request->user())]]);
     }
 
     public function store(StoreUserRequest $request): JsonResponse

@@ -34,6 +34,16 @@ class UserService
     }
 
     /**
+     * The roles this person can give, for the form to offer only those.
+     *
+     * @return array<int, string>
+     */
+    public function assignableRoles(User $actor): array
+    {
+        return $this->ceiling->assignableRoles($actor);
+    }
+
+    /**
      * @param  array<string, mixed>  $data  validated input (may contain `roles`)
      */
     public function create(array $data, User $actor): User

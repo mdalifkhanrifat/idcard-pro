@@ -139,6 +139,18 @@ it('never gives an account the Owner role, or a role beyond the giver', function
     expect($strong->fresh()->status->value)->toBe('active');
 });
 
+it('tells the page which roles this person can give, and how long a token lasts', function () {
+    $this->postJson('/api/v1/roles', ['name' => 'Settings keeper', 'permissions' => ['settings.update']])->assertCreated();
+
+    expect($this->getJson('/api/v1/integrations')->assertOk()->json('meta'))->toMatchArray(['token_days' => 365, 'max_token_days' => 1095])
+        ->and($this->getJson('/api/v1/integrations')->json('meta.assignable_roles'))->toContain('Settings keeper', 'Operator')->not->toContain('Owner')
+        ->and($this->getJson('/api/v1/users')->json('meta.assignable_roles'))->toContain('Owner', 'Settings keeper');
+
+    Sanctum::actingAs(tenantUser($this->tenant, 'Administrator'));
+    expect($this->getJson('/api/v1/integrations')->json('meta.assignable_roles'))->toEqualCanonicalizing(['Administrator', 'Operator', 'Viewer'])
+        ->and($this->getJson('/api/v1/users')->json('meta.assignable_roles'))->toEqualCanonicalizing(['Administrator', 'Operator', 'Viewer']);
+});
+
 it('takes back its own answer, and a change leaves what is not sent', function () {
     $account = ($this->account)(['name' => 'Payroll', 'description' => 'Sends staff changes']);
     $url = "/api/v1/integrations/{$account->public_id}";

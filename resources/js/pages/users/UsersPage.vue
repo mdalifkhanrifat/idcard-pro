@@ -36,6 +36,9 @@ const showFilters = ref(false);
 const dialogOpen = ref(false);
 const editing = ref<User | null>(null);
 
+/** Roles this person can give (the server's word); the rest stay as they are on a user. */
+const assignable = computed(() => (meta.value as { assignable_roles?: string[] }).assignable_roles);
+
 const activeFilterCount = computed(() => Object.entries(filters).filter(([key, v]) => key !== 'search' && v !== '').length);
 
 onMounted(async () => {
@@ -168,6 +171,6 @@ const yesNo = computed(() => [
             <ListPagination :list="list" />
         </div>
 
-        <UserFormDialog v-model:open="dialogOpen" :user="editing" :roles="roles" @saved="list.load()" />
+        <UserFormDialog v-model:open="dialogOpen" :user="editing" :roles="roles" :assignable="assignable" @saved="list.load()" />
     </div>
 </template>
