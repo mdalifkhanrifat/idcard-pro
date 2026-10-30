@@ -32,6 +32,12 @@ return [
             'name' => 'API token name',
             'expires_at' => 'Last day',
         ],
+        'webhooks' => [
+            'url' => 'Address',
+            'events' => 'Events',
+            'enabled' => 'On',
+            'secret_rotated_at' => 'Signing secret changed',
+        ],
         'roles' => [
             'name' => 'Role name',
             'permissions' => 'Permissions',

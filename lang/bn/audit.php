@@ -32,6 +32,12 @@ return [
             'name' => 'API token-এর নাম',
             'expires_at' => 'শেষ দিন',
         ],
+        'webhooks' => [
+            'url' => 'ঠিকানা',
+            'events' => 'ঘটনা',
+            'enabled' => 'চালু',
+            'secret_rotated_at' => 'সইয়ের চাবি বদল',
+        ],
         'roles' => [
             'name' => 'রোলের নাম',
             'permissions' => 'পারমিশন',

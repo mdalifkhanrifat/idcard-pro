@@ -81,6 +81,7 @@ return [
         'custom_fields.entity' => 'audit.values.custom_field_entity',
         'master_data.type' => 'reports.master_data_types',
         'settings.locale' => 'audit.values.locale',
+        'webhooks.events' => 'webhooks.events',
         'settings.card_number_on_reissue' => 'audit.values.number_on_reissue',
         'settings.verification.fields' => ['reports.fields', 'reports.columns', 'audit.values.card_detail'],
         'settings.biometrics.modalities.*.mode' => 'audit.values.biometric_mode',

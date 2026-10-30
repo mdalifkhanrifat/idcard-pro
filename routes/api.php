@@ -47,6 +47,7 @@ use App\Http\Controllers\Api\V1\TenantFontController;
 use App\Http\Controllers\Api\V1\TenantImageController;
 use App\Http\Controllers\Api\V1\TenantSettingsController;
 use App\Http\Controllers\Api\V1\UserController;
+use App\Http\Controllers\Api\V1\WebhookController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->name('api.v1.')->group(function () {
@@ -143,6 +144,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                 Route::get('integrations/{integration}/tokens', [IntegrationTokenController::class, 'index'])->name('integrations.tokens.index');
                 Route::post('integrations/{integration}/tokens', [IntegrationTokenController::class, 'store'])->name('integrations.tokens.store');
                 Route::delete('integrations/{integration}/tokens/{token}', [IntegrationTokenController::class, 'destroy'])->whereNumber('token')->name('integrations.tokens.destroy');
+                Route::apiResource('webhooks', WebhookController::class);
+                Route::post('webhooks/{webhook}/secret', [WebhookController::class, 'rotateSecret'])->name('webhooks.secret');
             });
             Route::apiResource('roles', RoleController::class)->except('show');
             Route::get('permissions', [PermissionController::class, 'index'])->name('permissions.index');

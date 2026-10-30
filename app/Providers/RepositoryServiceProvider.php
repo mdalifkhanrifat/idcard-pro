@@ -33,6 +33,7 @@ use App\Repositories\Contracts\TenantFontRepositoryInterface;
 use App\Repositories\Contracts\TenantImageRepositoryInterface;
 use App\Repositories\Contracts\TenantRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
+use App\Repositories\Contracts\WebhookRepositoryInterface;
 use App\Repositories\Eloquent\ActivityRepository;
 use App\Repositories\Eloquent\AppointmentClosureRepository;
 use App\Repositories\Eloquent\AppointmentLocationRepository;
@@ -64,6 +65,7 @@ use App\Repositories\Eloquent\TenantFontRepository;
 use App\Repositories\Eloquent\TenantImageRepository;
 use App\Repositories\Eloquent\TenantRepository;
 use App\Repositories\Eloquent\UserRepository;
+use App\Repositories\Eloquent\WebhookRepository;
 use Illuminate\Support\ServiceProvider;
 
 /**
@@ -102,6 +104,7 @@ class RepositoryServiceProvider extends ServiceProvider
         CardTemplateElementRepositoryInterface::class => CardTemplateElementRepository::class,
         UserRepositoryInterface::class => UserRepository::class,
         IntegrationRepositoryInterface::class => IntegrationRepository::class,
+        WebhookRepositoryInterface::class => WebhookRepository::class,
         RoleRepositoryInterface::class => RoleRepository::class,
         TenantRepositoryInterface::class => TenantRepository::class,
         ActivityRepositoryInterface::class => ActivityRepository::class,

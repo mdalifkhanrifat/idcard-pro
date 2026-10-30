@@ -10,8 +10,10 @@ use App\Models\MasterDataItem;
 use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
+use App\Models\Webhook;
 use App\Services\Appointments\AppointmentSettings;
 use App\Services\Audit\AuditChangeDescriber;
+use App\Services\Webhooks\WebhookEvents;
 use App\Support\Audit\JsonChanges;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Support\Facades\DB;
@@ -173,6 +175,7 @@ it('names every choice a logged field or setting offers, in both languages', fun
         ['custom_fields', CustomField::class, 'entity', CustomField::ENTITIES],
         ['master_data', MasterDataItem::class, 'type', array_keys(config('master_data.types'))],
         ['appointments', Appointment::class, 'service', array_keys(config('appointments.services'))],
+        ['webhooks', Webhook::class, 'events', WebhookEvents::keys()],
     ];
 
     $unnamed = [];

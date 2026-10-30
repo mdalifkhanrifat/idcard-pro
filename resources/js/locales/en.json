@@ -224,7 +224,8 @@
             "notifications": "Notifications",
             "appointment_locations": "Appointment places",
             "appointment_closures": "Appointment closures",
-            "appointments": "Appointments"
+            "appointments": "Appointments",
+            "webhooks": "Webhooks"
         },
         "events": {
             "created": "Created",
