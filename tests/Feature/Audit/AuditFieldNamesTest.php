@@ -7,6 +7,7 @@ use App\Models\Cardholder;
 use App\Models\CardholderFile;
 use App\Models\CustomField;
 use App\Models\MasterDataItem;
+use App\Models\Role;
 use App\Models\Tenant;
 use App\Models\User;
 use App\Services\Appointments\AppointmentSettings;
@@ -184,6 +185,18 @@ it('names every choice a logged field or setting offers, in both languages', fun
     }
 
     expect($unnamed)->toBe([]);
+})->with(['en', 'bn']);
+
+it('names every permission in both languages, as the roles page does', function (string $locale) {
+    app()->setLocale($locale);
+    $page = json_decode(File::get(resource_path("js/locales/{$locale}.json")), true)['roles'];
+
+    foreach (config('permissions.modules') as $module => $abilities) {
+        foreach ($abilities as $ability) {
+            expect(describedValue('roles', Role::class, 'permissions', "{$module}.{$ability}"))
+                ->toBe("{$page['modules'][$module]}: {$page['abilities'][$ability]}");
+        }
+    }
 })->with(['en', 'bn']);
 
 it('shows the record a reference points to, days as days and moments in the organization\'s time, in the reader\'s digits', function () {

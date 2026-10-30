@@ -47,9 +47,7 @@ final class AuditChangeDescriber
      */
     public function fields(Activity $activity): ?array
     {
-        $changes = $activity->attribute_changes?->toArray() ?? [];
-        $new = (array) ($changes['attributes'] ?? []);
-        $old = (array) ($changes['old'] ?? []);
+        [$new, $old] = $this->recorded($activity);
         if ($new === [] && $old === []) {
             return null;
         }
@@ -63,6 +61,23 @@ final class AuditChangeDescriber
     }
 
     /**
+     * New and old values: from the record's own logging, or from a change noted by hand (a role's permissions, a
+     * user's roles — RecordedChanges keeps the same two parts). An event's own facts are not field changes.
+     *
+     * @return array{0: array<string, mixed>, 1: array<string, mixed>}
+     */
+    private function recorded(Activity $activity): array
+    {
+        $changes = $activity->attribute_changes?->toArray() ?? [];
+        if ($changes === []) {
+            $properties = $activity->properties?->toArray() ?? [];
+            $changes = array_diff(array_keys($properties), ['attributes', 'old']) === [] ? $properties : [];
+        }
+
+        return [(array) ($changes['attributes'] ?? []), (array) ($changes['old'] ?? [])];
+    }
+
+    /**
      * Look up the records a page of rows refers to ("rank_id": 54) at once: one query per kind of record, not one
      * per row. Rows described without it still read right, a query at a time.
      *
@@ -72,8 +87,7 @@ final class AuditChangeDescriber
     {
         $wanted = [];
         foreach ($activities as $activity) {
-            $changes = $activity->attribute_changes?->toArray() ?? [];
-            foreach ([(array) ($changes['attributes'] ?? []), (array) ($changes['old'] ?? [])] as $values) {
+            foreach ($this->recorded($activity) as $values) {
                 foreach ($values as $key => $value) {
                     $kind = $this->kind($activity, (string) $key);
                     if ($kind !== null && $kind[0] === 'reference' && is_numeric($value)) {
@@ -127,7 +141,7 @@ final class AuditChangeDescriber
         }
         if (is_array($value)) {
             return array_is_list($value) && array_filter($value, is_array(...)) === []
-                ? Str::limit(implode(', ', array_map(fn (mixed $item): string => $this->scalar($kind, $item), $value)), 200)
+                ? Str::limit(implode(', ', array_map(fn (mixed $item): string => $this->scalar($kind, $item), $value)), 2000)
                 : $this->text($key, $value);
         }
 
@@ -145,11 +159,28 @@ final class AuditChangeDescriber
 
         return match ($kind[0]) {
             'names' => $this->named((array) $kind[1], (string) $value),
+            'joined' => $this->joined((array) $kind[1], (string) $value),
             'reference' => $this->reference($kind[1], $value),
             'date' => $this->values->date(substr((string) $value, 0, 10)),
             'datetime' => $this->moment((string) $value),
             default => (string) $value,
         };
+    }
+
+    /**
+     * A value of two parts, each named by its own lang array: "Issued cards: View"; as stored unless both are named.
+     *
+     * @param  array<int, string>  $groups
+     */
+    private function joined(array $groups, string $value): string
+    {
+        $parts = array_map(
+            fn (string $part, string $group): ?string => $this->group($group)[$part] ?? null,
+            explode('.', $value, 2),
+            $groups,
+        );
+
+        return in_array(null, $parts, true) ? $value : implode(': ', $parts);
     }
 
     /**
@@ -242,6 +273,10 @@ final class AuditChangeDescriber
         $groups = $this->valueGroups($log, $key);
         if ($groups !== null) {
             return ['names', $groups];
+        }
+        $joined = ((array) config('audit.joined'))["{$log}.{$key}"] ?? null;
+        if ($joined !== null) {
+            return ['joined', $joined];
         }
         $class = $type === '' ? null : (Relation::getMorphedModel($type) ?? $type);
         if (str_starts_with($key, 'settings.') || $class === null || ! is_subclass_of($class, Model::class)) {

@@ -45,6 +45,22 @@ it('keeps what a user did after that user is deleted, with their name, on the pa
     expect($this->getJson('/api/v1/reports/audit-changes?filter[log_name]=cardholders&columns[]=audit.who')->json('data.0.values')['audit.who'])->toBe($operator->name);
 });
 
+it('shows a role given and a permission changed like any other change, old and new', function () {
+    Sanctum::actingAs($this->owner);
+    $id = $this->postJson('/api/v1/roles', ['name' => 'Clerk', 'permissions' => ['users.view']])->assertCreated()->json('data.id');
+    $this->putJson("/api/v1/roles/{$id}", ['name' => 'Clerk', 'permissions' => ['users.view', 'cards.view']])->assertOk();
+    $operator = tenantUser($this->tenant, 'Operator');
+    $this->putJson("/api/v1/users/{$operator->public_id}", ['name' => $operator->name, 'email' => $operator->email, 'status' => 'active', 'roles' => ['Viewer']])->assertOk();
+
+    $byRole = $this->getJson('/api/v1/audit/activities?filter[log_name]=roles&filter[event]=updated')->assertOk()->json('data.0.fields');
+    expect($byRole)->toBe([['key' => 'permissions', 'label' => 'Permissions', 'old' => 'Users: View', 'new' => 'Issued cards: View, Users: View']]);
+
+    $byUser = $this->getJson('/api/v1/audit/activities?filter[log_name]=user')->assertOk()->json('data.0.fields');
+    expect($byUser)->toBe([['key' => 'roles', 'label' => 'Roles', 'old' => 'Operator', 'new' => 'Viewer']]);
+
+    expect($this->getJson('/api/v1/reports/audit-changes?filter[log_name]=user&columns[]=audit.changes')->json('data.0.values')['audit.changes'])->toBe('Roles: Operator → Viewer');
+});
+
 it('lists in the filter every kind of record this organization changed, including new modules', function () {
     Sanctum::actingAs($this->otherOwner);
     $this->postJson('/api/v1/cardholders', ['full_name' => 'Beta Person'])->assertCreated();
