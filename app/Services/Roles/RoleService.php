@@ -4,6 +4,7 @@ namespace App\Services\Roles;
 
 use App\Exceptions\BusinessRuleException;
 use App\Models\Role;
+use App\Models\User;
 use App\Repositories\Contracts\RoleRepositoryInterface;
 use App\Support\Audit\RecordedChanges;
 use App\Support\Permissions\PermissionRegistry;
@@ -17,7 +18,10 @@ use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
  */
 class RoleService
 {
-    public function __construct(private RoleRepositoryInterface $roles) {}
+    public function __construct(
+        private RoleRepositoryInterface $roles,
+        private PermissionCeiling $ceiling,
+    ) {}
 
     /**
      * @return Collection<int, Role>
@@ -35,8 +39,10 @@ class RoleService
     /**
      * @param  array<int, string>  $permissions
      */
-    public function create(string $name, array $permissions): Role
+    public function create(string $name, array $permissions, User $actor): Role
     {
+        $this->ceiling->ensurePermissions($actor, $permissions);
+
         return DB::transaction(function () use ($name, $permissions): Role {
             $role = $this->roles->create($name);
             $role->syncPermissions($permissions);
@@ -49,9 +55,10 @@ class RoleService
     /**
      * @param  array<int, string>  $permissions
      */
-    public function update(Role $role, string $name, array $permissions): Role
+    public function update(Role $role, string $name, array $permissions, User $actor): Role
     {
         $this->ensureEditable($role);
+        $this->ceiling->ensurePermissions($actor, array_values(array_diff($permissions, $role->permissions()->pluck('name')->all())));
 
         return DB::transaction(function () use ($role, $name, $permissions): Role {
             $before = $this->described($role->load('permissions'));

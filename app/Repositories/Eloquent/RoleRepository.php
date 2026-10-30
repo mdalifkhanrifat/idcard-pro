@@ -70,6 +70,13 @@ class RoleRepository implements RoleRepositoryInterface
         return $role->users()->count();
     }
 
+    public function permissionNames(array $roles): array
+    {
+        return $this->query()->whereIn('name', $roles)->with('permissions')->get()
+            ->flatMap(fn (Role $role) => $role->permissions->pluck('name'))
+            ->unique()->values()->all();
+    }
+
     public function delete(Role $role): void
     {
         $role->delete();

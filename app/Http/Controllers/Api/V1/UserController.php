@@ -29,7 +29,7 @@ class UserController extends Controller
 
     public function store(StoreUserRequest $request): JsonResponse
     {
-        return (new UserResource($this->users->create($request->validated())))->response()->setStatusCode(201);
+        return (new UserResource($this->users->create($request->validated(), $request->user())))->response()->setStatusCode(201);
     }
 
     public function show(User $user): UserResource
@@ -41,7 +41,7 @@ class UserController extends Controller
 
     public function update(UpdateUserRequest $request, User $user): UserResource
     {
-        return new UserResource($this->users->update($user, $request->validated()));
+        return new UserResource($this->users->update($user, $request->validated(), $request->user()));
     }
 
     public function destroy(Request $request, User $user): JsonResponse

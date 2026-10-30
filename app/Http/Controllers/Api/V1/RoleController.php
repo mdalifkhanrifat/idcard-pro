@@ -23,7 +23,7 @@ class RoleController extends Controller
 
     public function store(SaveRoleRequest $request): JsonResponse
     {
-        $role = $this->roles->create($request->validated('name'), $request->permissions());
+        $role = $this->roles->create($request->validated('name'), $request->permissions(), $request->user());
 
         return (new RoleResource($role))->response()->setStatusCode(201);
     }
@@ -32,7 +32,7 @@ class RoleController extends Controller
     {
         $model = $this->roles->findOrFail($role);
 
-        return new RoleResource($this->roles->update($model, $request->validated('name'), $request->permissions()));
+        return new RoleResource($this->roles->update($model, $request->validated('name'), $request->permissions(), $request->user()));
     }
 
     public function destroy(int $role): JsonResponse

@@ -38,5 +38,13 @@ interface RoleRepositoryInterface
 
     public function usersCount(Role $role): int;
 
+    /**
+     * Every permission the named roles hold together.
+     *
+     * @param  array<int, string>  $roles
+     * @return array<int, string>
+     */
+    public function permissionNames(array $roles): array;
+
     public function delete(Role $role): void;
 }

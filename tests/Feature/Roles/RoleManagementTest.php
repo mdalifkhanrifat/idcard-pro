@@ -72,3 +72,17 @@ it('notes every role change and every user\'s roles in the audit log: only what 
     expect($roleChanges)->toHaveCount(1)
         ->and($roleChanges[0]['changes'])->toBe(['attributes' => ['roles' => ['Operator', 'Viewer']], 'old' => ['roles' => ['Viewer']]]);
 });
+
+it('lets no one put into a role a permission they do not hold themselves', function () {
+    $editor = $this->postJson('/api/v1/roles', ['name' => 'Role Editor', 'permissions' => ['roles.view', 'roles.create', 'roles.update', 'users.view']])->assertCreated()->json('data.id');
+    $someone = $this->postJson('/api/v1/roles', ['name' => 'Someone', 'permissions' => ['users.view', 'settings.update']])->assertCreated()->json('data.id');
+    Sanctum::actingAs(tenantUser($this->tenant, 'Role Editor'));
+
+    $this->postJson('/api/v1/roles', ['name' => 'Bigger', 'permissions' => ['settings.update']])
+        ->assertUnprocessable()->assertJsonPath('message', __('roles.beyond_own'));
+    $this->putJson("/api/v1/roles/{$editor}", ['name' => 'Role Editor', 'permissions' => ['roles.view', 'roles.create', 'roles.update', 'users.view', 'settings.update']])->assertUnprocessable();
+
+    // What a role already had is not "given" again, and what they hold they can give
+    $this->putJson("/api/v1/roles/{$someone}", ['name' => 'Renamed', 'permissions' => ['users.view', 'settings.update']])->assertOk();
+    $this->postJson('/api/v1/roles', ['name' => 'Smaller', 'permissions' => ['users.view']])->assertCreated();
+});
