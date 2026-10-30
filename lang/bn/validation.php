@@ -326,6 +326,10 @@ return [
         // List filters (cards, cardholders, audit)
         'filter' => 'ফিল্টার',
         'filter.search' => 'খোঁজ',
+        'expires_in_days' => 'কত দিন চলবে',
+        'integrations' => 'ইন্টিগ্রেশনের সেটিং',
+        'integrations.token_days' => 'ইন্টিগ্রেশন token-এর স্বাভাবিক মেয়াদ (দিন)',
+        'integrations.max_token_days' => 'ইন্টিগ্রেশন token-এর সর্বোচ্চ মেয়াদ (দিন)',
         'filter.role' => 'রোল',
         'role' => 'রোল',
         'description' => 'বিবরণ',

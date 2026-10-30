@@ -98,6 +98,11 @@ return [
         'settings.reports.*.columns' => 'reports.columns',
     ],
 
+    // Moments noted by hand on a record that has no such date of its own, in the organization's time
+    'moments' => [
+        'api_tokens.expires_at',
+    ],
+
     // Values of two parts joined by a dot ("cards.view"), each part named by its own lang array: "Issued cards: View"
     'joined' => [
         'roles.permissions' => ['audit.values.permission_module', 'audit.values.permission_ability'],

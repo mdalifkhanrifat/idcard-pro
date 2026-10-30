@@ -11,6 +11,7 @@ use App\Repositories\Contracts\TenantRepositoryInterface;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Services\Appointments\AppointmentSettings;
 use App\Services\Biometrics\BiometricSettings;
+use App\Services\Integrations\IntegrationSettings;
 use App\Services\MasterData\MasterDataService;
 use App\Services\Notifications\NotificationSettings;
 use App\Support\Permissions\PermissionRegistry;
@@ -144,6 +145,12 @@ class TenantService
             $current = (array) ($tenant->settings['notifications'] ?? []);
             $data['settings'] = [...($data['settings'] ?? $tenant->settings ?? []), 'notifications' => NotificationSettings::normalize(NotificationSettings::merge($current, (array) $data['notifications']))];
             unset($data['notifications']);
+        }
+
+        if (array_key_exists('integrations', $data)) {
+            $current = (array) ($tenant->settings['integrations'] ?? []);
+            $data['settings'] = [...($data['settings'] ?? $tenant->settings ?? []), 'integrations' => IntegrationSettings::normalize([...$current, ...(array) $data['integrations']])];
+            unset($data['integrations']);
         }
 
         $biometricsChanged = false;

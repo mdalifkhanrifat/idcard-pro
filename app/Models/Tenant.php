@@ -6,6 +6,7 @@ use App\Enums\TenantStatus;
 use App\Services\Appointments\AppointmentSettings;
 use App\Services\Biometrics\BiometricSettings;
 use App\Services\Cards\CardNumberFormat;
+use App\Services\Integrations\IntegrationSettings;
 use App\Services\Notifications\NotificationSettings;
 use App\Support\Audit\JsonChanges;
 use Database\Factories\TenantFactory;
@@ -110,6 +111,7 @@ class Tenant extends Model
             'biometrics' => $this->biometricSettings(),
             'notifications' => $this->notificationSettings(),
             'appointments' => $this->appointmentSettings(),
+            'integrations' => $this->integrationSettings(),
         ];
     }
 
@@ -199,6 +201,14 @@ class Tenant extends Model
     public function appointmentSettings(): array
     {
         return AppointmentSettings::normalize((array) ($this->settings['appointments'] ?? []));
+    }
+
+    /**
+     * @return array{token_days: int, max_token_days: int}
+     */
+    public function integrationSettings(): array
+    {
+        return IntegrationSettings::normalize((array) ($this->settings['integrations'] ?? []));
     }
 
     /**

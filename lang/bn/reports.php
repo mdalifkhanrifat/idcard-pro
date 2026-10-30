@@ -417,6 +417,7 @@ return [
         ],
         // The audit page's names of modules and events
         'audit_logs' => [
+            'api_tokens' => 'API token',
             'user' => 'ইউজার',
             'roles' => 'রোল ও পারমিশন',
             'tenant' => 'প্রতিষ্ঠান',

@@ -278,6 +278,9 @@ final class AuditChangeDescriber
         if ($joined !== null) {
             return ['joined', $joined];
         }
+        if (in_array("{$log}.{$key}", (array) config('audit.moments'), true)) {
+            return ['datetime', null];
+        }
         $class = $type === '' ? null : (Relation::getMorphedModel($type) ?? $type);
         if (str_starts_with($key, 'settings.') || $class === null || ! is_subclass_of($class, Model::class)) {
             return null;

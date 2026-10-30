@@ -17,4 +17,9 @@ interface IntegrationRepositoryInterface extends RepositoryInterface
      * @return LengthAwarePaginator<int, User>
      */
     public function list(IntegrationFilter $filter): LengthAwarePaginator;
+
+    /**
+     * The account with its role, its tokens still in force and their last use.
+     */
+    public function withSummary(User $account): User;
 }

@@ -202,6 +202,7 @@
         "identifier": "Login used",
         "device": "Device",
         "logs": {
+            "api_tokens": "API tokens",
             "user": "Users",
             "roles": "Roles and permissions",
             "tenant": "Organization",

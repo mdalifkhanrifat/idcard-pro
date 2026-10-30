@@ -26,7 +26,7 @@ use Spatie\Activitylog\Models\Concerns\LogsActivity;
  */
 function auditedFields(): array
 {
-    $fields = ['user' => ['roles'], 'roles' => ['name', 'permissions']];
+    $fields = ['user' => ['roles'], 'roles' => ['name', 'permissions'], 'api_tokens' => ['owner', 'name', 'expires_at']];
     foreach (File::files(app_path('Models')) as $file) {
         $class = 'App\\Models\\'.$file->getFilenameWithoutExtension();
         if (! in_array(LogsActivity::class, class_uses_recursive($class), true)) {

@@ -9,9 +9,13 @@ use App\Models\User;
 use App\Repositories\Contracts\IntegrationRepositoryInterface;
 use App\Services\Roles\PermissionCeiling;
 use App\Support\Audit\RecordedChanges;
+use App\Support\Tenancy\TenantContext;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Laravel\Sanctum\NewAccessToken;
+use Laravel\Sanctum\PersonalAccessToken;
 
 /**
  * An organization's accounts for other systems. Each is a user of its own kind, so it survives whoever made it, acts
@@ -23,6 +27,8 @@ class IntegrationService
     public function __construct(
         private IntegrationRepositoryInterface $integrations,
         private PermissionCeiling $ceiling,
+        private ApiTokenService $tokens,
+        private TenantContext $tenant,
     ) {}
 
     /**
@@ -51,7 +57,7 @@ class IntegrationService
             ]);
             $this->giveRole($account, $data['role']);
 
-            return $account->load('roles');
+            return $this->integrations->withSummary($account);
         });
     }
 
@@ -80,8 +86,43 @@ class IntegrationService
                 $this->giveRole($account, $role);
             }
 
-            return $account->load('roles');
+            return $this->integrations->withSummary($account);
         });
+    }
+
+    public function find(User $account): User
+    {
+        return $this->integrations->withSummary($account);
+    }
+
+    /**
+     * @return Collection<int, PersonalAccessToken>
+     */
+    public function tokens(User $account): Collection
+    {
+        return $this->tokens->list($account);
+    }
+
+    /**
+     * A token acts with the account's role, so making one takes the same reach as giving that role: no one gets a
+     * way in stronger than their own.
+     *
+     * @param  array{name: string, expires_in_days?: int}  $data
+     */
+    public function issueToken(User $account, array $data, User $actor): NewAccessToken
+    {
+        $this->ceiling->ensureRoles($actor, $account->roles()->pluck('name')->all());
+        $days = $data['expires_in_days'] ?? $this->tenant->get()->integrationSettings()['token_days'];
+
+        return $this->tokens->issue($account, $data['name'], now()->addDays($days));
+    }
+
+    /**
+     * Anyone who manages integrations can stop a token, whoever's it is: stopping gives no one anything.
+     */
+    public function revokeToken(User $account, int $tokenId): void
+    {
+        $this->tokens->revoke($account, $tokenId);
     }
 
     /**
@@ -92,7 +133,7 @@ class IntegrationService
         $this->ceiling->ensureRoles($actor, $account->roles()->pluck('name')->all());
 
         DB::transaction(function () use ($account): void {
-            $account->tokens()->delete();
+            $this->tokens->revokeAll($account);
             $this->integrations->delete($account);
         });
     }

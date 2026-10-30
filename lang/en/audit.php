@@ -26,6 +26,11 @@ return [
             'username' => 'Username',
             'roles' => 'Roles',
         ],
+        'api_tokens' => [
+            'owner' => 'Account',
+            'name' => 'API token name',
+            'expires_at' => 'Last day',
+        ],
         'roles' => [
             'name' => 'Role name',
             'permissions' => 'Permissions',

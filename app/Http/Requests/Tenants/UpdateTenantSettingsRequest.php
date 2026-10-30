@@ -60,7 +60,28 @@ class UpdateTenantSettingsRequest extends FormRequest
                     $fail($problem);
                 }
             }],
-        ], ...$this->biometricRules(), ...$this->notificationRules()];
+        ], ...$this->biometricRules(), ...$this->notificationRules(), ...$this->integrationRules()];
+    }
+
+    /**
+     * How long integration tokens last (6.1): both whole days, the usual length within the most.
+     *
+     * @return array<string, array<int, mixed>>
+     */
+    private function integrationRules(): array
+    {
+        $limit = 'between:1,'.(int) config('integrations.tokens.limit');
+
+        return [
+            'integrations' => ['sometimes', 'array:token_days,max_token_days'],
+            'integrations.token_days' => ['sometimes', 'integer', $limit, function (string $attribute, mixed $value, \Closure $fail): void {
+                $most = $this->input('integrations.max_token_days', $this->tenantContext()->get()->integrationSettings()['max_token_days']);
+                if ((int) $value > (int) $most) {
+                    $fail(__('integrations.days_beyond_most'));
+                }
+            }],
+            'integrations.max_token_days' => ['sometimes', 'integer', $limit],
+        ];
     }
 
     /**

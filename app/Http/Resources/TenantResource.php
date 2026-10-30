@@ -70,6 +70,8 @@ class TenantResource extends JsonResource
             'notification_options' => NotificationSettings::options(),
             // Whether and how the organization uses appointments (what they can be set to: GET /appointments/settings)
             'appointments' => $this->resource->appointmentSettings(),
+            // How long integration tokens last (6.1)
+            'integrations' => $this->resource->integrationSettings(),
             'status' => $this->status,
             'users_count' => $this->whenCounted('users'),
             'created_at' => $this->created_at,

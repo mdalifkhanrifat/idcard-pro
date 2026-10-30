@@ -5,6 +5,7 @@ namespace App\Services\Account;
 use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
 use App\Services\Auth\TwoFactorAuthenticator;
+use App\Services\Integrations\ApiTokenService;
 use Illuminate\Auth\SessionGuard;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -20,6 +21,7 @@ class AccountService
     public function __construct(
         private UserRepositoryInterface $users,
         private TwoFactorAuthenticator $twoFactor,
+        private ApiTokenService $tokens,
     ) {}
 
     /**
@@ -84,12 +86,12 @@ class AccountService
      */
     public function tokens(User $user): Collection
     {
-        return $user->tokens()->latest()->get();
+        return $this->tokens->list($user);
     }
 
     public function createToken(User $user, string $name, ?int $expiresInDays): NewAccessToken
     {
-        return $user->createToken($name, ['*'], $expiresInDays ? now()->addDays($expiresInDays) : null);
+        return $this->tokens->issue($user, $name, $expiresInDays ? now()->addDays($expiresInDays) : null);
     }
 
     /**
@@ -97,6 +99,6 @@ class AccountService
      */
     public function revokeToken(User $user, int $tokenId): void
     {
-        $user->tokens()->whereKey($tokenId)->delete();
+        $this->tokens->revoke($user, $tokenId);
     }
 }

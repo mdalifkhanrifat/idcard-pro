@@ -35,7 +35,7 @@ class IntegrationController extends Controller
     {
         Gate::authorize('integrations.manage');
 
-        return new IntegrationResource($integration->load('roles'));
+        return new IntegrationResource($this->integrations->find($integration));
     }
 
     public function update(SaveIntegrationRequest $request, User $integration): IntegrationResource

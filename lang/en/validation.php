@@ -350,6 +350,10 @@ return [
         // List filters (cards, cardholders, audit): named as the pages label them
         'filter' => 'filter',
         'filter.search' => 'search',
+        'expires_in_days' => 'days until it ends',
+        'integrations' => 'integration settings',
+        'integrations.token_days' => 'usual length of an integration token (days)',
+        'integrations.max_token_days' => 'longest an integration token may last (days)',
         'filter.role' => 'role',
         'role' => 'role',
         'description' => 'description',

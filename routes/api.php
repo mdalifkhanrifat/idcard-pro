@@ -30,6 +30,7 @@ use App\Http\Controllers\Api\V1\CardVerificationController;
 use App\Http\Controllers\Api\V1\CustomFieldController;
 use App\Http\Controllers\Api\V1\FamilyMemberController;
 use App\Http\Controllers\Api\V1\IntegrationController;
+use App\Http\Controllers\Api\V1\IntegrationTokenController;
 use App\Http\Controllers\Api\V1\MasterDataController;
 use App\Http\Controllers\Api\V1\NotificationMessageController;
 use App\Http\Controllers\Api\V1\NotificationSettingsController;
@@ -137,7 +138,12 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         // Tenant-scoped administration
         Route::middleware('tenant.required')->group(function () {
             Route::apiResource('users', UserController::class);
-            Route::apiResource('integrations', IntegrationController::class)->middleware('person');
+            Route::middleware('person')->group(function () {
+                Route::apiResource('integrations', IntegrationController::class);
+                Route::get('integrations/{integration}/tokens', [IntegrationTokenController::class, 'index'])->name('integrations.tokens.index');
+                Route::post('integrations/{integration}/tokens', [IntegrationTokenController::class, 'store'])->name('integrations.tokens.store');
+                Route::delete('integrations/{integration}/tokens/{token}', [IntegrationTokenController::class, 'destroy'])->whereNumber('token')->name('integrations.tokens.destroy');
+            });
             Route::apiResource('roles', RoleController::class)->except('show');
             Route::get('permissions', [PermissionController::class, 'index'])->name('permissions.index');
             Route::get('audit/activities', [AuditController::class, 'activities'])->name('audit.activities');

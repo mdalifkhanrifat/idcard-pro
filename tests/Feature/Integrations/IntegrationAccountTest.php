@@ -29,7 +29,7 @@ it('makes an account with a role, no e-mail and no password anyone is told', fun
         ->assertJsonPath('data.role', 'Operator')
         ->assertJsonPath('data.status', 'active');
 
-    expect(array_keys($response->json('data')))->toEqual(['id', 'name', 'description', 'role', 'status', 'created_at']);
+    expect(array_keys($response->json('data')))->toEqual(['id', 'name', 'description', 'role', 'status', 'tokens_count', 'last_used_at', 'created_at']);
 
     $account = User::where('public_id', $response->json('data.id'))->first();
     expect($account->kind)->toBe(UserKind::Integration)

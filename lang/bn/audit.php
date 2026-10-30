@@ -26,6 +26,11 @@ return [
             'username' => 'ইউজারনেম',
             'roles' => 'রোল',
         ],
+        'api_tokens' => [
+            'owner' => 'অ্যাকাউন্ট',
+            'name' => 'API token-এর নাম',
+            'expires_at' => 'শেষ দিন',
+        ],
         'roles' => [
             'name' => 'রোলের নাম',
             'permissions' => 'পারমিশন',

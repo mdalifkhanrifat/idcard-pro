@@ -7,6 +7,7 @@ use App\Enums\UserStatus;
 use App\Exceptions\BusinessRuleException;
 use App\Models\User;
 use App\Repositories\Contracts\UserRepositoryInterface;
+use App\Services\Integrations\ApiTokenService;
 use App\Services\Roles\PermissionCeiling;
 use App\Support\Audit\RecordedChanges;
 use App\Support\Permissions\PermissionRegistry;
@@ -21,6 +22,7 @@ class UserService
     public function __construct(
         private UserRepositoryInterface $users,
         private PermissionCeiling $ceiling,
+        private ApiTokenService $tokens,
     ) {}
 
     /**
@@ -114,7 +116,7 @@ class UserService
         $this->ceiling->ensureRoles($actor, $user->roles()->pluck('name')->all());
         $this->guardLastOwner($user, [], UserStatus::Inactive->value);
 
-        $user->tokens()->delete();
+        $this->tokens->revokeAll($user);
         $this->users->delete($user);
     }
 

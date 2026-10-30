@@ -202,6 +202,7 @@
         "identifier": "লগইন আইডি",
         "device": "ডিভাইস",
         "logs": {
+            "api_tokens": "API token",
             "user": "ইউজার",
             "roles": "রোল ও পারমিশন",
             "tenant": "প্রতিষ্ঠান",
