@@ -29,6 +29,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property UserKind $kind
  * @property string $name
  * @property string|null $description
+ * @property array<int, string>|null $allowed_ips
  * @property string|null $email
  * @property string|null $username
  * @property string|null $phone
@@ -45,7 +46,7 @@ use Spatie\Permission\Traits\HasRoles;
  * @property Carbon|null $two_factor_confirmed_at
  * @property-read Tenant|null $tenant
  */
-#[Fillable(['tenant_id', 'kind', 'name', 'description', 'email', 'username', 'phone', 'locale', 'avatar_path', 'status', 'password'])]
+#[Fillable(['tenant_id', 'kind', 'name', 'description', 'allowed_ips', 'email', 'username', 'phone', 'locale', 'avatar_path', 'status', 'password'])]
 #[Hidden(['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'])]
 class User extends Authenticatable
 {
@@ -58,6 +59,7 @@ class User extends Authenticatable
     protected $attributes = [
         'is_platform_admin' => false,
         'kind' => 'person',
+        'allowed_ips' => null,
         'status' => 'active',
         'failed_login_attempts' => 0,
     ];
@@ -93,6 +95,7 @@ class User extends Authenticatable
             'two_factor_confirmed_at' => 'datetime',
             'is_platform_admin' => 'boolean',
             'kind' => UserKind::class,
+            'allowed_ips' => 'array',
             'status' => UserStatus::class,
         ];
     }
@@ -140,7 +143,7 @@ class User extends Authenticatable
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['kind', 'name', 'description', 'email', 'username', 'phone', 'status', 'locale'])
+            ->logOnly(['kind', 'name', 'description', 'allowed_ips', 'email', 'username', 'phone', 'status', 'locale'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->useLogName('user');

@@ -354,6 +354,8 @@ return [
         'integrations' => 'integration settings',
         'integrations.token_days' => 'usual length of an integration token (days)',
         'integrations.max_token_days' => 'longest an integration token may last (days)',
+        'allowed_ips' => 'addresses it works from',
+        'allowed_ips.*' => 'addresses it works from',
         'filter.role' => 'role',
         'role' => 'role',
         'description' => 'description',

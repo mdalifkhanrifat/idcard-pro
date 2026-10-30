@@ -135,7 +135,8 @@ class AuditChangeReport implements Report
     }
 
     /**
-     * A user by name, a cardholder acting for themself (public booking) by name and employee number, else the system.
+     * A user by name, an integration account by name and marked as one, a cardholder acting for themself (public
+     * booking) by name and employee number, else the system.
      */
     private function who(Activity $activity): string
     {
@@ -143,6 +144,7 @@ class AuditChangeReport implements Report
 
         return match (true) {
             $causer instanceof Cardholder => (string) __($causer->employee_no ? 'reports.values.cardholder_self_numbered' : 'reports.values.cardholder_self', ['name' => $causer->full_name, 'number' => $causer->employee_no]),
+            $causer instanceof User && $causer->isIntegration() => (string) __('reports.values.integration_actor', ['name' => $causer->name]),
             $causer !== null => (string) $causer->getAttribute('name'),
             default => (string) __('reports.values.system'),
         };

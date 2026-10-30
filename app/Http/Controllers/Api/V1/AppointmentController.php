@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\AppointmentSource;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Appointments\BookAppointmentRequest;
 use App\Http\Requests\Appointments\CancelAppointmentRequest;
@@ -81,7 +82,7 @@ class AppointmentController extends Controller
         /** @var array{location: string, service: string, cardholder: string, family_member?: string|null, date: string, time?: string|null, note?: string|null} $data */
         $data = $request->validated();
 
-        return $this->one($request, $this->booking->book($data, $request->user()))->response()->setStatusCode(201);
+        return $this->one($request, $this->booking->book($data, $request->user(), $this->way($request)))->response()->setStatusCode(201);
     }
 
     /**
@@ -103,7 +104,7 @@ class AppointmentController extends Controller
      */
     public function cancel(CancelAppointmentRequest $request, Appointment $appointment): AppointmentResource
     {
-        return $this->one($request, $this->statuses->cancel($appointment, $request->user(), $request->validated('reason')));
+        return $this->one($request, $this->statuses->cancel($appointment, $request->user(), $request->validated('reason'), via: $this->way($request)));
     }
 
     /**
@@ -113,7 +114,15 @@ class AppointmentController extends Controller
      */
     public function status(ChangeAppointmentStatusRequest $request, Appointment $appointment): AppointmentResource
     {
-        return $this->one($request, $this->statuses->change($appointment, $request->status(), $request->user(), $request->validated('reason')));
+        return $this->one($request, $this->statuses->change($appointment, $request->status(), $request->user(), $request->validated('reason'), via: $this->way($request)));
+    }
+
+    /**
+     * Through the API with a token, whoever holds it, else from the organization's own app.
+     */
+    private function way(Request $request): AppointmentSource
+    {
+        return $request->bearerToken() === null ? AppointmentSource::Staff : AppointmentSource::Api;
     }
 
     private function one(Request $request, Appointment $appointment): AppointmentResource

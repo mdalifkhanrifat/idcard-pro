@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\LoginChannel;
 use App\Enums\NotificationStatus;
 use App\Models\FamilyMember;
 use App\Models\NotificationMessage;
@@ -150,9 +151,10 @@ it('keeps proven sign-ins, lock-outs and blocks in the organization\'s sign-ins,
     ($this->identify)()->assertJsonValidationErrors('employee_no');
 
     Sanctum::actingAs($this->owner);
-    $rows = $this->getJson('/api/v1/audit/logins?filter[channel]=public_booking')->assertOk()->assertJsonPath('meta.channels', [
-        ['key' => 'staff', 'name' => 'Staff sign-in'], ['key' => 'public_booking', 'name' => 'Public booking link'],
-    ])->json('data');
+    $rows = $this->getJson('/api/v1/audit/logins?filter[channel]=public_booking')->assertOk()->assertJsonPath('meta.channels', array_map(
+        fn (LoginChannel $channel) => ['key' => $channel->value, 'name' => $channel->label()],
+        LoginChannel::cases(),
+    ))->assertJsonPath('meta.channels.1', ['key' => 'public_booking', 'name' => 'Public booking link'])->json('data');
     $jane = ['name' => 'Jane Doe', 'employee_no' => 'E-100'];
     expect(collect($rows)->map(fn (array $row) => [$row['event'], $row['identifier'], $row['cardholder'], $row['channel']['key'], $row['user']])->all())->toBe([
         ['blocked', 'E-100', $jane, 'public_booking', null],

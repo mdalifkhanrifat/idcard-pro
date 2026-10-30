@@ -17,7 +17,7 @@ class EnsurePerson
     {
         $user = $request->user();
 
-        abort_if($user instanceof User && $user->isIntegration(), Response::HTTP_FORBIDDEN);
+        abort_if($user instanceof User && $user->isIntegration(), Response::HTTP_FORBIDDEN, __('integrations.person_only'));
 
         return $next($request);
     }

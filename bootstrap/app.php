@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\CheckIntegrationAddress;
 use App\Http\Middleware\EnsurePerson;
 use App\Http\Middleware\EnsurePlatformAdmin;
 use App\Http\Middleware\RequirePublicBookingSession;
@@ -29,6 +30,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'tenant.required' => RequireTenant::class,
             'platform.admin' => EnsurePlatformAdmin::class,
             'person' => EnsurePerson::class,
+            'integration.address' => CheckIntegrationAddress::class,
             'public.booking' => ResolvePublicBookingTenant::class,
             'public.booking.session' => RequirePublicBookingSession::class,
         ]);

@@ -64,6 +64,14 @@ class AuditService
     }
 
     /**
+     * An integration account's token used from an address it does not work from.
+     */
+    public function recordRefusedAddress(Request $request, User $account): LoginEvent
+    {
+        return $this->loginEvents->record(LoginEventType::Blocked, $request->ip(), $request->userAgent(), $account, identifier: $account->name, channel: LoginChannel::Api);
+    }
+
+    /**
      * The ways one signs in, named in the reader's language (the sign-ins filter).
      *
      * @return array<int, array{key: string, name: string}>

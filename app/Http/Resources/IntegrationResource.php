@@ -23,6 +23,7 @@ class IntegrationResource extends JsonResource
             'description' => $this->description,
             'role' => $this->whenLoaded('roles', fn () => $this->roles->pluck('name')->first()),
             'status' => $this->status,
+            'allowed_ips' => $this->allowed_ips ?? [],
             'tokens_count' => $this->whenCounted('tokens'),
             'last_used_at' => $this->whenAggregated('tokens', 'last_used_at', 'max', fn (?string $moment) => $moment === null ? null : Carbon::parse($moment)),
             'created_at' => $this->created_at,

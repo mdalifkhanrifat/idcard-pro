@@ -40,7 +40,7 @@ class IntegrationService
     }
 
     /**
-     * @param  array{name: string, description?: string|null, role: string, status?: string}  $data
+     * @param  array{name: string, description?: string|null, role: string, status?: string, allowed_ips?: array<int, string>|null}  $data
      */
     public function create(array $data, User $actor): User
     {
@@ -53,6 +53,7 @@ class IntegrationService
                 'name' => $data['name'],
                 'description' => $data['description'] ?? null,
                 'status' => $data['status'] ?? UserStatus::Active->value,
+                'allowed_ips' => ($data['allowed_ips'] ?? []) ?: null,
                 'password' => Str::password(64),
             ]);
             $this->giveRole($account, $data['role']);
@@ -63,17 +64,21 @@ class IntegrationService
 
     /**
      * Whatever is not sent stays as it is. A name or a description is anyone's to correct; turning an account on or
-     * off or changing its role is for those who could have given it that role.
+     * off, changing its role or where it works from is for those who could have given it that role.
      *
-     * @param  array{name?: string, description?: string|null, role?: string, status?: string}  $data
+     * @param  array{name?: string, description?: string|null, role?: string, status?: string, allowed_ips?: array<int, string>|null}  $data
      */
     public function update(User $account, array $data, User $actor): User
     {
         $before = $account->roles()->pluck('name')->all();
         $role = $data['role'] ?? null;
         $roleChanges = $role !== null && $before !== [$role];
+        if (array_key_exists('allowed_ips', $data)) {
+            $data['allowed_ips'] = $data['allowed_ips'] ?: null;
+        }
+        $addressChanges = array_key_exists('allowed_ips', $data) && $data['allowed_ips'] !== $account->allowed_ips;
 
-        if ($roleChanges || (isset($data['status']) && $data['status'] !== $account->status->value)) {
+        if ($roleChanges || $addressChanges || (isset($data['status']) && $data['status'] !== $account->status->value)) {
             $this->ceiling->ensureRoles($actor, $before);
         }
         if ($roleChanges) {
@@ -81,7 +86,7 @@ class IntegrationService
         }
 
         return DB::transaction(function () use ($account, $data, $role, $roleChanges): User {
-            $this->integrations->update($account, collect($data)->only(['name', 'description', 'status'])->all());
+            $this->integrations->update($account, collect($data)->only(['name', 'description', 'status', 'allowed_ips'])->all());
             if ($roleChanges) {
                 $this->giveRole($account, $role);
             }

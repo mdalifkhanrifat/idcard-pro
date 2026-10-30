@@ -7,6 +7,7 @@ use App\Enums\UserStatus;
 use App\Models\User;
 use App\Support\Permissions\PermissionRegistry;
 use App\Support\Tenancy\TenantContext;
+use App\Support\Validation\IpOrCidr;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Enum;
@@ -36,6 +37,8 @@ class SaveIntegrationRequest extends FormRequest
             'description' => ['sometimes', 'nullable', 'string', 'max:500'],
             'role' => [$need, 'required', 'string', Rule::exists('roles', 'name')->where('tenant_id', $tenantId), Rule::notIn([PermissionRegistry::OWNER_ROLE])],
             'status' => ['sometimes', 'required', new Enum(UserStatus::class)],
+            'allowed_ips' => ['sometimes', 'nullable', 'array', 'max:50'],
+            'allowed_ips.*' => ['required', 'string', 'distinct', new IpOrCidr],
         ];
     }
 

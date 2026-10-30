@@ -404,9 +404,11 @@ return [
             'vertical' => 'উল্লম্ব',
         ],
         'login_channels' => [
+            'api' => 'API token',
             'staff' => 'কর্মীর লগইন',
             'public_booking' => 'পাবলিক বুকিং লিংক',
         ],
+        'integration_actor' => ':name (ইন্টিগ্রেশন)',
         'cardholder_self' => ':name (কার্ডধারী নিজে)',
         'cardholder_self_numbered' => ':name (কার্ডধারী নিজে; কর্মী নম্বর :number)',
         'system' => 'সিস্টেম',

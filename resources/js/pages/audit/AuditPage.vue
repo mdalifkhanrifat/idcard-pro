@@ -20,7 +20,7 @@ interface ActivityRow {
     event: string;
     subject_type: string;
     /** A user, or a cardholder acting for themself on the public booking link (5.6); null for the system. */
-    causer: { kind: 'user' | 'cardholder'; name: string | null; email: string | null; employee_no?: string | null } | null;
+    causer: { kind: 'user' | 'integration' | 'cardholder'; name: string | null; email: string | null; employee_no?: string | null } | null;
     /** Field changes, or what an event recorded (e.g. requirements_overridden: moment, reason, requirements). */
     changes: { attributes?: Record<string, unknown>; old?: Record<string, unknown>; reason?: string; moment?: string; report?: string; format?: string; rows?: number; print?: boolean; messages?: number; days?: number; address?: string } | null;
     /** The field changes for people (6.0): each field's name and its old and new value in the reader's language; null for an event. */
@@ -129,6 +129,7 @@ const loginReportQuery = computed(() => Object.fromEntries(Object.entries(logins
                         <div class="min-w-0 flex-1">
                             <p class="break-words text-fg">
                                 <span class="font-medium">{{ row.causer?.name ?? t('audit.system') }}</span>
+                                <span v-if="row.causer?.kind === 'integration'" class="text-muted" data-audit-integration> ({{ t('audit.integrationActor') }})</span>
                                 <span v-if="row.causer?.kind === 'cardholder'" class="text-muted" data-audit-cardholder> ({{ t('audit.cardholderSelf') }}<template v-if="row.causer.employee_no"> · <span class="whitespace-nowrap">{{ row.causer.employee_no }}</span></template>)</span>
                                 <template v-if="row.log_name || row.subject_type"> · {{ logLabel(row.log_name ?? '', row.subject_type) }}</template>
                             </p>

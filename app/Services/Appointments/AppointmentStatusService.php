@@ -56,17 +56,17 @@ class AppointmentStatusService
         return $cancelled;
     }
 
-    public function change(Appointment $appointment, AppointmentStatus $to, User $by, ?string $reason = null, ?CarbonImmutable $now = null): Appointment
+    public function change(Appointment $appointment, AppointmentStatus $to, User $by, ?string $reason = null, ?CarbonImmutable $now = null, AppointmentSource $via = AppointmentSource::Staff): Appointment
     {
         $from = null;
-        $changed = DB::transaction(function () use ($appointment, $to, $by, $reason, $now, &$from): Appointment {
+        $changed = DB::transaction(function () use ($appointment, $to, $by, $reason, $now, $via, &$from): Appointment {
             $appointment = $this->appointments->lockForChange($appointment);
             // Restoring takes a place: its lock next, before any other read (see lockForBooking())
             $place = $appointment->status === AppointmentStatus::Cancelled ? $this->locations->lockForBooking($appointment->location_id) : null;
             $now = $this->now($now);
             $from = $appointment->status;
 
-            return $this->apply($appointment, $to, $by, $reason, $now, $this->check($appointment, $to, $now, $place));
+            return $this->apply($appointment, $to, $by, $reason, $now, $this->check($appointment, $to, $now, $place), $via);
         });
         $this->notifications->stepped($changed, $from);
 

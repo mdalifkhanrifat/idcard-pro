@@ -21,6 +21,7 @@ return [
             'authority_type_id' => 'কর্তৃপক্ষের ধরন',
         ],
         'user' => [
+            'allowed_ips' => 'যে ঠিকানা থেকে চলে',
             'kind' => 'অ্যাকাউন্টের ধরন',
             'description' => 'বিবরণ',
             'username' => 'ইউজারনেম',

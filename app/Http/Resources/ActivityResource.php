@@ -3,6 +3,7 @@
 namespace App\Http\Resources;
 
 use App\Models\Cardholder;
+use App\Models\User;
 use App\Services\Audit\AuditChangeDescriber;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
@@ -34,8 +35,9 @@ class ActivityResource extends JsonResource
     }
 
     /**
-     * Who acted: a user (kind "user"), or a cardholder acting for themself on the public booking link (kind
-     * "cardholder", with their employee number instead of an email); null for the system.
+     * Who acted: a user (kind "user"), an organization's account for another system (kind "integration", no email),
+     * or a cardholder acting for themself on the public booking link (kind "cardholder", with their employee number
+     * instead of an email); null for the system.
      *
      * @return array{kind: string, name: string|null, email: string|null, employee_no?: string|null}|null
      */
@@ -46,6 +48,7 @@ class ActivityResource extends JsonResource
         return match (true) {
             $causer === null => null,
             $causer instanceof Cardholder => ['kind' => 'cardholder', 'name' => $causer->full_name, 'email' => null, 'employee_no' => $causer->employee_no],
+            $causer instanceof User && $causer->isIntegration() => ['kind' => 'integration', 'name' => $causer->name, 'email' => null],
             default => ['kind' => 'user', 'name' => $causer->getAttribute('name'), 'email' => $causer->getAttribute('email')],
         };
     }

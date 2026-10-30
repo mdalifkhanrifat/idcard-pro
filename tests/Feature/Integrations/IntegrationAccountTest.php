@@ -29,7 +29,7 @@ it('makes an account with a role, no e-mail and no password anyone is told', fun
         ->assertJsonPath('data.role', 'Operator')
         ->assertJsonPath('data.status', 'active');
 
-    expect(array_keys($response->json('data')))->toEqual(['id', 'name', 'description', 'role', 'status', 'tokens_count', 'last_used_at', 'created_at']);
+    expect(array_keys($response->json('data')))->toEqual(['id', 'name', 'description', 'role', 'status', 'allowed_ips', 'tokens_count', 'last_used_at', 'created_at']);
 
     $account = User::where('public_id', $response->json('data.id'))->first();
     expect($account->kind)->toBe(UserKind::Integration)
@@ -220,7 +220,7 @@ it('keeps what only a person does away from an account, whatever its role', func
     $this->getJson('/api/v1/users')->assertOk();
     $this->getJson('/api/v1/integrations')->assertForbidden();
     $this->postJson('/api/v1/integrations', ['name' => 'Another', 'role' => 'Wide'])->assertForbidden();
-    $this->postJson('/api/v1/auth/tokens', ['name' => 'More'])->assertForbidden();
+    $this->postJson('/api/v1/auth/tokens', ['name' => 'More'])->assertForbidden()->assertJsonPath('message', __('integrations.person_only'));
     $this->getJson('/api/v1/auth/tokens')->assertForbidden();
     $this->putJson('/api/v1/auth/password', ['current_password' => 'x', 'password' => 'Taken#Over789', 'password_confirmation' => 'Taken#Over789'])->assertForbidden();
     $this->postJson('/api/v1/auth/two-factor')->assertForbidden();

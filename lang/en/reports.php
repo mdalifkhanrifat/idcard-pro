@@ -404,9 +404,11 @@ return [
             'vertical' => 'Vertical',
         ],
         'login_channels' => [
+            'api' => 'API token',
             'staff' => 'Staff sign-in',
             'public_booking' => 'Public booking link',
         ],
+        'integration_actor' => ':name (integration)',
         'cardholder_self' => ':name (cardholder, themself)',
         'cardholder_self_numbered' => ':name (cardholder, themself; employee no. :number)',
         'system' => 'System',

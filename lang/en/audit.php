@@ -21,6 +21,7 @@ return [
             'authority_type_id' => 'Authority type',
         ],
         'user' => [
+            'allowed_ips' => 'Addresses it works from',
             'kind' => 'Account type',
             'description' => 'Description',
             'username' => 'Username',

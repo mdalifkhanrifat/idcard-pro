@@ -77,7 +77,7 @@ class ActivityRepository implements ActivityRepositoryInterface
     private function causers(): array
     {
         return ['causer' => fn (MorphTo $causer): MorphTo => $causer->constrain([
-            User::class => fn (Builder $query) => $query->withoutGlobalScope(SoftDeletingScope::class)->select('id', 'name', 'email'),
+            User::class => fn (Builder $query) => $query->withoutGlobalScope(SoftDeletingScope::class)->select('id', 'kind', 'name', 'email'),
             Cardholder::class => fn (Builder $query) => $query->select('id', 'full_name', 'employee_no'),
         ])];
     }
