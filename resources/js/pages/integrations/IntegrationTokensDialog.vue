@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { Check, Copy, KeyRound, TriangleAlert } from 'lucide-vue-next';
+import { KeyRound } from 'lucide-vue-next';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiDialog from '@/components/ui/UiDialog.vue';
@@ -12,6 +12,7 @@ import { toApiError } from '@/lib/http';
 import { createToken, fetchTokens, revokeToken, type ApiToken, type Integration, type IntegrationOptions } from '@/lib/integrations/api';
 import { endsSoon } from '@/lib/integrations/tokens';
 import { useUiStore } from '@/stores/ui';
+import OnceSecret from './OnceSecret.vue';
 
 const props = defineProps<{ account: Integration | null; options: IntegrationOptions | undefined; canMake: boolean }>();
 const open = defineModel<boolean>('open', { default: false });
@@ -26,9 +27,7 @@ const failed = ref(false);
 const busy = ref(false);
 const form = reactive({ name: '', days: 365 as number | string });
 const errors = ref<Record<string, string[]>>({});
-/** Held here only, for as long as the dialog is open: it is never put in the address or in the browser's storage. */
 const plain = ref<string | null>(null);
-const copied = ref(false);
 const apiUrl = `${window.location.origin}/api/v1`;
 const example = computed(() => `curl -H "Authorization: Bearer ${plain.value ?? '<token>'}" -H "Accept: application/json" ${apiUrl}/cardholders`);
 
@@ -49,7 +48,6 @@ async function load(): Promise<void> {
 
 watch(open, (value) => {
     plain.value = null;
-    copied.value = false;
     if (value) {
         errors.value = {};
         Object.assign(form, { name: '', days: props.options?.token_days ?? 365 });
@@ -63,7 +61,6 @@ async function make(): Promise<void> {
     try {
         const token = await createToken(props.account!.id, form.name, form.days);
         plain.value = token.plain_text_token;
-        copied.value = false;
         form.name = '';
         emit('changed');
         await load();
@@ -75,15 +72,6 @@ async function make(): Promise<void> {
         }
     } finally {
         busy.value = false;
-    }
-}
-
-async function copy(): Promise<void> {
-    try {
-        await navigator.clipboard.writeText(plain.value ?? '');
-        copied.value = true;
-    } catch {
-        ui.notify(t('integrations.tokens.copyFailed'), 'error');
     }
 }
 
@@ -105,15 +93,7 @@ async function revoke(token: ApiToken): Promise<void> {
 <template>
     <UiDialog v-model:open="open" :title="t('integrations.tokens.title', { name: account?.name ?? '' })" size="lg" full-on-phone>
         <div class="space-y-5" data-integration-tokens>
-            <section v-if="plain" class="rounded-lg border border-warning/40 bg-warning/10 p-4" data-token-once>
-                <p class="flex items-start gap-2 text-sm font-medium text-fg">
-                    <TriangleAlert class="mt-0.5 size-4 shrink-0" />{{ t('integrations.tokens.onlyOnce') }}
-                </p>
-                <code class="mt-3 block break-all rounded-md bg-surface p-3 font-mono text-xs text-fg" dir="ltr" data-token-plain>{{ plain }}</code>
-                <UiButton variant="secondary" class="mt-3" data-token-copy @click="copy">
-                    <Check v-if="copied" class="size-4" /><Copy v-else class="size-4" />{{ copied ? t('integrations.tokens.copied') : t('integrations.tokens.copy') }}
-                </UiButton>
-            </section>
+            <OnceSecret v-if="plain" :value="plain" :warning="t('integrations.tokens.onlyOnce')" />
 
             <form v-if="canMake" class="grid gap-3 sm:grid-cols-[1fr_9rem_auto] sm:items-start" data-token-form @submit.prevent="make">
                 <UiInput v-model="form.name" :label="t('integrations.tokens.name')" :hint="t('integrations.tokens.nameHint')" required :error="errors.name" />

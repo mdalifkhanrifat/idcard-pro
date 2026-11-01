@@ -2215,9 +2215,46 @@
             "hintQr": "Show this number (or the QR code in your e-mail) at the desk."
         }
     },
+    "webhooks": {
+        "new": "New webhook",
+        "editTitle": "Edit webhook",
+        "name": "Name",
+        "nameHint": "What it tells, like “HR system”.",
+        "url": "Address",
+        "urlHint": "Where to send, like https://hr.example.com/hooks. It must be public and use https.",
+        "enabled": "Turned on",
+        "enabledHint": "While off, nothing is sent and what happens is not kept for later.",
+        "events": "What to be told about",
+        "groupBeyond": "You may not see this data yourself, so you cannot choose it.",
+        "searchPlaceholder": "Search by name or address",
+        "on": "On",
+        "off": "Off",
+        "turnOn": "Turn on",
+        "turnedOn": "Turned on",
+        "turnedItselfOff": "Turned itself off",
+        "eventCount": "No events | {count} event | {count} events",
+        "failuresInRow": "{count} failed in a row | {count} failed in a row",
+        "test": "Test",
+        "testDelivered": "Test delivered: the address answered {code}.",
+        "testFailedCode": "{reason} ({code})",
+        "deleteConfirm": "Delete {name}? Nothing more is sent to it.",
+        "empty": "No webhooks yet",
+        "emptyHint": "Add an address, and it is told when something it cares about happens here.",
+        "secret": {
+            "title": "Signing secret of {name}",
+            "onlyOnce": "Copy this secret now. It cannot be shown again.",
+            "howTo": "Keep it in the system that receives. It uses it to check that each delivery really came from here.",
+            "rotate": "New signing secret",
+            "rotateConfirm": "Make a new secret for {name}? The old one stops at once, so deliveries fail its check until the new one is in place."
+        }
+    },
     "integrations": {
+        "tabs": {
+            "accounts": "Accounts",
+            "webhooks": "Webhooks"
+        },
         "title": "Integrations",
-        "subtitle": "Accounts other systems (HR, access control and the like) use to reach this organization through the API.",
+        "subtitle": "How other systems (HR, access control and the like) connect to this organization: accounts reach it through the API, webhooks tell them what happens.",
         "new": "New integration",
         "editTitle": "Edit integration",
         "name": "Name",
