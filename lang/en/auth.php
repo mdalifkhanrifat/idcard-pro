@@ -4,6 +4,7 @@ return [
     'failed' => 'These credentials do not match our records.',
     'password' => 'The provided password is incorrect.',
     'throttle' => 'Too many login attempts. Please try again in :seconds seconds.',
+    'too_many_requests' => 'Too many tries. Please try again in :seconds seconds.',
     'locked' => 'This account is temporarily locked after too many failed attempts. Try again in :minutes minute(s) or contact your administrator.',
     'inactive' => 'This account or organization is inactive. Please contact your administrator.',
     'two_factor_invalid' => 'The authentication code is invalid.',

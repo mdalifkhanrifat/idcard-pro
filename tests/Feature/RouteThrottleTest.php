@@ -33,6 +33,24 @@ it('gives every limit written in place a name of its own', function () {
         ->and($throttles->pluck('limit')->map(fn (string $limit): string => explode(',', $limit)[2] ?? '')->duplicates()->all())->toBe([]);
 });
 
+it('says when to try again in the reader\'s language and digits, keeping the headers', function () {
+    Queue::fake();
+    [, $owner] = tenantWithOwner();
+    $owner->forceFill(['locale' => 'bn'])->save();
+    Sanctum::actingAs($owner);
+
+    foreach (range(0, (int) config('notifications.manual.test_per_minute')) as $try) {
+        // Each request starts as a new one would: a language left by the one before would hide a limit that runs too early
+        app()->setLocale('en');
+        $answer = $this->postJson('/api/v1/notifications/test', ['channel' => 'mail', 'address' => 'qa@example.test'], ['Accept-Language' => 'bn']);
+    }
+
+    $answer->assertTooManyRequests();
+    expect($answer->json('message'))->toMatch('/^অনেকবার চেষ্টা হয়েছে। [০-৯]+ সেকেন্ড পরে/u')
+        ->and((int) $answer->headers->get('Retry-After'))->toBeGreaterThan(0)
+        ->and($answer->headers->has('X-RateLimit-Limit'))->toBeTrue();
+});
+
 it('does not let one action use up the limit of another', function () {
     Http::preventStrayRequests();
     Http::fake(['*' => Http::response('', 200)]);
