@@ -8,6 +8,7 @@ use App\Services\Biometrics\BiometricSettings;
 use App\Services\Cards\CardNumberFormat;
 use App\Services\Integrations\IntegrationSettings;
 use App\Services\Notifications\NotificationSettings;
+use App\Services\Webhooks\WebhookSettings;
 use App\Support\Audit\JsonChanges;
 use Database\Factories\TenantFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -112,6 +113,7 @@ class Tenant extends Model
             'notifications' => $this->notificationSettings(),
             'appointments' => $this->appointmentSettings(),
             'integrations' => $this->integrationSettings(),
+            'webhooks' => $this->webhookSettings(),
         ];
     }
 
@@ -209,6 +211,14 @@ class Tenant extends Model
     public function integrationSettings(): array
     {
         return IntegrationSettings::normalize((array) ($this->settings['integrations'] ?? []));
+    }
+
+    /**
+     * @return array{prune_log: bool, log_days: int}
+     */
+    public function webhookSettings(): array
+    {
+        return WebhookSettings::normalize((array) ($this->settings['webhooks'] ?? []));
     }
 
     /**

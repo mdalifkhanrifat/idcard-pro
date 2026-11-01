@@ -8,6 +8,7 @@ use App\Models\Webhook;
 use App\Models\WebhookDelivery;
 use App\Repositories\Contracts\WebhookDeliveryRepositoryInterface;
 use App\Support\ListPage;
+use Carbon\CarbonInterface;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 
@@ -40,6 +41,22 @@ class WebhookDeliveryRepository extends EloquentRepository implements WebhookDel
             ->orderByDesc('id')
             ->paginate(ListPage::clamp($filter->perPage))
             ->withQueryString();
+    }
+
+    public function deleteOlderThan(int $tenantId, CarbonInterface $before, int $chunk = 1000): int
+    {
+        $deleted = 0;
+        do {
+            $ids = WebhookDelivery::query()->withoutGlobalScopes()
+                ->where('tenant_id', $tenantId)
+                ->where('created_at', '<', $before)
+                ->orderBy('id')
+                ->limit($chunk)
+                ->pluck('id');
+            $deleted += $ids->isEmpty() ? 0 : WebhookDelivery::query()->withoutGlobalScopes()->whereIn('id', $ids)->delete();
+        } while ($ids->count() === $chunk);
+
+        return $deleted;
     }
 
     public function withDetails(WebhookDelivery $delivery): WebhookDelivery

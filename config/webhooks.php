@@ -22,6 +22,9 @@
 | once and then after each of `retry.backoff` seconds, about nine hours in all. After `disable_after` deliveries in a
 | row have failed the webhook turns itself off.
 |
+| The log of deliveries holds what was sent. It is kept for good unless the organization chooses to have deliveries
+| older than `log_days` deleted (daily, app:prune-webhook-deliveries).
+|
 */
 
 return [
@@ -60,5 +63,13 @@ return [
 
     // Failed deliveries sent again by hand, per user and minute
     'resend_per_minute' => 30,
+
+    // Days a delivery stays in the log when the organization has old ones deleted (within these)
+    'log_days' => ['min' => 7, 'max' => 3650],
+
+    'defaults' => [
+        'prune_log' => false,
+        'log_days' => 365,
+    ],
 
 ];

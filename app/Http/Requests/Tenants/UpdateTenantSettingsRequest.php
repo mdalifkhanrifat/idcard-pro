@@ -81,6 +81,9 @@ class UpdateTenantSettingsRequest extends FormRequest
                 }
             }],
             'integrations.max_token_days' => ['sometimes', 'integer', $limit],
+            'webhooks' => ['sometimes', 'array:prune_log,log_days'],
+            'webhooks.prune_log' => ['sometimes', 'boolean'],
+            'webhooks.log_days' => ['sometimes', 'integer', 'between:'.(int) config('webhooks.log_days.min').','.(int) config('webhooks.log_days.max')],
         ];
     }
 

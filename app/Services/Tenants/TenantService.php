@@ -14,6 +14,7 @@ use App\Services\Biometrics\BiometricSettings;
 use App\Services\Integrations\IntegrationSettings;
 use App\Services\MasterData\MasterDataService;
 use App\Services\Notifications\NotificationSettings;
+use App\Services\Webhooks\WebhookSettings;
 use App\Support\Permissions\PermissionRegistry;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -151,6 +152,12 @@ class TenantService
             $current = (array) ($tenant->settings['integrations'] ?? []);
             $data['settings'] = [...($data['settings'] ?? $tenant->settings ?? []), 'integrations' => IntegrationSettings::normalize([...$current, ...(array) $data['integrations']])];
             unset($data['integrations']);
+        }
+
+        if (array_key_exists('webhooks', $data)) {
+            $current = (array) ($tenant->settings['webhooks'] ?? []);
+            $data['settings'] = [...($data['settings'] ?? $tenant->settings ?? []), 'webhooks' => WebhookSettings::normalize([...$current, ...(array) $data['webhooks']])];
+            unset($data['webhooks']);
         }
 
         $biometricsChanged = false;
