@@ -124,6 +124,7 @@ every attempt.
 | `cardholder.created` | A cardholder is added | `GET /api/v1/cardholders/{id}` |
 | `cardholder.updated` | A cardholder's own record changes | the same |
 | `cardholder.deleted` | A cardholder is deleted | the same, as last saved |
+| `cardholder.imported` | A file of cardholders ends | see [Imports](#imports) |
 | `card.issued` | A card is issued | `GET /api/v1/cards/{id}` |
 | `card.printed` | A card is printed | the same |
 | `card.updated` | A card's details change | the same |
@@ -136,6 +137,32 @@ every attempt.
 | `webhook.test` | Someone presses *Test* | `{"test": true}` |
 
 New events can be added, and new fields can appear in `data`: ignore what you do not know.
+
+## Imports
+
+A file can hold thousands of rows. A webhook that chooses `cardholder.imported` gets one delivery for
+the whole file, and hears nothing of `cardholder.created` or `cardholder.updated` from that file. A
+webhook that does not choose it goes on hearing of each row. Card events are not affected.
+
+```json
+{
+  "id": "01kbx7j8m2…",
+  "status": "completed",
+  "created": 2,
+  "updated": 1,
+  "failed": 1,
+  "cards": { "imported": 0, "skipped": 0 },
+  "started_at": "2026-11-01T10:00:00Z",
+  "finished_at": "2026-11-01T10:00:09Z",
+  "cardholders": { "created": ["01kbx7…", "01kbx8…"], "updated": ["01kbx9…"] }
+}
+```
+
+`cardholders` holds ids only: read the records from the API. Nothing is sent when no row saved.
+
+A file that breaks off comes with `"status": "failed"` and the rows that did save. If the run was cut
+off from outside, the ids are no longer known: `created`, `updated` and `cardholders` are `null`, and
+some rows may have saved, so compare for yourself.
 
 ## Managing webhooks through the API
 

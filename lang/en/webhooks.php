@@ -11,6 +11,7 @@ return [
         'cardholder.created' => 'Cardholder added',
         'cardholder.updated' => 'Cardholder changed',
         'cardholder.deleted' => 'Cardholder deleted',
+        'cardholder.imported' => 'File imported (one message for the whole file)',
         'card.issued' => 'Card issued',
         'card.printed' => 'Card printed',
         'card.updated' => 'Card changed',

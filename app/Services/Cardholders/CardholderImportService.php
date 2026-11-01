@@ -16,6 +16,7 @@ use App\Repositories\Contracts\CardholderRepositoryInterface;
 use App\Repositories\Contracts\CardTemplateRepositoryInterface;
 use App\Services\Cards\CardIssueService;
 use App\Services\CustomFields\CustomFieldService;
+use App\Services\Webhooks\WebhookNotifier;
 use App\Support\Spreadsheets\TabularFileReader;
 use App\Support\Spreadsheets\UnreadableSpreadsheetException;
 use App\Support\Tenancy\TenantContext;
@@ -36,6 +37,9 @@ use Throwable;
  */
 class CardholderImportService
 {
+    /** Says in one delivery what a file did, for the webhooks that chose it (config webhooks.batches). */
+    private const IMPORTED_EVENT = 'cardholder.imported';
+
     public function __construct(
         private CardholderImportRepositoryInterface $imports,
         private CardholderRepositoryInterface $cardholders,
@@ -47,6 +51,7 @@ class CardholderImportService
         private CardTemplateRepositoryInterface $templates,
         private CardIssueService $cardIssue,
         private TenantContext $tenantContext,
+        private WebhookNotifier $webhooks,
     ) {}
 
     /**
@@ -133,6 +138,7 @@ class CardholderImportService
     public function process(CardholderImport $import): void
     {
         $this->imports->update($import, ['status' => ImportStatus::Processing, 'started_at' => now()]);
+        $changed = ['created' => [], 'updated' => []];
 
         try {
             $template = null;
@@ -140,14 +146,17 @@ class CardholderImportService
                 $template = $this->cardTemplate($import->options['card_template'] ?? null)
                     ?? throw new BusinessRuleException(__('cards.import.template_unavailable'));
             }
-            $result = $this->walk(
-                Storage::disk($import->disk)->path((string) $import->path),
-                pathinfo((string) $import->path, PATHINFO_EXTENSION),
-                [...$import->options, 'import_cards' => $template !== null],
-                dryRun: false,
-                actor: $import->user,
-                template: $template,
-            );
+            $result = $this->webhooks->inBatch(self::IMPORTED_EVENT, function () use ($import, $template, &$changed): array {
+                return $this->walk(
+                    Storage::disk($import->disk)->path((string) $import->path),
+                    pathinfo((string) $import->path, PATHINFO_EXTENSION),
+                    [...$import->options, 'import_cards' => $template !== null],
+                    dryRun: false,
+                    actor: $import->user,
+                    template: $template,
+                    changed: $changed,
+                );
+            });
 
             $this->imports->update($import, [
                 'status' => ImportStatus::Completed,
@@ -158,8 +167,11 @@ class CardholderImportService
                 'summary' => [...($import->summary ?? []), 'created_lookups' => $result['summary']['lookups_to_create'], 'cards_result' => $result['summary']['cards']],
                 'finished_at' => now(),
             ]);
+            $this->tellIfAnythingChanged($import, $changed);
         } catch (Throwable $e) {
             $this->imports->update($import, ['status' => ImportStatus::Failed, 'finished_at' => now(), 'errors' => [['row' => 0, 'messages' => [$e->getMessage()]]]]);
+            // The rows saved so far stay, and webhooks that chose the whole heard nothing of them
+            $this->tellIfAnythingChanged($import, $changed);
 
             throw $e;
         } finally {
@@ -171,6 +183,18 @@ class CardholderImportService
     {
         $this->imports->update($import, ['status' => ImportStatus::Failed, 'finished_at' => now(), 'errors' => [['row' => 0, 'messages' => [$message]]]]);
         $this->removeFile($import);
+        // Cut off from outside: some rows may have saved, and which is no longer known
+        $this->webhooks->tellImported(self::IMPORTED_EVENT, $import, null);
+    }
+
+    /**
+     * @param  array{created: array<int, string>, updated: array<int, string>}  $changed
+     */
+    private function tellIfAnythingChanged(CardholderImport $import, array $changed): void
+    {
+        if ($changed['created'] !== [] || $changed['updated'] !== []) {
+            $this->webhooks->tellImported(self::IMPORTED_EVENT, $import, $changed);
+        }
     }
 
     /**
@@ -211,9 +235,10 @@ class CardholderImportService
      * when a template is given).
      *
      * @param  array{create_missing_lookups: bool, update_existing: bool, import_cards?: bool}  $options
+     * @param  array{created: array<int, string>, updated: array<int, string>}  $changed  the ids saved so far, kept by the caller in case the file breaks off
      * @return array{total: int, valid: int, created: int, updated: int, errors: array<int, array{row: int, messages: array<int, string>}>, summary: array<string, mixed>}
      */
-    private function walk(string $path, string $extension, array $options, bool $dryRun, ?User $actor = null, ?CardTemplate $template = null): array
+    private function walk(string $path, string $extension, array $options, bool $dryRun, ?User $actor = null, ?CardTemplate $template = null, array &$changed = ['created' => [], 'updated' => []]): array
     {
         $this->mapper->useCustomFields($this->customFields->list('cardholder', true));
         $maxRows = (int) config('cardholder_import.max_rows');
@@ -270,6 +295,9 @@ class CardholderImportService
                 }
 
                 $valid++;
+                if (isset($outcome['cardholder'])) {
+                    $changed[$outcome['action']][] = $outcome['cardholder'];
+                }
                 if ($outcome['action'] === 'updated') {
                     $updated++;
                 } elseif ($outcome['action'] === 'created') {
@@ -344,6 +372,7 @@ class CardholderImportService
             }
 
             $action = $existing ? 'updated' : 'created';
+            $cardholder = null;
             if ($messages === [] && ! $dryRun) {
                 $cardholder = $existing instanceof Cardholder
                     ? $this->cardholderService->update($existing, $validation->validated())
@@ -353,7 +382,7 @@ class CardholderImportService
                 }
             }
 
-            return ['messages' => $messages, 'action' => $action, 'card' => $messages === [] ? $cardAction : null, 'lookups' => $mapped['created'], 'preview' => $preview];
+            return ['messages' => $messages, 'action' => $action, 'cardholder' => $cardholder?->public_id, 'card' => $messages === [] ? $cardAction : null, 'lookups' => $mapped['created'], 'preview' => $preview];
         };
 
         if ($dryRun) {

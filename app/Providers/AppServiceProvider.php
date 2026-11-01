@@ -8,6 +8,7 @@ use App\Services\Appointments\BookedAppointmentLoad;
 use App\Services\Audit\AuditChangeDescriber;
 use App\Services\Cards\CardRequirements;
 use App\Services\Integrations\IntegrationSettings;
+use App\Services\Webhooks\WebhookNotifier;
 use App\Support\Pdf\DisabledPdfRenderer;
 use App\Support\Pdf\GotenbergPdfRenderer;
 use App\Support\Pdf\PdfRenderer;
@@ -33,6 +34,8 @@ class AppServiceProvider extends ServiceProvider
         $this->app->scoped(TenantContext::class);
         // One per request or job: requirements read the organization's settings once
         $this->app->scoped(CardRequirements::class);
+        // Holds which file is being worked through, for the services it is handed to
+        $this->app->scoped(WebhookNotifier::class);
         // One per request or job: the audit's field names are looked up once per language
         $this->app->scoped(AuditChangeDescriber::class);
         // What is already booked at a place (bookings come with 5.4)

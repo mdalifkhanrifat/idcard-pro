@@ -11,6 +11,7 @@ return [
         'cardholder.created' => 'কার্ডধারী যোগ',
         'cardholder.updated' => 'কার্ডধারী বদল',
         'cardholder.deleted' => 'কার্ডধারী মোছা',
+        'cardholder.imported' => 'ফাইল ইমপোর্ট (পুরো ফাইলের একটাই বার্তা)',
         'card.issued' => 'কার্ড ইস্যু',
         'card.printed' => 'কার্ড ছাপা',
         'card.updated' => 'কার্ড বদল',

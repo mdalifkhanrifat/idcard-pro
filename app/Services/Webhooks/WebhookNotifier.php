@@ -5,9 +5,12 @@ namespace App\Services\Webhooks;
 use App\Models\Appointment;
 use App\Models\Card;
 use App\Models\Cardholder;
+use App\Models\CardholderImport;
 use App\Models\Tenant;
+use App\Models\Webhook;
 use App\Repositories\Contracts\WebhookRepositoryInterface;
 use App\Support\Tenancy\TenantContext;
+use Closure;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
@@ -19,6 +22,9 @@ use Throwable;
  */
 class WebhookNotifier
 {
+    /** The batch event of the file being worked through, if any. */
+    private ?string $batch = null;
+
     public function __construct(
         private WebhookRepositoryInterface $webhooks,
         private WebhookDeliveryService $deliveries,
@@ -33,20 +39,59 @@ class WebhookNotifier
     {
         $tenant = $this->tenantContext->get();
         if ($tenant !== null) {
-            DB::afterCommit(fn () => $this->send($event, $subject, $tenant));
+            // Asked now: it is the moment of the change that decides, not the moment of saving
+            $folded = $this->batch !== null && in_array($event, (array) ((array) config('webhooks.batches'))[$this->batch], true) ? $this->batch : null;
+            DB::afterCommit(fn () => $this->send($event, fn (): array => $this->payloads->of($subject, $tenant), $tenant, $folded));
         }
     }
 
-    private function send(string $event, Appointment|Card|Cardholder $subject, Tenant $tenant): void
+    /**
+     * Work through a file: webhooks that chose the batch event hear nothing of its rows, and are told of the whole with
+     * tellImported() instead.
+     *
+     * @template T
+     *
+     * @param  Closure(): T  $work
+     * @return T
+     */
+    public function inBatch(string $event, Closure $work): mixed
+    {
+        $this->batch = $event;
+        try {
+            return $work();
+        } finally {
+            $this->batch = null;
+        }
+    }
+
+    /**
+     * What a file did, once it ended, however it ended.
+     *
+     * @param  array{created: array<int, string>, updated: array<int, string>}|null  $changed  public ids; null when not known
+     */
+    public function tellImported(string $event, CardholderImport $import, ?array $changed): void
+    {
+        $tenant = $this->tenantContext->get();
+        if ($tenant !== null) {
+            $this->send($event, fn (): array => $this->payloads->ofImport($import, $changed), $tenant, null);
+        }
+    }
+
+    /**
+     * @param  Closure(): array<string, mixed>  $describe  only when some webhook is to be told
+     * @param  string|null  $folded  the batch event that stands in for this one, for the webhooks that chose it
+     */
+    private function send(string $event, Closure $describe, Tenant $tenant, ?string $folded): void
     {
         try {
-            $this->tenantContext->run($tenant, function () use ($event, $subject, $tenant): void {
-                $webhooks = $this->webhooks->listeningTo($event);
+            $this->tenantContext->run($tenant, function () use ($event, $describe, $folded): void {
+                $webhooks = $this->webhooks->listeningTo($event)
+                    ->reject(fn (Webhook $webhook): bool => $folded !== null && in_array($folded, $webhook->events, true));
                 if ($webhooks->isEmpty()) {
                     return;
                 }
-                $data = $this->payloads->of($subject, $tenant);
-                $webhooks->each(fn ($webhook) => $this->deliveries->queue($webhook, $event, $data));
+                $data = $describe();
+                $webhooks->each(fn (Webhook $webhook) => $this->deliveries->queue($webhook, $event, $data));
             });
         } catch (Throwable $failure) {
             report($failure);

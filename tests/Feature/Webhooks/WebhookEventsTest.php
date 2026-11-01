@@ -2,10 +2,13 @@
 
 use App\Data\Cards\ImportCardData;
 use App\Enums\AppointmentStatus;
+use App\Enums\ImportStatus;
+use App\Jobs\ImportCardholders;
 use App\Jobs\SendWebhook;
 use App\Models\AppointmentLocation;
 use App\Models\Cardholder;
 use App\Models\CardholderFile;
+use App\Models\CardholderImport;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\Webhook;
@@ -192,6 +195,85 @@ it('tells of each row of an imported file that saved, and nothing of a preview o
     expect(($this->told)())->toBe(['cardholder.created', 'cardholder.created']);
 });
 
+it('says in one delivery what a file did, to a webhook that chose that, and of each row to one that did not', function () {
+    Queue::fake([SendWebhook::class]);
+    $whole = ($this->listen)(['cardholder.imported', 'cardholder.created', 'cardholder.updated']);
+    $rows = ($this->listen)(['cardholder.created', 'cardholder.updated']);
+    $existing = cardholder($this->tenant, ['employee_no' => 'E-9', 'full_name' => 'Old Name']);
+    $file = UploadedFile::fake()->createWithContent('people.csv', "full_name,employee_no,date_of_birth\nRahim Uddin,E-1,1990-04-15\nKarim Mia,E-2,1991-05-16\nNew Name,E-9,1992-06-17\nBad Date,E-3,not-a-date\n");
+
+    $id = $this->post('/api/v1/cardholder-imports', ['file' => $file, 'update_existing' => '1'], ['Accept' => 'application/json'])->assertCreated()->json('data.id');
+    $this->postJson("/api/v1/cardholder-imports/{$id}/start")->assertSuccessful();
+
+    $of = fn (Webhook $webhook): array => WebhookDelivery::withoutGlobalScopes()->where('webhook_id', $webhook->id)->orderBy('id')->pluck('event')->all();
+    expect($of($whole))->toBe(['cardholder.imported'])
+        ->and($of($rows))->toBe(['cardholder.created', 'cardholder.created', 'cardholder.updated']);
+
+    $sent = json_decode(WebhookDelivery::withoutGlobalScopes()->where('webhook_id', $whole->id)->sole()->payload, true)['data'];
+    $made = Cardholder::withoutGlobalScopes()->whereIn('employee_no', ['E-1', 'E-2'])->orderBy('id')->pluck('public_id')->all();
+
+    expect($sent['id'])->toBe($id)
+        ->and($sent['status'])->toBe('completed')
+        ->and([$sent['created'], $sent['updated'], $sent['failed']])->toBe([2, 1, 1])
+        ->and($sent['cards'])->toBe(['imported' => 0, 'skipped' => 0])
+        ->and($sent['cardholders'])->toBe(['created' => $made, 'updated' => [$existing->public_id]])
+        ->and($sent['finished_at'])->toEndWith('Z');
+});
+
+it('says nothing of a file where no row saved', function () {
+    Queue::fake([SendWebhook::class]);
+    ($this->listen)(['cardholder.imported']);
+    $file = UploadedFile::fake()->createWithContent('people.csv', "full_name,employee_no\nTaken Number,E-3\n");
+    $id = $this->post('/api/v1/cardholder-imports', ['file' => $file], ['Accept' => 'application/json'])->assertCreated()->json('data.id');
+    // Valid when it was read, no longer when its turn comes
+    cardholder($this->tenant, ['employee_no' => 'E-3']);
+
+    $this->postJson("/api/v1/cardholder-imports/{$id}/start")->assertSuccessful();
+
+    expect(($this->told)())->toBe([])
+        ->and(CardholderImport::withoutGlobalScopes()->where('public_id', $id)->value('failed_count'))->toBe(1);
+});
+
+it('still tells of the rows that saved when a file breaks off', function () {
+    Queue::fake([SendWebhook::class]);
+    ($this->listen)(['cardholder.imported']);
+    config(['cardholder_import.max_rows' => 3]);
+    $file = UploadedFile::fake()->createWithContent('people.csv', "full_name,employee_no\nA One,E-1\nB Two,E-2\n");
+    $id = $this->post('/api/v1/cardholder-imports', ['file' => $file], ['Accept' => 'application/json'])->assertCreated()->json('data.id');
+    config(['cardholder_import.max_rows' => 1]);
+    $this->expectsReport = true;
+
+    $this->postJson("/api/v1/cardholder-imports/{$id}/start");
+
+    $sent = ($this->last)()['data'];
+    expect($sent['status'])->toBe('failed')
+        ->and($sent['created'])->toBe(1)
+        ->and($sent['cardholders']['created'])->toHaveCount(1);
+});
+
+it('says the ids are not known when a run is cut off from outside', function () {
+    ($this->listen)(['cardholder.imported']);
+    $import = ($this->inTenant)(fn () => CardholderImport::query()->create(['original_name' => 'people.csv', 'disk' => 'local', 'status' => ImportStatus::Processing, 'options' => []]));
+
+    (new ImportCardholders($import->id))->failed(new RuntimeException('Timed out'));
+
+    $sent = ($this->last)()['data'];
+    expect($sent['status'])->toBe('failed')
+        ->and($sent['cardholders'])->toBeNull()
+        ->and($sent['created'])->toBeNull();
+});
+
+it('tells of each row again after a file, in the same process', function () {
+    $notifier = app(WebhookNotifier::class);
+    ($this->listen)(['cardholder.imported', 'cardholder.created']);
+
+    $notifier->inBatch('cardholder.imported', fn () => ($this->inTenant)(fn () => $notifier->tell('cardholder.created', cardholder($this->tenant))));
+    expect(($this->told)())->toBe([]);
+
+    ($this->inTenant)(fn () => $notifier->tell('cardholder.created', cardholder($this->tenant)));
+    expect(($this->told)())->toBe(['cardholder.created']);
+});
+
 it('tells of what a system does with its API token, the same way', function () {
     ($this->listen)(['cardholder.created']);
     $account = ($this->inTenant)(fn () => User::factory()->integration()->create(['tenant_id' => $this->tenant->id])->assignRole('Administrator'));
@@ -266,7 +348,7 @@ it('is quiet without an organization, as in a seeder', function () {
 });
 
 it('has every event of the registry fired somewhere', function () {
-    $sources = collect(['Cards/CardNotifications', 'Appointments/AppointmentNotifications', 'Cardholders/CardholderService'])
+    $sources = collect(['Cards/CardNotifications', 'Appointments/AppointmentNotifications', 'Cardholders/CardholderService', 'Cardholders/CardholderImportService'])
         ->map(fn (string $file) => file_get_contents(app_path("Services/{$file}.php")))
         ->join('');
 

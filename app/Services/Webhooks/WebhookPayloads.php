@@ -8,6 +8,7 @@ use App\Http\Resources\CardResource;
 use App\Models\Appointment;
 use App\Models\Card;
 use App\Models\Cardholder;
+use App\Models\CardholderImport;
 use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Traits\Localizable;
@@ -35,5 +36,27 @@ class WebhookPayloads
         $saved = $subject->fresh($relations) ?? $subject->withoutRelations()->load($relations);
 
         return $this->withLocale((string) $tenant->locale, fn (): array => (new $resource($saved))->resolve(new Request));
+    }
+
+    /**
+     * What a file did, without what is in it: the ids say which records to read. `cardholders` is null when a run was
+     * cut off and they are not known: the receiver then compares for itself.
+     *
+     * @param  array{created: array<int, string>, updated: array<int, string>}|null  $changed
+     * @return array<string, mixed>
+     */
+    public function ofImport(CardholderImport $import, ?array $changed): array
+    {
+        return [
+            'id' => $import->public_id,
+            'status' => $import->status->value,
+            'created' => $changed === null ? null : count($changed['created']),
+            'updated' => $changed === null ? null : count($changed['updated']),
+            'failed' => $import->failed_count,
+            'cards' => $import->summary['cards_result'] ?? null,
+            'started_at' => $import->started_at?->utc()->toIso8601ZuluString(),
+            'finished_at' => $import->finished_at?->utc()->toIso8601ZuluString(),
+            'cardholders' => $changed,
+        ];
     }
 }
