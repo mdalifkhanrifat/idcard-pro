@@ -21,6 +21,9 @@ export interface Tenant {
     /** Landscape default for new templates, in mm. */
     default_card_size?: { width: number; height: number };
     integrations?: { token_days: number; max_token_days: number };
+    /** Whether old webhook deliveries leave the log (6.2), and the days it can be set to. */
+    webhooks?: { prune_log: boolean; log_days: number };
+    webhook_options?: { log_days: { min: number; max: number } };
     /** Public card verification (3.7), chosen by the organization. */
     verification?: TenantVerification;
     /** Details the verification page may show. */

@@ -379,6 +379,15 @@
                 "print": "Each print uses the person's latest capture, so a reprint of the same card can show a newer image."
             }
         },
+        "webhooks": {
+            "title": "Webhooks",
+            "description": "The log of what was sent to webhooks. It holds the data sent, which can be personal.",
+            "pruneLog": "Delete old deliveries from the log",
+            "keepHint": "Off: the log is kept for good.",
+            "pruneWarning": "Deliveries older than this are deleted every day and cannot be brought back. Each deletion is noted in the audit log.",
+            "logDays": "Days to keep",
+            "logDaysHint": "From {min} to {max} days"
+        },
         "integrations": {
             "title": "Integration tokens",
             "description": "How long the tokens of integration accounts last. Every token has an end.",

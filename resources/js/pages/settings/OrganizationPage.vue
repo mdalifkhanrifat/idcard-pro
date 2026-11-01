@@ -2,7 +2,7 @@
 import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { watchDebounced } from '@vueuse/core';
 import { useI18n } from 'vue-i18n';
-import { ArrowDown, ArrowRight, ArrowUp, BadgeCheck, Upload } from 'lucide-vue-next';
+import { AlertTriangle, ArrowDown, ArrowRight, ArrowUp, BadgeCheck, Upload } from 'lucide-vue-next';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiCard from '@/components/ui/UiCard.vue';
 import UiCheckbox from '@/components/ui/UiCheckbox.vue';
@@ -10,6 +10,7 @@ import UiInput from '@/components/ui/UiInput.vue';
 import UiPageHeader from '@/components/ui/UiPageHeader.vue';
 import UiSelect from '@/components/ui/UiSelect.vue';
 import UiTextarea from '@/components/ui/UiTextarea.vue';
+import { formatNumber } from '@/lib/format';
 import { applyBrand } from '@/lib/brand';
 import { appendBiometricSettings } from '@/lib/biometrics/settings';
 import { http, toApiError } from '@/lib/http';
@@ -59,6 +60,9 @@ const canSeeAppointments = computed(() => auth.can(['appointments.view', 'settin
 
 /** How long integration tokens last (6.1). */
 const integrations = reactive({ token_days: 365 as number | string, max_token_days: 1095 as number | string });
+/** Whether old webhook deliveries leave the log (6.2), and the days it can be set to (the server's word). */
+const webhooks = reactive({ prune_log: false, log_days: 365 as number | string });
+const webhookDays = ref({ min: 7, max: 3650 });
 
 const sampleCode = ref('EMP');
 const numberPreview = ref('');
@@ -90,6 +94,8 @@ onMounted(async () => {
     logoPreview.value = data.data.logo_url;
     Object.assign(cardSize, data.data.default_card_size ?? {});
     Object.assign(integrations, data.data.integrations ?? {});
+    Object.assign(webhooks, data.data.webhooks ?? {});
+    webhookDays.value = data.data.webhook_options?.log_days ?? webhookDays.value;
 });
 
 watch(() => form.primary_color, (color) => applyBrand(color));
@@ -134,6 +140,8 @@ async function save(): Promise<void> {
     }
     body.append('integrations[token_days]', String(integrations.token_days));
     body.append('integrations[max_token_days]', String(integrations.max_token_days));
+    body.append('webhooks[prune_log]', webhooks.prune_log ? '1' : '0');
+    body.append('webhooks[log_days]', String(webhooks.log_days));
     if (logo.value) {
         body.append('logo', logo.value);
     }
@@ -265,6 +273,23 @@ async function save(): Promise<void> {
                     <fieldset :disabled="!canEdit" class="grid gap-4 sm:grid-cols-2">
                         <UiInput v-model="integrations.token_days" type="number" min="1" :label="t('settings.integrations.tokenDays')" :error="errors['integrations.token_days']" />
                         <UiInput v-model="integrations.max_token_days" type="number" min="1" :label="t('settings.integrations.maxTokenDays')" :error="errors['integrations.max_token_days']" />
+                    </fieldset>
+                </UiCard>
+                <UiCard :title="t('settings.webhooks.title')" :description="t('settings.webhooks.description')" data-webhook-settings>
+                    <fieldset :disabled="!canEdit" class="space-y-3">
+                        <UiCheckbox v-model="webhooks.prune_log" :label="t('settings.webhooks.pruneLog')" :description="webhooks.prune_log ? '' : t('settings.webhooks.keepHint')" data-webhook-prune />
+                        <div v-if="webhooks.prune_log" class="space-y-3 rounded-lg border border-warning/40 bg-warning/8 p-3" data-webhook-prune-warning>
+                            <p class="flex items-start gap-2 text-sm text-fg"><AlertTriangle class="mt-0.5 size-4 shrink-0 text-warning" />{{ t('settings.webhooks.pruneWarning') }}</p>
+                            <UiInput
+                                v-model="webhooks.log_days"
+                                type="number"
+                                :min="String(webhookDays.min)"
+                                :max="String(webhookDays.max)"
+                                :label="t('settings.webhooks.logDays')"
+                                :hint="t('settings.webhooks.logDaysHint', { min: formatNumber(webhookDays.min), max: formatNumber(webhookDays.max) })"
+                                :error="errors['webhooks.log_days']"
+                            />
+                        </div>
                     </fieldset>
                 </UiCard>
                 <UiCard v-if="notifications && notificationOptions" :title="t('notifications.summary.title')" :description="t('notifications.summary.description')" data-notification-card>
