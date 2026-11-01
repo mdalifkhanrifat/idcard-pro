@@ -34,6 +34,30 @@ class WebhookEvents
     }
 
     /**
+     * Whether this person may read what was sent about an event. An event no longer in the list has no group left to
+     * say who may, so it stays closed; a test delivery holds nothing.
+     */
+    public static function readable(User $user, string $event): bool
+    {
+        return in_array($event, self::keys(), true)
+            ? self::beyond($user, [$event]) === []
+            : $event === WebhookDeliveryService::TEST_EVENT;
+    }
+
+    /**
+     * Every event a delivery can be about, named, for choosing one in the log.
+     *
+     * @return array<int, array{key: string, name: string}>
+     */
+    public static function logged(): array
+    {
+        return array_map(
+            fn (string $event): array => ['key' => $event, 'name' => self::name($event)],
+            [...self::keys(), WebhookDeliveryService::TEST_EVENT],
+        );
+    }
+
+    /**
      * An event's name in the reader's language; its key once it has none (no longer in the list).
      */
     public static function name(string $event): string

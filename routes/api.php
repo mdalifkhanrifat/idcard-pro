@@ -48,6 +48,7 @@ use App\Http\Controllers\Api\V1\TenantImageController;
 use App\Http\Controllers\Api\V1\TenantSettingsController;
 use App\Http\Controllers\Api\V1\UserController;
 use App\Http\Controllers\Api\V1\WebhookController;
+use App\Http\Controllers\Api\V1\WebhookDeliveryController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->name('api.v1.')->group(function () {
@@ -148,6 +149,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                 Route::post('webhooks/{webhook}/secret', [WebhookController::class, 'rotateSecret'])->name('webhooks.secret');
                 Route::post('webhooks/{webhook}/test', [WebhookController::class, 'test'])
                     ->middleware('throttle:'.(int) config('webhooks.test_per_minute').',1,webhook-test')->name('webhooks.test');
+                Route::get('webhooks/{webhook}/deliveries', [WebhookDeliveryController::class, 'index'])->name('webhooks.deliveries.index');
+                Route::get('webhooks/{webhook}/deliveries/{delivery}', [WebhookDeliveryController::class, 'show'])->scopeBindings()->name('webhooks.deliveries.show');
             });
             Route::apiResource('roles', RoleController::class)->except('show');
             Route::get('permissions', [PermissionController::class, 'index'])->name('permissions.index');

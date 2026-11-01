@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
@@ -57,6 +58,14 @@ class Webhook extends Model
     public function getRouteKeyName(): string
     {
         return 'public_id';
+    }
+
+    /**
+     * @return HasMany<WebhookDelivery, $this>
+     */
+    public function deliveries(): HasMany
+    {
+        return $this->hasMany(WebhookDelivery::class);
     }
 
     /**

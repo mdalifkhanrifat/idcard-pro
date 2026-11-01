@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Enums\WebhookDeliveryStatus;
 use App\Models\WebhookDelivery;
 use App\Services\Webhooks\WebhookEvents;
 use Illuminate\Http\Request;
@@ -12,6 +13,19 @@ use Illuminate\Http\Resources\Json\JsonResource;
  */
 class WebhookDeliveryResource extends JsonResource
 {
+    /**
+     * Every status, named, for choosing one in the log.
+     *
+     * @return array<int, array{key: string, name: string}>
+     */
+    public static function statuses(): array
+    {
+        return array_map(fn (WebhookDeliveryStatus $status): array => [
+            'key' => $status->value,
+            'name' => (string) __("webhooks.statuses.{$status->value}"),
+        ], WebhookDeliveryStatus::cases());
+    }
+
     /**
      * @return array<string, mixed>
      */

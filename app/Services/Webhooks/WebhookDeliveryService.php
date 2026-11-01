@@ -2,6 +2,7 @@
 
 namespace App\Services\Webhooks;
 
+use App\Data\Webhooks\WebhookDeliveryFilter;
 use App\Data\Webhooks\WebhookResult;
 use App\Enums\WebhookDeliveryStatus;
 use App\Enums\WebhookFailure;
@@ -15,6 +16,7 @@ use App\Repositories\Contracts\WebhookDeliveryRepositoryInterface;
 use App\Repositories\Contracts\WebhookRepositoryInterface;
 use App\Services\Notifications\NotificationService;
 use App\Support\Tenancy\TenantContext;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -34,6 +36,14 @@ class WebhookDeliveryService
         private NotificationService $notifications,
         private TenantContext $tenantContext,
     ) {}
+
+    /**
+     * @return LengthAwarePaginator<int, WebhookDelivery>
+     */
+    public function list(Webhook $webhook, WebhookDeliveryFilter $filter): LengthAwarePaginator
+    {
+        return $this->deliveries->listFor($webhook, $filter);
+    }
 
     /**
      * Log a delivery and hand it to the queue, once whatever caused it is saved.
