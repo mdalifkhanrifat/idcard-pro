@@ -16,6 +16,9 @@ use Illuminate\Database\Eloquent\Builder;
  */
 class WebhookDeliveryRepository extends EloquentRepository implements WebhookDeliveryRepositoryInterface
 {
+    /** What the answers about a delivery need: what can be done with it, and what it is linked to. */
+    private const DETAILS = ['webhook', 'resend:id,public_id,resend_of_id', 'resendOf:id,public_id'];
+
     protected function model(): string
     {
         return WebhookDelivery::class;
@@ -29,6 +32,7 @@ class WebhookDeliveryRepository extends EloquentRepository implements WebhookDel
     public function listFor(Webhook $webhook, WebhookDeliveryFilter $filter): LengthAwarePaginator
     {
         return $this->query()
+            ->with(self::DETAILS)
             ->where('webhook_id', $webhook->id)
             ->when($filter->status, fn (Builder $q, WebhookDeliveryStatus $status) => $q->where('status', $status))
             ->when($filter->event, fn (Builder $q, string $event) => $q->where('event', $event))
@@ -36,5 +40,15 @@ class WebhookDeliveryRepository extends EloquentRepository implements WebhookDel
             ->orderByDesc('id')
             ->paginate(ListPage::clamp($filter->perPage))
             ->withQueryString();
+    }
+
+    public function withDetails(WebhookDelivery $delivery): WebhookDelivery
+    {
+        return $delivery->load(self::DETAILS);
+    }
+
+    public function lockForResend(WebhookDelivery $delivery): WebhookDelivery
+    {
+        return $this->query()->whereKey($delivery->id)->lockForUpdate()->with(self::DETAILS)->firstOrFail();
     }
 }

@@ -18,6 +18,7 @@ use App\Services\Notifications\NotificationService;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 /**
  * Telling an address what happened: a logged delivery, handed to the queue and tried until it gets through or runs
@@ -43,6 +44,11 @@ class WebhookDeliveryService
     public function list(Webhook $webhook, WebhookDeliveryFilter $filter): LengthAwarePaginator
     {
         return $this->deliveries->listFor($webhook, $filter);
+    }
+
+    public function details(WebhookDelivery $delivery): WebhookDelivery
+    {
+        return $this->deliveries->withDetails($delivery);
     }
 
     /**
@@ -78,7 +84,61 @@ class WebhookDeliveryService
             ->withProperties(['delivery' => $delivery->public_id, 'status' => $delivery->status->value, 'response_code' => $delivery->response_code])
             ->log('tested');
 
-        return $delivery;
+        return $this->deliveries->withDetails($delivery);
+    }
+
+    /**
+     * A failed delivery once more, as a new line in the log: the exact text, so the receiver sees the same id and can
+     * tell it from something new, signed afresh. The old line stays, linked. Once per delivery, whoever is quicker.
+     *
+     * @throws ValidationException when it cannot go (see resendProblem)
+     */
+    public function resend(WebhookDelivery $delivery, User $sender): WebhookDelivery
+    {
+        $resent = DB::transaction(function () use ($delivery, $sender): WebhookDelivery {
+            $delivery = $this->deliveries->lockForResend($delivery);
+
+            $problem = $this->resendProblem($delivery, $sender);
+            if ($problem !== null) {
+                throw ValidationException::withMessages(['delivery' => __("webhooks.resend.{$problem}")]);
+            }
+
+            $resent = $this->deliveries->create([
+                'webhook_id' => $delivery->webhook_id,
+                'resend_of_id' => $delivery->id,
+                'event' => $delivery->event,
+                'payload' => $delivery->payload,
+            ]);
+            SendWebhook::dispatch($resent->id)->afterCommit();
+
+            return $resent;
+        });
+
+        activity('webhooks')
+            ->performedOn($delivery->webhook)
+            ->causedBy($sender)
+            ->event('resent')
+            ->withProperties(['delivery' => $resent->public_id, 'resend_of' => $delivery->public_id, 'event' => $resent->event])
+            ->log('resent');
+
+        return $this->deliveries->withDetails($resent);
+    }
+
+    /**
+     * Why this delivery cannot be sent again by this person, as a key of webhooks.resend; null when it can. Asked by
+     * the answers too, so a page offers exactly what a resend would do. A webhook turned off would only have it marked
+     * failed again, so it must be on (a test still works while it is off); data this person may not see stays closed.
+     */
+    public function resendProblem(WebhookDelivery $delivery, User $sender): ?string
+    {
+        return match (true) {
+            $delivery->event === self::TEST_EVENT => 'test',
+            $delivery->status !== WebhookDeliveryStatus::Failed => 'not_failed',
+            $delivery->resend !== null => 'already',
+            ! $delivery->webhook->enabled => 'disabled',
+            ! WebhookEvents::readable($sender, $delivery->event) => 'beyond',
+            default => null,
+        };
     }
 
     /**

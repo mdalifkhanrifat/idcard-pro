@@ -25,6 +25,13 @@ return [
     'statuses' => ['queued' => 'Waiting', 'delivered' => 'Delivered', 'failed' => 'Failed'],
     'beyond_reach' => 'You may not see this data yourself, so you cannot send it to an address: :events.',
     'too_many' => 'An organization can have at most :max webhooks.',
+    'resend' => [
+        'test' => 'A test is not sent again. Send a new test instead.',
+        'not_failed' => 'Only a failed delivery can be sent again.',
+        'already' => 'This delivery has been sent again already. If that one failed, send that one again.',
+        'disabled' => 'This webhook is turned off. Turn it on first.',
+        'beyond' => 'You may not see this data yourself, so you cannot send it again.',
+    ],
     'address' => [
         'invalid' => 'This is not a web address (like https://hr.example.com/hooks).',
         'credentials' => 'Put no name or password in the address; deliveries are signed instead.',

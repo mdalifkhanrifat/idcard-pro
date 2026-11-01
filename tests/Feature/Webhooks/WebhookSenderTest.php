@@ -41,13 +41,13 @@ it('signs the exact text it sends, with the time inside, so a receiver can check
     [$result, $delivery] = ($this->attempt)(payload: ['id' => 'x', 'name' => 'রহিম উদ্দিন', 'url' => 'https://a.test/b']);
 
     expect($result->delivered())->toBeTrue()->and($result->code)->toBe(200);
-    Http::assertSent(function (Request $request) use ($delivery) {
+    Http::assertSent(function (Request $request) {
         $timestamp = (string) now()->getTimestamp();
         expect($request->body())->toBe('{"id":"x","name":"রহিম উদ্দিন","url":"https://a.test/b"}')
             ->and($request->url())->toBe('https://hr.example.com/hooks')
             ->and($request->method())->toBe('POST')
             ->and($request->header('Content-Type'))->toBe(['application/json'])
-            ->and($request->header('X-Webhook-Id'))->toBe([$delivery->public_id])
+            ->and($request->header('X-Webhook-Id'))->toBe(['x'])
             ->and($request->header('X-Webhook-Event'))->toBe(['card.issued'])
             ->and($request->header('X-Webhook-Timestamp'))->toBe([$timestamp])
             ->and($request->header('X-Webhook-Signature'))->toBe(['sha256='.hash_hmac('sha256', $timestamp.'.'.$request->body(), 'whsec_test')]);

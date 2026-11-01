@@ -21,4 +21,11 @@ interface WebhookDeliveryRepositoryInterface extends RepositoryInterface
      * @return LengthAwarePaginator<int, WebhookDelivery>
      */
     public function listFor(Webhook $webhook, WebhookDeliveryFilter $filter): LengthAwarePaginator;
+
+    public function withDetails(WebhookDelivery $delivery): WebhookDelivery;
+
+    /**
+     * Inside a transaction: nothing can send this one again until it ends.
+     */
+    public function lockForResend(WebhookDelivery $delivery): WebhookDelivery;
 }

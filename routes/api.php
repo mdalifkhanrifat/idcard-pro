@@ -151,6 +151,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                     ->middleware('throttle:'.(int) config('webhooks.test_per_minute').',1,webhook-test')->name('webhooks.test');
                 Route::get('webhooks/{webhook}/deliveries', [WebhookDeliveryController::class, 'index'])->name('webhooks.deliveries.index');
                 Route::get('webhooks/{webhook}/deliveries/{delivery}', [WebhookDeliveryController::class, 'show'])->scopeBindings()->name('webhooks.deliveries.show');
+                Route::post('webhooks/{webhook}/deliveries/{delivery}/resend', [WebhookDeliveryController::class, 'resend'])
+                    ->scopeBindings()->middleware('throttle:'.(int) config('webhooks.resend_per_minute').',1,webhook-resend')->name('webhooks.deliveries.resend');
             });
             Route::apiResource('roles', RoleController::class)->except('show');
             Route::get('permissions', [PermissionController::class, 'index'])->name('permissions.index');

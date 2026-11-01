@@ -48,7 +48,7 @@ class WebhookSender
                 ->withOptions(['proxy' => '', 'curl' => $pin === [] ? [] : [CURLOPT_RESOLVE => $pin]])
                 ->sink('/dev/null')
                 ->withHeaders([
-                    'X-Webhook-Id' => $delivery->public_id,
+                    'X-Webhook-Id' => $delivery->receiverId(),
                     'X-Webhook-Event' => $delivery->event,
                     'X-Webhook-Timestamp' => $timestamp,
                     'X-Webhook-Signature' => 'sha256='.hash_hmac('sha256', "{$timestamp}.{$body}", $webhook->secret),

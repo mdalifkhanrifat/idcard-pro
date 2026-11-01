@@ -10,6 +10,8 @@ use App\Models\Webhook;
 use App\Models\WebhookDelivery;
 use App\Services\Webhooks\WebhookDeliveryService;
 use App\Services\Webhooks\WebhookEvents;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
 
@@ -30,6 +32,17 @@ class WebhookDeliveryController extends Controller
     {
         Gate::authorize('integrations.manage');
 
-        return new WebhookDeliveryDetailResource($delivery);
+        return new WebhookDeliveryDetailResource($this->deliveries->details($delivery));
+    }
+
+    /**
+     * Send a failed delivery again: a new delivery (201), the old one stays, linked (resent_as). 422 with
+     * `errors.delivery` when it cannot go.
+     */
+    public function resend(Request $request, Webhook $webhook, WebhookDelivery $delivery): JsonResponse
+    {
+        Gate::authorize('integrations.manage');
+
+        return (new WebhookDeliveryDetailResource($this->deliveries->resend($delivery, $request->user())))->response()->setStatusCode(201);
     }
 }

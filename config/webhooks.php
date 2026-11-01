@@ -58,4 +58,7 @@ return [
     // Test deliveries by hand, per user and minute
     'test_per_minute' => 5,
 
+    // Failed deliveries sent again by hand, per user and minute
+    'resend_per_minute' => 30,
+
 ];
