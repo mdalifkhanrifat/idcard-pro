@@ -295,8 +295,8 @@ class CardholderImportService
                 }
 
                 $valid++;
-                if (isset($outcome['cardholder'])) {
-                    $changed[$outcome['action']][] = $outcome['cardholder'];
+                if ($outcome['cardholder'] !== null) {
+                    $changed[$outcome['action'] === 'updated' ? 'updated' : 'created'][] = $outcome['cardholder'];
                 }
                 if ($outcome['action'] === 'updated') {
                     $updated++;
@@ -328,7 +328,7 @@ class CardholderImportService
      * @param  array<int, string>  $columns
      * @param  array{create_missing_lookups: bool, update_existing: bool}  $options
      * @param  array{employee_no: array<string, true>, card_no: array<string, true>}  $seen  values met earlier in the file
-     * @return array{messages: array<int, string>, action: string, card: 'imported'|'skipped'|null, lookups: array<int, string>, preview: array<string, string>}
+     * @return array{messages: array<int, string>, action: string, cardholder: string|null, card: 'imported'|'skipped'|null, lookups: array<int, string>, preview: array<string, string>}
      */
     private function handleRow(array $cells, array $columns, array $options, bool $dryRun, ?User $actor, ?CardTemplate $template, string $timezone, array &$seen): array
     {
@@ -404,11 +404,11 @@ class CardholderImportService
             return $failed->outcome;
         } catch (ValidationException $e) {
             // A rule that changed since the row was checked (e.g. another person got the card number meanwhile)
-            return ['messages' => array_values($e->validator->errors()->all()), 'action' => 'failed', 'card' => null, 'lookups' => [], 'preview' => $preview];
+            return ['messages' => array_values($e->validator->errors()->all()), 'action' => 'failed', 'cardholder' => null, 'card' => null, 'lookups' => [], 'preview' => $preview];
         } catch (Throwable $e) {
             report($e);
 
-            return ['messages' => [__('cardholders.import.row_failed')], 'action' => 'failed', 'card' => null, 'lookups' => [], 'preview' => $preview];
+            return ['messages' => [__('cardholders.import.row_failed')], 'action' => 'failed', 'cardholder' => null, 'card' => null, 'lookups' => [], 'preview' => $preview];
         }
     }
 
