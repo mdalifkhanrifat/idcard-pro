@@ -32,6 +32,7 @@ export interface IntegrationOptions {
     assignable_roles: string[];
     token_days: number;
     max_token_days: number;
+    requests_per_minute: number;
 }
 
 export async function fetchTokens(id: string): Promise<ApiToken[]> {

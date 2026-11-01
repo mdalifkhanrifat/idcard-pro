@@ -72,6 +72,7 @@ class TenantResource extends JsonResource
             'appointments' => $this->resource->appointmentSettings(),
             // How long integration tokens last (6.1)
             'integrations' => $this->resource->integrationSettings(),
+            'integration_options' => ['requests_per_minute' => ['min' => (int) config('integrations.requests.min'), 'max' => (int) config('integrations.requests.max')]],
             // Whether old webhook deliveries are deleted from the log (6.2), and the days it can be set to
             'webhooks' => $this->resource->webhookSettings(),
             'webhook_options' => ['log_days' => config('webhooks.log_days')],

@@ -73,7 +73,7 @@ class UpdateTenantSettingsRequest extends FormRequest
         $limit = 'between:1,'.(int) config('integrations.tokens.limit');
 
         return [
-            'integrations' => ['sometimes', 'array:token_days,max_token_days'],
+            'integrations' => ['sometimes', 'array:token_days,max_token_days,requests_per_minute'],
             'integrations.token_days' => ['sometimes', 'integer', $limit, function (string $attribute, mixed $value, \Closure $fail): void {
                 $most = $this->input('integrations.max_token_days', $this->tenantContext()->get()->integrationSettings()['max_token_days']);
                 if ((int) $value > (int) $most) {
@@ -81,6 +81,7 @@ class UpdateTenantSettingsRequest extends FormRequest
                 }
             }],
             'integrations.max_token_days' => ['sometimes', 'integer', $limit],
+            'integrations.requests_per_minute' => ['sometimes', 'integer', 'between:'.(int) config('integrations.requests.min').','.(int) config('integrations.requests.max')],
             'webhooks' => ['sometimes', 'array:prune_log,log_days'],
             'webhooks.prune_log' => ['sometimes', 'boolean'],
             'webhooks.log_days' => ['sometimes', 'integer', 'between:'.(int) config('webhooks.log_days.min').','.(int) config('webhooks.log_days.max')],

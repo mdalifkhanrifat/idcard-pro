@@ -7,6 +7,7 @@ use App\Services\Appointments\AppointmentLoad;
 use App\Services\Appointments\BookedAppointmentLoad;
 use App\Services\Audit\AuditChangeDescriber;
 use App\Services\Cards\CardRequirements;
+use App\Services\Integrations\IntegrationSettings;
 use App\Support\Pdf\DisabledPdfRenderer;
 use App\Support\Pdf\GotenbergPdfRenderer;
 use App\Support\Pdf\PdfRenderer;
@@ -81,5 +82,16 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('signed-files', fn (Request $request) => Limit::perMinute((int) config('cards.print.files_per_minute'))
             ->by($request->user() !== null ? 'user:'.$request->user()->getAuthIdentifier() : 'ip:'.$request->ip()));
+
+        // Systems calling the API: per account, so a second token adds nothing, as many as its organization chose.
+        // Runs before the organization is resolved, so it asks the account. People in a browser carry no token.
+        RateLimiter::for('api-tokens', function (Request $request): Limit {
+            $user = $request->user();
+            if ($request->bearerToken() === null || ! $user instanceof User) {
+                return Limit::none();
+            }
+
+            return Limit::perMinute($user->tenant?->integrationSettings()['requests_per_minute'] ?? IntegrationSettings::defaultRequestsPerMinute())->by('token-user:'.$user->id);
+        });
     }
 }

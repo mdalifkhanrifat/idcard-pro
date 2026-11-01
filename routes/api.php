@@ -119,7 +119,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         ->middleware(['signed:relative', 'throttle:60,1,report-render'])
         ->name('report-render');
 
-    Route::middleware(['auth:sanctum', 'tenant', 'integration.address'])->group(function () {
+    Route::middleware(['auth:sanctum', 'throttle:api-tokens', 'tenant', 'integration.address'])->group(function () {
 
         // Current user / security
         Route::prefix('auth')->name('auth.')->group(function () {

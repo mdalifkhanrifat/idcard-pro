@@ -59,7 +59,8 @@ const appointments = ref<AppointmentSettingsResponse | null>(null);
 const canSeeAppointments = computed(() => auth.can(['appointments.view', 'settings.update']));
 
 /** How long integration tokens last (6.1). */
-const integrations = reactive({ token_days: 365 as number | string, max_token_days: 1095 as number | string });
+const integrations = reactive({ token_days: 365 as number | string, max_token_days: 1095 as number | string, requests_per_minute: 600 as number | string });
+const requestLimits = ref({ min: 10, max: 6000 });
 /** Whether old webhook deliveries leave the log (6.2), and the days it can be set to (the server's word). */
 const webhooks = reactive({ prune_log: false, log_days: 365 as number | string });
 const webhookDays = ref({ min: 7, max: 3650 });
@@ -94,6 +95,7 @@ onMounted(async () => {
     logoPreview.value = data.data.logo_url;
     Object.assign(cardSize, data.data.default_card_size ?? {});
     Object.assign(integrations, data.data.integrations ?? {});
+    requestLimits.value = data.data.integration_options?.requests_per_minute ?? requestLimits.value;
     Object.assign(webhooks, data.data.webhooks ?? {});
     webhookDays.value = data.data.webhook_options?.log_days ?? webhookDays.value;
 });
@@ -140,6 +142,7 @@ async function save(): Promise<void> {
     }
     body.append('integrations[token_days]', String(integrations.token_days));
     body.append('integrations[max_token_days]', String(integrations.max_token_days));
+    body.append('integrations[requests_per_minute]', String(integrations.requests_per_minute));
     body.append('webhooks[prune_log]', webhooks.prune_log ? '1' : '0');
     body.append('webhooks[log_days]', String(webhooks.log_days));
     if (logo.value) {
@@ -273,6 +276,17 @@ async function save(): Promise<void> {
                     <fieldset :disabled="!canEdit" class="grid gap-4 sm:grid-cols-2">
                         <UiInput v-model="integrations.token_days" type="number" min="1" :label="t('settings.integrations.tokenDays')" :error="errors['integrations.token_days']" />
                         <UiInput v-model="integrations.max_token_days" type="number" min="1" :label="t('settings.integrations.maxTokenDays')" :error="errors['integrations.max_token_days']" />
+                        <UiInput
+                            v-model="integrations.requests_per_minute"
+                            type="number"
+                            :min="String(requestLimits.min)"
+                            :max="String(requestLimits.max)"
+                            :label="t('settings.integrations.requestsPerMinute')"
+                            :hint="t('settings.integrations.requestsHint', { min: formatNumber(requestLimits.min), max: formatNumber(requestLimits.max) })"
+                            :error="errors['integrations.requests_per_minute']"
+                            class="sm:col-span-2"
+                            data-requests-per-minute
+                        />
                     </fieldset>
                 </UiCard>
                 <UiCard :title="t('settings.webhooks.title')" :description="t('settings.webhooks.description')" data-webhook-settings>

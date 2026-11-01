@@ -330,6 +330,7 @@ return [
         'integrations' => 'ইন্টিগ্রেশনের সেটিং',
         'integrations.token_days' => 'ইন্টিগ্রেশন token-এর স্বাভাবিক মেয়াদ (দিন)',
         'integrations.max_token_days' => 'ইন্টিগ্রেশন token-এর সর্বোচ্চ মেয়াদ (দিন)',
+        'integrations.requests_per_minute' => 'অ্যাকাউন্ট-প্রতি মিনিটে API অনুরোধ',
         'webhooks' => 'webhook-এর সেটিং',
         'webhooks.prune_log' => 'লগ থেকে পুরনো ডেলিভারি মোছা',
         'webhooks.log_days' => 'ডেলিভারি কতদিন রাখবেন',

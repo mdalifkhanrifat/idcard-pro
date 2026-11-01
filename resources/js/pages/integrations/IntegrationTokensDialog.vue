@@ -127,6 +127,7 @@ async function revoke(token: ApiToken): Promise<void> {
             <details class="rounded-lg border border-line p-3 text-sm" data-token-howto>
                 <summary class="cursor-pointer font-medium text-fg">{{ t('integrations.tokens.howTo') }}</summary>
                 <p class="mt-2 text-muted">{{ t('integrations.tokens.howToText') }}</p>
+                <p class="mt-2 text-muted" data-token-limit>{{ t('integrations.tokens.limitText', { count: formatNumber(options?.requests_per_minute ?? 0) }) }}</p>
                 <code class="mt-2 block break-all rounded-md bg-surface-2 p-3 font-mono text-xs text-fg" dir="ltr">{{ example }}</code>
             </details>
         </div>

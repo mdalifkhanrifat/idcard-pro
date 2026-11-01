@@ -206,7 +206,7 @@ class Tenant extends Model
     }
 
     /**
-     * @return array{token_days: int, max_token_days: int}
+     * @return array{token_days: int, max_token_days: int, requests_per_minute: int}
      */
     public function integrationSettings(): array
     {

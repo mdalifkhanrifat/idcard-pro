@@ -389,10 +389,12 @@
             "logDaysHint": "From {min} to {max} days"
         },
         "integrations": {
-            "title": "Integration tokens",
-            "description": "How long the tokens of integration accounts last. Every token has an end.",
+            "title": "Integration tokens and calls",
+            "description": "How long the tokens of integration accounts last, and how much a system may ask for. Every token has an end.",
             "tokenDays": "Usual length (days)",
-            "maxTokenDays": "Longest allowed (days)"
+            "maxTokenDays": "Longest allowed (days)",
+            "requestsPerMinute": "API calls a minute, per account",
+            "requestsHint": "From {min} to {max}. A system that goes over waits a moment; people using the site are not affected."
         }
     },
     "account": {
@@ -2331,6 +2333,7 @@
             "beyondReach": "This account holds more than you do, so you cannot make it a token. You can still revoke one.",
             "howTo": "How to use it",
             "howToText": "Send the token in the Authorization header of every request, and ask for JSON. It acts with this account’s role, inside this organization only.",
+            "limitText": "At most {count} calls a minute for this account, across its tokens. Past that the answer is 429, and Retry-After says how many seconds to wait.",
             "loadFailed": "The tokens could not be loaded.",
             "retry": "Try again"
         }
