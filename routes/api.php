@@ -88,7 +88,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
     // Public card verification (3.7): the code from the card's QR code, no sign-in
     Route::get('verify/{code}', [CardVerificationController::class, 'show'])
-        ->middleware('throttle:'.(int) config('cards.verification.throttle').',1')
+        ->middleware('throttle:'.(int) config('cards.verification.throttle').',1,card-verify')
         ->name('cards.verify');
 
     // The public booking link (5.6): the organization by its slug, no sign-in, rate limited per address
@@ -109,13 +109,13 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
     // Cards for the PDF engine's render page (signed link made by CardRenderService::link)
     Route::get('card-render', [CardRenderController::class, 'show'])
-        ->middleware(['signed:relative', 'throttle:120,1'])
+        ->middleware(['signed:relative', 'throttle:120,1,card-render'])
         ->name('card-render');
 
     // A report document for the PDF engine (signed link made by PdfExporter, readable once)
     Route::get('report-render/{token}', [ReportRenderController::class, 'show'])
         ->where('token', '[A-Za-z0-9]{48}')
-        ->middleware(['signed:relative', 'throttle:60,1'])
+        ->middleware(['signed:relative', 'throttle:60,1,report-render'])
         ->name('report-render');
 
     Route::middleware(['auth:sanctum', 'tenant', 'integration.address'])->group(function () {
@@ -147,7 +147,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
                 Route::apiResource('webhooks', WebhookController::class);
                 Route::post('webhooks/{webhook}/secret', [WebhookController::class, 'rotateSecret'])->name('webhooks.secret');
                 Route::post('webhooks/{webhook}/test', [WebhookController::class, 'test'])
-                    ->middleware('throttle:'.(int) config('webhooks.test_per_minute').',1')->name('webhooks.test');
+                    ->middleware('throttle:'.(int) config('webhooks.test_per_minute').',1,webhook-test')->name('webhooks.test');
             });
             Route::apiResource('roles', RoleController::class)->except('show');
             Route::get('permissions', [PermissionController::class, 'index'])->name('permissions.index');
@@ -175,9 +175,9 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('notifications/messages', [NotificationMessageController::class, 'index'])->name('notifications.messages.index');
             Route::get('notifications/messages/{message}', [NotificationMessageController::class, 'show'])->name('notifications.messages.show');
             Route::post('notifications/messages/{message}/resend', [NotificationMessageController::class, 'resend'])
-                ->middleware('throttle:'.(int) config('notifications.manual.resend_per_minute').',1')->name('notifications.messages.resend');
+                ->middleware('throttle:'.(int) config('notifications.manual.resend_per_minute').',1,notification-resend')->name('notifications.messages.resend');
             Route::post('notifications/test', [NotificationMessageController::class, 'sendTest'])
-                ->middleware('throttle:'.(int) config('notifications.manual.test_per_minute').',1')->name('notifications.test');
+                ->middleware('throttle:'.(int) config('notifications.manual.test_per_minute').',1,notification-test')->name('notifications.test');
             Route::get('settings', [TenantSettingsController::class, 'show'])->name('settings.show');
             Route::post('settings', [TenantSettingsController::class, 'update'])->name('settings.update');
             Route::get('settings/card-number-preview', [TenantSettingsController::class, 'cardNumberPreview'])->name('settings.card-number-preview');
@@ -198,7 +198,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::prefix('cardholder-imports')->name('cardholder-imports.')->controller(CardholderImportController::class)->group(function () {
                 Route::get('/', 'index')->name('index');
                 Route::get('template', 'template')->name('template');
-                Route::post('/', 'store')->middleware('throttle:20,1')->name('store');
+                Route::post('/', 'store')->middleware('throttle:20,1,cardholder-import')->name('store');
                 Route::get('{import}', 'show')->name('show');
                 Route::post('{import}/start', 'start')->name('start');
                 Route::delete('{import}', 'destroy')->name('destroy');
@@ -232,14 +232,14 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::get('cards/printable', [CardPrintController::class, 'printable'])->name('cards.printable');
             Route::post('cards/prints', [CardPrintController::class, 'batch'])->name('cards.prints.batch');
             // PDFs are drawn by the PDF engine: heavier than other calls, so limited separately
-            Route::post('cards/pdf', [CardPdfController::class, 'batch'])->middleware('throttle:20,1')->name('cards.pdf.batch');
+            Route::post('cards/pdf', [CardPdfController::class, 'batch'])->middleware('throttle:20,1,cards-pdf-batch')->name('cards.pdf.batch');
             Route::get('cards/{card}', [CardController::class, 'show'])->name('cards.show');
             Route::patch('cards/{card}', [CardController::class, 'update'])->name('cards.update');
             Route::post('cards/{card}/revoke', [CardController::class, 'revoke'])->name('cards.revoke');
             Route::get('cards/{card}/prints', [CardPrintController::class, 'index'])->name('cards.prints.index');
             Route::get('cards/{card}/verifications', [CardVerificationController::class, 'history'])->name('cards.verifications.index');
             Route::post('cards/{card}/prints', [CardPrintController::class, 'store'])->name('cards.prints.store');
-            Route::get('cards/{card}/pdf', [CardPdfController::class, 'show'])->middleware('throttle:60,1')->name('cards.pdf.show');
+            Route::get('cards/{card}/pdf', [CardPdfController::class, 'show'])->middleware('throttle:60,1,card-pdf')->name('cards.pdf.show');
             Route::apiResource('cardholders.qualifications', QualificationController::class)->except('show')->scoped(['cardholder' => 'public_id', 'qualification' => 'public_id']);
 
             // Reports (Phase 5): the registry (columns of each report), then each report
@@ -247,7 +247,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::put('reports/{report}/columns', [ReportController::class, 'updateColumns'])->where('report', '[a-z0-9-]+')->name('reports.columns.update');
             Route::get('reports/{report}', [ReportDataController::class, 'index'])->where('report', '[a-z0-9-]+')->name('reports.show');
             // Files are written whole before sending: heavier than other calls, so limited separately
-            Route::get('reports/{report}/export', [ReportDataController::class, 'export'])->where('report', '[a-z0-9-]+')->middleware('throttle:20,1')->name('reports.export');
+            Route::get('reports/{report}/export', [ReportDataController::class, 'export'])->where('report', '[a-z0-9-]+')->middleware('throttle:20,1,report-export')->name('reports.export');
         });
 
         // Platform administration
