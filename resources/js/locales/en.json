@@ -259,6 +259,7 @@
         "integrationActor": "integration",
         "cardholderSelf": "cardholder themself",
         "prunedDetail": "{messages} messages older than {days} days deleted (as the organization chose)",
+        "prunedDeliveriesDetail": "{deliveries} deliveries older than {days} days deleted (as the organization chose)",
         "resentDetail": "Message sent again to {address}",
         "testSentDetail": "Test message sent to {address}",
         "details": "Details",

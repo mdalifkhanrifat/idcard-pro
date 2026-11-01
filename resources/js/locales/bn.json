@@ -259,6 +259,7 @@
         "integrationActor": "ইন্টিগ্রেশন",
         "cardholderSelf": "কার্ডধারী নিজে",
         "prunedDetail": "{days} দিনের বেশি পুরনো {messages}টা বার্তা মোছা হয়েছে (প্রতিষ্ঠানের সেটিং অনুযায়ী)",
+        "prunedDeliveriesDetail": "{days} দিনের বেশি পুরনো {deliveries}টা ডেলিভারি মোছা হয়েছে (প্রতিষ্ঠানের সেটিং অনুযায়ী)",
         "resentDetail": "{address} ঠিকানায় বার্তা আবার পাঠানো হয়েছে",
         "testSentDetail": "{address} ঠিকানায় পরীক্ষার বার্তা পাঠানো হয়েছে",
         "details": "বিস্তারিত",
