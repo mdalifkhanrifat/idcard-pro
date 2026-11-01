@@ -26,14 +26,45 @@ export interface WebhookEventGroup {
     events: { key: string; name: string }[];
 }
 
-export interface WebhookDelivery {
+interface Named {
+    key: string;
+    name: string;
+}
+
+/** One line of the log. */
+export interface WebhookDeliveryLine {
     id: string;
-    status: { key: string; name: string };
+    event: Named;
+    status: Named;
+    attempts: number;
     response_code: number | null;
-    failure: { key: string; name: string } | null;
+    failure: Named | null;
+    delivered_at: string | null;
+    created_at: string;
+    resend_of: string | null;
+    resent_as: string | null;
+    /** Null where it can never apply; otherwise whether it can go now, by the rule the resend itself follows. */
+    actions: { resend: { allowed: boolean; reason: string | null } | null };
+}
+
+/** With what was sent, as the exact text, unless this person may not see that data. */
+export interface WebhookDeliveryDetail extends WebhookDeliveryLine {
+    payload: string | null;
+    payload_hidden: boolean;
+}
+
+export interface WebhookLogMeta {
+    statuses: Named[];
+    events: Named[];
 }
 
 export type WebhookForm = Pick<Webhook, 'name' | 'url' | 'enabled' | 'events'>;
+
+export async function fetchWebhook(id: string): Promise<Webhook> {
+    const { data } = await http.get<{ data: Webhook }>(`/webhooks/${id}`);
+
+    return data.data;
+}
 
 export async function createWebhook(form: WebhookForm): Promise<WebhookWithSecret> {
     const { data } = await http.post<{ data: WebhookWithSecret }>('/webhooks', form);
@@ -55,10 +86,38 @@ export async function rotateWebhookSecret(id: string): Promise<WebhookWithSecret
     return data.data;
 }
 
-export async function testWebhook(id: string): Promise<WebhookDelivery> {
-    const { data } = await http.post<{ data: WebhookDelivery }>(`/webhooks/${id}/test`);
+export async function testWebhook(id: string): Promise<WebhookDeliveryLine> {
+    const { data } = await http.post<{ data: WebhookDeliveryLine }>(`/webhooks/${id}/test`);
 
     return data.data;
+}
+
+export async function fetchDelivery(webhookId: string, id: string): Promise<WebhookDeliveryDetail> {
+    const { data } = await http.get<{ data: WebhookDeliveryDetail }>(`/webhooks/${webhookId}/deliveries/${id}`);
+
+    return data.data;
+}
+
+export async function resendDelivery(webhookId: string, id: string): Promise<WebhookDeliveryDetail> {
+    const { data } = await http.post<{ data: WebhookDeliveryDetail }>(`/webhooks/${webhookId}/deliveries/${id}/resend`);
+
+    return data.data;
+}
+
+export function deliveryTone(status: string): 'success' | 'danger' | 'neutral' {
+    return status === 'delivered' ? 'success' : status === 'failed' ? 'danger' : 'neutral';
+}
+
+/** Laid out to read. Parsing here is only for showing: an empty object stays an object, and other text stays as it is. */
+export function prettyPayload(payload: string | null): string {
+    if (payload === null) {
+        return '';
+    }
+    try {
+        return JSON.stringify(JSON.parse(payload), null, 2);
+    } catch {
+        return payload;
+    }
 }
 
 /** Off by failing, not by a person's choice: only that leaves a moment, and it goes when turned on again. */

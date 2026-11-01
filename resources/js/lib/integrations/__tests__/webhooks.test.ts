@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { groupState, knownEvents, turnedItselfOff, withGroup, type WebhookEventGroup } from '../webhooks';
+import { deliveryTone, groupState, knownEvents, prettyPayload, turnedItselfOff, withGroup, type WebhookEventGroup } from '../webhooks';
 
 const cards: WebhookEventGroup = { key: 'card', name: 'Cards', allowed: true, events: [{ key: 'card.issued', name: 'Issued' }, { key: 'card.printed', name: 'Printed' }] };
 
@@ -25,5 +25,22 @@ describe('choosing a group of events', () => {
 
     it('drops an event no longer offered', () => {
         expect(knownEvents(['card.issued', 'gone.event'], [cards])).toEqual(['card.issued']);
+    });
+});
+
+describe('the log', () => {
+    it('colours a delivery by how it went', () => {
+        expect(deliveryTone('delivered')).toBe('success');
+        expect(deliveryTone('failed')).toBe('danger');
+        expect(deliveryTone('queued')).toBe('neutral');
+    });
+
+    it('lays out what was sent, an empty object still an object', () => {
+        expect(prettyPayload('{"data":{"custom_fields":{}}}')).toBe('{\n  "data": {\n    "custom_fields": {}\n  }\n}');
+    });
+
+    it('shows other text as it is, and nothing for nothing', () => {
+        expect(prettyPayload('not json')).toBe('not json');
+        expect(prettyPayload(null)).toBe('');
     });
 });

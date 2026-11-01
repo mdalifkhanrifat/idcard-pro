@@ -1,16 +1,19 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
-import { KeyRound, Pencil, Plus, Power, RotateCcw, Search, Send, Trash2 } from 'lucide-vue-next';
+import { useRoute, useRouter } from 'vue-router';
+import { History, KeyRound, Pencil, Plus, Power, RotateCcw, Search, Send, Trash2 } from 'lucide-vue-next';
 import ListPagination from '@/components/ListPagination.vue';
 import UiBadge from '@/components/ui/UiBadge.vue';
 import UiButton from '@/components/ui/UiButton.vue';
 import UiEmpty from '@/components/ui/UiEmpty.vue';
 import UiSelect from '@/components/ui/UiSelect.vue';
 import WebhookFormDialog from './WebhookFormDialog.vue';
+import WebhookLogDialog from './WebhookLogDialog.vue';
 import WebhookSecretDialog from './WebhookSecretDialog.vue';
 import { useConfirm } from '@/composables/useConfirm';
 import { useListQuery } from '@/composables/useListQuery';
+import { useUrlOpen } from '@/composables/useUrlOpen';
 import { formatNumber } from '@/lib/format';
 import { toApiError } from '@/lib/http';
 import { deleteWebhook, rotateWebhookSecret, testWebhook, turnedItselfOff, updateWebhook, type Webhook, type WebhookEventGroup, type WebhookWithSecret } from '@/lib/integrations/webhooks';
@@ -32,8 +35,17 @@ const editing = ref<Webhook | null>(null);
 const secretOpen = ref(false);
 const shown = ref({ name: '', secret: '' });
 const testing = ref<string | null>(null);
+/** Whose log is open: in the URL with its filters and the delivery shown, so a reload or a link comes back here. */
+const logOf = useUrlOpen('webhook_log');
+const route = useRoute();
+const router = useRouter();
 
 onMounted(() => list.load());
+
+function closeLog(): void {
+    router.replace({ query: Object.fromEntries(Object.entries(route.query).filter(([key]) => !key.startsWith('webhook_log') && key !== 'webhook_delivery')) });
+    list.load();
+}
 
 function openCreate(): void {
     editing.value = null;
@@ -136,6 +148,7 @@ async function test(webhook: Webhook): Promise<void> {
                 <div class="ml-auto flex flex-wrap items-center gap-1">
                     <UiButton v-if="!webhook.enabled" variant="secondary" data-webhook-turn-on @click="turnOn(webhook)"><Power class="size-4" />{{ t('webhooks.turnOn') }}</UiButton>
                     <UiButton variant="secondary" :loading="testing === webhook.id" data-webhook-test @click="test(webhook)"><Send class="size-4" />{{ t('webhooks.test') }}</UiButton>
+                    <UiButton variant="secondary" data-webhook-log-open @click="logOf = webhook.id"><History class="size-4" />{{ t('webhooks.log.open') }}</UiButton>
                     <div class="flex items-center gap-1">
                         <button type="button" class="rounded-md p-2 text-muted hover:bg-surface-2 hover:text-fg" :aria-label="t('webhooks.secret.rotate')" :title="t('webhooks.secret.rotate')" data-webhook-rotate @click="rotate(webhook)">
                             <KeyRound class="size-4" />
@@ -155,5 +168,6 @@ async function test(webhook: Webhook): Promise<void> {
 
         <WebhookFormDialog v-model:open="formOpen" :webhook="editing" :groups="groups" @created="created" @saved="list.load()" />
         <WebhookSecretDialog v-model:open="secretOpen" :name="shown.name" :secret="shown.secret" />
+        <WebhookLogDialog v-if="logOf !== null" :key="logOf" :webhook-id="logOf" @close="closeLog" />
     </div>
 </template>
