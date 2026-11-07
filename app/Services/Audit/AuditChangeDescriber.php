@@ -62,7 +62,8 @@ final class AuditChangeDescriber
 
     /**
      * New and old values: from the record's own logging, or from a change noted by hand (a role's permissions, a
-     * user's roles — RecordedChanges keeps the same two parts). An event's own facts are not field changes.
+     * user's roles — RecordedChanges keeps the same two parts). An event's own facts are not field changes, unless
+     * config('audit.facts') lists the event: then they are shown as new values.
      *
      * @return array{0: array<string, mixed>, 1: array<string, mixed>}
      */
@@ -71,6 +72,9 @@ final class AuditChangeDescriber
         $changes = $activity->attribute_changes?->toArray() ?? [];
         if ($changes === []) {
             $properties = $activity->properties?->toArray() ?? [];
+            if (in_array("{$activity->log_name}.{$activity->event}", (array) config('audit.facts'), true)) {
+                return [$properties, []];
+            }
             $changes = array_diff(array_keys($properties), ['attributes', 'old']) === [] ? $properties : [];
         }
 

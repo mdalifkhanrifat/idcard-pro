@@ -38,6 +38,11 @@ return [
             'enabled' => 'On',
             'secret_rotated_at' => 'Signing secret changed',
             'failure_count' => 'Deliveries failed in a row',
+            'event' => 'Event',
+            'delivery' => 'Delivery',
+            'resend_of' => 'Sent again from delivery',
+            'status' => 'Result',
+            'response_code' => 'Answer code',
         ],
         'roles' => [
             'name' => 'Role name',

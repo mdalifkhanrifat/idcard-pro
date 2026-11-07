@@ -38,6 +38,11 @@ return [
             'enabled' => 'চালু',
             'secret_rotated_at' => 'সইয়ের চাবি বদল',
             'failure_count' => 'পরপর ব্যর্থ পাঠানো',
+            'event' => 'কোন ঘটনা',
+            'delivery' => 'ডেলিভারি',
+            'resend_of' => 'যে ডেলিভারি আবার পাঠানো',
+            'status' => 'ফল',
+            'response_code' => 'উত্তরের কোড',
         ],
         'roles' => [
             'name' => 'রোলের নাম',

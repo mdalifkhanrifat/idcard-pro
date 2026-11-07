@@ -30,11 +30,17 @@ use App\Models\MasterDataItem;
 | a field cast to an enum by `enums`, other fields and settings by `values`, a reference ("rank_id") by the
 | record it points to (`references`), days and moments by the model's date casts, numbers in the reader's digits.
 |
+| `facts` ("log.event"): events that record facts of their own rather than old and new values (a webhook delivery
+| sent again, a test). Their facts are shown as fields, named and written the same way. Events with a line of their
+| own on the audit page (exported, pruned, a message sent again) are not listed.
+|
 */
 
 return [
 
     // Values never shown, whatever the record or setting (the last part of the key decides)
+    'facts' => ['webhooks.resent', 'webhooks.tested'],
+
     'hidden' => ['password', 'remember_token', 'token', 'secret', 'two_factor_secret', 'two_factor_recovery_codes'],
 
     // A wildcard part of a settings path, named by what it stands for: "notifications.events.card_ready.enabled"
@@ -82,6 +88,8 @@ return [
         'master_data.type' => 'reports.master_data_types',
         'settings.locale' => 'audit.values.locale',
         'webhooks.events' => 'webhooks.events',
+        'webhooks.event' => 'webhooks.events',
+        'webhooks.status' => 'webhooks.statuses',
         'settings.card_number_on_reissue' => 'audit.values.number_on_reissue',
         'settings.verification.fields' => ['reports.fields', 'reports.columns', 'audit.values.card_detail'],
         'settings.biometrics.modalities.*.mode' => 'audit.values.biometric_mode',
