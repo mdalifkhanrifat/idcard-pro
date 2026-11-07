@@ -28,6 +28,8 @@ const { filters, rows, meta, loading } = list;
 
 /** What can be chosen, grouped and named, and which groups this person may send somewhere: the server's word. */
 const groups = computed(() => ((meta.value as { events?: WebhookEventGroup[] }).events ?? []));
+/** Failures in a row at which a webhook turns itself off (the organization's setting), so a count says how near it is. */
+const disableAfter = computed(() => (meta.value as { disable_after?: number }).disable_after ?? null);
 const filtered = computed(() => Boolean(filters.search || filters.enabled));
 
 const formOpen = ref(false);
@@ -143,7 +145,7 @@ async function test(webhook: Webhook): Promise<void> {
                     <UiBadge v-if="turnedItselfOff(webhook)" tone="danger" data-webhook-self-off>{{ t('webhooks.turnedItselfOff') }}</UiBadge>
                     <UiBadge v-else :tone="webhook.enabled ? 'success' : 'neutral'">{{ t(webhook.enabled ? 'webhooks.on' : 'webhooks.off') }}</UiBadge>
                     <UiBadge>{{ t('webhooks.eventCount', { count: formatNumber(webhook.events.length) }, webhook.events.length) }}</UiBadge>
-                    <UiBadge v-if="webhook.failure_count > 0" tone="warning" data-webhook-failures>{{ t('webhooks.failuresInRow', { count: formatNumber(webhook.failure_count) }, webhook.failure_count) }}</UiBadge>
+                    <UiBadge v-if="webhook.failure_count > 0" tone="warning" data-webhook-failures>{{ disableAfter ? t('webhooks.failuresOf', { count: formatNumber(webhook.failure_count), limit: formatNumber(disableAfter) }, webhook.failure_count) : t('webhooks.failuresInRow', { count: formatNumber(webhook.failure_count) }, webhook.failure_count) }}</UiBadge>
                 </div>
                 <div class="ml-auto flex flex-wrap items-center gap-1">
                     <UiButton v-if="!webhook.enabled" variant="secondary" data-webhook-turn-on @click="turnOn(webhook)"><Power class="size-4" />{{ t('webhooks.turnOn') }}</UiButton>

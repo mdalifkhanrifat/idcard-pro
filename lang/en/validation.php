@@ -358,6 +358,8 @@ return [
         'webhooks' => 'webhook settings',
         'webhooks.prune_log' => 'deleting old deliveries from the log',
         'webhooks.log_days' => 'days to keep deliveries',
+        'webhooks.attempts' => 'tries per delivery',
+        'webhooks.disable_after' => 'failures in a row before turning off',
         'allowed_ips' => 'addresses it works from',
         'allowed_ips.*' => 'addresses it works from',
         'url' => 'address',

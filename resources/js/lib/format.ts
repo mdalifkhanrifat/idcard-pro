@@ -73,6 +73,18 @@ export function formatLongDate(value: string, withYear = true): string {
     return new Intl.DateTimeFormat(i18n.global.locale.value === 'bn' ? 'bn-BD' : 'en-GB', { weekday: 'long', day: 'numeric', month: 'long', ...(withYear && { year: 'numeric' }) }).format(new Date(year, month - 1, day));
 }
 
+/** A length of time, roughly, in the reader's language and digits: minutes under an hour, else hours ("8.6 hours"). */
+export function formatDuration(seconds: number): string {
+    const [unit, value] = seconds < 3600 ? ['minute', Math.max(1, Math.round(seconds / 60))] : ['hour', seconds / 3600];
+
+    return new Intl.NumberFormat(i18n.global.locale.value === 'bn' ? 'bn-BD' : 'en', {
+        style: 'unit',
+        unit,
+        unitDisplay: 'long',
+        maximumFractionDigits: value < 10 ? 1 : 0,
+    }).format(value);
+}
+
 export function formatBytes(bytes: number): string {
     const units = ['B', 'KB', 'MB', 'GB'];
     let value = bytes;

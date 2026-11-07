@@ -214,7 +214,7 @@ class Tenant extends Model
     }
 
     /**
-     * @return array{prune_log: bool, log_days: int}
+     * @return array{prune_log: bool, log_days: int, attempts: int, disable_after: int}
      */
     public function webhookSettings(): array
     {

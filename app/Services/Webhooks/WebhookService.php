@@ -7,6 +7,7 @@ use App\Exceptions\BusinessRuleException;
 use App\Models\User;
 use App\Models\Webhook;
 use App\Repositories\Contracts\WebhookRepositoryInterface;
+use App\Support\Tenancy\TenantContext;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
@@ -16,7 +17,7 @@ use Illuminate\Validation\ValidationException;
  */
 class WebhookService
 {
-    public function __construct(private WebhookRepositoryInterface $webhooks) {}
+    public function __construct(private WebhookRepositoryInterface $webhooks, private TenantContext $tenantContext) {}
 
     /**
      * @return LengthAwarePaginator<int, Webhook>
@@ -24,6 +25,16 @@ class WebhookService
     public function list(WebhookFilter $filter): LengthAwarePaginator
     {
         return $this->webhooks->list($filter);
+    }
+
+    /**
+     * Failed deliveries in a row after which a webhook of this organization turns itself off.
+     */
+    public function disableAfter(): int
+    {
+        $tenant = $this->tenantContext->get();
+
+        return ($tenant?->webhookSettings() ?? WebhookSettings::normalize([]))['disable_after'];
     }
 
     /**

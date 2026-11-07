@@ -103,13 +103,18 @@ old one at once, so anything still on its way is signed with the new one: have t
 
 ## When your address fails
 
-A delivery is tried up to **six times**: at once, then after 1 minute, 5 minutes, 30 minutes, 2 hours
-and 6 hours, about nine hours in all. After that it is marked failed in the log, where it can be seen
-and sent again by hand, with the same body and `id`.
+By default a delivery is tried up to **six times**: at once, then after 1 minute, 5 minutes,
+30 minutes, 2 hours and 6 hours, about nine hours in all. After that it is marked failed in the log,
+where it can be seen and sent again by hand, with the same body and `id`.
 
-After **20 deliveries in a row** have failed, the webhook turns itself off, and the people who look
-after integrations are told. Nothing is sent while it is off, and what happens meanwhile is not
-stored for later. Any success starts the count again, as does turning it back on.
+By default, after **20 deliveries in a row** have failed, the webhook turns itself off, and the people
+who look after integrations are told. Nothing is sent while it is off, and what happens meanwhile is
+not stored for later. Any success starts the count again, as does turning it back on.
+
+The organization chooses both in its settings (Organization → Webhooks): from one try to six, and
+from 1 to 100 failed deliveries. Fewer tries keep the first waits (three tries: at once, after
+1 minute, after 5 more), so plan your downtime around the organization's choice. The webhook list
+answers with the count in force as `meta.disable_after`.
 
 ## Addresses
 

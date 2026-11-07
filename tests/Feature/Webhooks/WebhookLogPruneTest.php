@@ -92,16 +92,16 @@ it('is set through the organization settings, off by default, unsent parts left 
     Sanctum::actingAs($this->owner);
 
     $answer = $this->getJson('/api/v1/settings')->assertOk();
-    expect($answer->json('data.webhooks'))->toBe(['prune_log' => false, 'log_days' => 365])
+    expect($answer->json('data.webhooks'))->toBe(['prune_log' => false, 'log_days' => 365, 'attempts' => 6, 'disable_after' => 20])
         ->and($answer->json('data.webhook_options.log_days'))->toBe(['min' => 7, 'max' => 3650]);
 
     $save = fn (array $webhooks) => $this->postJson('/api/v1/settings', ['name' => 'Acme', 'timezone' => 'Asia/Dhaka', 'locale' => 'en', 'primary_color' => '#112233', 'webhooks' => $webhooks]);
 
-    $save(['prune_log' => true])->assertOk()->assertJsonPath('data.webhooks', ['prune_log' => true, 'log_days' => 365]);
-    $save(['log_days' => 90])->assertOk()->assertJsonPath('data.webhooks', ['prune_log' => true, 'log_days' => 90]);
+    $save(['prune_log' => true])->assertOk()->assertJsonPath('data.webhooks', ['prune_log' => true, 'log_days' => 365, 'attempts' => 6, 'disable_after' => 20]);
+    $save(['log_days' => 90])->assertOk()->assertJsonPath('data.webhooks', ['prune_log' => true, 'log_days' => 90, 'attempts' => 6, 'disable_after' => 20]);
     $save(['log_days' => 3])->assertUnprocessable()->assertJsonValidationErrors('webhooks.log_days');
     $save(['other' => 1])->assertUnprocessable();
-    $save($this->getJson('/api/v1/settings')->json('data.webhooks'))->assertOk()->assertJsonPath('data.webhooks', ['prune_log' => true, 'log_days' => 90]);
+    $save($this->getJson('/api/v1/settings')->json('data.webhooks'))->assertOk()->assertJsonPath('data.webhooks', ['prune_log' => true, 'log_days' => 90, 'attempts' => 6, 'disable_after' => 20]);
 
     $changes = Activity::query()->where('log_name', 'tenant')->orWhere('subject_type', $this->acme->getMorphClass())->latest('id')->get()
         ->flatMap(fn (Activity $activity) => array_keys((array) ($activity->attribute_changes['attributes'] ?? [])));

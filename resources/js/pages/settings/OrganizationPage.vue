@@ -10,7 +10,8 @@ import UiInput from '@/components/ui/UiInput.vue';
 import UiPageHeader from '@/components/ui/UiPageHeader.vue';
 import UiSelect from '@/components/ui/UiSelect.vue';
 import UiTextarea from '@/components/ui/UiTextarea.vue';
-import { formatNumber } from '@/lib/format';
+import { formatDuration, formatNumber } from '@/lib/format';
+import { lastTryAfter } from '@/lib/integrations/webhooks';
 import { applyBrand } from '@/lib/brand';
 import { appendBiometricSettings } from '@/lib/biometrics/settings';
 import { http, toApiError } from '@/lib/http';
@@ -61,9 +62,25 @@ const canSeeAppointments = computed(() => auth.can(['appointments.view', 'settin
 /** How long integration tokens last (6.1). */
 const integrations = reactive({ token_days: 365 as number | string, max_token_days: 1095 as number | string, requests_per_minute: 600 as number | string });
 const requestLimits = ref({ min: 10, max: 6000 });
-/** Whether old webhook deliveries leave the log (6.2), and the days it can be set to (the server's word). */
-const webhooks = reactive({ prune_log: false, log_days: 365 as number | string });
+/**
+ * Whether old webhook deliveries leave the log (6.2), how often a delivery is tried and after how many failures in a
+ * row a webhook turns itself off (6.2e); what each can be set to is the server's word.
+ */
+const webhooks = reactive({ prune_log: false, log_days: 365 as number | string, attempts: 6, disable_after: 20 as number | string });
 const webhookDays = ref({ min: 7, max: 3650 });
+const webhookAttempts = ref({ min: 1, max: 6, backoff: [60, 300, 1800, 7200, 21600] });
+const webhookDisable = ref({ min: 1, max: 100 });
+/** Each choice says when its last try comes, so the number means something. */
+const attemptChoices = computed(() =>
+    Array.from({ length: webhookAttempts.value.max - webhookAttempts.value.min + 1 }, (_, index) => {
+        const attempts = webhookAttempts.value.min + index;
+        const label = attempts === 1
+            ? t('settings.webhooks.attemptsOnce', { count: formatNumber(1) })
+            : t('settings.webhooks.attemptsWithin', { count: formatNumber(attempts), time: formatDuration(lastTryAfter(attempts, webhookAttempts.value.backoff)) }, attempts);
+
+        return { value: attempts, label };
+    }),
+);
 
 const sampleCode = ref('EMP');
 const numberPreview = ref('');
@@ -98,6 +115,8 @@ onMounted(async () => {
     requestLimits.value = data.data.integration_options?.requests_per_minute ?? requestLimits.value;
     Object.assign(webhooks, data.data.webhooks ?? {});
     webhookDays.value = data.data.webhook_options?.log_days ?? webhookDays.value;
+    webhookAttempts.value = data.data.webhook_options?.attempts ?? webhookAttempts.value;
+    webhookDisable.value = data.data.webhook_options?.disable_after ?? webhookDisable.value;
 });
 
 watch(() => form.primary_color, (color) => applyBrand(color));
@@ -145,6 +164,8 @@ async function save(): Promise<void> {
     body.append('integrations[requests_per_minute]', String(integrations.requests_per_minute));
     body.append('webhooks[prune_log]', webhooks.prune_log ? '1' : '0');
     body.append('webhooks[log_days]', String(webhooks.log_days));
+    body.append('webhooks[attempts]', String(webhooks.attempts));
+    body.append('webhooks[disable_after]', String(webhooks.disable_after));
     if (logo.value) {
         body.append('logo', logo.value);
     }
@@ -291,6 +312,22 @@ async function save(): Promise<void> {
                 </UiCard>
                 <UiCard :title="t('settings.webhooks.title')" :description="t('settings.webhooks.description')" data-webhook-settings>
                     <fieldset :disabled="!canEdit" class="space-y-3">
+                        <div class="grid gap-4 sm:grid-cols-2">
+                            <div class="space-y-1.5" data-webhook-attempts>
+                                <UiSelect v-model="webhooks.attempts" :options="attemptChoices" :label="t('settings.webhooks.attempts')" :error="errors['webhooks.attempts']" />
+                                <p class="text-xs text-muted">{{ t('settings.webhooks.attemptsHint') }}</p>
+                            </div>
+                            <UiInput
+                                v-model="webhooks.disable_after"
+                                type="number"
+                                :min="String(webhookDisable.min)"
+                                :max="String(webhookDisable.max)"
+                                :label="t('settings.webhooks.disableAfter')"
+                                :hint="t('settings.webhooks.disableAfterHint', { min: formatNumber(webhookDisable.min), max: formatNumber(webhookDisable.max) })"
+                                :error="errors['webhooks.disable_after']"
+                                data-webhook-disable-after
+                            />
+                        </div>
                         <UiCheckbox v-model="webhooks.prune_log" :label="t('settings.webhooks.pruneLog')" :description="webhooks.prune_log ? '' : t('settings.webhooks.keepHint')" data-webhook-prune />
                         <div v-if="webhooks.prune_log" class="space-y-3 rounded-lg border border-warning/40 bg-warning/8 p-3" data-webhook-prune-warning>
                             <p class="flex items-start gap-2 text-sm text-fg"><AlertTriangle class="mt-0.5 size-4 shrink-0 text-warning" />{{ t('settings.webhooks.pruneWarning') }}</p>

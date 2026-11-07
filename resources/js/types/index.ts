@@ -23,8 +23,13 @@ export interface Tenant {
     integrations?: { token_days: number; max_token_days: number; requests_per_minute: number };
     integration_options?: { requests_per_minute: { min: number; max: number } };
     /** Whether old webhook deliveries leave the log (6.2), and the days it can be set to. */
-    webhooks?: { prune_log: boolean; log_days: number };
-    webhook_options?: { log_days: { min: number; max: number } };
+    webhooks?: { prune_log: boolean; log_days: number; attempts: number; disable_after: number };
+    /** What each can be set to; `attempts.backoff` the seconds before each try after the first (fewer tries keep the first). */
+    webhook_options?: {
+        log_days: { min: number; max: number };
+        attempts: { min: number; max: number; backoff: number[] };
+        disable_after: { min: number; max: number };
+    };
     /** Public card verification (3.7), chosen by the organization. */
     verification?: TenantVerification;
     /** Details the verification page may show. */

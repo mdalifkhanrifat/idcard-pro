@@ -334,6 +334,8 @@ return [
         'webhooks' => 'webhook-এর সেটিং',
         'webhooks.prune_log' => 'লগ থেকে পুরনো ডেলিভারি মোছা',
         'webhooks.log_days' => 'ডেলিভারি কতদিন রাখবেন',
+        'webhooks.attempts' => 'ডেলিভারি-প্রতি চেষ্টা',
+        'webhooks.disable_after' => 'বন্ধের আগে পরপর ব্যর্থ ডেলিভারি',
         'allowed_ips' => 'যে ঠিকানা থেকে চলে',
         'allowed_ips.*' => 'যে ঠিকানা থেকে চলে',
         'url' => 'ঠিকানা',

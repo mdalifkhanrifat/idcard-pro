@@ -22,12 +22,16 @@ class WebhookController extends Controller
 
     /**
      * Filters: filter[search|enabled]. Sorts: name, created_at (prefix "-" for descending). meta.events: what can be
-     * chosen, grouped and named.
+     * chosen, grouped and named; meta.disable_after: failures in a row after which one turns itself off.
      */
     public function index(ListWebhooksRequest $request): AnonymousResourceCollection
     {
         return WebhookResource::collection($this->webhooks->list($request->toFilter()))
-            ->additional(['meta' => ['events' => WebhookEvents::options($request->user())]]);
+            ->additional(['meta' => [
+                'events' => WebhookEvents::options($request->user()),
+                // Failures in a row after which a webhook turns itself off (the organization's setting)
+                'disable_after' => $this->webhooks->disableAfter(),
+            ]]);
     }
 
     /**

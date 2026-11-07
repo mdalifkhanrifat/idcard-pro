@@ -22,6 +22,10 @@
 | once and then after each of `retry.backoff` seconds, about nine hours in all. After `disable_after` deliveries in a
 | row have failed the webhook turns itself off.
 |
+| An organization may try fewer times (settings.webhooks.attempts, from 1 to one more than the waits): it then keeps
+| the first waits, never a schedule of its own, so no one can make this server knock every second. It may also turn
+| its webhooks off sooner or later (settings.webhooks.disable_after, within `disable_limits`).
+|
 | The log of deliveries holds what was sent. It is kept for good unless the organization chooses to have deliveries
 | older than `log_days` deleted (daily, app:prune-webhook-deliveries).
 |
@@ -63,6 +67,8 @@ return [
     'retry' => ['backoff' => [60, 300, 1800, 7200, 21600]],
 
     'disable_after' => 20,
+
+    'disable_limits' => ['min' => 1, 'max' => 100],
 
     // Test deliveries by hand, per user and minute
     'test_per_minute' => 5,

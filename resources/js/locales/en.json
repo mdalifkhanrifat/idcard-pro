@@ -381,12 +381,18 @@
         },
         "webhooks": {
             "title": "Webhooks",
-            "description": "The log of what was sent to webhooks. It holds the data sent, which can be personal.",
+            "description": "How deliveries are tried, and the log of what was sent. The log holds the data sent, which can be personal.",
             "pruneLog": "Delete old deliveries from the log",
             "keepHint": "Off: the log is kept for good.",
             "pruneWarning": "Deliveries older than this are deleted every day and cannot be brought back. Each deletion is noted in the audit log.",
             "logDays": "Days to keep",
-            "logDaysHint": "From {min} to {max} days"
+            "logDaysHint": "From {min} to {max} days",
+            "attempts": "Tries per delivery",
+            "attemptsOnce": "{count} — once, never again",
+            "attemptsWithin": "{count} — the last after {time} | {count} — the last after {time}",
+            "attemptsHint": "When the address does not answer, each try waits longer than the one before. Fewer tries mark a delivery failed sooner.",
+            "disableAfter": "Turn off after failures in a row",
+            "disableAfterHint": "From {min} to {max}. A delivery counts once, after its last try; any success starts the count again."
         },
         "integrations": {
             "title": "Integration tokens and calls",
@@ -2282,7 +2288,8 @@
             "howTo": "Keep it in the system that receives. It uses it to check that each delivery really came from here.",
             "rotate": "New signing secret",
             "rotateConfirm": "Make a new secret for {name}? The old one stops at once, so deliveries fail its check until the new one is in place."
-        }
+        },
+        "failuresOf": "{count} of {limit} failed in a row | {count} of {limit} failed in a row"
     },
     "integrations": {
         "tabs": {

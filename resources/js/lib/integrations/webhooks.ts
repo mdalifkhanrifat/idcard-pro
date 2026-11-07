@@ -120,6 +120,14 @@ export function prettyPayload(payload: string | null): string {
     }
 }
 
+/**
+ * Seconds from the first try to the last, for this many tries in all: fewer tries keep the first of the server's
+ * waits (as the server itself does), so this is what the organization's choice means.
+ */
+export function lastTryAfter(attempts: number, backoff: number[]): number {
+    return backoff.slice(0, Math.max(0, attempts - 1)).reduce((sum, wait) => sum + wait, 0);
+}
+
 /** Off by failing, not by a person's choice: only that leaves a moment, and it goes when turned on again. */
 export function turnedItselfOff(webhook: Pick<Webhook, 'enabled' | 'disabled_at'>): boolean {
     return !webhook.enabled && webhook.disabled_at !== null;

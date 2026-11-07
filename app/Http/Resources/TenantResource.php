@@ -6,6 +6,7 @@ use App\Models\Tenant;
 use App\Services\Biometrics\BiometricSettings;
 use App\Services\Cards\CardNumberFormat;
 use App\Services\Notifications\NotificationSettings;
+use App\Services\Webhooks\WebhookSettings;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -73,9 +74,10 @@ class TenantResource extends JsonResource
             // How long integration tokens last (6.1)
             'integrations' => $this->resource->integrationSettings(),
             'integration_options' => ['requests_per_minute' => ['min' => (int) config('integrations.requests.min'), 'max' => (int) config('integrations.requests.max')]],
-            // Whether old webhook deliveries are deleted from the log (6.2), and the days it can be set to
+            // Whether old webhook deliveries are deleted from the log (6.2), how often a delivery is tried and after how many
+            // failures in a row a webhook turns itself off (6.2e), and what each can be set to
             'webhooks' => $this->resource->webhookSettings(),
-            'webhook_options' => ['log_days' => config('webhooks.log_days')],
+            'webhook_options' => ['log_days' => config('webhooks.log_days'), ...WebhookSettings::options()],
             'status' => $this->status,
             'users_count' => $this->whenCounted('users'),
             'created_at' => $this->created_at,

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { deliveryTone, groupState, knownEvents, prettyPayload, turnedItselfOff, withGroup, type WebhookEventGroup } from '../webhooks';
+import { deliveryTone, groupState, knownEvents, lastTryAfter, prettyPayload, turnedItselfOff, withGroup, type WebhookEventGroup } from '../webhooks';
 
 const cards: WebhookEventGroup = { key: 'card', name: 'Cards', allowed: true, events: [{ key: 'card.issued', name: 'Issued' }, { key: 'card.printed', name: 'Printed' }] };
 
@@ -42,5 +42,20 @@ describe('the log', () => {
     it('shows other text as it is, and nothing for nothing', () => {
         expect(prettyPayload('not json')).toBe('not json');
         expect(prettyPayload(null)).toBe('');
+    });
+});
+
+describe('lastTryAfter', () => {
+    const backoff = [60, 300, 1800, 7200, 21600];
+
+    it('adds up the first waits only, as the server keeps them for fewer tries', () => {
+        expect(lastTryAfter(6, backoff)).toBe(30960);
+        expect(lastTryAfter(3, backoff)).toBe(360);
+        expect(lastTryAfter(2, backoff)).toBe(60);
+    });
+
+    it('is no wait at all for a single try', () => {
+        expect(lastTryAfter(1, backoff)).toBe(0);
+        expect(lastTryAfter(0, backoff)).toBe(0);
     });
 });

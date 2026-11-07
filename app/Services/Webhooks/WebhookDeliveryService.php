@@ -59,7 +59,7 @@ class WebhookDeliveryService
     public function queue(Webhook $webhook, string $event, array $data): WebhookDelivery
     {
         $delivery = $this->log($webhook, $event, $data);
-        SendWebhook::dispatch($delivery->id)->afterCommit();
+        $this->dispatch($delivery);
 
         return $delivery;
     }
@@ -109,7 +109,7 @@ class WebhookDeliveryService
                 'event' => $delivery->event,
                 'payload' => $delivery->payload,
             ]);
-            SendWebhook::dispatch($resent->id)->afterCommit();
+            $this->dispatch($resent);
 
             return $resent;
         });
@@ -190,7 +190,7 @@ class WebhookDeliveryService
             $turnedOff = DB::transaction(function () use ($delivery): ?Webhook {
                 $webhook = $this->webhooks->lockForFailure($delivery->webhook_id);
                 $webhook->failure_count++;
-                $reached = $webhook->enabled && $webhook->failure_count >= (int) config('webhooks.disable_after');
+                $reached = $webhook->enabled && $webhook->failure_count >= $delivery->tenant->webhookSettings()['disable_after'];
                 if ($reached) {
                     $webhook->enabled = false;
                     $webhook->disabled_at = now();
@@ -205,6 +205,17 @@ class WebhookDeliveryService
                 $this->noteTurnedOff($turnedOff, $delivery->tenant);
             }
         });
+    }
+
+    /**
+     * To the queue once whatever caused it is saved, tried as often as the organization chose.
+     */
+    private function dispatch(WebhookDelivery $delivery): void
+    {
+        $tenant = $this->tenantContext->get();
+        assert($tenant instanceof Tenant);
+
+        SendWebhook::dispatch($delivery->id, WebhookSettings::backoff($tenant->webhookSettings()['attempts']))->afterCommit();
     }
 
     /**

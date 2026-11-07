@@ -5,6 +5,7 @@ namespace App\Http\Requests\Tenants;
 use App\Services\Biometrics\BiometricSettings;
 use App\Services\Cards\CardNumberFormat;
 use App\Services\Notifications\NotificationSettingsRules;
+use App\Services\Webhooks\WebhookSettings;
 use App\Support\Tenancy\TenantContext;
 use DateTimeZone;
 use Illuminate\Foundation\Http\FormRequest;
@@ -82,9 +83,11 @@ class UpdateTenantSettingsRequest extends FormRequest
             }],
             'integrations.max_token_days' => ['sometimes', 'integer', $limit],
             'integrations.requests_per_minute' => ['sometimes', 'integer', 'between:'.(int) config('integrations.requests.min').','.(int) config('integrations.requests.max')],
-            'webhooks' => ['sometimes', 'array:prune_log,log_days'],
+            'webhooks' => ['sometimes', 'array:prune_log,log_days,attempts,disable_after'],
             'webhooks.prune_log' => ['sometimes', 'boolean'],
             'webhooks.log_days' => ['sometimes', 'integer', 'between:'.(int) config('webhooks.log_days.min').','.(int) config('webhooks.log_days.max')],
+            'webhooks.attempts' => ['sometimes', 'integer', 'between:1,'.WebhookSettings::mostAttempts()],
+            'webhooks.disable_after' => ['sometimes', 'integer', 'between:'.(int) config('webhooks.disable_limits.min').','.(int) config('webhooks.disable_limits.max')],
         ];
     }
 
