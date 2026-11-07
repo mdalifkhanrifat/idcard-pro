@@ -34,14 +34,16 @@ class WebhookNotifier
 
     /**
      * @param  string  $event  a config('webhooks.events') key
+     * @param  array<string, mixed>  $change  what changed, when the record alone does not say (a family member, a
+     *                                        file): sent as data.change, ids and words only, never a file or a link
      */
-    public function tell(string $event, Appointment|Card|Cardholder $subject): void
+    public function tell(string $event, Appointment|Card|Cardholder $subject, array $change = []): void
     {
         $tenant = $this->tenantContext->get();
         if ($tenant !== null) {
             // Asked now: it is the moment of the change that decides, not the moment of saving
             $folded = $this->batch !== null && in_array($event, (array) ((array) config('webhooks.batches'))[$this->batch], true) ? $this->batch : null;
-            DB::afterCommit(fn () => $this->send($event, fn (): array => $this->payloads->of($subject, $tenant), $tenant, $folded));
+            DB::afterCommit(fn () => $this->send($event, fn (): array => [...$this->payloads->of($subject, $tenant), ...($change === [] ? [] : ['change' => $change])], $tenant, $folded));
         }
     }
 

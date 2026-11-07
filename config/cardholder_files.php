@@ -16,6 +16,10 @@
 | - max_kb:     maximum upload size in kilobytes
 | - family:     family members may keep their own file of this kind (their
 |               photo and signature print on family cards)
+| - webhook:    the webhook event (config/webhooks.php) told when the
+|               cardholder's own file of this kind is uploaded or deleted;
+|               a family member's tells cardholder.family_changed. Kinds
+|               without it are not told of.
 |
 | Legacy mapping: photo = picture, signature = holder_sign,
 | document = pdf + files. Fingerprints are biometric data (Phase 4).
@@ -37,6 +41,7 @@ return [
             'max_kb' => 5120,
             'max_dimension' => 1200,
             'family' => true,
+            'webhook' => 'cardholder.photo_changed',
         ],
         'signature' => [
             'single' => true,

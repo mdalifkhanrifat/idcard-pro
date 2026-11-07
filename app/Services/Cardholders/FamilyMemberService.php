@@ -10,11 +10,13 @@ use App\Repositories\Contracts\CardRepositoryInterface;
 use App\Repositories\Contracts\FamilyMemberRepositoryInterface;
 use App\Repositories\Contracts\MasterDataRepositoryInterface;
 use App\Services\Biometrics\BiometricService;
+use App\Services\Webhooks\WebhookNotifier;
 use Illuminate\Support\Collection;
 
 /**
  * Family members recorded for a cardholder. Their own photo and signature are cardholder files
- * (CardholderFileService) and are removed with them.
+ * (CardholderFileService) and are removed with them. Webhooks hear of each change as cardholder.family_changed, about
+ * the cardholder, with the member's id and what happened in data.change.
  */
 class FamilyMemberService
 {
@@ -27,6 +29,7 @@ class FamilyMemberService
         private CardholderFileService $files,
         private BiometricService $biometrics,
         private AppointmentRepositoryInterface $appointments,
+        private WebhookNotifier $webhooks,
     ) {}
 
     /**
@@ -47,6 +50,7 @@ class FamilyMemberService
             'cardholder_id' => $cardholder->id,
             'sort_order' => $data['sort_order'] ?? $this->members->nextSortOrder($cardholder),
         ]);
+        $this->tellChanged($cardholder, $member, 'created');
 
         return $member->load(self::RELATIONS);
     }
@@ -56,7 +60,12 @@ class FamilyMemberService
      */
     public function update(FamilyMember $member, array $data): FamilyMember
     {
-        return $this->members->update($member, $this->resolveBloodGroup($data))->load(self::RELATIONS);
+        $updated = $this->members->update($member, $this->resolveBloodGroup($data));
+        if ($updated->wasChanged()) {
+            $this->tellChanged($updated->cardholder, $updated, 'updated');
+        }
+
+        return $updated->load(self::RELATIONS);
     }
 
     public function delete(FamilyMember $member): void
@@ -70,9 +79,19 @@ class FamilyMemberService
         // File and biometric records go with the member (foreign key cascade); the stored files are removed afterwards
         $locations = $this->files->storedLocationsOfMember($member);
         $biometricLocations = $this->biometrics->storedLocationsOfMember($member);
+        $cardholder = $member->cardholder;
         $this->members->delete($member);
+        $this->tellChanged($cardholder, $member, 'deleted');
         $this->files->deleteStored($locations);
         $this->biometrics->deleteStored($biometricLocations);
+    }
+
+    /**
+     * @param  'created'|'updated'|'deleted'  $action
+     */
+    private function tellChanged(Cardholder $cardholder, FamilyMember $member, string $action): void
+    {
+        $this->webhooks->tell('cardholder.family_changed', $cardholder, ['family_member' => ['id' => $member->public_id, 'action' => $action]]);
     }
 
     /**

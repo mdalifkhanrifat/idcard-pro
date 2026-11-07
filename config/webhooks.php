@@ -34,7 +34,7 @@
 return [
 
     'events' => [
-        'cardholder' => ['cardholder.created', 'cardholder.updated', 'cardholder.deleted', 'cardholder.imported'],
+        'cardholder' => ['cardholder.created', 'cardholder.updated', 'cardholder.deleted', 'cardholder.imported', 'cardholder.family_changed', 'cardholder.photo_changed'],
         'card' => ['card.issued', 'card.printed', 'card.updated', 'card.revoked'],
         'appointment' => ['appointment.booked', 'appointment.confirmed', 'appointment.moved', 'appointment.cancelled', 'appointment.status_changed'],
     ],

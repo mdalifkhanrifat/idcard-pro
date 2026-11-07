@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Repositories\Contracts\CardholderFileRepositoryInterface;
 use App\Repositories\Contracts\CardRepositoryInterface;
 use App\Repositories\Contracts\FamilyMemberRepositoryInterface;
+use App\Services\Webhooks\WebhookNotifier;
 use App\Support\Media\ImageSanitizer;
 use App\Support\Media\UnreadableImageException;
 use Illuminate\Http\UploadedFile;
@@ -35,6 +36,7 @@ class CardholderFileService
         private ImageSanitizer $images,
         private CardRepositoryInterface $cards,
         private FamilyMemberRepositoryInterface $familyMembers,
+        private WebhookNotifier $webhooks,
     ) {}
 
     /**
@@ -83,7 +85,7 @@ class CardholderFileService
         Storage::disk($disk)->put($path, $contents);
 
         try {
-            return DB::transaction(function () use ($cardholder, $member, $collection, $definition, $upload, $title, $actor, $disk, $path, $contents, $mimeType, $width, $height): CardholderFile {
+            $file = DB::transaction(function () use ($cardholder, $member, $collection, $definition, $upload, $title, $actor, $disk, $path, $contents, $mimeType, $width, $height): CardholderFile {
                 if ($definition['single']) {
                     $this->files->markReplaced($cardholder, $collection, $member);
                 }
@@ -109,6 +111,9 @@ class CardholderFileService
 
             throw $e;
         }
+        $this->tellChanged($cardholder, $file, $member, 'uploaded');
+
+        return $file;
     }
 
     public function delete(CardholderFile $file): void
@@ -118,6 +123,27 @@ class CardholderFileService
         }
         $this->files->delete($file);
         Storage::disk($file->disk)->delete($file->path);
+        $this->tellChanged($file->cardholder, $file, $file->familyMember, 'deleted');
+    }
+
+    /**
+     * Webhooks hear of the kinds of file that name an event (config/cardholder_files.php → `webhook`): the cardholder's
+     * own as that event, a family member's as cardholder.family_changed. The file's id and kind only: never the file,
+     * nor a link to it (the API gives one to whoever may see it).
+     *
+     * @param  'uploaded'|'deleted'  $action
+     */
+    private function tellChanged(Cardholder $cardholder, CardholderFile $file, ?FamilyMember $member, string $action): void
+    {
+        $event = config("cardholder_files.collections.{$file->collection}.webhook");
+        if (! is_string($event)) {
+            return;
+        }
+        $change = ['file' => ['id' => $file->public_id, 'collection' => $file->collection, 'action' => $action]];
+
+        $member === null
+            ? $this->webhooks->tell($event, $cardholder, $change)
+            : $this->webhooks->tell('cardholder.family_changed', $cardholder, ['family_member' => ['id' => $member->public_id, 'action' => 'updated'], ...$change]);
     }
 
     /**

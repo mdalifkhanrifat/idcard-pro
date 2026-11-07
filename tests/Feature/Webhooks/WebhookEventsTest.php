@@ -348,8 +348,10 @@ it('is quiet without an organization, as in a seeder', function () {
 });
 
 it('has every event of the registry fired somewhere', function () {
-    $sources = collect(['Cards/CardNotifications', 'Appointments/AppointmentNotifications', 'Cardholders/CardholderService', 'Cardholders/CardholderImportService'])
+    $sources = collect(['Cards/CardNotifications', 'Appointments/AppointmentNotifications', 'Cardholders/CardholderService', 'Cardholders/CardholderImportService', 'Cardholders/FamilyMemberService'])
         ->map(fn (string $file) => file_get_contents(app_path("Services/{$file}.php")))
+        // Kinds of file name their own event (config/cardholder_files.php → webhook)
+        ->push(collect(config('cardholder_files.collections'))->pluck('webhook')->filter()->map(fn (string $event) => "'{$event}'")->join(''))
         ->join('');
 
     foreach (WebhookEvents::keys() as $event) {
@@ -385,4 +387,78 @@ it('has a permission for every group of events', function () {
         [$module, $ability] = explode('.', $permission);
         expect(config("permissions.modules.{$module}"))->toContain($ability);
     }
+});
+
+it('tells of a family member added, changed and removed, as a change of the cardholder, and of no change at all', function () {
+    ($this->listen)(['cardholder.family_changed']);
+    $holder = cardholder($this->tenant);
+    $members = "/api/v1/cardholders/{$holder->public_id}/family-members";
+
+    $member = $this->postJson($members, ['relation' => 'father', 'name' => 'Abdul Karim'])->assertCreated()->json('data.id');
+    expect(($this->last)()['data']['id'])->toBe($holder->public_id)
+        ->and(($this->last)()['data']['change'])->toBe(['family_member' => ['id' => $member, 'action' => 'created']]);
+
+    $this->putJson("{$members}/{$member}", ['relation' => 'father', 'name' => 'Abdul Karim'])->assertOk();
+    $this->putJson("{$members}/{$member}", ['relation' => 'father', 'name' => 'Abdul Kader'])->assertOk();
+    expect(($this->last)()['data']['change']['family_member']['action'])->toBe('updated');
+    $this->deleteJson("{$members}/{$member}")->assertNoContent();
+
+    expect(($this->told)())->toBe(['cardholder.family_changed', 'cardholder.family_changed', 'cardholder.family_changed'])
+        ->and(($this->last)()['data']['change'])->toBe(['family_member' => ['id' => $member, 'action' => 'deleted']]);
+});
+
+it('tells of the cardholder\'s own photo uploaded, replaced and removed: the file\'s id only, never the file or a link', function () {
+    ($this->listen)();
+    $holder = cardholder($this->tenant);
+    $upload = fn (string $collection) => $this->post("/api/v1/cardholders/{$holder->public_id}/files", ['collection' => $collection, 'file' => UploadedFile::fake()->image('me.jpg', 300, 400)], ['Accept' => 'application/json'])->assertCreated()->json('data.id');
+
+    $first = $upload('photo');
+    $payload = WebhookDelivery::withoutGlobalScopes()->orderByDesc('id')->firstOrFail()->payload;
+    expect(json_decode($payload, true)['data']['change'])->toBe(['file' => ['id' => $first, 'collection' => 'photo', 'action' => 'uploaded']])
+        ->and(json_decode($payload, true)['data'])->not->toHaveKey('photo')
+        ->and($payload)->not->toContain('signature=')->not->toContain('/files/')->not->toContain('tenants/');
+
+    $second = $upload('photo');
+    $this->deleteJson("/api/v1/cardholders/{$holder->public_id}/files/{$second}")->assertNoContent();
+    expect(($this->last)()['data']['change']['file'])->toBe(['id' => $second, 'collection' => 'photo', 'action' => 'deleted']);
+
+    // Kinds that name no event are not told of
+    ($this->clear)();
+    $signature = $upload('signature');
+    $this->post("/api/v1/cardholders/{$holder->public_id}/files", ['collection' => 'document', 'file' => UploadedFile::fake()->create('cv.pdf', 10, 'application/pdf')], ['Accept' => 'application/json']);
+    $this->deleteJson("/api/v1/cardholders/{$holder->public_id}/files/{$signature}")->assertNoContent();
+    expect(($this->told)())->toBe([]);
+});
+
+it('tells of a family member\'s photo as a change of the family, not of the cardholder\'s photo', function () {
+    ($this->listen)(['cardholder.family_changed', 'cardholder.photo_changed']);
+    $holder = cardholder($this->tenant);
+    $member = $this->postJson("/api/v1/cardholders/{$holder->public_id}/family-members", ['relation' => 'mother', 'name' => 'Amena'])->assertCreated()->json('data.id');
+    ($this->clear)();
+    $upload = fn (string $collection) => $this->post("/api/v1/cardholders/{$holder->public_id}/files", ['collection' => $collection, 'family_member' => $member, 'file' => UploadedFile::fake()->image('mum.jpg', 300, 400)], ['Accept' => 'application/json'])->assertCreated()->json('data.id');
+
+    $photo = $upload('photo');
+    $upload('signature');
+
+    expect(($this->told)())->toBe(['cardholder.family_changed'])
+        ->and(($this->last)()['data']['id'])->toBe($holder->public_id)
+        ->and(($this->last)()['data']['change'])->toBe([
+            'family_member' => ['id' => $member, 'action' => 'updated'],
+            'file' => ['id' => $photo, 'collection' => 'photo', 'action' => 'uploaded'],
+        ]);
+});
+
+it('tells nothing of a family member or a photo that could not change', function () {
+    $this->expectsReport = true;
+    ($this->listen)();
+    $holder = cardholder($this->tenant);
+    $member = ($this->inTenant)(fn () => $holder->familyMembers()->create(['relation' => 'father', 'name' => 'Abdul', 'sort_order' => 1]));
+    $card = ($this->issued)($holder);
+    ($this->inTenant)(fn () => DB::table('cards')->where('public_id', $card['id'])->update(['family_member_id' => $member->id]));
+    ($this->clear)();
+
+    $this->deleteJson("/api/v1/cardholders/{$holder->public_id}/family-members/{$member->public_id}")->assertStatus(422);
+    $this->post("/api/v1/cardholders/{$holder->public_id}/files", ['collection' => 'photo', 'file' => UploadedFile::fake()->create('bad.exe', 10)], ['Accept' => 'application/json'])->assertUnprocessable();
+
+    expect(($this->told)())->toBe([]);
 });

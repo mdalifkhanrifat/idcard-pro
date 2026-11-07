@@ -130,6 +130,8 @@ every attempt.
 | `cardholder.updated` | A cardholder's own record changes | the same |
 | `cardholder.deleted` | A cardholder is deleted | the same, as last saved |
 | `cardholder.imported` | A file of cardholders ends | see [Imports](#imports) |
+| `cardholder.family_changed` | A family member is added, changed or removed, or their photo changes | the cardholder, with `change` (see [What changed](#what-changed)) |
+| `cardholder.photo_changed` | The cardholder's own photo is uploaded, replaced or removed | the same |
 | `card.issued` | A card is issued | `GET /api/v1/cards/{id}` |
 | `card.printed` | A card is printed | the same |
 | `card.updated` | A card's details change | the same |
@@ -142,6 +144,25 @@ every attempt.
 | `webhook.test` | Someone presses *Test* | `{"test": true}` |
 
 New events can be added, and new fields can appear in `data`: ignore what you do not know.
+
+### What changed
+
+The cardholder's record does not say what happened to a family member or a file, so these two events
+add `data.change`, with ids and words only:
+
+```json
+{"family_member": {"id": "01K…", "action": "created"}}
+{"file": {"id": "01K…", "collection": "photo", "action": "uploaded"}}
+{"family_member": {"id": "01K…", "action": "updated"}, "file": {"id": "01K…", "collection": "photo", "action": "uploaded"}}
+```
+
+`family_member.action` is `created`, `updated` or `deleted`; `file.action` is `uploaded` (a new photo,
+which replaces the old one) or `deleted`. The last line is a family member's own photo: it is told as
+`cardholder.family_changed`, never as `cardholder.photo_changed`.
+
+**No photo is ever sent, nor a link to one.** To fetch it, read
+`GET /api/v1/cardholders/{id}/files?collection=photo` with your token (add `&family_member={id}` for a
+family member's): the answer holds a link that works for a few minutes. Signatures and other documents are not told of.
 
 ## Imports
 
