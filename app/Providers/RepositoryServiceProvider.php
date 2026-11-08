@@ -21,6 +21,7 @@ use App\Repositories\Contracts\CardTemplateRepositoryInterface;
 use App\Repositories\Contracts\CardVerificationRepositoryInterface;
 use App\Repositories\Contracts\CustomFieldRepositoryInterface;
 use App\Repositories\Contracts\FamilyMemberRepositoryInterface;
+use App\Repositories\Contracts\IdempotencyKeyRepositoryInterface;
 use App\Repositories\Contracts\IntegrationRepositoryInterface;
 use App\Repositories\Contracts\LoginEventRepositoryInterface;
 use App\Repositories\Contracts\MasterDataRepositoryInterface;
@@ -55,6 +56,7 @@ use App\Repositories\Eloquent\CardTemplateRepository;
 use App\Repositories\Eloquent\CardVerificationRepository;
 use App\Repositories\Eloquent\CustomFieldRepository;
 use App\Repositories\Eloquent\FamilyMemberRepository;
+use App\Repositories\Eloquent\IdempotencyKeyRepository;
 use App\Repositories\Eloquent\IntegrationRepository;
 use App\Repositories\Eloquent\LoginEventRepository;
 use App\Repositories\Eloquent\MasterDataRepository;
@@ -92,6 +94,7 @@ class RepositoryServiceProvider extends ServiceProvider
         CustomFieldRepositoryInterface::class => CustomFieldRepository::class,
         CardholderImportRepositoryInterface::class => CardholderImportRepository::class,
         CardholderSyncRepositoryInterface::class => CardholderSyncRepository::class,
+        IdempotencyKeyRepositoryInterface::class => IdempotencyKeyRepository::class,
         SignatoryRepositoryInterface::class => SignatoryRepository::class,
         AppointmentLocationRepositoryInterface::class => AppointmentLocationRepository::class,
         AppointmentClosureRepositoryInterface::class => AppointmentClosureRepository::class,

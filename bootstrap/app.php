@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\CheckIntegrationAddress;
+use App\Http\Middleware\EnsureIdempotency;
 use App\Http\Middleware\EnsurePerson;
 use App\Http\Middleware\EnsurePlatformAdmin;
 use App\Http\Middleware\RequirePublicBookingSession;
@@ -34,6 +35,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'platform.admin' => EnsurePlatformAdmin::class,
             'person' => EnsurePerson::class,
             'integration.address' => CheckIntegrationAddress::class,
+            'idempotent' => EnsureIdempotency::class,
             'public.booking' => ResolvePublicBookingTenant::class,
             'public.booking.session' => RequirePublicBookingSession::class,
         ]);

@@ -212,7 +212,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
 
             Route::apiResource('cardholders', CardholderController::class);
             // HR systems send their people (docs/SYNC.md)
-            Route::post('sync/cardholders', [CardholderSyncController::class, 'store'])->name('sync.cardholders');
+            Route::post('sync/cardholders', [CardholderSyncController::class, 'store'])->middleware('idempotent')->name('sync.cardholders');
 
             Route::apiResource('card-templates', CardTemplateController::class)->parameters(['card-templates' => 'template']);
             Route::post('card-templates/{template}/duplicate', [CardTemplateController::class, 'duplicate'])->name('card-templates.duplicate');
