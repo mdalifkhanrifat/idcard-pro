@@ -180,6 +180,7 @@
             "update": "Edit",
             "delete": "Delete",
             "import": "Import",
+            "sync": "Sync from HR",
             "issue": "Issue",
             "print": "Print",
             "revoke": "Revoke",

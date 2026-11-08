@@ -127,7 +127,7 @@ return [
         'locale' => ['en' => 'English', 'bn' => 'Bangla'],
         'user_kind' => ['person' => 'Person', 'integration' => 'Integration'],
         'permission_module' => ['users' => 'Users', 'roles' => 'Roles', 'audit' => 'Audit log', 'settings' => 'Organization settings', 'master_data' => 'Master data', 'cardholders' => 'Cardholders', 'signatories' => 'Signatories', 'templates' => 'Card templates', 'fonts' => 'Fonts', 'images' => 'Image library', 'cards' => 'Issued cards', 'biometrics' => 'Biometrics', 'reports' => 'Reports', 'notifications' => 'Notifications', 'appointments' => 'Appointments', 'integrations' => 'Integrations'],
-        'permission_ability' => ['view' => 'View', 'create' => 'Create', 'update' => 'Edit', 'delete' => 'Delete', 'import' => 'Import', 'issue' => 'Issue', 'print' => 'Print', 'revoke' => 'Revoke', 'enroll' => 'Enroll', 'override_requirements' => 'Override requirements', 'export' => 'Export', 'send' => 'Send', 'book' => 'Book', 'manage' => 'Manage'],
+        'permission_ability' => ['view' => 'View', 'create' => 'Create', 'update' => 'Edit', 'delete' => 'Delete', 'import' => 'Import', 'sync' => 'Sync from HR', 'issue' => 'Issue', 'print' => 'Print', 'revoke' => 'Revoke', 'enroll' => 'Enroll', 'override_requirements' => 'Override requirements', 'export' => 'Export', 'send' => 'Send', 'book' => 'Book', 'manage' => 'Manage'],
         'tenant_status' => ['active' => 'Active', 'suspended' => 'Suspended'],
         'custom_field_type' => ['text' => 'Text', 'textarea' => 'Long text', 'number' => 'Number', 'date' => 'Date', 'select' => 'Drop-down', 'checkbox' => 'Yes / no'],
         'custom_field_entity' => ['cardholder' => 'Cardholder', 'family_member' => 'Family member'],

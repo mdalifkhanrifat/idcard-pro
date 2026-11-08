@@ -333,8 +333,10 @@ class CardholderImportService
         }
 
         $run = function () use ($cells, $columns, $options, $dryRun, $actor, $template, $timezone, &$seen, $preview): array {
-            $mapped = $this->mapper->toInput($cells, $columns, $options['create_missing_lookups'], $dryRun);
-            $record = $this->sync->check($mapped['input'], $mapped['errors'], $options['update_existing'], $seen['employee_no']);
+            $employeeColumn = array_search('employee_no', $columns, true);
+            $existing = $options['update_existing'] && $employeeColumn !== false ? $this->sync->find($cells[$employeeColumn] ?? null) : null;
+            $mapped = $this->mapper->toInput($cells, $columns, $options['create_missing_lookups'], $dryRun, $existing);
+            $record = $this->sync->check($mapped['input'], $mapped['errors'], $existing, $seen['employee_no']);
             $messages = $record->messages;
 
             [$card, $cardAction] = [null, null];

@@ -22,7 +22,8 @@ return [
         'audit' => ['view'],
         'settings' => ['view', 'update'],
         'master_data' => ['view', 'create', 'update', 'delete'],
-        'cardholders' => ['view', 'create', 'update', 'delete', 'import'],
+        // sync: create and update people by employee number through the API (an HR system's integration account)
+        'cardholders' => ['view', 'create', 'update', 'delete', 'import', 'sync'],
         'signatories' => ['view', 'create', 'update', 'delete'],
         'templates' => ['view', 'create', 'update', 'delete'],
         // Licensed fonts for card templates; anyone with templates.view can also use (list) them
@@ -52,7 +53,7 @@ return [
             'users.view', 'users.create', 'users.update', 'users.delete',
             'roles.view', 'audit.view', 'settings.view',
             'master_data.view', 'master_data.create', 'master_data.update', 'master_data.delete',
-            'cardholders.view', 'cardholders.create', 'cardholders.update', 'cardholders.delete', 'cardholders.import',
+            'cardholders.view', 'cardholders.create', 'cardholders.update', 'cardholders.delete', 'cardholders.import', 'cardholders.sync',
             'signatories.view', 'signatories.create', 'signatories.update', 'signatories.delete',
             'templates.view', 'templates.create', 'templates.update', 'templates.delete',
             'fonts.view', 'fonts.create', 'fonts.delete',

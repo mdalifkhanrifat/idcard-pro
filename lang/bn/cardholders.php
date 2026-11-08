@@ -41,4 +41,18 @@ return [
         'nothing_to_import' => 'ইমপোর্ট করার মতো কোনো সঠিক সারি নেই।',
         'running' => 'ইমপোর্ট চলছে, এখন মোছা যাবে না।',
     ],
+    'sync' => [
+        'employee_no_required' => 'প্রতিটা রেকর্ডে employee_no লাগবে: মানুষ এটা দিয়েই চেনা হয়।',
+        'duplicate_in_batch' => 'কর্মী নম্বর :value এই অনুরোধে একাধিকবার আছে।',
+        'unknown_field' => '“:field” কার্ডধারীর কোনো ঘর নয়।',
+        'both_given' => ':list অথবা :column — যেকোনো একটা দিন, দুটো নয়।',
+        'invalid_lookup' => ':list হবে নাম বা কোড, id/code/name-সহ একটা object, অথবা null।',
+        'record_failed' => 'এই রেকর্ডটি সেভ করা যায়নি।',
+        'attributes' => [
+            'records' => 'রেকর্ডের তালিকা',
+            'records.*' => 'রেকর্ড',
+            'dry_run' => 'পরীক্ষামূলক চালনা',
+            'create_missing_lookups' => 'না-থাকা master data তৈরি',
+        ],
+    ],
 ];

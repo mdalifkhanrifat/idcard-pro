@@ -6,8 +6,6 @@ use App\Data\Cards\ImportCardData;
 use App\Enums\CustomFieldType;
 use App\Models\Cardholder;
 use App\Models\CustomField;
-use App\Models\MasterDataItem;
-use App\Repositories\Contracts\MasterDataRepositoryInterface;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
@@ -26,21 +24,11 @@ class CardholderImportMapper
     ];
 
     /**
-     * Child master data column => parent column (children are looked up inside their parent).
-     */
-    private const PARENTS = ['unit_id' => 'department_id', 'sub_region_id' => 'region_id'];
-
-    /**
-     * @var array<string, array<string, MasterDataItem>> type => normalized key => item
-     */
-    private array $lookupCache = [];
-
-    /**
      * @var Collection<string, CustomField>
      */
     private Collection $customFields;
 
-    public function __construct(private MasterDataRepositoryInterface $masterData)
+    public function __construct(private MasterDataLookups $lookups)
     {
         $this->customFields = collect();
     }
@@ -102,9 +90,10 @@ class CardholderImportMapper
      * @param  array<int, string>  $cells
      * @param  array<int, string>  $columns
      * @param  bool  $createMissing  create unknown master data items (dry runs only report them)
+     * @param  Cardholder|null  $existing  the person the row updates, if any
      * @return array{input: array<string, mixed>, errors: array<string, string>, created: array<int, string>}
      */
-    public function toInput(array $cells, array $columns, bool $createMissing, bool $dryRun): array
+    public function toInput(array $cells, array $columns, bool $createMissing, bool $dryRun, ?Cardholder $existing = null): array
     {
         $input = [];
         $custom = [];
@@ -130,53 +119,9 @@ class CardholderImportMapper
             $input['custom_fields'] = $custom;
         }
 
-        $errors = [];
-        $created = [];
-        // Parents first so children can be looked up inside them.
-        $lookupColumns = array_keys(array_intersect_key(Cardholder::LOOKUPS, $raw));
-        usort($lookupColumns, fn (string $a, string $b) => isset(self::PARENTS[$a]) <=> isset(self::PARENTS[$b]));
+        $lookups = $this->lookups->resolve(array_intersect_key($raw, Cardholder::LOOKUPS), $input, $createMissing, $dryRun, $existing);
 
-        foreach ($lookupColumns as $column) {
-            $value = $raw[$column];
-            if ($value === '') {
-                $input[$column] = null;
-
-                continue;
-            }
-
-            $type = Cardholder::LOOKUPS[$column];
-            $parentColumn = self::PARENTS[$column] ?? null;
-            $parent = null;
-            if ($parentColumn !== null) {
-                $parent = isset($input[$parentColumn]) ? $this->findByPublicId(Cardholder::LOOKUPS[$parentColumn], $input[$parentColumn]) : null;
-                if ($parent === null) {
-                    // In a dry run the parent may only be scheduled for creation; then so is the child.
-                    if (in_array(Cardholder::LOOKUPS[$parentColumn].': '.($raw[$parentColumn] ?? ''), $created, true)) {
-                        $created[] = "{$type}: {$value}";
-                    } else {
-                        $errors[$column] = __('cardholders.import.parent_required', ['parent' => __("cardholders.fields.{$parentColumn}")]);
-                    }
-
-                    continue;
-                }
-            }
-
-            $item = $this->find($type, $value, $parent);
-            if ($item === null && $createMissing) {
-                $created[] = "{$type}: {$value}";
-                if (! $dryRun) {
-                    $item = $this->create($type, $value, $parent);
-                }
-            }
-
-            if ($item !== null) {
-                $input[$column] = $item->public_id;
-            } elseif (! $createMissing) {
-                $errors[$column] = __('cardholders.import.unknown_lookup', ['value' => $value, 'list' => __("cardholders.fields.{$column}")]);
-            }
-        }
-
-        return ['input' => $input, 'errors' => $errors, 'created' => $created];
+        return ['input' => $input, 'errors' => $lookups['errors'], 'created' => $lookups['created']];
     }
 
     /**
@@ -341,53 +286,6 @@ class CardholderImportMapper
         }
 
         return $hour < 24 && $minute < 60 && $second < 60 ? sprintf('%02d:%02d:%02d', $hour, $minute, $second) : null;
-    }
-
-    private function find(string $type, string $value, ?MasterDataItem $parent): ?MasterDataItem
-    {
-        return $this->items($type)[$this->lookupKey($value, $parent)] ?? null;
-    }
-
-    private function findByPublicId(string $type, string $publicId): ?MasterDataItem
-    {
-        foreach ($this->items($type) as $item) {
-            if ($item->public_id === $publicId) {
-                return $item;
-            }
-        }
-
-        return null;
-    }
-
-    private function create(string $type, string $name, ?MasterDataItem $parent): MasterDataItem
-    {
-        $item = $this->masterData->create(['type' => $type, 'name' => Str::limit($name, 255, ''), 'parent_id' => $parent?->id]);
-        $this->lookupCache[$type][$this->lookupKey($name, $parent)] = $item;
-
-        return $item;
-    }
-
-    /**
-     * @return array<string, MasterDataItem>
-     */
-    private function items(string $type): array
-    {
-        if (! isset($this->lookupCache[$type])) {
-            $this->lookupCache[$type] = [];
-            foreach ($this->masterData->allOfType($type) as $item) {
-                $parent = $item->parent_id ? (object) ['id' => $item->parent_id] : null;
-                foreach (array_filter([$item->name, $item->name_local, $item->code]) as $label) {
-                    $this->lookupCache[$type][$this->lookupKey($label, $parent)] ??= $item;
-                }
-            }
-        }
-
-        return $this->lookupCache[$type];
-    }
-
-    private function lookupKey(string $value, MasterDataItem|\stdClass|null $parent): string
-    {
-        return ($parent->id ?? 0).'|'.mb_strtolower(trim($value));
     }
 
     private function normalize(string $header): string

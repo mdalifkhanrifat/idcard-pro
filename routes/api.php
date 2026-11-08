@@ -20,6 +20,7 @@ use App\Http\Controllers\Api\V1\CardController;
 use App\Http\Controllers\Api\V1\CardholderController;
 use App\Http\Controllers\Api\V1\CardholderFileController;
 use App\Http\Controllers\Api\V1\CardholderImportController;
+use App\Http\Controllers\Api\V1\CardholderSyncController;
 use App\Http\Controllers\Api\V1\CardPdfController;
 use App\Http\Controllers\Api\V1\CardPrintController;
 use App\Http\Controllers\Api\V1\CardRenderController;
@@ -210,6 +211,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             });
 
             Route::apiResource('cardholders', CardholderController::class);
+            // HR systems send their people (docs/SYNC.md)
+            Route::post('sync/cardholders', [CardholderSyncController::class, 'store'])->name('sync.cardholders');
 
             Route::apiResource('card-templates', CardTemplateController::class)->parameters(['card-templates' => 'template']);
             Route::post('card-templates/{template}/duplicate', [CardTemplateController::class, 'duplicate'])->name('card-templates.duplicate');

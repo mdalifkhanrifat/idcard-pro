@@ -16,8 +16,8 @@ it('finds a person by employee number and updates them, or creates someone new',
 
     ($this->inTenant)(function () {
         $seen = [];
-        $known = $this->sync->check(['full_name' => 'New Name', 'employee_no' => 'E-1'], [], true, $seen);
-        $new = $this->sync->check(['full_name' => 'Someone', 'employee_no' => 'E-2'], [], true, $seen);
+        $known = $this->sync->check(['full_name' => 'New Name', 'employee_no' => 'E-1'], [], $this->sync->find('E-1'), $seen);
+        $new = $this->sync->check(['full_name' => 'Someone', 'employee_no' => 'E-2'], [], $this->sync->find(' E-2 '), $seen);
 
         expect($known->passes())->toBeTrue()
             ->and($known->action())->toBe('updated')
@@ -31,12 +31,12 @@ it('finds a person by employee number and updates them, or creates someone new',
         ->toBe(['E-1' => 'New Name', 'E-2' => 'Someone']);
 });
 
-it('does not touch an existing person unless asked to update', function () {
+it('does not touch an existing person it was not given (a new person with a number already taken)', function () {
     cardholder($this->tenant, ['employee_no' => 'E-1']);
 
     ($this->inTenant)(function () {
         $seen = [];
-        $check = $this->sync->check(['full_name' => 'New Name', 'employee_no' => 'E-1'], [], false, $seen);
+        $check = $this->sync->check(['full_name' => 'New Name', 'employee_no' => 'E-1'], [], null, $seen);
 
         expect($check->passes())->toBeFalse()
             ->and($check->action())->toBe('created')
@@ -47,8 +47,8 @@ it('does not touch an existing person unless asked to update', function () {
 it('names an employee number met twice in one batch in the words the source asks for', function () {
     ($this->inTenant)(function () {
         $seen = [];
-        $this->sync->check(['full_name' => 'A', 'employee_no' => 'e-7'], [], true, $seen);
-        $second = $this->sync->check(['full_name' => 'B', 'employee_no' => 'E-7'], [], true, $seen, 'cardholders.import.duplicate_in_file');
+        $this->sync->check(['full_name' => 'A', 'employee_no' => 'e-7'], [], null, $seen);
+        $second = $this->sync->check(['full_name' => 'B', 'employee_no' => 'E-7'], [], null, $seen, 'cardholders.import.duplicate_in_file');
 
         expect($second->messages)->toBe([__('cardholders.import.duplicate_in_file', ['value' => 'E-7'])]);
     });
@@ -61,8 +61,8 @@ it('keeps the mapping errors first, and gives a field no second message', functi
 
     ($this->inTenant)(function () use ($parent, $foreignUnit) {
         $seen = [];
-        $mapped = $this->sync->check(['full_name' => 'A', 'department_id' => $parent->public_id, 'unit_id' => $foreignUnit], ['unit_id' => 'Unit not found.'], true, $seen);
-        $unmapped = $this->sync->check(['full_name' => 'B', 'department_id' => $parent->public_id, 'unit_id' => $foreignUnit], [], true, $seen);
+        $mapped = $this->sync->check(['full_name' => 'A', 'department_id' => $parent->public_id, 'unit_id' => $foreignUnit], ['unit_id' => 'Unit not found.'], null, $seen);
+        $unmapped = $this->sync->check(['full_name' => 'B', 'department_id' => $parent->public_id, 'unit_id' => $foreignUnit], [], null, $seen);
 
         expect($mapped->messages)->toBe(['Unit not found.'])
             ->and($unmapped->messages)->toHaveCount(1)
@@ -73,7 +73,7 @@ it('keeps the mapping errors first, and gives a field no second message', functi
 it('never saves a record that failed its check', function () {
     ($this->inTenant)(function () {
         $seen = [];
-        $check = $this->sync->check(['employee_no' => 'E-1'], [], true, $seen);
+        $check = $this->sync->check(['employee_no' => 'E-1'], [], null, $seen);
 
         expect(fn () => $this->sync->save($check, $this->owner))->toThrow(LogicException::class);
     });

@@ -41,4 +41,18 @@ return [
         'nothing_to_import' => 'There are no valid rows to import.',
         'running' => 'This import is running and cannot be removed.',
     ],
+    'sync' => [
+        'employee_no_required' => 'Every record needs an employee_no: people are found by it.',
+        'duplicate_in_batch' => 'Employee no :value appears more than once in this request.',
+        'unknown_field' => '“:field” is not a cardholder field.',
+        'both_given' => 'Give either :list or :column, not both.',
+        'invalid_lookup' => ':list must be a name or code, an object with id, code or name, or null.',
+        'record_failed' => 'This record could not be saved.',
+        'attributes' => [
+            'records' => 'records',
+            'records.*' => 'record',
+            'dry_run' => 'dry run',
+            'create_missing_lookups' => 'create missing master data',
+        ],
+    ],
 ];

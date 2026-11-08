@@ -121,6 +121,22 @@ it('updates existing cardholders by employee no when asked', function () {
     $this->getJson("/api/v1/cardholder-imports/{$id}")->assertJsonPath('data.updated_count', 1);
 });
 
+it('finds a unit in the department an updated person already has when the file has no department column', function () {
+    Sanctum::actingAs($this->owner);
+    $ops = masterItem($this->tenant, ['type' => 'department', 'name' => 'Operations']);
+    $alpha = masterItem($this->tenant, ['type' => 'unit', 'name' => 'Alpha', 'parent_id' => $ops->id]);
+    masterItem($this->tenant, ['type' => 'unit', 'name' => 'Alpha', 'parent_id' => masterItem($this->tenant, ['type' => 'department', 'name' => 'Stores'])->id]);
+    cardholder($this->tenant, ['employee_no' => 'E-1', 'full_name' => 'Rahim', 'department_id' => $ops->id]);
+
+    $id = analyze([['Name', 'Employee no', 'Unit'], ['Rahim', 'E-1', 'alpha'], ['Karim', 'E-2', 'Alpha']], ['update_existing' => 1])
+        ->assertJsonPath('data.valid_rows', 1)
+        ->assertJsonPath('data.errors.0.messages.0', __('cardholders.import.parent_required', ['parent' => __('cardholders.fields.department_id')]))
+        ->json('data.id');
+    $this->postJson("/api/v1/cardholder-imports/{$id}/start")->assertOk();
+
+    expect(Cardholder::query()->where('employee_no', 'E-1')->value('unit_id'))->toBe($alpha->id);
+});
+
 it('flags duplicate employee numbers inside the file', function () {
     Sanctum::actingAs($this->owner);
 

@@ -28,36 +28,55 @@ class CardholderSyncService
     ) {}
 
     /**
+     * The person a record is about, found by employee number (exactly as the organization keeps it).
+     */
+    public function find(mixed $employeeNo): ?Cardholder
+    {
+        $employeeNo = is_scalar($employeeNo) ? trim((string) $employeeNo) : '';
+
+        return $employeeNo === '' ? null : $this->cardholders->findByEmployeeNo($employeeNo);
+    }
+
+    /**
      * Check one record without writing anything.
      *
      * @param  array<string, mixed>  $input  mapped input; master data references are public ids
      * @param  array<string, string>  $mappingErrors  field => message from mapping; such a field gets no second message
+     * @param  Cardholder|null  $existing  the person to update (find()); null: a new person
      * @param  array<string, true>  $seen  employee numbers (lower case) met earlier in the same batch
      * @param  string  $duplicateMessage  translation key (with :value) for an employee number met twice
+     * @param  bool  $partial  an existing person keeps what the record leaves out (even a required field)
      */
-    public function check(array $input, array $mappingErrors, bool $updateExisting, array &$seen, string $duplicateMessage = 'cardholders.import.duplicate_in_file'): CardholderSyncCheck
+    public function check(array $input, array $mappingErrors, ?Cardholder $existing, array &$seen, string $duplicateMessage = 'cardholders.import.duplicate_in_file', bool $partial = false): CardholderSyncCheck
     {
         $messages = array_values($mappingErrors);
+        $errors = array_map(fn (string $message): array => [$message], $mappingErrors);
 
         $employeeNo = $input['employee_no'] ?? null;
         if ($employeeNo !== null) {
             $key = mb_strtolower((string) $employeeNo);
             if (isset($seen[$key])) {
-                $messages[] = __($duplicateMessage, ['value' => $employeeNo]);
+                $messages[] = $errors['employee_no'][] = __($duplicateMessage, ['value' => $employeeNo]);
             }
             $seen[$key] = true;
         }
 
-        $existing = $updateExisting && $employeeNo !== null ? $this->cardholders->findByEmployeeNo((string) $employeeNo) : null;
-        $validation = Validator::make($input, $this->validator->rules($existing), [], $this->validator->attributes());
+        $rules = $this->validator->rules($existing);
+        if ($partial && $existing instanceof Cardholder) {
+            $rules = array_map(fn (array $fieldRules): array => ['sometimes', ...$fieldRules], $rules);
+        }
+        $validation = Validator::make($input, $rules, [], $this->validator->attributes());
         $messages = [...$messages, ...$validation->errors()->all()];
+        foreach ($validation->errors()->messages() as $field => $fieldMessages) {
+            $errors[$field] = [...($errors[$field] ?? []), ...$fieldMessages];
+        }
         foreach ($this->validator->parentErrors($input, $existing) as $field => $message) {
             if (! $validation->errors()->hasAny([$field, CardholderValidator::DEPENDENT_LOOKUPS[$field]]) && ! isset($mappingErrors[$field])) {
-                $messages[] = $message;
+                $messages[] = $errors[$field][] = $message;
             }
         }
 
-        return new CardholderSyncCheck($existing, $messages === [] ? $validation->validated() : [], $messages);
+        return new CardholderSyncCheck($existing, $messages === [] ? $validation->validated() : [], $messages, $errors);
     }
 
     /**
@@ -72,6 +91,20 @@ class CardholderSyncService
         return $check->existing instanceof Cardholder
             ? $this->cardholderService->update($check->existing, $check->validated)
             : $this->cardholderService->create($check->validated, $actor);
+    }
+
+    /**
+     * What saving did: a new person, a change, or nothing new (every value was already so).
+     *
+     * @return 'created'|'updated'|'unchanged'
+     */
+    public function result(CardholderSyncCheck $check, Cardholder $saved): string
+    {
+        if (! $check->existing instanceof Cardholder) {
+            return 'created';
+        }
+
+        return $saved->wasChanged() ? 'updated' : 'unchanged';
     }
 
     /**
