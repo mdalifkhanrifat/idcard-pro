@@ -9,10 +9,13 @@ use App\Models\AppointmentLocation;
 use App\Models\Cardholder;
 use App\Models\CardholderFile;
 use App\Models\CardholderImport;
+use App\Models\CardholderSync;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\Webhook;
 use App\Models\WebhookDelivery;
+use App\Repositories\Contracts\CardholderSyncRepositoryInterface;
+use App\Repositories\Eloquent\CardholderSyncRepository;
 use App\Services\Appointments\PublicBooking\PublicAppointmentService;
 use App\Services\Cards\CardIssueService;
 use App\Services\Webhooks\WebhookEvents;
@@ -263,6 +266,73 @@ it('says the ids are not known when a run is cut off from outside', function () 
         ->and($sent['created'])->toBeNull();
 });
 
+it('says in one delivery what an HR sync request did, to a webhook that chose that, and of each record to one that did not', function () {
+    Queue::fake([SendWebhook::class]);
+    $whole = ($this->listen)(['cardholder.synced', 'cardholder.created', 'cardholder.updated']);
+    $rows = ($this->listen)(['cardholder.created', 'cardholder.updated']);
+    $changes = cardholder($this->tenant, ['employee_no' => 'E-8', 'full_name' => 'Old Name']);
+    cardholder($this->tenant, ['employee_no' => 'E-9', 'full_name' => 'Same Name']);
+
+    $answer = $this->postJson('/api/v1/sync/cardholders', ['records' => [
+        ['employee_no' => 'E-1', 'full_name' => 'Rahim Uddin'],
+        ['employee_no' => 'E-8', 'full_name' => 'New Name'],
+        ['employee_no' => 'E-9', 'full_name' => 'Same Name'],
+        ['employee_no' => 'E-3'],
+    ]])->assertOk();
+
+    $of = fn (Webhook $webhook): array => WebhookDelivery::withoutGlobalScopes()->where('webhook_id', $webhook->id)->orderBy('id')->pluck('event')->all();
+    expect($of($whole))->toBe(['cardholder.synced'])
+        ->and($of($rows))->toBe(['cardholder.created', 'cardholder.updated']);
+
+    $sent = json_decode(WebhookDelivery::withoutGlobalScopes()->where('webhook_id', $whole->id)->sole()->payload, true)['data'];
+    $made = Cardholder::withoutGlobalScopes()->where('employee_no', 'E-1')->value('public_id');
+    $run = CardholderSync::withoutGlobalScopes()->sole();
+
+    expect($sent['id'])->toBe($answer->json('data.id'))->toBe($run->public_id)
+        ->and([$sent['total'], $sent['created'], $sent['updated'], $sent['unchanged'], $sent['failed']])->toBe([4, 1, 1, 1, 1])
+        ->and($sent['cardholders'])->toBe(['created' => [$made], 'updated' => [$changes->public_id]])
+        ->and($sent['finished_at'])->toEndWith('Z')
+        ->and($run->only(['user_id', 'total', 'created_count', 'updated_count', 'unchanged_count', 'failed_count']))
+        ->toBe(['user_id' => $this->owner->id, 'total' => 4, 'created_count' => 1, 'updated_count' => 1, 'unchanged_count' => 1, 'failed_count' => 1]);
+});
+
+it('keeps no run of a dry run and says nothing of a sync that changed nobody', function () {
+    Queue::fake([SendWebhook::class]);
+    ($this->listen)(['cardholder.synced']);
+    cardholder($this->tenant, ['employee_no' => 'E-9', 'full_name' => 'Same Name']);
+
+    $this->postJson('/api/v1/sync/cardholders', ['dry_run' => true, 'records' => [['employee_no' => 'E-1', 'full_name' => 'A']]])
+        ->assertOk()
+        ->assertJsonPath('data.id', null);
+    expect(CardholderSync::withoutGlobalScopes()->count())->toBe(0);
+
+    $this->postJson('/api/v1/sync/cardholders', ['records' => [['employee_no' => 'E-9', 'full_name' => 'Same Name'], ['employee_no' => 'E-2']]])->assertOk();
+
+    expect(($this->told)())->toBe([])
+        ->and(CardholderSync::withoutGlobalScopes()->sole()->only(['unchanged_count', 'failed_count']))->toBe(['unchanged_count' => 1, 'failed_count' => 1]);
+});
+
+it('still tells of the records saved when a sync breaks off, and keeps it as unfinished', function () {
+    Queue::fake([SendWebhook::class]);
+    ($this->listen)(['cardholder.synced']);
+    $this->expectsReport = true;
+    app()->instance(CardholderSyncRepositoryInterface::class, new class extends CardholderSyncRepository
+    {
+        public function update(Illuminate\Database\Eloquent\Model $model, array $attributes): Illuminate\Database\Eloquent\Model
+        {
+            throw new RuntimeException('Gone');
+        }
+    });
+
+    $this->postJson('/api/v1/sync/cardholders', ['records' => [['employee_no' => 'E-1', 'full_name' => 'A']]])->assertServerError();
+
+    $sent = ($this->last)()['data'];
+    expect($sent['created'])->toBe(1)
+        ->and($sent['finished_at'])->toBeNull()
+        ->and(CardholderSync::withoutGlobalScopes()->sole()->finished_at)->toBeNull()
+        ->and(Cardholder::withoutGlobalScopes()->where('employee_no', 'E-1')->exists())->toBeTrue();
+});
+
 it('tells of each row again after a file, in the same process', function () {
     $notifier = app(WebhookNotifier::class);
     ($this->listen)(['cardholder.imported', 'cardholder.created']);
@@ -348,7 +418,7 @@ it('is quiet without an organization, as in a seeder', function () {
 });
 
 it('has every event of the registry fired somewhere', function () {
-    $sources = collect(['Cards/CardNotifications', 'Appointments/AppointmentNotifications', 'Cardholders/CardholderService', 'Cardholders/CardholderImportService', 'Cardholders/FamilyMemberService'])
+    $sources = collect(['Cards/CardNotifications', 'Appointments/AppointmentNotifications', 'Cardholders/CardholderService', 'Cardholders/CardholderImportService', 'Cardholders/CardholderApiSyncService', 'Cardholders/FamilyMemberService'])
         ->map(fn (string $file) => file_get_contents(app_path("Services/{$file}.php")))
         // Kinds of file name their own event (config/cardholder_files.php → webhook)
         ->push(collect(config('cardholder_files.collections'))->pluck('webhook')->filter()->map(fn (string $event) => "'{$event}'")->join(''))

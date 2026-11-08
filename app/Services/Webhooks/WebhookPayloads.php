@@ -9,6 +9,7 @@ use App\Models\Appointment;
 use App\Models\Card;
 use App\Models\Cardholder;
 use App\Models\CardholderImport;
+use App\Models\CardholderSync;
 use App\Models\Tenant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Traits\Localizable;
@@ -56,6 +57,28 @@ class WebhookPayloads
             'cards' => $import->summary['cards_result'] ?? null,
             'started_at' => $import->started_at?->utc()->toIso8601ZuluString(),
             'finished_at' => $import->finished_at?->utc()->toIso8601ZuluString(),
+            'cardholders' => $changed,
+        ];
+    }
+
+    /**
+     * What one request of an HR sync did, without what was sent: the ids say which records to read. A run that broke
+     * off has no finished_at, and the ids of the records saved until then.
+     *
+     * @param  array{created: array<int, string>, updated: array<int, string>}  $changed
+     * @return array<string, mixed>
+     */
+    public function ofSync(CardholderSync $sync, array $changed): array
+    {
+        return [
+            'id' => $sync->public_id,
+            'total' => $sync->total,
+            'created' => count($changed['created']),
+            'updated' => count($changed['updated']),
+            'unchanged' => $sync->unchanged_count,
+            'failed' => $sync->failed_count,
+            'started_at' => $sync->started_at->utc()->toIso8601ZuluString(),
+            'finished_at' => $sync->finished_at?->utc()->toIso8601ZuluString(),
             'cardholders' => $changed,
         ];
     }

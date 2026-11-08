@@ -130,6 +130,7 @@ every attempt.
 | `cardholder.updated` | A cardholder's own record changes | the same |
 | `cardholder.deleted` | A cardholder is deleted | the same, as last saved |
 | `cardholder.imported` | A file of cardholders ends | see [Imports](#imports) |
+| `cardholder.synced` | A request of the HR sync API ends | see [HR sync](#hr-sync) |
 | `cardholder.family_changed` | A family member is added, changed or removed, or their photo changes | the cardholder, with `change` (see [What changed](#what-changed)) |
 | `cardholder.photo_changed` | The cardholder's own photo is uploaded, replaced or removed | the same |
 | `card.issued` | A card is issued | `GET /api/v1/cards/{id}` |
@@ -189,6 +190,31 @@ webhook that does not choose it goes on hearing of each row. Card events are not
 A file that breaks off comes with `"status": "failed"` and the rows that did save. If the run was cut
 off from outside, the ids are no longer known: `created`, `updated` and `cardholders` are `null`, and
 some rows may have saved, so compare for yourself.
+
+## HR sync
+
+One request to `POST /api/v1/sync/cardholders` can hold hundreds of people. A webhook that chooses
+`cardholder.synced` gets one delivery for the whole request, and hears nothing of
+`cardholder.created` or `cardholder.updated` from it. A webhook that does not choose it goes on
+hearing of each person. A dry run is never told of.
+
+```json
+{
+  "id": "01kbz2c4p9…",
+  "total": 4,
+  "created": 1,
+  "updated": 1,
+  "unchanged": 1,
+  "failed": 1,
+  "started_at": "2026-11-08T10:00:00Z",
+  "finished_at": "2026-11-08T10:00:01Z",
+  "cardholders": { "created": ["01kbz2…"], "updated": ["01kbz3…"] }
+}
+```
+
+`id` is the one the sync request answered with (`data.id`). `cardholders` holds ids only: read the
+records from the API. Nothing is sent when nobody was created or updated. A request that broke off
+comes with `"finished_at": null` and the people saved until then.
 
 ## Managing webhooks through the API
 

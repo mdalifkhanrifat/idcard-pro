@@ -12,6 +12,7 @@ use App\Repositories\Contracts\CardBiometricImageRepositoryInterface;
 use App\Repositories\Contracts\CardholderFileRepositoryInterface;
 use App\Repositories\Contracts\CardholderImportRepositoryInterface;
 use App\Repositories\Contracts\CardholderRepositoryInterface;
+use App\Repositories\Contracts\CardholderSyncRepositoryInterface;
 use App\Repositories\Contracts\CardPrintRepositoryInterface;
 use App\Repositories\Contracts\CardRepositoryInterface;
 use App\Repositories\Contracts\CardSequenceRepositoryInterface;
@@ -45,6 +46,7 @@ use App\Repositories\Eloquent\CardBiometricImageRepository;
 use App\Repositories\Eloquent\CardholderFileRepository;
 use App\Repositories\Eloquent\CardholderImportRepository;
 use App\Repositories\Eloquent\CardholderRepository;
+use App\Repositories\Eloquent\CardholderSyncRepository;
 use App\Repositories\Eloquent\CardPrintRepository;
 use App\Repositories\Eloquent\CardRepository;
 use App\Repositories\Eloquent\CardSequenceRepository;
@@ -89,6 +91,7 @@ class RepositoryServiceProvider extends ServiceProvider
         QualificationRepositoryInterface::class => QualificationRepository::class,
         CustomFieldRepositoryInterface::class => CustomFieldRepository::class,
         CardholderImportRepositoryInterface::class => CardholderImportRepository::class,
+        CardholderSyncRepositoryInterface::class => CardholderSyncRepository::class,
         SignatoryRepositoryInterface::class => SignatoryRepository::class,
         AppointmentLocationRepositoryInterface::class => AppointmentLocationRepository::class,
         AppointmentClosureRepositoryInterface::class => AppointmentClosureRepository::class,

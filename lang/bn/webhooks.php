@@ -12,6 +12,7 @@ return [
         'cardholder.updated' => 'কার্ডধারী বদল',
         'cardholder.deleted' => 'কার্ডধারী মোছা',
         'cardholder.imported' => 'ফাইল ইমপোর্ট (পুরো ফাইলের একটাই বার্তা)',
+        'cardholder.synced' => 'HR sync (প্রতিটা অনুরোধের একটাই বার্তা)',
         'cardholder.family_changed' => 'পরিবারের সদস্য যোগ, বদল বা মোছা',
         'cardholder.photo_changed' => 'ছবি বদল বা মোছা',
         'card.issued' => 'কার্ড ইস্যু',

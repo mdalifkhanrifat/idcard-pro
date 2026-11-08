@@ -34,15 +34,17 @@
 return [
 
     'events' => [
-        'cardholder' => ['cardholder.created', 'cardholder.updated', 'cardholder.deleted', 'cardholder.imported', 'cardholder.family_changed', 'cardholder.photo_changed'],
+        'cardholder' => ['cardholder.created', 'cardholder.updated', 'cardholder.deleted', 'cardholder.imported', 'cardholder.synced', 'cardholder.family_changed', 'cardholder.photo_changed'],
         'card' => ['card.issued', 'card.printed', 'card.updated', 'card.revoked'],
         'appointment' => ['appointment.booked', 'appointment.confirmed', 'appointment.moved', 'appointment.cancelled', 'appointment.status_changed'],
     ],
 
-    // An event that says in one delivery what a whole file did. A webhook that chooses it hears nothing of these events
-    // from that file; a webhook that does not goes on hearing of each row, so choosing it is what changes anything.
+    // An event that says in one delivery what a whole batch did: a file, or one request of an HR sync. A webhook that
+    // chooses it hears nothing of these events from that batch; a webhook that does not goes on hearing of each record,
+    // so choosing it is what changes anything.
     'batches' => [
         'cardholder.imported' => ['cardholder.created', 'cardholder.updated'],
+        'cardholder.synced' => ['cardholder.created', 'cardholder.updated'],
     ],
 
     // What a person must be allowed to see to send a group's events somewhere: a webhook hands that data over

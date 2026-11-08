@@ -12,6 +12,7 @@ return [
         'cardholder.updated' => 'Cardholder changed',
         'cardholder.deleted' => 'Cardholder deleted',
         'cardholder.imported' => 'File imported (one message for the whole file)',
+        'cardholder.synced' => 'HR sync (one message for each request)',
         'cardholder.family_changed' => 'Family member added, changed or removed',
         'cardholder.photo_changed' => 'Photo changed or removed',
         'card.issued' => 'Card issued',

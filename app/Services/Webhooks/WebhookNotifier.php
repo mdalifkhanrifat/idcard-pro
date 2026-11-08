@@ -6,6 +6,7 @@ use App\Models\Appointment;
 use App\Models\Card;
 use App\Models\Cardholder;
 use App\Models\CardholderImport;
+use App\Models\CardholderSync;
 use App\Models\Tenant;
 use App\Models\Webhook;
 use App\Repositories\Contracts\WebhookRepositoryInterface;
@@ -48,8 +49,8 @@ class WebhookNotifier
     }
 
     /**
-     * Work through a file: webhooks that chose the batch event hear nothing of its rows, and are told of the whole with
-     * tellImported() instead.
+     * Work through a batch (a file, a request of an HR sync): webhooks that chose the batch event hear nothing of its
+     * records, and are told of the whole with tellImported() or tellSynced() instead.
      *
      * @template T
      *
@@ -76,6 +77,19 @@ class WebhookNotifier
         $tenant = $this->tenantContext->get();
         if ($tenant !== null) {
             $this->send($event, fn (): array => $this->payloads->ofImport($import, $changed), $tenant, null);
+        }
+    }
+
+    /**
+     * What one request of an HR sync did (the batch event cardholder.synced), however it ended.
+     *
+     * @param  array{created: array<int, string>, updated: array<int, string>}  $changed  public ids
+     */
+    public function tellSynced(CardholderSync $sync, array $changed): void
+    {
+        $tenant = $this->tenantContext->get();
+        if ($tenant !== null) {
+            $this->send('cardholder.synced', fn (): array => $this->payloads->ofSync($sync, $changed), $tenant, null);
         }
     }
 

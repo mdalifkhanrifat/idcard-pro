@@ -3,27 +3,70 @@
 namespace App\Services\Cardholders;
 
 use App\Models\User;
+use App\Repositories\Contracts\CardholderSyncRepositoryInterface;
+use App\Services\Webhooks\WebhookNotifier;
 
 /**
  * An HR system's batch of people (POST /api/v1/sync/cardholders): each record is found by employee
  * number and created or updated on its own, by the same rules as everywhere else
  * (CardholderSyncService). One record failing never holds back the others. A dry run says what
- * would happen and writes nothing.
+ * would happen and writes nothing. A run is kept (cardholder_syncs: who, when, how many, never what was sent) and,
+ * for the webhooks that chose cardholder.synced, told of as one delivery.
  */
 class CardholderApiSyncService
 {
     public const RESULTS = ['created', 'updated', 'unchanged', 'failed'];
 
+    /** Says in one delivery what a request did, for the webhooks that chose it (config webhooks.batches). */
+    private const SYNCED_EVENT = 'cardholder.synced';
+
     public function __construct(
         private CardholderSyncService $sync,
         private CardholderSyncMapper $mapper,
+        private CardholderSyncRepositoryInterface $syncs,
+        private WebhookNotifier $webhooks,
     ) {}
 
     /**
      * @param  array<int, array<array-key, mixed>>  $records
-     * @return array{dry_run: bool, summary: array<string, int>, records: array<int, array{index: int, employee_no: mixed, result: string, id: string|null, errors: object}>, lookups_created: array<int, string>}
+     * @return array{id: string|null, dry_run: bool, summary: array<string, int>, records: array<int, array{index: int, employee_no: mixed, result: string, id: string|null, errors: object}>, lookups_created: array<int, string>}
      */
     public function run(array $records, bool $dryRun, bool $createMissingLookups, ?User $actor): array
+    {
+        if ($dryRun) {
+            return ['id' => null, ...$this->walk($records, true, $createMissingLookups, $actor)];
+        }
+
+        // Kept from the start, so a run that breaks off is known (no finished_at) and told of
+        $sync = $this->syncs->create(['user_id' => $actor?->id, 'total' => count($records), 'started_at' => now()]);
+        $changed = ['created' => [], 'updated' => []];
+        try {
+            // Not an arrow function: the ids saved must reach this side, whatever happens
+            $result = $this->webhooks->inBatch(self::SYNCED_EVENT, function () use ($records, $createMissingLookups, $actor, &$changed): array {
+                return $this->walk($records, false, $createMissingLookups, $actor, $changed);
+            });
+            $this->syncs->update($sync, [
+                'created_count' => $result['summary']['created'],
+                'updated_count' => $result['summary']['updated'],
+                'unchanged_count' => $result['summary']['unchanged'],
+                'failed_count' => $result['summary']['failed'],
+                'finished_at' => now(),
+            ]);
+        } finally {
+            if ($changed['created'] !== [] || $changed['updated'] !== []) {
+                $this->webhooks->tellSynced($sync, $changed);
+            }
+        }
+
+        return ['id' => $sync->public_id, ...$result];
+    }
+
+    /**
+     * @param  array<int, array<array-key, mixed>>  $records
+     * @param  array{created: array<int, string>, updated: array<int, string>}  $changed  the ids saved so far, kept by the caller in case the run breaks off
+     * @return array{dry_run: bool, summary: array<string, int>, records: array<int, array{index: int, employee_no: mixed, result: string, id: string|null, errors: object}>, lookups_created: array<int, string>}
+     */
+    private function walk(array $records, bool $dryRun, bool $createMissingLookups, ?User $actor, array &$changed = ['created' => [], 'updated' => []]): array
     {
         $seen = [];
         $results = [];
@@ -48,6 +91,9 @@ class CardholderApiSyncService
                 foreach ($outcome['lookups'] as $lookup) {
                     $lookupsCreated[$lookup] = true;
                 }
+            }
+            if (! $dryRun && in_array($result, ['created', 'updated'], true) && $outcome['id'] !== null) {
+                $changed[$result][] = $outcome['id'];
             }
             $results[] = [
                 'index' => $index,
