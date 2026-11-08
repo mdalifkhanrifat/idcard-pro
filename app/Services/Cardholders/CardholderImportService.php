@@ -12,7 +12,6 @@ use App\Models\CardholderImport;
 use App\Models\CardTemplate;
 use App\Models\User;
 use App\Repositories\Contracts\CardholderImportRepositoryInterface;
-use App\Repositories\Contracts\CardholderRepositoryInterface;
 use App\Repositories\Contracts\CardTemplateRepositoryInterface;
 use App\Services\Cards\CardIssueService;
 use App\Services\CustomFields\CustomFieldService;
@@ -22,9 +21,7 @@ use App\Support\Spreadsheets\UnreadableSpreadsheetException;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\UploadedFile;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 use Throwable;
@@ -42,9 +39,7 @@ class CardholderImportService
 
     public function __construct(
         private CardholderImportRepositoryInterface $imports,
-        private CardholderRepositoryInterface $cardholders,
-        private CardholderService $cardholderService,
-        private CardholderValidator $validator,
+        private CardholderSyncService $sync,
         private CustomFieldService $customFields,
         private CardholderImportMapper $mapper,
         private TabularFileReader $reader,
@@ -339,25 +334,8 @@ class CardholderImportService
 
         $run = function () use ($cells, $columns, $options, $dryRun, $actor, $template, $timezone, &$seen, $preview): array {
             $mapped = $this->mapper->toInput($cells, $columns, $options['create_missing_lookups'], $dryRun);
-            $input = $mapped['input'];
-            $messages = array_values($mapped['errors']);
-
-            $employeeNo = $input['employee_no'] ?? null;
-            if ($employeeNo !== null) {
-                if (isset($seen['employee_no'][mb_strtolower($employeeNo)])) {
-                    $messages[] = __('cardholders.import.duplicate_in_file', ['value' => $employeeNo]);
-                }
-                $seen['employee_no'][mb_strtolower($employeeNo)] = true;
-            }
-
-            $existing = $options['update_existing'] && $employeeNo !== null ? $this->cardholders->findByEmployeeNo($employeeNo) : null;
-            $validation = Validator::make($input, $this->validator->rules($existing), [], $this->validator->attributes());
-            $messages = [...$messages, ...$validation->errors()->all()];
-            foreach ($this->validator->parentErrors($input, $existing) as $field => $message) {
-                if (! $validation->errors()->hasAny([$field, CardholderValidator::DEPENDENT_LOOKUPS[$field]]) && ! isset($mapped['errors'][$field])) {
-                    $messages[] = $message;
-                }
-            }
+            $record = $this->sync->check($mapped['input'], $mapped['errors'], $options['update_existing'], $seen['employee_no']);
+            $messages = $record->messages;
 
             [$card, $cardAction] = [null, null];
             if ($template !== null) {
@@ -365,18 +343,16 @@ class CardholderImportService
                 $messages = [...$messages, ...array_values($mappedCard['errors'])];
                 if ($mappedCard['errors'] === [] && ! $mappedCard['data']->isEmpty()) {
                     $card = $mappedCard['data'];
-                    $check = $this->checkCard($card, $existing, $template, $seen);
+                    $check = $this->checkCard($card, $record->existing, $template, $seen);
                     $messages = [...$messages, ...$check['errors']];
                     $cardAction = $check['skip'] ? 'skipped' : 'imported';
                 }
             }
 
-            $action = $existing ? 'updated' : 'created';
+            $action = $record->action();
             $cardholder = null;
             if ($messages === [] && ! $dryRun) {
-                $cardholder = $existing instanceof Cardholder
-                    ? $this->cardholderService->update($existing, $validation->validated())
-                    : $this->cardholderService->create($validation->validated(), $actor);
+                $cardholder = $this->sync->save($record, $actor);
                 if ($card !== null && $template !== null && $cardAction === 'imported') {
                     $this->cardIssue->importCard($cardholder, $template, $card, $actor);
                 }
@@ -391,25 +367,10 @@ class CardholderImportService
 
         // Each row commits on its own so one bad row does not undo the others,
         // and master data created for a row that then fails is rolled back with it.
-        try {
-            return DB::transaction(function () use ($run): array {
-                $outcome = $run();
-                if ($outcome['messages'] !== []) {
-                    throw new RowFailed($outcome);
-                }
-
-                return $outcome;
-            });
-        } catch (RowFailed $failed) {
-            return $failed->outcome;
-        } catch (ValidationException $e) {
-            // A rule that changed since the row was checked (e.g. another person got the card number meanwhile)
-            return ['messages' => array_values($e->validator->errors()->all()), 'action' => 'failed', 'cardholder' => null, 'card' => null, 'lookups' => [], 'preview' => $preview];
-        } catch (Throwable $e) {
-            report($e);
-
-            return ['messages' => [__('cardholders.import.row_failed')], 'action' => 'failed', 'cardholder' => null, 'card' => null, 'lookups' => [], 'preview' => $preview];
-        }
+        return $this->sync->atomically(
+            $run,
+            fn (array $messages): array => ['messages' => $messages, 'action' => 'failed', 'cardholder' => null, 'card' => null, 'lookups' => [], 'preview' => $preview],
+        );
     }
 
     /**
