@@ -30,6 +30,7 @@ use Spatie\Activitylog\Support\LogOptions;
  * @property string $public_id
  * @property int $tenant_id
  * @property int $cardholder_id
+ * @property string|null $external_id the HR system's own id (HR sync), unique within the cardholder
  * @property FamilyRelation $relation
  * @property BiometricStatus $biometric_status kept by BiometricStatusService, never filled from input
  * @property string $name
@@ -54,7 +55,7 @@ use Spatie\Activitylog\Support\LogOptions;
  */
 #[ObservedBy([BiometricStatusObserver::class])]
 #[Fillable([
-    'cardholder_id', 'relation', 'name', 'name_local', 'gender', 'date_of_birth', 'phone', 'blood_group_id',
+    'cardholder_id', 'external_id', 'relation', 'name', 'name_local', 'gender', 'date_of_birth', 'phone', 'blood_group_id',
     'national_id', 'passport_no', 'identification_mark', 'card_no', 'sort_order',
 ])]
 class FamilyMember extends Model
@@ -156,7 +157,7 @@ class FamilyMember extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['cardholder_id', 'relation', 'name', 'card_no'])
+            ->logOnly(['cardholder_id', 'external_id', 'relation', 'name', 'card_no'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->useLogName('family_members');

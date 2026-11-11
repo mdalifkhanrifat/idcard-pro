@@ -168,7 +168,13 @@ return [
     'ulid' => ':attribute একটি সঠিক ULID হতে হবে।',
     'uuid' => ':attribute একটি সঠিক UUID হতে হবে।',
 
-    'custom' => [],
+    'custom' => [
+        // "today" cannot stand in the general sentence (":date-এর"): a birth date says it in words
+        'date_of_birth' => [
+            'before' => ':attribute অবশ্যই আজকের আগের তারিখ হতে হবে।',
+            'before_or_equal' => ':attribute আজ বা তার আগের তারিখ হতে হবে।',
+        ],
+    ],
 
     /*
     | Field names as the pages label them (a request's own attributes() wins).

@@ -44,7 +44,7 @@ return [
     // so choosing it is what changes anything.
     'batches' => [
         'cardholder.imported' => ['cardholder.created', 'cardholder.updated'],
-        'cardholder.synced' => ['cardholder.created', 'cardholder.updated'],
+        'cardholder.synced' => ['cardholder.created', 'cardholder.updated', 'cardholder.family_changed'],
     ],
 
     // What a person must be allowed to see to send a group's events somewhere: a webhook hands that data over

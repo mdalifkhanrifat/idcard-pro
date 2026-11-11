@@ -138,4 +138,32 @@ class MasterDataLookups
     {
         return ($parent->id ?? 0).'|'.mb_strtolower(trim($value));
     }
+
+    /**
+     * A master data reference as an HR system sends it: {"id": …} as the API gives it, a name, local name or
+     * code, or {"code"|"name"|"name_local": …}. Returns ['id' => public id], a name/code to look up ('' clears), or false.
+     *
+     * @return array{id: string}|string|false
+     */
+    public function reference(mixed $value): array|string|false
+    {
+        if ($value === null) {
+            return '';
+        }
+        if (is_string($value) || is_int($value)) {
+            return (string) $value;
+        }
+        if (is_array($value)) {
+            if (isset($value['id']) && is_string($value['id'])) {
+                return ['id' => $value['id']];
+            }
+            foreach (['code', 'name', 'name_local'] as $label) {
+                if (isset($value[$label]) && (is_string($value[$label]) || is_int($value[$label]))) {
+                    return (string) $value[$label];
+                }
+            }
+        }
+
+        return false;
+    }
 }

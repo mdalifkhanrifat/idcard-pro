@@ -195,8 +195,10 @@ some rows may have saved, so compare for yourself.
 
 One request to `POST /api/v1/sync/cardholders` (or to `POST /api/v1/sync/cardholders/deactivate`, for
 the people who left) can hold hundreds of people. A webhook that chooses `cardholder.synced` gets one
-delivery for the whole request, and hears nothing of `cardholder.created` or `cardholder.updated` from
-it. A webhook that does not choose it goes on hearing of each person. A dry run is never told of.
+delivery for the whole request, and hears nothing of `cardholder.created`, `cardholder.updated` or
+`cardholder.family_changed` from it (a person whose family changed is listed in `cardholders.updated`).
+A webhook that does not choose it goes on hearing of each person and each family member. A dry run is
+never told of.
 
 ```json
 {

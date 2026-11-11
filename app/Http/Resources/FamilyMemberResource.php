@@ -20,6 +20,7 @@ class FamilyMemberResource extends JsonResource
     {
         return [
             'id' => $this->public_id,
+            'external_id' => $this->external_id,
             'relation' => $this->relation,
             'biometric_status' => $this->when((bool) $request->user()?->can('biometrics.view'), fn () => $this->biometric_status),
             'name' => $this->name,

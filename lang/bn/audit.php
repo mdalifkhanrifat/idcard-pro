@@ -97,6 +97,7 @@ return [
             'is_required' => 'আবশ্যক',
         ],
         'family_members' => [
+            'external_id' => 'HR-এর id',
             'relation' => 'সম্পর্ক',
             'card_no' => 'কার্ড নম্বর',
         ],

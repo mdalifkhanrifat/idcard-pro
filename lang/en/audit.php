@@ -97,6 +97,7 @@ return [
             'is_required' => 'Required',
         ],
         'family_members' => [
+            'external_id' => 'HR id',
             'relation' => 'Relation',
             'card_no' => 'Card no',
         ],

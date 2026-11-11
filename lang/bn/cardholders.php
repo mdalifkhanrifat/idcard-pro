@@ -41,6 +41,12 @@ return [
         'nothing_to_import' => 'ইমপোর্ট করার মতো কোনো সঠিক সারি নেই।',
         'running' => 'ইমপোর্ট চলছে, এখন মোছা যাবে না।',
     ],
+    'family_fields' => [
+        'external_id' => 'HR-এর id',
+        'blood_group_id' => 'রক্তের গ্রুপ',
+        'card_no' => 'কার্ড নম্বর',
+        'sort_order' => 'ক্রম',
+    ],
     'sync' => [
         'employee_no_required' => 'প্রতিটা রেকর্ডে employee_no লাগবে: মানুষ এটা দিয়েই চেনা হয়।',
         'duplicate_in_batch' => 'কর্মী নম্বর :value এই অনুরোধে একাধিকবার আছে।',
@@ -49,6 +55,14 @@ return [
         'invalid_lookup' => ':list হবে নাম বা কোড, id/code/name-সহ একটা object, অথবা null।',
         'record_failed' => 'এই রেকর্ডটি সেভ করা যায়নি।',
         'not_found' => 'কর্মী নম্বর :value-এর কোনো কার্ডধারী নেই।',
+        'unknown_family_field' => '“:field” পরিবারের সদস্যের কোনো ঘর নয়।',
+        'family_not_list' => 'family হবে পরিবারের সদস্যদের একটা তালিকা।',
+        'family_too_many' => 'একটা রেকর্ডে সর্বোচ্চ :max জন পরিবারের সদস্য দেওয়া যায়।',
+        'family_member_invalid' => 'পরিবারের প্রতিটা সদস্য হবে ঘরসহ একটা object।',
+        'family_id_unknown' => '“:id” এই কার্ডধারীর পরিবারের কোনো সদস্য নয়।',
+        'family_ambiguous' => 'পরিবারে একাধিক :relation “:name” আছেন: কোনজন তা বোঝাতে external_id বা id দিন।',
+        'family_member_twice' => 'এই সদস্য আগেই family.:other-এ দেওয়া আছে।',
+        'family_external_twice' => 'external_id :value এই পরিবারে একাধিকবার আছে।',
         'attributes' => [
             'records' => 'রেকর্ডের তালিকা',
             'records.*' => 'রেকর্ড',
@@ -57,6 +71,7 @@ return [
             'employee_nos' => 'কর্মী নম্বরের তালিকা',
             'employee_nos.*' => 'কর্মী নম্বর',
             'status' => 'অবস্থা',
+            'family' => 'পরিবার',
         ],
     ],
 ];

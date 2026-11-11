@@ -11,7 +11,8 @@ use Closure;
 
 /**
  * An HR system's batch of people. POST /api/v1/sync/cardholders: each record is found by employee number
- * and created or updated on its own, by the same rules as everywhere else (CardholderSyncService).
+ * and created or updated on its own, by the same rules as everywhere else (CardholderSyncService), with
+ * their family when the record has one (FamilySyncService).
  * POST /api/v1/sync/cardholders/deactivate: the people who left, by employee number, marked as no longer
  * active (never deleted). One record failing never holds back the others. A dry run says what would happen
  * and writes nothing. A run is kept (cardholder_syncs: who, when, what kind, how many, never what was sent)
@@ -35,6 +36,7 @@ class CardholderApiSyncService
     public function __construct(
         private CardholderSyncService $sync,
         private CardholderSyncMapper $mapper,
+        private FamilySyncService $family,
         private CardholderSyncRepositoryInterface $syncs,
         private WebhookNotifier $webhooks,
     ) {}
@@ -124,7 +126,7 @@ class CardholderApiSyncService
                     function () use ($record, $createMissingLookups, $actor, &$seen): array {
                         return $this->one($record, false, $createMissingLookups, $actor, $seen);
                     },
-                    fn (array $messages): array => ['messages' => $messages, 'errors' => ['record' => $messages], 'result' => 'failed', 'id' => null, 'lookups' => []],
+                    fn (array $messages): array => ['messages' => $messages, 'errors' => ['record' => $messages], 'result' => 'failed', 'id' => null, 'lookups' => [], 'family' => array_key_exists('family', $record) ? [] : null],
                     'cardholders.sync.record_failed',
                 );
 
@@ -144,6 +146,8 @@ class CardholderApiSyncService
                 'result' => $result,
                 'id' => $result === 'failed' ? null : $outcome['id'],
                 'errors' => (object) ($result === 'failed' ? $outcome['errors'] : []),
+                // Only for a record that sent a family: what became of each member
+                ...($outcome['family'] !== null ? ['family' => $result === 'failed' ? [] : $outcome['family']] : []),
             ];
         }
 
@@ -153,22 +157,43 @@ class CardholderApiSyncService
     /**
      * @param  array<array-key, mixed>  $record
      * @param  array<string, true>  $seen
-     * @return array{messages: array<int, string>, errors: array<string, array<int, string>>, result: string, id: string|null, lookups: array<int, string>}
+     * @return array{messages: array<int, string>, errors: array<string, array<int, string>>, result: string, id: string|null, lookups: array<int, string>, family: array<int, array<string, mixed>>|null}
      */
     private function one(array $record, bool $dryRun, bool $createMissingLookups, ?User $actor, array &$seen): array
     {
+        // The family is the record's too, but checked and saved by its own rules
+        $sentFamily = array_key_exists('family', $record);
+        $family = $record['family'] ?? null;
+        unset($record['family']);
+
         $existing = $this->sync->find($record['employee_no'] ?? null);
         $mapped = $this->mapper->toInput($record, $createMissingLookups, $dryRun, $existing);
         $check = $this->sync->check($mapped['input'], $mapped['errors'], $existing, $seen, 'cardholders.sync.duplicate_in_batch', partial: true);
-        $outcome = ['messages' => $check->messages, 'errors' => $check->errors, 'result' => $check->action(), 'id' => $check->existing?->public_id, 'lookups' => $mapped['created']];
+        $familyCheck = $sentFamily ? $this->family->check($family, $existing, $createMissingLookups, $dryRun) : null;
+        $outcome = [
+            'messages' => [...$check->messages, ...($familyCheck->messages ?? [])],
+            'errors' => [...$check->errors, ...($familyCheck->errors ?? [])],
+            'result' => $check->action(),
+            'id' => $check->existing?->public_id,
+            'lookups' => array_values(array_unique([...$mapped['created'], ...($familyCheck->lookups ?? [])])),
+            'family' => $familyCheck !== null ? $this->family->planned($familyCheck) : null,
+        ];
 
-        if (! $check->passes() || $dryRun) {
+        if ($outcome['messages'] !== [] || $dryRun) {
             return $outcome;
         }
 
         $saved = $this->sync->save($check, $actor);
+        $result = $this->sync->result($check, $saved);
+        if ($familyCheck !== null) {
+            $outcome['family'] = $this->family->save($familyCheck, $saved);
+            // A person whose family changed was updated, though their own fields were already so
+            if ($result === 'unchanged' && array_filter($outcome['family'], fn (array $member): bool => $member['result'] !== 'unchanged') !== []) {
+                $result = 'updated';
+            }
+        }
 
-        return [...$outcome, 'result' => $this->sync->result($check, $saved), 'id' => $saved->public_id];
+        return [...$outcome, 'result' => $result, 'id' => $saved->public_id];
     }
 
     /**

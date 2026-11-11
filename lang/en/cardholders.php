@@ -41,6 +41,12 @@ return [
         'nothing_to_import' => 'There are no valid rows to import.',
         'running' => 'This import is running and cannot be removed.',
     ],
+    'family_fields' => [
+        'external_id' => 'HR id',
+        'blood_group_id' => 'blood group',
+        'card_no' => 'card no',
+        'sort_order' => 'order',
+    ],
     'sync' => [
         'employee_no_required' => 'Every record needs an employee_no: people are found by it.',
         'duplicate_in_batch' => 'Employee no :value appears more than once in this request.',
@@ -49,6 +55,14 @@ return [
         'invalid_lookup' => ':list must be a name or code, an object with id, code or name, or null.',
         'record_failed' => 'This record could not be saved.',
         'not_found' => 'No cardholder has employee no :value.',
+        'unknown_family_field' => '“:field” is not a family member field.',
+        'family_not_list' => 'family must be a list of family members.',
+        'family_too_many' => 'A record can hold at most :max family members.',
+        'family_member_invalid' => 'Each family member must be an object of fields.',
+        'family_id_unknown' => '“:id” is not a family member of this cardholder.',
+        'family_ambiguous' => 'More than one family member is :relation “:name”: send external_id or id to say which.',
+        'family_member_twice' => 'This family member is already given at family.:other.',
+        'family_external_twice' => 'external_id :value appears more than once in this family.',
         'attributes' => [
             'records' => 'records',
             'records.*' => 'record',
@@ -57,6 +71,7 @@ return [
             'employee_nos' => 'employee numbers',
             'employee_nos.*' => 'employee number',
             'status' => 'status',
+            'family' => 'family',
         ],
     ],
 ];

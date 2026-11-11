@@ -17,4 +17,7 @@ return [
     // Records in one request
     'max_records' => (int) env('CARDHOLDER_SYNC_MAX_RECORDS', 500),
 
+    // Family members in one record ("family")
+    'max_family' => (int) env('CARDHOLDER_SYNC_MAX_FAMILY', 30),
+
 ];

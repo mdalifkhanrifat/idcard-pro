@@ -323,6 +323,25 @@ it('tells of the people who left in one delivery too, as a deactivation, and of 
     expect(($this->told)())->toBe([]);
 });
 
+it('folds the family changes of an HR sync into its one delivery, and tells them one by one to a webhook that did not choose that', function () {
+    Queue::fake([SendWebhook::class]);
+    $whole = ($this->listen)(['cardholder.synced', 'cardholder.family_changed']);
+    $rows = ($this->listen)(['cardholder.family_changed', 'cardholder.updated']);
+    $person = cardholder($this->tenant, ['employee_no' => 'E-8', 'full_name' => 'Same Name']);
+
+    $this->postJson('/api/v1/sync/cardholders', ['records' => [
+        ['employee_no' => 'E-8', 'full_name' => 'Same Name', 'family' => [['relation' => 'son', 'name' => 'Rafi'], ['relation' => 'daughter', 'name' => 'Rima']]],
+    ]])->assertOk()->assertJsonPath('data.records.0.result', 'updated');
+
+    $of = fn (Webhook $webhook): array => WebhookDelivery::withoutGlobalScopes()->where('webhook_id', $webhook->id)->orderBy('id')->pluck('event')->all();
+    expect($of($whole))->toBe(['cardholder.synced'])
+        ->and($of($rows))->toBe(['cardholder.family_changed', 'cardholder.family_changed']);
+
+    $sent = json_decode(WebhookDelivery::withoutGlobalScopes()->where('webhook_id', $whole->id)->sole()->payload, true)['data'];
+    expect($sent['cardholders'])->toBe(['created' => [], 'updated' => [$person->public_id]])
+        ->and($sent['updated'])->toBe(1);
+});
+
 it('keeps no run of a dry run and says nothing of a sync that changed nobody', function () {
     Queue::fake([SendWebhook::class]);
     ($this->listen)(['cardholder.synced']);

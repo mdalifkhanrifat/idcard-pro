@@ -58,7 +58,7 @@ class CardholderSyncMapper
 
                     continue;
                 }
-                $reference = $this->reference($value);
+                $reference = $this->lookups->reference($value);
                 if ($reference === false) {
                     $errors[$column] = __('cardholders.sync.invalid_lookup', ['list' => $key]);
                 } elseif (is_array($reference)) {
@@ -81,32 +81,5 @@ class CardholderSyncMapper
         $lookups = $this->lookups->resolve($names, $input, $createMissing, $dryRun, $existing);
 
         return ['input' => $input, 'errors' => [...$errors, ...$lookups['errors']], 'created' => $lookups['created']];
-    }
-
-    /**
-     * A master data reference: ['id' => public id], a name/code to look up ('' clears), or false.
-     *
-     * @return array{id: string}|string|false
-     */
-    private function reference(mixed $value): array|string|false
-    {
-        if ($value === null) {
-            return '';
-        }
-        if (is_string($value) || is_int($value)) {
-            return (string) $value;
-        }
-        if (is_array($value)) {
-            if (isset($value['id']) && is_string($value['id'])) {
-                return ['id' => $value['id']];
-            }
-            foreach (['code', 'name', 'name_local'] as $label) {
-                if (isset($value[$label]) && (is_string($value[$label]) || is_int($value[$label]))) {
-                    return (string) $value[$label];
-                }
-            }
-        }
-
-        return false;
     }
 }
