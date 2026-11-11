@@ -47,6 +47,10 @@ return [
         'card_no' => 'card no',
         'sort_order' => 'order',
     ],
+    'sync_targets' => [
+        'family' => 'Family',
+        'family_mode' => 'Family: merge or replace',
+    ],
     'sync' => [
         'employee_no_required' => 'Every record needs an employee_no: people are found by it.',
         'duplicate_in_batch' => 'Employee no :value appears more than once in this request.',
@@ -66,6 +70,7 @@ return [
         'family_cannot_remove' => ':relation “:name” is not in the list but cannot be removed: :reason',
         'family_mode_invalid' => 'family_mode must be one of: :modes.',
         'family_mode_without_family' => 'family_mode needs a family list in the same record.',
+        'renamed_both_given' => 'Give either :theirs (this organization\'s name for :ours) or :ours, not both.',
         'attributes' => [
             'records' => 'records',
             'records.*' => 'record',

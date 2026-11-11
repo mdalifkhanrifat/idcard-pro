@@ -355,6 +355,8 @@ return [
         'integrations.token_days' => 'usual length of an integration token (days)',
         'integrations.max_token_days' => 'longest an integration token may last (days)',
         'integrations.requests_per_minute' => 'API calls a minute per account',
+        'integrations.sync_fields' => 'HR field names',
+        'integrations.sync_fields.*' => 'HR field name',
         'webhooks' => 'webhook settings',
         'webhooks.prune_log' => 'deleting old deliveries from the log',
         'webhooks.log_days' => 'days to keep deliveries',

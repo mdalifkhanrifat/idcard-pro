@@ -7,6 +7,7 @@ use App\Enums\CardholderSyncKind;
 use App\Models\User;
 use App\Repositories\Contracts\CardholderSyncRepositoryInterface;
 use App\Services\Webhooks\WebhookNotifier;
+use App\Support\Tenancy\TenantContext;
 use Closure;
 
 /**
@@ -42,6 +43,7 @@ class CardholderApiSyncService
         private FamilySyncService $family,
         private CardholderSyncRepositoryInterface $syncs,
         private WebhookNotifier $webhooks,
+        private TenantContext $tenantContext,
     ) {}
 
     /**
@@ -120,14 +122,17 @@ class CardholderApiSyncService
         $results = [];
         $summary = ['total' => count($records), ...array_fill_keys(self::RESULTS, 0)];
         $lookupsCreated = [];
+        // The HR system's own field names, as the organization keeps them (settings.integrations.sync_fields)
+        $names = $this->tenantContext->get()?->integrationSettings()['sync_fields'] ?? [];
 
         foreach (array_values($records) as $index => $record) {
+            ['record' => $record, 'errors' => $renameErrors] = $this->mapper->rename($record, $names);
             $outcome = $dryRun
-                ? $this->one($record, true, $createMissingLookups, $actor, $seen)
+                ? $this->one($record, true, $createMissingLookups, $actor, $seen, $renameErrors)
                 : $this->sync->atomically(
                     // Not an arrow function: the numbers seen must outlive the record
-                    function () use ($record, $createMissingLookups, $actor, &$seen): array {
-                        return $this->one($record, false, $createMissingLookups, $actor, $seen);
+                    function () use ($record, $createMissingLookups, $actor, &$seen, $renameErrors): array {
+                        return $this->one($record, false, $createMissingLookups, $actor, $seen, $renameErrors);
                     },
                     fn (array $messages): array => ['messages' => $messages, 'errors' => ['record' => $messages], 'result' => 'failed', 'id' => null, 'lookups' => [], 'family' => array_key_exists('family', $record) ? [] : null],
                     'cardholders.sync.record_failed',
@@ -160,9 +165,10 @@ class CardholderApiSyncService
     /**
      * @param  array<array-key, mixed>  $record
      * @param  array<string, true>  $seen
+     * @param  array<string, string>  $renameErrors  a field sent under the HR system's name and ours (CardholderSyncMapper::rename())
      * @return array{messages: array<int, string>, errors: array<string, array<int, string>>, result: string, id: string|null, lookups: array<int, string>, family: array<int, array<string, mixed>>|null}
      */
-    private function one(array $record, bool $dryRun, bool $createMissingLookups, ?User $actor, array &$seen): array
+    private function one(array $record, bool $dryRun, bool $createMissingLookups, ?User $actor, array &$seen, array $renameErrors = []): array
     {
         // The family is the record's too, but checked and saved by its own rules
         $sentFamily = array_key_exists('family', $record);
@@ -180,8 +186,8 @@ class CardholderApiSyncService
         $check = $this->sync->check($mapped['input'], $mapped['errors'], $existing, $seen, 'cardholders.sync.duplicate_in_batch', partial: true);
         $familyCheck = $sentFamily && $modeError === null ? $this->family->check($family, $existing, $createMissingLookups, $dryRun, $mode === 'replace') : null;
         $outcome = [
-            'messages' => [...$check->messages, ...($familyCheck->messages ?? []), ...($modeError !== null ? [$modeError] : [])],
-            'errors' => [...$check->errors, ...($familyCheck->errors ?? []), ...($modeError !== null ? ['family_mode' => [$modeError]] : [])],
+            'messages' => [...array_values($renameErrors), ...$check->messages, ...($familyCheck->messages ?? []), ...($modeError !== null ? [$modeError] : [])],
+            'errors' => $this->mergeErrors(array_map(fn (string $message): array => [$message], $renameErrors), $check->errors, $familyCheck->errors ?? [], $modeError !== null ? ['family_mode' => [$modeError]] : []),
             'result' => $check->action(),
             'id' => $check->existing?->public_id,
             'lookups' => array_values(array_unique([...$mapped['created'], ...($familyCheck->lookups ?? [])])),
@@ -203,6 +209,24 @@ class CardholderApiSyncService
         }
 
         return [...$outcome, 'result' => $result, 'id' => $saved->public_id];
+    }
+
+    /**
+     * Problems by field from each check, a field's messages kept together.
+     *
+     * @param  array<string, array<int, string>>  ...$groups
+     * @return array<string, array<int, string>>
+     */
+    private function mergeErrors(array ...$groups): array
+    {
+        $errors = [];
+        foreach ($groups as $group) {
+            foreach ($group as $field => $messages) {
+                $errors[$field] = [...($errors[$field] ?? []), ...$messages];
+            }
+        }
+
+        return $errors;
     }
 
     /**

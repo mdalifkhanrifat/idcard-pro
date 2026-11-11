@@ -47,6 +47,10 @@ return [
         'card_no' => 'কার্ড নম্বর',
         'sort_order' => 'ক্রম',
     ],
+    'sync_targets' => [
+        'family' => 'পরিবার',
+        'family_mode' => 'পরিবার: যোগ না বদল',
+    ],
     'sync' => [
         'employee_no_required' => 'প্রতিটা রেকর্ডে employee_no লাগবে: মানুষ এটা দিয়েই চেনা হয়।',
         'duplicate_in_batch' => 'কর্মী নম্বর :value এই অনুরোধে একাধিকবার আছে।',
@@ -66,6 +70,7 @@ return [
         'family_cannot_remove' => ':relation “:name” তালিকায় নেই, কিন্তু সরানো যায় না: :reason',
         'family_mode_invalid' => 'family_mode হবে এগুলোর একটা: :modes।',
         'family_mode_without_family' => 'family_mode দিলে একই রেকর্ডে family-র তালিকাও দিতে হবে।',
+        'renamed_both_given' => ':theirs (এই প্রতিষ্ঠানে :ours-এর নাম) অথবা :ours — যেকোনো একটা দিন, দুটো নয়।',
         'attributes' => [
             'records' => 'রেকর্ডের তালিকা',
             'records.*' => 'রেকর্ড',

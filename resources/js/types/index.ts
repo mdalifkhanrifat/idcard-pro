@@ -20,7 +20,7 @@ export interface Tenant {
     card_number_on_reissue?: 'keep' | 'new';
     /** Landscape default for new templates, in mm. */
     default_card_size?: { width: number; height: number };
-    integrations?: { token_days: number; max_token_days: number; requests_per_minute: number };
+    integrations?: { token_days: number; max_token_days: number; requests_per_minute: number; sync_fields?: Record<string, string> };
     integration_options?: { requests_per_minute: { min: number; max: number } };
     /** Whether old webhook deliveries leave the log (6.2), and the days it can be set to. */
     webhooks?: { prune_log: boolean; log_days: number; attempts: number; disable_after: number };

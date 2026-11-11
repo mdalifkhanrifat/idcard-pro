@@ -105,6 +105,7 @@ return [
         'settings.appointments.verification.method' => 'appointments.verification',
         'settings.appointments.verification.code_channels' => 'notifications.channels',
         'settings.reports.*.columns' => 'reports.columns',
+        'settings.integrations.sync_fields.*' => ['reports.fields', 'cardholders.fields', 'cardholders.sync_targets'],
     ],
 
     // Moments noted by hand on a record that has no such date of its own, in the organization's time

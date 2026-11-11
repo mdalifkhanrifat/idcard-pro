@@ -20,4 +20,7 @@ return [
     // Family members in one record ("family")
     'max_family' => (int) env('CARDHOLDER_SYNC_MAX_FAMILY', 30),
 
+    // The HR system's own field names an organization may keep (settings.integrations.sync_fields)
+    'max_field_names' => 100,
+
 ];

@@ -50,7 +50,8 @@ function auditedSettings(): array
 {
     $tenant = Tenant::factory()->make(['settings' => ['reports' => collect(config('reports.reports'))->map(fn () => ['columns' => ['x']])->all()]]);
 
-    return array_keys(JsonChanges::between([], $tenant->effectiveSettings(), 'settings')['new']);
+    // Every path, the empty ones too (a change from nothing to nothing is never logged, but a value may come later)
+    return array_keys(JsonChanges::flatten($tenant->effectiveSettings(), 'settings'));
 }
 
 it('names every field and setting the audit log records, in both languages', function (string $locale) {
