@@ -48,11 +48,15 @@ return [
         'both_given' => 'Give either :list or :column, not both.',
         'invalid_lookup' => ':list must be a name or code, an object with id, code or name, or null.',
         'record_failed' => 'This record could not be saved.',
+        'not_found' => 'No cardholder has employee no :value.',
         'attributes' => [
             'records' => 'records',
             'records.*' => 'record',
             'dry_run' => 'dry run',
             'create_missing_lookups' => 'create missing master data',
+            'employee_nos' => 'employee numbers',
+            'employee_nos.*' => 'employee number',
+            'status' => 'status',
         ],
     ],
 ];

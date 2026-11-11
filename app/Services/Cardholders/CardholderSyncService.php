@@ -3,6 +3,7 @@
 namespace App\Services\Cardholders;
 
 use App\Data\Cardholders\CardholderSyncCheck;
+use App\Enums\CardholderStatus;
 use App\Models\Cardholder;
 use App\Models\User;
 use App\Repositories\Contracts\CardholderRepositoryInterface;
@@ -91,6 +92,31 @@ class CardholderSyncService
         return $check->existing instanceof Cardholder
             ? $this->cardholderService->update($check->existing, $check->validated)
             : $this->cardholderService->create($check->validated, $actor);
+    }
+
+    /**
+     * Mark a person who left as no longer active, through CardholderService (the audit log and the
+     * cardholder.updated webhook follow). Nobody is deleted and no card is revoked: the records stay.
+     *
+     * @param  CardholderStatus|null  $status  null: inactive, and a person already not active is left as they are
+     *                                         (a retired person stays retired)
+     * @return bool whether anything changed
+     */
+    public function deactivate(Cardholder $person, ?CardholderStatus $status): bool
+    {
+        if ($this->keepsStatus($person, $status)) {
+            return false;
+        }
+
+        return $this->cardholderService->update($person, ['status' => ($status ?? CardholderStatus::Inactive)->value])->wasChanged();
+    }
+
+    /**
+     * Whether deactivating would leave the person as they are.
+     */
+    public function keepsStatus(Cardholder $person, ?CardholderStatus $status): bool
+    {
+        return $status === null ? $person->status !== CardholderStatus::Active : $person->status === $status;
     }
 
     /**

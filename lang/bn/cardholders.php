@@ -48,11 +48,15 @@ return [
         'both_given' => ':list অথবা :column — যেকোনো একটা দিন, দুটো নয়।',
         'invalid_lookup' => ':list হবে নাম বা কোড, id/code/name-সহ একটা object, অথবা null।',
         'record_failed' => 'এই রেকর্ডটি সেভ করা যায়নি।',
+        'not_found' => 'কর্মী নম্বর :value-এর কোনো কার্ডধারী নেই।',
         'attributes' => [
             'records' => 'রেকর্ডের তালিকা',
             'records.*' => 'রেকর্ড',
             'dry_run' => 'পরীক্ষামূলক চালনা',
             'create_missing_lookups' => 'না-থাকা master data তৈরি',
+            'employee_nos' => 'কর্মী নম্বরের তালিকা',
+            'employee_nos.*' => 'কর্মী নম্বর',
+            'status' => 'অবস্থা',
         ],
     ],
 ];

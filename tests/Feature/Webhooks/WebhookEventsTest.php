@@ -22,6 +22,7 @@ use App\Services\Webhooks\WebhookEvents;
 use App\Services\Webhooks\WebhookNotifier;
 use App\Services\Webhooks\WebhookPayloads;
 use App\Support\Tenancy\TenantContext;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\DB;
@@ -289,11 +290,37 @@ it('says in one delivery what an HR sync request did, to a webhook that chose th
     $run = CardholderSync::withoutGlobalScopes()->sole();
 
     expect($sent['id'])->toBe($answer->json('data.id'))->toBe($run->public_id)
-        ->and([$sent['total'], $sent['created'], $sent['updated'], $sent['unchanged'], $sent['failed']])->toBe([4, 1, 1, 1, 1])
+        ->and($sent['kind'])->toBe('upsert')
+        ->and([$sent['total'], $sent['created'], $sent['updated'], $sent['unchanged'], $sent['failed'], $sent['not_found']])->toBe([4, 1, 1, 1, 1, 0])
         ->and($sent['cardholders'])->toBe(['created' => [$made], 'updated' => [$changes->public_id]])
         ->and($sent['finished_at'])->toEndWith('Z')
         ->and($run->only(['user_id', 'total', 'created_count', 'updated_count', 'unchanged_count', 'failed_count']))
         ->toBe(['user_id' => $this->owner->id, 'total' => 4, 'created_count' => 1, 'updated_count' => 1, 'unchanged_count' => 1, 'failed_count' => 1]);
+});
+
+it('tells of the people who left in one delivery too, as a deactivation, and of each one to a webhook that did not choose that', function () {
+    Queue::fake([SendWebhook::class]);
+    $whole = ($this->listen)(['cardholder.synced', 'cardholder.updated']);
+    $rows = ($this->listen)(['cardholder.updated']);
+    $left = cardholder($this->tenant, ['employee_no' => 'E-1']);
+    cardholder($this->tenant, ['employee_no' => 'E-2', 'status' => 'inactive']);
+
+    $answer = $this->postJson('/api/v1/sync/cardholders/deactivate', ['employee_nos' => ['E-1', 'E-2', 'E-404']])->assertOk();
+
+    $of = fn (Webhook $webhook): array => WebhookDelivery::withoutGlobalScopes()->where('webhook_id', $webhook->id)->orderBy('id')->pluck('event')->all();
+    expect($of($whole))->toBe(['cardholder.synced'])
+        ->and($of($rows))->toBe(['cardholder.updated']);
+
+    $sent = json_decode(WebhookDelivery::withoutGlobalScopes()->where('webhook_id', $whole->id)->sole()->payload, true)['data'];
+    expect($sent['id'])->toBe($answer->json('data.id'))
+        ->and($sent['kind'])->toBe('deactivate')
+        ->and([$sent['total'], $sent['created'], $sent['updated'], $sent['unchanged'], $sent['failed'], $sent['not_found']])->toBe([3, 0, 1, 1, 0, 1])
+        ->and($sent['cardholders'])->toBe(['created' => [], 'updated' => [$left->public_id]]);
+
+    // Nobody left who was still active: nothing to tell
+    ($this->clear)();
+    $this->postJson('/api/v1/sync/cardholders/deactivate', ['employee_nos' => ['E-1', 'E-404']])->assertOk();
+    expect(($this->told)())->toBe([]);
 });
 
 it('keeps no run of a dry run and says nothing of a sync that changed nobody', function () {
@@ -318,7 +345,7 @@ it('still tells of the records saved when a sync breaks off, and keeps it as unf
     $this->expectsReport = true;
     app()->instance(CardholderSyncRepositoryInterface::class, new class extends CardholderSyncRepository
     {
-        public function update(Illuminate\Database\Eloquent\Model $model, array $attributes): Illuminate\Database\Eloquent\Model
+        public function update(Model $model, array $attributes): Model
         {
             throw new RuntimeException('Gone');
         }

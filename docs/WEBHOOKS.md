@@ -193,26 +193,31 @@ some rows may have saved, so compare for yourself.
 
 ## HR sync
 
-One request to `POST /api/v1/sync/cardholders` can hold hundreds of people. A webhook that chooses
-`cardholder.synced` gets one delivery for the whole request, and hears nothing of
-`cardholder.created` or `cardholder.updated` from it. A webhook that does not choose it goes on
-hearing of each person. A dry run is never told of.
+One request to `POST /api/v1/sync/cardholders` (or to `POST /api/v1/sync/cardholders/deactivate`, for
+the people who left) can hold hundreds of people. A webhook that chooses `cardholder.synced` gets one
+delivery for the whole request, and hears nothing of `cardholder.created` or `cardholder.updated` from
+it. A webhook that does not choose it goes on hearing of each person. A dry run is never told of.
 
 ```json
 {
   "id": "01kbz2c4p9…",
+  "kind": "upsert",
   "total": 4,
   "created": 1,
   "updated": 1,
   "unchanged": 1,
   "failed": 1,
+  "not_found": 0,
   "started_at": "2026-11-08T10:00:00Z",
   "finished_at": "2026-11-08T10:00:01Z",
   "cardholders": { "created": ["01kbz2…"], "updated": ["01kbz3…"] }
 }
 ```
 
-`id` is the one the sync request answered with (`data.id`). `cardholders` holds ids only: read the
+`id` is the one the sync request answered with (`data.id`). `kind` says which request it was:
+`upsert` (people created or updated) or `deactivate` (people who left: those marked as no longer active
+are counted in `updated` and listed in `cardholders.updated`; `not_found` counts the employee numbers that
+matched nobody, and is `0` for an upsert). `cardholders` holds ids only: read the
 records from the API. Nothing is sent when nobody was created or updated. A request that broke off
 comes with `"finished_at": null` and the people saved until then.
 

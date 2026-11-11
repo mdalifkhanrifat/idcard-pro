@@ -72,11 +72,13 @@ class WebhookPayloads
     {
         return [
             'id' => $sync->public_id,
+            'kind' => $sync->kind->value,
             'total' => $sync->total,
             'created' => count($changed['created']),
             'updated' => count($changed['updated']),
             'unchanged' => $sync->unchanged_count,
             'failed' => $sync->failed_count,
+            'not_found' => $sync->not_found_count,
             'started_at' => $sync->started_at->utc()->toIso8601ZuluString(),
             'finished_at' => $sync->finished_at?->utc()->toIso8601ZuluString(),
             'cardholders' => $changed,

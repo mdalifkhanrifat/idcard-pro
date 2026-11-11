@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\CardholderSyncKind;
 use App\Models\CardholderSync;
 use App\Models\Tenant;
 use Illuminate\Database\Eloquent\Factories\Factory;
@@ -18,6 +19,7 @@ class CardholderSyncFactory extends Factory
     {
         return [
             'tenant_id' => Tenant::factory(),
+            'kind' => CardholderSyncKind::Upsert,
             'total' => 3,
             'created_count' => 1,
             'updated_count' => 1,
