@@ -7,11 +7,13 @@ use App\Enums\CardholderSyncKind;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Cardholders\DeactivateCardholdersRequest;
 use App\Http\Requests\Cardholders\ListCardholderSyncsRequest;
+use App\Http\Requests\Cardholders\SaveSyncSettingsRequest;
 use App\Http\Requests\Cardholders\SyncCardholdersRequest;
 use App\Http\Resources\CardholderSyncResource;
 use App\Services\Cardholders\CardholderApiSyncService;
 use App\Services\Cardholders\CardholderSyncLogService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\Gate;
 
@@ -59,6 +61,36 @@ class CardholderSyncController extends Controller
         ['fields' => $fields, 'sync_fields' => $names] = $this->log->fields();
 
         return response()->json(['data' => $fields, 'meta' => ['sync_fields' => (object) $names]]);
+    }
+
+    /**
+     * The HR sync's settings (HR field names, deleting old runs), with what may be chosen and whether this person
+     * may change them.
+     */
+    public function settings(Request $request): JsonResponse
+    {
+        abort_unless(Gate::any(['integrations.manage', 'settings.update']), 403);
+
+        return $this->settingsResponse($this->log->settings(), $request);
+    }
+
+    /**
+     * Change some of the HR sync's settings; what is left out stays.
+     */
+    public function saveSettings(SaveSyncSettingsRequest $request): JsonResponse
+    {
+        return $this->settingsResponse($this->log->saveSettings($request->validated()), $request);
+    }
+
+    /**
+     * @param  array<string, mixed>  $settings
+     */
+    private function settingsResponse(array $settings, Request $request): JsonResponse
+    {
+        return response()->json([
+            'data' => [...$settings, 'sync_fields' => (object) $settings['sync_fields']],
+            'meta' => ['log_days' => config('cardholder_sync.log_days'), 'can_update' => $request->user()->can('settings.update')],
+        ]);
     }
 
     /**

@@ -3,9 +3,8 @@
 namespace App\Http\Requests\Tenants;
 
 use App\Services\Biometrics\BiometricSettings;
-use App\Services\Cardholders\CardholderSyncMapper;
 use App\Services\Cards\CardNumberFormat;
-use App\Services\Integrations\IntegrationSettings;
+use App\Services\Integrations\SyncSettingsRules;
 use App\Services\Notifications\NotificationSettingsRules;
 use App\Services\Webhooks\WebhookSettings;
 use App\Support\Tenancy\TenantContext;
@@ -85,50 +84,13 @@ class UpdateTenantSettingsRequest extends FormRequest
             }],
             'integrations.max_token_days' => ['sometimes', 'integer', $limit],
             'integrations.requests_per_minute' => ['sometimes', 'integer', 'between:'.(int) config('integrations.requests.min').','.(int) config('integrations.requests.max')],
-            'integrations.sync_prune_log' => ['sometimes', 'boolean'],
-            'integrations.sync_log_days' => ['sometimes', 'integer', 'between:'.(int) config('cardholder_sync.log_days.min').','.(int) config('cardholder_sync.log_days.max')],
-            // The HR system's own field names (6.3f): theirs => ours; the whole map is sent, an empty one clears it
-            'integrations.sync_fields' => ['sometimes', 'array', 'max:'.(int) config('cardholder_sync.max_field_names'), function (string $attribute, mixed $value, \Closure $fail): void {
-                $problem = $this->syncFieldsProblem((array) $value);
-                if ($problem !== null) {
-                    $fail($problem);
-                }
-            }],
+            ...app(SyncSettingsRules::class)->rules('integrations.'),
             'webhooks' => ['sometimes', 'array:prune_log,log_days,attempts,disable_after'],
             'webhooks.prune_log' => ['sometimes', 'boolean'],
             'webhooks.log_days' => ['sometimes', 'integer', 'between:'.(int) config('webhooks.log_days.min').','.(int) config('webhooks.log_days.max')],
             'webhooks.attempts' => ['sometimes', 'integer', 'between:1,'.WebhookSettings::mostAttempts()],
             'webhooks.disable_after' => ['sometimes', 'integer', 'between:'.(int) config('webhooks.disable_limits.min').','.(int) config('webhooks.disable_limits.max')],
         ];
-    }
-
-    /**
-     * What is wrong with a map of the HR system's field names, if anything: each name is a name (not a path), each
-     * stands for a field the sync takes, and no two for the same.
-     *
-     * @param  array<array-key, mixed>  $names
-     */
-    private function syncFieldsProblem(array $names): ?string
-    {
-        if ($names !== [] && array_is_list($names)) {
-            return __('integrations.sync_fields.not_a_map');
-        }
-        $targets = app(CardholderSyncMapper::class)->targets();
-        $seen = [];
-        foreach ($names as $theirs => $ours) {
-            if (! IntegrationSettings::isFieldName((string) $theirs)) {
-                return __('integrations.sync_fields.bad_name', ['name' => $theirs]);
-            }
-            if (! is_string($ours) || ! in_array($ours, $targets, true)) {
-                return __('integrations.sync_fields.unknown_field', ['name' => $theirs, 'field' => is_scalar($ours) ? (string) $ours : '']);
-            }
-            if (isset($seen[$ours])) {
-                return __('integrations.sync_fields.twice', ['field' => $ours, 'names' => $seen[$ours].', '.$theirs]);
-            }
-            $seen[$ours] = (string) $theirs;
-        }
-
-        return null;
     }
 
     /**

@@ -8,6 +8,8 @@ use App\Models\Tenant;
 use App\Models\User;
 use App\Repositories\Contracts\CardholderSyncRepositoryInterface;
 use App\Repositories\Contracts\TenantRepositoryInterface;
+use App\Services\Integrations\IntegrationSettings;
+use App\Services\Tenants\TenantService;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
@@ -23,7 +25,36 @@ class CardholderSyncLogService
         private TenantRepositoryInterface $tenants,
         private CardholderSyncMapper $mapper,
         private TenantContext $tenantContext,
+        private TenantService $tenantService,
     ) {}
+
+    /**
+     * The organization's HR sync settings: its HR field names and whether old runs are deleted.
+     *
+     * @return array{sync_fields: array<string, string>, sync_prune_log: bool, sync_log_days: int}
+     */
+    public function settings(): array
+    {
+        $settings = $this->tenantContext->get()?->integrationSettings() ?? IntegrationSettings::normalize([]);
+
+        return array_intersect_key($settings, array_flip(['sync_fields', 'sync_prune_log', 'sync_log_days']));
+    }
+
+    /**
+     * Change some of them (what is left out stays), as any organization setting: the audit log notes each change.
+     *
+     * @param  array<string, mixed>  $change  validated (SyncSettingsRules)
+     * @return array{sync_fields: array<string, string>, sync_prune_log: bool, sync_log_days: int}
+     */
+    public function saveSettings(array $change): array
+    {
+        $tenant = $this->tenantContext->get();
+        if ($tenant !== null && $change !== []) {
+            $this->tenantContext->set($this->tenantService->updateSettings($tenant, ['integrations' => $change]));
+        }
+
+        return $this->settings();
+    }
 
     /**
      * The runs a person may see: all of them with integrations.manage, else (an HR system's account) its own.

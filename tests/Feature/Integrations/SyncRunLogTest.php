@@ -101,3 +101,37 @@ it('keeps every run unless the organization chose to delete old ones, and notes 
     $this->artisan('app:prune-sync-runs', ['tenant' => 'acme'])->assertSuccessful();
     expect(Activity::query()->where('log_name', 'hr_sync')->count())->toBe(1);
 });
+
+it('reads and changes the HR sync settings on their own, as any organization setting', function () {
+    ($this->as)($this->owner);
+    $this->getJson('/api/v1/sync/cardholders/settings')->assertOk()
+        ->assertExactJson(['data' => ['sync_fields' => [], 'sync_prune_log' => false, 'sync_log_days' => 365], 'meta' => ['log_days' => ['min' => 7, 'max' => 3650], 'can_update' => true]]);
+
+    $this->putJson('/api/v1/sync/cardholders/settings', ['sync_fields' => ['emp_id' => 'employee_no']])->assertOk()
+        ->assertJsonPath('data.sync_fields', ['emp_id' => 'employee_no'])
+        ->assertJsonPath('data.sync_prune_log', false);
+    // What is left out stays
+    $this->putJson('/api/v1/sync/cardholders/settings', ['sync_prune_log' => true, 'sync_log_days' => 90])->assertOk()
+        ->assertJsonPath('data', ['sync_fields' => ['emp_id' => 'employee_no'], 'sync_prune_log' => true, 'sync_log_days' => 90]);
+    expect($this->tenant->fresh()->integrationSettings()['requests_per_minute'])->toBe((int) config('integrations.requests.per_minute'));
+
+    $this->putJson('/api/v1/sync/cardholders/settings', ['sync_fields' => ['a' => 'rank', 'b' => 'rank']])->assertUnprocessable()
+        ->assertJsonPath('errors.sync_fields.0', 'Only one HR field name can stand for “rank” (a, b).');
+    $this->putJson('/api/v1/sync/cardholders/settings', ['sync_log_days' => 1], ['Accept-Language' => 'bn'])->assertUnprocessable()->assertJsonValidationErrors('sync_log_days');
+
+    $noted = Activity::query()->where('log_name', 'tenant')->latest('id')->firstOrFail();
+    expect($noted->causer_id)->toBe($this->owner->id)
+        ->and(array_keys($noted->attribute_changes['attributes']))->toEqualCanonicalizing(['settings.integrations.sync_prune_log', 'settings.integrations.sync_log_days']);
+
+    // Who manages integrations but not the settings reads them, and may not change them
+    $manager = app(TenantContext::class)->run($this->tenant, function (): User {
+        Role::create(['name' => 'Integrations only', 'guard_name' => 'web', 'tenant_id' => $this->tenant->id])->givePermissionTo('integrations.manage');
+
+        return tenantUser($this->tenant, 'Viewer')->syncRoles('Integrations only');
+    });
+    ($this->as)($manager);
+    $this->getJson('/api/v1/sync/cardholders/settings')->assertOk()->assertJsonPath('meta.can_update', false);
+    $this->putJson('/api/v1/sync/cardholders/settings', ['sync_prune_log' => false])->assertForbidden();
+    ($this->as)($this->hr);
+    $this->getJson('/api/v1/sync/cardholders/settings')->assertForbidden();
+});

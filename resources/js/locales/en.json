@@ -2297,7 +2297,8 @@
     "integrations": {
         "tabs": {
             "accounts": "Accounts",
-            "webhooks": "Webhooks"
+            "webhooks": "Webhooks",
+            "sync": "HR sync"
         },
         "title": "Integrations",
         "subtitle": "How other systems (HR, access control and the like) connect to this organization: accounts reach it through the API, webhooks tell them what happens.",
@@ -2346,6 +2347,47 @@
             "limitText": "At most {count} calls a minute for this account, across its tokens. Past that the answer is 429, and Retry-After says how many seconds to wait.",
             "loadFailed": "The tokens could not be loaded.",
             "retry": "Try again"
+        },
+        "sync": {
+            "howTitle": "How an HR system sends people",
+            "howDescription": "An integration account's token sends people here. Every record gets its own result, and a dry run changes nothing. Send one Idempotency-Key per batch, so a batch sent twice is done once.",
+            "tokenHint": "Make the account and its token on the Accounts tab, with a role that may “Sync from HR”.",
+            "upsert": "Add or update people (with their family)",
+            "deactivate": "People who left: marked inactive, never deleted",
+            "namesTitle": "HR field names",
+            "namesDescription": "If the HR system names fields its own way, say which of ours each one is. Our own names always work too.",
+            "theirs": "HR system's name",
+            "ours": "Our field",
+            "addName": "Add a name",
+            "removeName": "Remove this name",
+            "noNames": "None: the HR system uses our field names.",
+            "readOnly": "Only someone who may change the organization's settings can change these.",
+            "runsTitle": "Runs",
+            "runsDescription": "Who sent what, when, and how it went. What was sent is never kept.",
+            "kind": "Kind",
+            "kinds": {
+                "upsert": "Add or update",
+                "deactivate": "People who left"
+            },
+            "total": "{count} record | {count} records",
+            "created": "{count} added",
+            "updated": "{count} updated",
+            "deactivated": "{count} marked inactive",
+            "unchanged": "{count} unchanged",
+            "notFound": "{count} not found",
+            "failed": "{count} failed",
+            "brokeOff": "Stopped midway",
+            "deletedAccount": "{name} (deleted)",
+            "noRuns": "No runs yet",
+            "noRunsHint": "Runs show here once an HR system sends people.",
+            "keepTitle": "Keeping the run log",
+            "keepDescription": "The log says who sent what and when, never the people's details.",
+            "pruneLog": "Delete old runs from the log",
+            "keepHint": "Off: the log is kept for good.",
+            "pruneWarning": "Runs older than this are deleted every day and cannot be brought back. Each deletion is noted in the audit log.",
+            "logDays": "Days to keep",
+            "logDaysHint": "From {min} to {max} days",
+            "copyFailed": "Could not copy; select the text and copy it by hand."
         }
     }
 }

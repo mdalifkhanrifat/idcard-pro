@@ -216,6 +216,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             Route::post('sync/cardholders/deactivate', [CardholderSyncController::class, 'deactivate'])->middleware('idempotent')->name('sync.cardholders.deactivate');
             Route::get('sync/cardholders/runs', [CardholderSyncController::class, 'runs'])->name('sync.cardholders.runs');
             Route::get('sync/cardholders/fields', [CardholderSyncController::class, 'fields'])->name('sync.cardholders.fields');
+            Route::get('sync/cardholders/settings', [CardholderSyncController::class, 'settings'])->name('sync.cardholders.settings');
+            Route::put('sync/cardholders/settings', [CardholderSyncController::class, 'saveSettings'])->name('sync.cardholders.settings.update');
 
             Route::apiResource('card-templates', CardTemplateController::class)->parameters(['card-templates' => 'template']);
             Route::post('card-templates/{template}/duplicate', [CardTemplateController::class, 'duplicate'])->name('card-templates.duplicate');
