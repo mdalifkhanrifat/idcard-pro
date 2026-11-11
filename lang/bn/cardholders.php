@@ -3,6 +3,9 @@
 return [
     'lookup_parent_mismatch' => 'নির্বাচিত আইটেমটি বেছে নেওয়া :parent-এর অধীনে নয়।',
     'fields' => [
+        'previous_office' => 'আগের অফিস',
+        'company_address' => 'প্রতিষ্ঠানের ঠিকানা',
+        'company_phone' => 'প্রতিষ্ঠানের ফোন',
         'blood_group_id' => 'রক্তের গ্রুপ',
         'religion_id' => 'ধর্ম',
         'region_id' => 'অঞ্চল',
@@ -48,6 +51,8 @@ return [
         'sort_order' => 'ক্রম',
     ],
     'sync_targets' => [
+        'status' => 'রেকর্ডের অবস্থা',
+        'custom_fields' => 'কাস্টম ফিল্ড (key দিয়ে)',
         'family' => 'পরিবার',
         'family_mode' => 'পরিবার: যোগ না বদল',
     ],

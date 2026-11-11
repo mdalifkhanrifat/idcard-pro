@@ -70,14 +70,14 @@ it('lasts as the organization says, never without an end', function () {
 });
 
 it('keeps the organization\'s token lengths apart from its other settings, and in order', function () {
-    $this->getJson('/api/v1/settings')->assertOk()->assertJsonPath('data.integrations', ['token_days' => 365, 'max_token_days' => 1095, 'requests_per_minute' => 600, 'sync_fields' => []]);
+    $this->getJson('/api/v1/settings')->assertOk()->assertJsonPath('data.integrations', ['token_days' => 365, 'max_token_days' => 1095, 'requests_per_minute' => 600, 'sync_fields' => [], 'sync_prune_log' => false, 'sync_log_days' => 365]);
 
     ($this->save)(['token_days' => 200, 'max_token_days' => 100])->assertJsonValidationErrors('integrations.token_days');
     ($this->save)(['token_days' => 2000])->assertJsonValidationErrors('integrations.token_days');
     ($this->save)(['max_token_days' => 0])->assertJsonValidationErrors('integrations.max_token_days');
 
     // Only what is sent changes, and the usual length follows the most down
-    ($this->save)(['max_token_days' => 100])->assertOk()->assertJsonPath('data.integrations', ['token_days' => 100, 'max_token_days' => 100, 'requests_per_minute' => 600, 'sync_fields' => []]);
+    ($this->save)(['max_token_days' => 100])->assertOk()->assertJsonPath('data.integrations', ['token_days' => 100, 'max_token_days' => 100, 'requests_per_minute' => 600, 'sync_fields' => [], 'sync_prune_log' => false, 'sync_log_days' => 365]);
     ($this->save)($this->getJson('/api/v1/settings')->json('data.integrations'))->assertOk();
 
     $fields = collect($this->getJson('/api/v1/audit/activities?filter[log_name]=tenant&filter[event]=updated')->json('data.0.fields'))->keyBy('key');

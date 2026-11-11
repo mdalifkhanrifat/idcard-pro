@@ -3,6 +3,9 @@
 return [
     'lookup_parent_mismatch' => 'The selected item does not belong to the chosen :parent.',
     'fields' => [
+        'previous_office' => 'previous office',
+        'company_address' => 'company address',
+        'company_phone' => 'company phone',
         'blood_group_id' => 'blood group',
         'religion_id' => 'religion',
         'region_id' => 'region',
@@ -48,6 +51,8 @@ return [
         'sort_order' => 'order',
     ],
     'sync_targets' => [
+        'status' => 'Record status',
+        'custom_fields' => 'Custom fields (by key)',
         'family' => 'Family',
         'family_mode' => 'Family: merge or replace',
     ],

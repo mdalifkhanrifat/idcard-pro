@@ -23,7 +23,7 @@ interface ActivityRow {
     causer: { kind: 'user' | 'integration' | 'cardholder'; name: string | null; email: string | null; employee_no?: string | null } | null;
     /** Field changes, or what an event recorded (e.g. requirements_overridden: moment, reason, requirements). */
     changes: { attributes?: Record<string, unknown>; old?: Record<string, unknown>; reason?: string; moment?: string; report?: string; format?: string; rows?: number; print?: boolean; messages?: number;
- deliveries?: number; days?: number; address?: string } | null;
+ deliveries?: number; runs?: number; days?: number; address?: string } | null;
     /** The field changes for people (6.0): each field's name and its old and new value in the reader's language; null for an event. */
     fields: { key: string; label: string; old: string | null; new: string | null }[] | null;
     created_at: string;
@@ -139,10 +139,13 @@ const loginReportQuery = computed(() => Object.fromEntries(Object.entries(logins
                                 {{ t('audit.exportDetail', { report: reportName(row.changes.report), format: (row.changes.format ?? '').toUpperCase() + (row.changes.print ? ` (${t('audit.printed')})` : ''), rows: n(row.changes.rows ?? 0) }) }}
                             </p>
                             <p v-if="row.event === 'pruned' && row.changes?.messages" class="text-xs text-muted" data-audit-pruned>
-                                {{ t('audit.prunedDetail', { messages: n(row.changes.messages), days: n(row.changes.days ?? 0) }) }}
+                                {{ t('audit.prunedDetail', { messages: n(row.changes.messages), days: n(row.changes.days ?? 0) }, row.changes.messages) }}
                             </p>
                             <p v-if="row.event === 'pruned' && row.changes?.deliveries" class="text-xs text-muted" data-audit-pruned>
-                                {{ t('audit.prunedDeliveriesDetail', { deliveries: n(row.changes.deliveries), days: n(row.changes.days ?? 0) }) }}
+                                {{ t('audit.prunedDeliveriesDetail', { deliveries: n(row.changes.deliveries), days: n(row.changes.days ?? 0) }, row.changes.deliveries) }}
+                            </p>
+                            <p v-if="row.event === 'pruned' && row.changes?.runs" class="text-xs text-muted" data-audit-pruned>
+                                {{ t('audit.prunedRunsDetail', { runs: n(row.changes.runs), days: n(row.changes.days ?? 0) }, row.changes.runs) }}
                             </p>
                             <p v-if="row.event === 'resent' && row.changes?.address" class="break-words text-xs text-muted" data-audit-resent>
                                 {{ t('audit.resentDetail', { address: row.changes.address }) }}

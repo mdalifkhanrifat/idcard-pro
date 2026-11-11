@@ -226,6 +226,7 @@
             "appointment_locations": "অ্যাপয়েন্টমেন্টের জায়গা",
             "appointment_closures": "অ্যাপয়েন্টমেন্টের ছুটি",
             "appointments": "অ্যাপয়েন্টমেন্ট",
+            "hr_sync": "HR sync",
             "webhooks": "Webhook"
         },
         "events": {
@@ -261,6 +262,7 @@
         "cardholderSelf": "কার্ডধারী নিজে",
         "prunedDetail": "{days} দিনের বেশি পুরনো {messages}টা বার্তা মোছা হয়েছে (প্রতিষ্ঠানের সেটিং অনুযায়ী)",
         "prunedDeliveriesDetail": "{days} দিনের বেশি পুরনো {deliveries}টা ডেলিভারি মোছা হয়েছে (প্রতিষ্ঠানের সেটিং অনুযায়ী)",
+        "prunedRunsDetail": "{days} দিনের বেশি পুরনো {runs}টা HR sync চালনা মোছা হয়েছে (প্রতিষ্ঠানের সেটিং অনুযায়ী)",
         "resentDetail": "{address} ঠিকানায় বার্তা আবার পাঠানো হয়েছে",
         "testSentDetail": "{address} ঠিকানায় পরীক্ষার বার্তা পাঠানো হয়েছে",
         "details": "বিস্তারিত",

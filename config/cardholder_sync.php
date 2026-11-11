@@ -23,4 +23,9 @@ return [
     // The HR system's own field names an organization may keep (settings.integrations.sync_fields)
     'max_field_names' => 100,
 
+    // The run log (cardholder_syncs): kept unless the organization chose to delete old runs (settings.integrations
+    // sync_prune_log, sync_log_days), daily by app:prune-sync-runs
+    'log_days' => ['min' => 7, 'max' => 3650],
+    'defaults' => ['prune_log' => false, 'log_days' => 365],
+
 ];

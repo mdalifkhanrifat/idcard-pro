@@ -14,6 +14,8 @@ Schedule::command('model:prune')->daily();
 Schedule::command('app:prune-notification-log')->daily()->withoutOverlapping();
 // Webhook deliveries past the days an organization keeps them, only where it chose to have them deleted
 Schedule::command('app:prune-webhook-deliveries')->daily()->withoutOverlapping();
+// HR sync runs past the days an organization keeps them, only where it chose to have them deleted (6.3g)
+Schedule::command('app:prune-sync-runs')->daily()->withoutOverlapping();
 // Reminders before appointments, once each, as each organization set them (5.7c)
 Schedule::command('app:send-appointment-reminders')->everyFiveMinutes()->withoutOverlapping()->onOneServer();
 // Reminders before cards' last days, once each, in each organization's morning (5.7d)

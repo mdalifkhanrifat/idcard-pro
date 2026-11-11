@@ -419,6 +419,7 @@ return [
         ],
         // The audit page's names of modules and events
         'audit_logs' => [
+            'hr_sync' => 'HR sync',
             'webhooks' => 'Webhook',
             'api_tokens' => 'API token',
             'user' => 'ইউজার',

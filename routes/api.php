@@ -214,6 +214,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
             // HR systems send their people (docs/SYNC.md)
             Route::post('sync/cardholders', [CardholderSyncController::class, 'store'])->middleware('idempotent')->name('sync.cardholders');
             Route::post('sync/cardholders/deactivate', [CardholderSyncController::class, 'deactivate'])->middleware('idempotent')->name('sync.cardholders.deactivate');
+            Route::get('sync/cardholders/runs', [CardholderSyncController::class, 'runs'])->name('sync.cardholders.runs');
+            Route::get('sync/cardholders/fields', [CardholderSyncController::class, 'fields'])->name('sync.cardholders.fields');
 
             Route::apiResource('card-templates', CardTemplateController::class)->parameters(['card-templates' => 'template']);
             Route::post('card-templates/{template}/duplicate', [CardTemplateController::class, 'duplicate'])->name('card-templates.duplicate');

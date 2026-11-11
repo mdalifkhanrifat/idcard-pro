@@ -10,7 +10,7 @@ class IntegrationSettings
 {
     /**
      * @param  array<string, mixed>  $saved
-     * @return array{token_days: int, max_token_days: int, requests_per_minute: int, sync_fields: array<string, string>}
+     * @return array{token_days: int, max_token_days: int, requests_per_minute: int, sync_fields: array<string, string>, sync_prune_log: bool, sync_log_days: int}
      */
     public static function normalize(array $saved): array
     {
@@ -23,6 +23,9 @@ class IntegrationSettings
             // Within what this installation allows now, whatever was saved under an older limit
             'requests_per_minute' => self::requestsWithinLimits((int) ($saved['requests_per_minute'] ?? config('integrations.requests.per_minute'))),
             'sync_fields' => self::syncFields($saved['sync_fields'] ?? []),
+            // The HR sync's run log: kept, unless the organization chose to delete runs older than its days
+            'sync_prune_log' => (bool) ($saved['sync_prune_log'] ?? config('cardholder_sync.defaults.prune_log')),
+            'sync_log_days' => max((int) config('cardholder_sync.log_days.min'), min((int) ($saved['sync_log_days'] ?? config('cardholder_sync.defaults.log_days')), (int) config('cardholder_sync.log_days.max'))),
         ];
     }
 

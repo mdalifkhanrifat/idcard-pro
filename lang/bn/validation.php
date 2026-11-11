@@ -337,6 +337,8 @@ return [
         'integrations.token_days' => 'ইন্টিগ্রেশন token-এর স্বাভাবিক মেয়াদ (দিন)',
         'integrations.max_token_days' => 'ইন্টিগ্রেশন token-এর সর্বোচ্চ মেয়াদ (দিন)',
         'integrations.requests_per_minute' => 'অ্যাকাউন্ট-প্রতি মিনিটে API অনুরোধ',
+        'integrations.sync_prune_log' => 'HR sync-এর পুরনো চালনা লগ থেকে মোছা',
+        'integrations.sync_log_days' => 'HR sync-এর চালনা কত দিন রাখা হবে',
         'integrations.sync_fields' => 'HR-এর ঘরের নাম',
         'integrations.sync_fields.*' => 'HR-এর ঘরের নাম',
         'webhooks' => 'webhook-এর সেটিং',

@@ -76,7 +76,7 @@ class UpdateTenantSettingsRequest extends FormRequest
         $limit = 'between:1,'.(int) config('integrations.tokens.limit');
 
         return [
-            'integrations' => ['sometimes', 'array:token_days,max_token_days,requests_per_minute,sync_fields'],
+            'integrations' => ['sometimes', 'array:token_days,max_token_days,requests_per_minute,sync_fields,sync_prune_log,sync_log_days'],
             'integrations.token_days' => ['sometimes', 'integer', $limit, function (string $attribute, mixed $value, \Closure $fail): void {
                 $most = $this->input('integrations.max_token_days', $this->tenantContext()->get()->integrationSettings()['max_token_days']);
                 if ((int) $value > (int) $most) {
@@ -85,6 +85,8 @@ class UpdateTenantSettingsRequest extends FormRequest
             }],
             'integrations.max_token_days' => ['sometimes', 'integer', $limit],
             'integrations.requests_per_minute' => ['sometimes', 'integer', 'between:'.(int) config('integrations.requests.min').','.(int) config('integrations.requests.max')],
+            'integrations.sync_prune_log' => ['sometimes', 'boolean'],
+            'integrations.sync_log_days' => ['sometimes', 'integer', 'between:'.(int) config('cardholder_sync.log_days.min').','.(int) config('cardholder_sync.log_days.max')],
             // The HR system's own field names (6.3f): theirs => ours; the whole map is sent, an empty one clears it
             'integrations.sync_fields' => ['sometimes', 'array', 'max:'.(int) config('cardholder_sync.max_field_names'), function (string $attribute, mixed $value, \Closure $fail): void {
                 $problem = $this->syncFieldsProblem((array) $value);
