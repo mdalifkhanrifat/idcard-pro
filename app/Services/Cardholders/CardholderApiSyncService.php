@@ -24,6 +24,9 @@ class CardholderApiSyncService
 
     public const DEACTIVATE_RESULTS = ['deactivated', 'unchanged', 'not_found', 'failed'];
 
+    /** What a record's family_mode may say: keep the members the list leaves out (merge), or remove them (replace). */
+    public const FAMILY_MODES = ['merge', 'replace'];
+
     /** Says in one delivery what a request did, for the webhooks that chose it (config webhooks.batches). */
     private const SYNCED_EVENT = 'cardholder.synced';
 
@@ -164,15 +167,21 @@ class CardholderApiSyncService
         // The family is the record's too, but checked and saved by its own rules
         $sentFamily = array_key_exists('family', $record);
         $family = $record['family'] ?? null;
-        unset($record['family']);
+        $mode = $record['family_mode'] ?? 'merge';
+        $modeError = match (true) {
+            ! in_array($mode, self::FAMILY_MODES, true) => __('cardholders.sync.family_mode_invalid', ['modes' => implode(', ', self::FAMILY_MODES)]),
+            array_key_exists('family_mode', $record) && ! $sentFamily => __('cardholders.sync.family_mode_without_family'),
+            default => null,
+        };
+        unset($record['family'], $record['family_mode']);
 
         $existing = $this->sync->find($record['employee_no'] ?? null);
         $mapped = $this->mapper->toInput($record, $createMissingLookups, $dryRun, $existing);
         $check = $this->sync->check($mapped['input'], $mapped['errors'], $existing, $seen, 'cardholders.sync.duplicate_in_batch', partial: true);
-        $familyCheck = $sentFamily ? $this->family->check($family, $existing, $createMissingLookups, $dryRun) : null;
+        $familyCheck = $sentFamily && $modeError === null ? $this->family->check($family, $existing, $createMissingLookups, $dryRun, $mode === 'replace') : null;
         $outcome = [
-            'messages' => [...$check->messages, ...($familyCheck->messages ?? [])],
-            'errors' => [...$check->errors, ...($familyCheck->errors ?? [])],
+            'messages' => [...$check->messages, ...($familyCheck->messages ?? []), ...($modeError !== null ? [$modeError] : [])],
+            'errors' => [...$check->errors, ...($familyCheck->errors ?? []), ...($modeError !== null ? ['family_mode' => [$modeError]] : [])],
             'result' => $check->action(),
             'id' => $check->existing?->public_id,
             'lookups' => array_values(array_unique([...$mapped['created'], ...($familyCheck->lookups ?? [])])),

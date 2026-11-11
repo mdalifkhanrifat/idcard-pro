@@ -2,8 +2,10 @@
 
 use App\Models\CardholderFile;
 use App\Models\FamilyMember;
+use App\Services\Cardholders\FamilyMemberService;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 
@@ -211,4 +213,29 @@ it('removes a family member\'s stored files with the member', function () {
     Storage::disk(config('cardholder_files.disk'))->assertMissing($memberPath);
     Storage::disk(config('cardholder_files.disk'))->assertExists($this->cardholder->fresh()->photo->path);
     expect(CardholderFile::count())->toBe(1);
+});
+
+it('keeps a family member\'s stored files when the deletion is rolled back, and removes them once it commits', function () {
+    Sanctum::actingAs($this->owner);
+    $member = app(TenantContext::class)->run($this->tenant, fn () => FamilyMember::factory()->create(['tenant_id' => $this->tenant->id, 'cardholder_id' => $this->cardholder->id]));
+    $this->post($this->base, ['collection' => 'photo', 'family_member' => $member->public_id, 'file' => UploadedFile::fake()->image('m.jpg')], ['Accept' => 'application/json']);
+    $path = $member->fresh()->photo->path;
+    $disk = Storage::disk(config('cardholder_files.disk'));
+
+    // A later step of the same transaction fails (e.g. another record of an HR sync): the member comes back, so must the photo
+    app(TenantContext::class)->run($this->tenant, function () use ($member) {
+        try {
+            DB::transaction(function () use ($member) {
+                app(FamilyMemberService::class)->delete($member->fresh());
+
+                throw new RuntimeException('a later step failed');
+            });
+        } catch (RuntimeException) {
+        }
+    });
+    $disk->assertExists($path);
+    expect($member->fresh())->not->toBeNull();
+
+    app(TenantContext::class)->run($this->tenant, fn () => DB::transaction(fn () => app(FamilyMemberService::class)->delete($member->fresh())));
+    $disk->assertMissing($path);
 });

@@ -183,11 +183,14 @@ class BiometricService
     }
 
     /**
+     * Remove stored captures once their records are gone: after the transaction commits, if one is open (a rollback
+     * brings the records back, and the encrypted files must still be there), else at once.
+     *
      * @param  Collection<int, array{disk: string, path: string}>  $locations
      */
     public function deleteStored(Collection $locations): void
     {
-        $this->vault->delete($locations);
+        DB::afterCommit(fn () => $this->vault->delete($locations));
     }
 
     /**

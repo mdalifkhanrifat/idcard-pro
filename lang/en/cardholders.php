@@ -63,6 +63,9 @@ return [
         'family_ambiguous' => 'More than one family member is :relation “:name”: send external_id or id to say which.',
         'family_member_twice' => 'This family member is already given at family.:other.',
         'family_external_twice' => 'external_id :value appears more than once in this family.',
+        'family_cannot_remove' => ':relation “:name” is not in the list but cannot be removed: :reason',
+        'family_mode_invalid' => 'family_mode must be one of: :modes.',
+        'family_mode_without_family' => 'family_mode needs a family list in the same record.',
         'attributes' => [
             'records' => 'records',
             'records.*' => 'record',

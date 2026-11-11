@@ -167,14 +167,15 @@ class CardholderFileService
     }
 
     /**
-     * Remove stored files once their records are gone.
+     * Remove stored files once their records are gone: after the transaction commits, if one is open (an HR sync
+     * record that fails later rolls the records back, and the files must still be there), else at once.
      *
      * @param  Collection<int, array{disk: string, path: string}>  $locations
      */
     public function deleteStored(Collection $locations): void
     {
-        $locations->groupBy('disk')
-            ->each(fn (Collection $group, string $disk) => Storage::disk($disk)->delete($group->pluck('path')->all()));
+        DB::afterCommit(fn () => $locations->groupBy('disk')
+            ->each(fn (Collection $group, string $disk) => Storage::disk($disk)->delete($group->pluck('path')->all())));
     }
 
     public function temporaryUrl(CardholderFile $file): string

@@ -340,6 +340,16 @@ it('folds the family changes of an HR sync into its one delivery, and tells them
     $sent = json_decode(WebhookDelivery::withoutGlobalScopes()->where('webhook_id', $whole->id)->sole()->payload, true)['data'];
     expect($sent['cardholders'])->toBe(['created' => [], 'updated' => [$person->public_id]])
         ->and($sent['updated'])->toBe(1);
+
+    // A member removed by replace is told the same way: folded, or one by one as deleted
+    ($this->clear)();
+    $this->postJson('/api/v1/sync/cardholders', ['records' => [
+        ['employee_no' => 'E-8', 'family_mode' => 'replace', 'family' => [['relation' => 'son', 'name' => 'Rafi']]],
+    ]])->assertOk()->assertJsonPath('data.records.0.family.1.result', 'removed');
+
+    expect($of($whole))->toBe(['cardholder.synced'])
+        ->and($of($rows))->toBe(['cardholder.family_changed'])
+        ->and(json_decode(WebhookDelivery::withoutGlobalScopes()->where('webhook_id', $rows->id)->sole()->payload, true)['data']['change']['family_member']['action'])->toBe('deleted');
 });
 
 it('keeps no run of a dry run and says nothing of a sync that changed nobody', function () {

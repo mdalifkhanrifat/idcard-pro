@@ -63,6 +63,9 @@ return [
         'family_ambiguous' => 'পরিবারে একাধিক :relation “:name” আছেন: কোনজন তা বোঝাতে external_id বা id দিন।',
         'family_member_twice' => 'এই সদস্য আগেই family.:other-এ দেওয়া আছে।',
         'family_external_twice' => 'external_id :value এই পরিবারে একাধিকবার আছে।',
+        'family_cannot_remove' => ':relation “:name” তালিকায় নেই, কিন্তু সরানো যায় না: :reason',
+        'family_mode_invalid' => 'family_mode হবে এগুলোর একটা: :modes।',
+        'family_mode_without_family' => 'family_mode দিলে একই রেকর্ডে family-র তালিকাও দিতে হবে।',
         'attributes' => [
             'records' => 'রেকর্ডের তালিকা',
             'records.*' => 'রেকর্ড',

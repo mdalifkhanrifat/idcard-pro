@@ -68,13 +68,26 @@ class FamilyMemberService
         return $updated->load(self::RELATIONS);
     }
 
-    public function delete(FamilyMember $member): void
+    /**
+     * Why a member cannot be deleted, or null: cards and appointments are records of what was handed out and booked.
+     */
+    public function deleteProblem(FamilyMember $member): ?string
     {
         if ($this->cards->existsForFamilyMember($member->id)) {
-            throw new BusinessRuleException(__('cards.in_use.family_member'));
+            return __('cards.in_use.family_member');
         }
         if ($this->appointments->existsFor(familyMemberId: $member->id)) {
-            throw new BusinessRuleException(__('appointments.in_use.family_member'));
+            return __('appointments.in_use.family_member');
+        }
+
+        return null;
+    }
+
+    public function delete(FamilyMember $member): void
+    {
+        $problem = $this->deleteProblem($member);
+        if ($problem !== null) {
+            throw new BusinessRuleException($problem);
         }
         // File and biometric records go with the member (foreign key cascade); the stored files are removed afterwards
         $locations = $this->files->storedLocationsOfMember($member);

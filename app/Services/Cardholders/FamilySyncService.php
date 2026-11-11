@@ -3,10 +3,12 @@
 namespace App\Services\Cardholders;
 
 use App\Data\Cardholders\FamilySyncCheck;
+use App\Exceptions\BusinessRuleException;
 use App\Models\Cardholder;
 use App\Models\FamilyMember;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\ValidationException;
 use LogicException;
 
 /**
@@ -14,8 +16,10 @@ use LogicException;
  * Each member is found by our id ("id", as the API gives it), else by the HR system's own id ("external_id"),
  * else by relation and name; a member found by relation and name who has no external_id yet takes the one sent,
  * so members recorded by hand are linked on the first sync instead of being made twice. A member not found is
- * created. Members the list leaves out are kept. Changes go through FamilyMemberService (the audit log and the
- * cardholder.family_changed webhook follow), inside the record's transaction.
+ * created. Members the list leaves out are kept, unless the record says "family_mode": "replace": then they are
+ * removed, but never one with cards or appointments (the whole record fails instead). Changes go through
+ * FamilyMemberService (the audit log and the cardholder.family_changed webhook follow), inside the record's
+ * transaction.
  */
 class FamilySyncService
 {
@@ -31,8 +35,9 @@ class FamilySyncService
      * @param  mixed  $family  as sent: a list of members
      * @param  Cardholder|null  $cardholder  the person the record updates; null: a new person, every member is new
      * @param  bool  $createMissing  create an unknown blood group (a dry run only reports it)
+     * @param  bool  $replace  remove the members the list leaves out (family_mode "replace")
      */
-    public function check(mixed $family, ?Cardholder $cardholder, bool $createMissing, bool $dryRun): FamilySyncCheck
+    public function check(mixed $family, ?Cardholder $cardholder, bool $createMissing, bool $dryRun, bool $replace = false): FamilySyncCheck
     {
         if (! is_array($family) || ! array_is_list($family)) {
             return $this->failed('family', __('cardholders.sync.family_not_list'));
@@ -112,34 +117,68 @@ class FamilySyncService
             }
         }
 
-        return new FamilySyncCheck($messages === [] ? $planned : [], $messages, $errors, array_values(array_unique($lookups)));
+        $removing = [];
+        // Only for a family with no other problem: a member an item failed to name is not "left out"
+        if ($replace && $messages === []) {
+            foreach ($existing as $member) {
+                if (isset($claimed[$member->id])) {
+                    continue;
+                }
+                $problem = $this->members->deleteProblem($member);
+                if ($problem !== null) {
+                    $messages[] = $errors['family'][] = $this->cannotRemove($member, $problem);
+                } else {
+                    $removing[] = $member;
+                }
+            }
+        }
+
+        return $messages === []
+            ? new FamilySyncCheck($planned, [], [], array_values(array_unique($lookups)), $removing)
+            : new FamilySyncCheck([], $messages, $errors, array_values(array_unique($lookups)));
     }
 
     /**
      * What each member would become, before saving (a dry run): a member found is told as updated, as nothing
      * is compared until it is saved.
      *
-     * @return array<int, array{index: int, id: string|null, external_id: string|null, result: string}>
+     * @return array<int, array{index: int|null, id: string|null, external_id: string|null, result: string}>
      */
     public function planned(FamilySyncCheck $check): array
     {
-        return array_map(fn (array $plan): array => [
-            'index' => $plan['index'],
-            'id' => $plan['member']?->public_id,
-            'external_id' => $this->externalId($plan['input']) ?? $plan['member']?->external_id,
-            'result' => $plan['member'] === null ? 'created' : 'updated',
-        ], $check->planned);
+        return [
+            ...array_map(fn (array $plan): array => [
+                'index' => $plan['index'],
+                'id' => $plan['member']?->public_id,
+                'external_id' => $this->externalId($plan['input']) ?? $plan['member']?->external_id,
+                'result' => $plan['member'] === null ? 'created' : 'updated',
+            ], $check->planned),
+            ...array_map($this->removed(...), $check->removing),
+        ];
     }
 
     /**
      * Save a family that passed its check, for the person just saved.
      *
-     * @return array<int, array{index: int, id: string, external_id: string|null, result: 'created'|'updated'|'unchanged'}>
+     * Members left out are removed first, so an HR id they held is free for the members the list brings.
+     *
+     * @return array<int, array{index: int|null, id: string, external_id: string|null, result: 'created'|'updated'|'unchanged'|'removed'}>
      */
     public function save(FamilySyncCheck $check, Cardholder $cardholder): array
     {
         if (! $check->passes()) {
             throw new LogicException('A family that failed its check cannot be saved.');
+        }
+
+        $removed = [];
+        foreach ($check->removing as $member) {
+            try {
+                $this->members->delete($member);
+            } catch (BusinessRuleException $e) {
+                // A card or appointment came meanwhile: the record fails with the reason, and rolls back
+                throw ValidationException::withMessages(['family' => $this->cannotRemove($member, $e->getMessage())]);
+            }
+            $removed[] = $this->removed($member);
         }
 
         $results = [];
@@ -154,7 +193,20 @@ class FamilySyncService
             $results[] = ['index' => $plan['index'], 'id' => $saved->public_id, 'external_id' => $saved->external_id, 'result' => $result];
         }
 
-        return $results;
+        return [...$results, ...$removed];
+    }
+
+    /**
+     * @return array{index: null, id: string, external_id: string|null, result: 'removed'}
+     */
+    private function removed(FamilyMember $member): array
+    {
+        return ['index' => null, 'id' => $member->public_id, 'external_id' => $member->external_id, 'result' => 'removed'];
+    }
+
+    private function cannotRemove(FamilyMember $member, string $reason): string
+    {
+        return __('cardholders.sync.family_cannot_remove', ['relation' => __("cards.values.relation.{$member->relation->value}"), 'name' => $member->name, 'reason' => $reason]);
     }
 
     /**

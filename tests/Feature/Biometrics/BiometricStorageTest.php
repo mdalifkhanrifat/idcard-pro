@@ -4,9 +4,11 @@ use App\Models\BiometricCapture;
 use App\Models\FamilyMember;
 use App\Repositories\Contracts\BiometricCaptureRepositoryInterface;
 use App\Services\Biometrics\BiometricVault;
+use App\Services\Cardholders\FamilyMemberService;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Encryption\Encrypter;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Activitylog\Models\Activity;
@@ -139,4 +141,24 @@ it('creates the biometric key once and will not silently replace it', function (
 
     unlink("{$dir}/.env");
     rmdir($dir);
+});
+
+it('keeps the encrypted files when a deletion is rolled back', function () {
+    $member = FamilyMember::factory()->create(['tenant_id' => $this->tenant->id, 'cardholder_id' => $this->holder->id]);
+    $captured = ($this->capture)('left_thumb', $member);
+    $disk = Storage::disk(config('biometrics.disk'));
+
+    app(TenantContext::class)->run($this->tenant, function () use ($member) {
+        try {
+            DB::transaction(function () use ($member) {
+                app(FamilyMemberService::class)->delete($member->fresh());
+
+                throw new RuntimeException('a later step failed');
+            });
+        } catch (RuntimeException) {
+        }
+    });
+
+    $disk->assertExists([$captured->image_path, $captured->template_path]);
+    expect($member->fresh())->not->toBeNull();
 });

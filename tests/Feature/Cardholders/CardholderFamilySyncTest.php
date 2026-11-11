@@ -1,9 +1,12 @@
 <?php
 
+use App\Models\Card;
 use App\Models\Cardholder;
 use App\Models\FamilyMember;
 use App\Models\MasterDataItem;
 use App\Models\User;
+use App\Services\Cardholders\CardholderSyncService;
+use App\Services\Cardholders\FamilySyncService;
 use App\Support\Tenancy\TenantContext;
 use Laravel\Sanctum\Sanctum;
 use Spatie\Activitylog\Models\Activity;
@@ -190,4 +193,91 @@ it('lets the form set the HR id too, one per member of a cardholder', function (
     // Saving the member again with its own HR id is no clash; the form leaving it out keeps it
     $this->putJson("{$base}/{$id}", ['relation' => 'son', 'name' => 'Rafiul', 'external_id' => 'F-1'])->assertOk();
     $this->putJson("{$base}/{$id}", ['relation' => 'son', 'name' => 'Rafiul'])->assertOk()->assertJsonPath('data.external_id', 'F-1');
+});
+
+it('removes the members the list leaves out when the record says replace, as the integration account', function () {
+    $person = cardholder($this->tenant, ['employee_no' => 'E-1']);
+    $kept = ($this->member)(['relation' => 'son', 'name' => 'Rafi', 'external_id' => 'F-1'], $person);
+    $left = ($this->member)(['relation' => 'mother', 'name' => 'Amena', 'external_id' => 'F-2'], $person);
+    $alsoLeft = ($this->member)(['relation' => 'father', 'name' => 'Karim'], $person);
+
+    // A dry run says who would go, and removes nobody
+    ($this->sync)(['dry_run' => true, 'records' => [['employee_no' => 'E-1', 'family_mode' => 'replace', 'family' => [['external_id' => 'F-1']]]]])
+        ->assertOk()
+        ->assertJsonPath('data.records.0.family', [
+            ['index' => 0, 'id' => $kept->public_id, 'external_id' => 'F-1', 'result' => 'updated'],
+            ['index' => null, 'id' => $left->public_id, 'external_id' => 'F-2', 'result' => 'removed'],
+            ['index' => null, 'id' => $alsoLeft->public_id, 'external_id' => null, 'result' => 'removed'],
+        ]);
+    expect(($this->members)($person))->toHaveCount(3);
+
+    ($this->sync)(['records' => [['employee_no' => 'E-1', 'family_mode' => 'replace', 'family' => [['external_id' => 'F-1']]]]])
+        ->assertOk()
+        ->assertJsonPath('data.records.0.result', 'updated')
+        ->assertJsonPath('data.records.0.family.0.result', 'unchanged')
+        ->assertJsonPath('data.records.0.family.1.result', 'removed')
+        ->assertJsonPath('data.records.0.family.2.result', 'removed');
+
+    expect(($this->members)($person))->toBe([['son', 'Rafi', 'F-1']]);
+    $gone = Activity::query()->where('log_name', 'family_members')->where('subject_id', $left->id)->where('event', 'deleted')->sole();
+    expect($gone->causer_id)->toBe($this->hr->id);
+
+    // An empty list with replace leaves nobody; merge (the default) leaves everyone
+    ($this->sync)(['records' => [['employee_no' => 'E-1', 'family' => []]]])->assertOk()->assertJsonPath('data.records.0.result', 'unchanged');
+    expect(($this->members)($person))->toHaveCount(1);
+    ($this->sync)(['records' => [['employee_no' => 'E-1', 'family_mode' => 'replace', 'family' => []]]])->assertOk()->assertJsonPath('data.records.0.family.0.result', 'removed');
+    expect(($this->members)($person))->toBe([]);
+});
+
+it('never removes a member with a card or an appointment: the whole record fails, in a dry run too', function () {
+    $person = cardholder($this->tenant, ['employee_no' => 'E-1', 'full_name' => 'Rahim']);
+    $carded = ($this->member)(['relation' => 'spouse', 'name' => 'Salma'], $person);
+    $plain = ($this->member)(['relation' => 'son', 'name' => 'Rafi'], $person);
+    Card::factory()->create(['tenant_id' => $this->tenant->id, 'cardholder_id' => $person->id, 'family_member_id' => $carded->id, 'card_template_id' => cardTemplate($this->tenant)->id]);
+
+    foreach ([true, false] as $dryRun) {
+        $answer = ($this->sync)(['dry_run' => $dryRun, 'records' => [['employee_no' => 'E-1', 'full_name' => 'Rahim Uddin', 'family_mode' => 'replace', 'family' => [['relation' => 'daughter', 'name' => 'Rima']]]]])->assertOk();
+        expect($answer->json('data.records.0.result'))->toBe('failed')
+            ->and($answer->json('data.records.0.errors.family'))->toBe(['Spouse “Salma” is not in the list but cannot be removed: This family member has issued cards, which are kept as records.']);
+    }
+
+    // A member an item failed to name is not "left out": only that item's problem is told
+    $answer = ($this->sync)(['records' => [['employee_no' => 'E-1', 'family_mode' => 'replace', 'family' => [['id' => '01ARZ3NDEKTSV4RRFFQ69G5FAV', 'name' => 'Salma'], ['relation' => 'son', 'name' => 'Rafi']]]]])->assertOk();
+    expect(array_keys($answer->json('data.records.0.errors')))->toBe(['family.0.id']);
+
+    expect(($this->members)($person))->toBe([['spouse', 'Salma', null], ['son', 'Rafi', null]])
+        ->and($person->fresh()->full_name)->toBe('Rahim')
+        ->and($plain->fresh())->not->toBeNull();
+});
+
+it('fails the record with the reason when a card comes between the check and the save', function () {
+    $person = cardholder($this->tenant, ['employee_no' => 'E-1']);
+    $member = ($this->member)(['relation' => 'son', 'name' => 'Rafi'], $person);
+
+    $outcome = app(TenantContext::class)->run($this->tenant, function () use ($person, $member) {
+        $family = app(FamilySyncService::class);
+        $check = $family->check([], $person, false, false, replace: true);
+        expect($check->removing)->toHaveCount(1);
+        Card::factory()->create(['tenant_id' => $this->tenant->id, 'cardholder_id' => $person->id, 'family_member_id' => $member->id, 'card_template_id' => cardTemplate($this->tenant)->id]);
+
+        return app(CardholderSyncService::class)->atomically(
+            fn (): array => ['messages' => [], 'family' => $family->save($check, $person)],
+            fn (array $messages): array => ['messages' => $messages],
+        );
+    });
+
+    expect($outcome['messages'])->toBe(['Son “Rafi” is not in the list but cannot be removed: This family member has issued cards, which are kept as records.'])
+        ->and($member->fresh())->not->toBeNull();
+});
+
+it('takes merge or replace, and only with a family', function () {
+    cardholder($this->tenant, ['employee_no' => 'E-1']);
+
+    ($this->sync)(['records' => [
+        ['employee_no' => 'E-1', 'family_mode' => 'all', 'family' => []],
+        ['employee_no' => 'E-1', 'family_mode' => 'replace'],
+    ]])
+        ->assertOk()
+        ->assertJsonPath('data.records.0.errors.family_mode.0', 'family_mode must be one of: merge, replace.')
+        ->assertJsonPath('data.records.1.errors.family_mode.0', 'family_mode needs a family list in the same record.');
 });
