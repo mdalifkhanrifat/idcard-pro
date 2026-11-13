@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\AuditsChanges;
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\TenantImageFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -10,7 +11,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
-use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 /**
@@ -35,7 +35,7 @@ use Spatie\Activitylog\Support\LogOptions;
 class TenantImage extends Model
 {
     /** @use HasFactory<TenantImageFactory> */
-    use BelongsToTenant, HasFactory, HasUlids, LogsActivity;
+    use AuditsChanges, BelongsToTenant, HasFactory, HasUlids;
 
     /**
      * @return array<int, string>
@@ -74,7 +74,8 @@ class TenantImage extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['name', 'path'])
+            ->logFillable()
+            ->logExcept(['disk', 'mime_type', 'width', 'height', 'size'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->useLogName('images');

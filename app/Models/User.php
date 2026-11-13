@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\UserKind;
 use App\Enums\UserStatus;
+use App\Models\Concerns\AuditsChanges;
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -17,7 +18,6 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
 use Laravel\Sanctum\HasApiTokens;
-use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -51,7 +51,7 @@ use Spatie\Permission\Traits\HasRoles;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use BelongsToTenant, HasApiTokens, HasFactory, HasRoles, HasUlids, LogsActivity, Notifiable, SoftDeletes;
+    use AuditsChanges, BelongsToTenant, HasApiTokens, HasFactory, HasRoles, HasUlids, Notifiable, SoftDeletes;
 
     /**
      * @var array<string, mixed>
@@ -143,7 +143,9 @@ class User extends Authenticatable
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['kind', 'name', 'description', 'allowed_ips', 'email', 'username', 'phone', 'status', 'locale'])
+            ->logFillable()
+            ->logOnly(['password_changed_at', 'two_factor_confirmed_at'])
+            ->logExcept(['tenant_id', 'avatar_path', 'password'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->useLogName('user');

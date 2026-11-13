@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\AuditsChanges;
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\CardholderFileFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -11,7 +12,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
-use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 /**
@@ -48,7 +48,7 @@ use Spatie\Activitylog\Support\LogOptions;
 class CardholderFile extends Model
 {
     /** @use HasFactory<CardholderFileFactory> */
-    use BelongsToTenant, HasFactory, HasUlids, LogsActivity;
+    use AuditsChanges, BelongsToTenant, HasFactory, HasUlids;
 
     /**
      * @return array<int, string>
@@ -118,7 +118,8 @@ class CardholderFile extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['cardholder_id', 'family_member_id', 'collection', 'title', 'original_name', 'replaced_at'])
+            ->logFillable()
+            ->logExcept(['disk', 'path', 'mime_type', 'size', 'width', 'height', 'checksum', 'uploaded_by'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->useLogName('cardholder_files');

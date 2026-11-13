@@ -6,9 +6,9 @@ use App\Enums\BiometricStatus;
 use App\Enums\CardStatus;
 use App\Enums\FamilyRelation;
 use App\Enums\Gender;
+use App\Models\Concerns\AuditsChanges;
 use App\Models\Concerns\BelongsToTenant;
 use App\Observers\BiometricStatusObserver;
-use App\Support\Audit\AuditValues;
 use Database\Factories\FamilyMemberFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
@@ -21,8 +21,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
-use Spatie\Activitylog\Models\Activity;
-use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 /**
@@ -63,7 +61,7 @@ use Spatie\Activitylog\Support\LogOptions;
 class FamilyMember extends Model
 {
     /** @use HasFactory<FamilyMemberFactory> */
-    use BelongsToTenant, HasFactory, HasUlids, LogsActivity;
+    use AuditsChanges, BelongsToTenant, HasFactory, HasUlids;
 
     /**
      * @return array<int, string>
@@ -165,10 +163,5 @@ class FamilyMember extends Model
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->useLogName('family_members');
-    }
-
-    public function beforeActivityLogged(Activity $activity, string $eventName): void
-    {
-        AuditValues::tidy($activity);
     }
 }

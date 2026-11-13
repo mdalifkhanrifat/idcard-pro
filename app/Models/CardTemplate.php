@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\TemplateAudience;
 use App\Enums\TemplateOrientation;
+use App\Models\Concerns\AuditsChanges;
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\CardTemplateFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -14,7 +15,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
-use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 /**
@@ -50,7 +50,7 @@ use Spatie\Activitylog\Support\LogOptions;
 class CardTemplate extends Model
 {
     /** @use HasFactory<CardTemplateFactory> */
-    use BelongsToTenant, HasFactory, HasUlids, LogsActivity;
+    use AuditsChanges, BelongsToTenant, HasFactory, HasUlids;
 
     /**
      * CR80, the common ID card size in millimetres.
@@ -153,7 +153,8 @@ class CardTemplate extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['name', 'code', 'card_type_id', 'audience', 'orientation', 'width', 'height', 'size_unit', 'authority_type_id', 'validity_months', 'is_active', 'version'])
+            ->logFillable()
+            ->logExcept(['created_by'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->useLogName('card_templates');

@@ -20,6 +20,7 @@ use App\Models\Cardholder;
 use App\Models\CardTemplate;
 use App\Models\FamilyMember;
 use App\Models\MasterDataItem;
+use App\Models\Signatory;
 
 /*
 |--------------------------------------------------------------------------
@@ -54,6 +55,7 @@ return [
             'permanent_address', 'postal_code', 'height', 'weight', 'eye_color', 'complexion', 'identification_mark', 'custom_fields',
         ],
         'family_members' => ['date_of_birth', 'phone', 'national_id', 'passport_no', 'identification_mark'],
+        'qualifications' => ['certificate_no'],
     ],
 
     // A wildcard part of a settings path, named by what it stands for: "notifications.events.card_ready.enabled"
@@ -141,6 +143,7 @@ return [
         FamilyMember::class => 'name',
         AppointmentLocation::class => 'name',
         CardTemplate::class => 'name',
+        Signatory::class => 'name',
     ],
 
     // References whose relation is not named after the field: "<log>.<field>" => relation

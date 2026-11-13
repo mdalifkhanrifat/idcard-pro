@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\AuditsChanges;
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\AppointmentLocationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -9,7 +10,6 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
-use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 /**
@@ -34,7 +34,7 @@ use Spatie\Activitylog\Support\LogOptions;
 class AppointmentLocation extends Model
 {
     /** @use HasFactory<AppointmentLocationFactory> */
-    use BelongsToTenant, HasFactory, HasUlids, LogsActivity;
+    use AuditsChanges, BelongsToTenant, HasFactory, HasUlids;
 
     /**
      * As the table's defaults, so a new place answers with them before it is read again.
@@ -77,7 +77,7 @@ class AppointmentLocation extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['name', 'name_local', 'address', 'slot_capacity', 'day_capacity', 'services', 'hours', 'is_active', 'sort_order'])
+            ->logFillable()
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->useLogName('appointment_locations');

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\CardStatus;
+use App\Models\Concerns\AuditsChanges;
 use App\Models\Concerns\BelongsToTenant;
 use App\Support\Tenancy\TenantContext;
 use Database\Factories\CardFactory;
@@ -14,7 +15,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
-use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 /**
@@ -74,7 +74,7 @@ use Spatie\Activitylog\Support\LogOptions;
 class Card extends Model
 {
     /** @use HasFactory<CardFactory> */
-    use BelongsToTenant, HasFactory, HasUlids, LogsActivity;
+    use AuditsChanges, BelongsToTenant, HasFactory, HasUlids;
 
     /**
      * @var array<string, mixed>
@@ -264,7 +264,11 @@ class Card extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['number', 'rf_card_no', 'reason', 'card_template_id', 'template_version', 'issue_date', 'expiry_date', 'status', 'status_note'])
+            ->logFillable()
+            ->logExcept([
+                'layout', 'values', 'verify_code', 'document_file_id', 'photo_file_id', 'signature_file_id', 'status_changed_at', 'replaced_by_id',
+                'issued_by', 'active_number_key', 'active_holder_key', 'print_count', 'last_printed_at', 'verify_count', 'last_verified_at',
+            ])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->useLogName('cards');

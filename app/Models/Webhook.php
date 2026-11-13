@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\AuditsChanges;
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\WebhookFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -12,7 +13,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Carbon;
-use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 /**
@@ -37,7 +37,7 @@ use Spatie\Activitylog\Support\LogOptions;
 class Webhook extends Model
 {
     /** @use HasFactory<WebhookFactory> */
-    use BelongsToTenant, HasFactory, HasUlids, LogsActivity, SoftDeletes;
+    use AuditsChanges, BelongsToTenant, HasFactory, HasUlids, SoftDeletes;
 
     /**
      * @var array<string, mixed>
@@ -88,7 +88,9 @@ class Webhook extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['name', 'url', 'events', 'enabled', 'secret_rotated_at'])
+            ->logFillable()
+            ->logOnly(['secret_rotated_at'])
+            ->logExcept(['secret', 'failure_count', 'disabled_at'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->useLogName('webhooks');

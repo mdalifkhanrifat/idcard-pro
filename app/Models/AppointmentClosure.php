@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\AuditsChanges;
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\AppointmentClosureFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -10,7 +11,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
-use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 /**
@@ -33,7 +33,7 @@ use Spatie\Activitylog\Support\LogOptions;
 class AppointmentClosure extends Model
 {
     /** @use HasFactory<AppointmentClosureFactory> */
-    use BelongsToTenant, HasFactory, HasUlids, LogsActivity;
+    use AuditsChanges, BelongsToTenant, HasFactory, HasUlids;
 
     /**
      * As the table's default, so a new closure answers with it before it is read again.
@@ -101,7 +101,7 @@ class AppointmentClosure extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['location_id', 'date_from', 'date_to', 'yearly', 'reason', 'reason_local'])
+            ->logFillable()
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->useLogName('appointment_closures');

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\AuditsChanges;
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\SignatoryFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -10,7 +11,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
-use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 /**
@@ -37,7 +37,7 @@ use Spatie\Activitylog\Support\LogOptions;
 class Signatory extends Model
 {
     /** @use HasFactory<SignatoryFactory> */
-    use BelongsToTenant, HasFactory, HasUlids, LogsActivity;
+    use AuditsChanges, BelongsToTenant, HasFactory, HasUlids;
 
     /**
      * @var array<string, mixed>
@@ -82,7 +82,8 @@ class Signatory extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['name', 'designation', 'authority_type_id', 'signature_path', 'effective_from', 'effective_to', 'is_active'])
+            ->logFillable()
+            ->logExcept(['signature_disk'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->useLogName('signatories');

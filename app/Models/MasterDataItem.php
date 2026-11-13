@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\AuditsChanges;
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\MasterDataItemFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -11,7 +12,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 /**
@@ -33,7 +33,7 @@ use Spatie\Activitylog\Support\LogOptions;
 class MasterDataItem extends Model
 {
     /** @use HasFactory<MasterDataItemFactory> */
-    use BelongsToTenant, HasFactory, HasUlids, LogsActivity;
+    use AuditsChanges, BelongsToTenant, HasFactory, HasUlids;
 
     /**
      * @var array<string, mixed>
@@ -94,7 +94,8 @@ class MasterDataItem extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['type', 'name', 'name_local', 'code', 'is_active'])
+            ->logFillable()
+            ->logExcept(['sort_order'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->useLogName('master_data');

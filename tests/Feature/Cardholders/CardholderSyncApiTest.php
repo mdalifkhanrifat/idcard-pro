@@ -202,6 +202,8 @@ it('needs cardholders.sync, a list of records and no more than allowed', functio
     config(['cardholder_sync.max_records' => 2]);
     ($this->sync)(['records' => [['employee_no' => 'E-1'], ['employee_no' => 'E-2'], ['employee_no' => 'E-3']]])->assertUnprocessable()->assertJsonValidationErrors('records');
     ($this->sync)(['records' => []])->assertUnprocessable()->assertJsonValidationErrors('records');
+    // One mistake, one message (not "must be an array" and "must be a list" both)
+    ($this->sync)(['records' => 'x'])->assertUnprocessable()->assertJsonCount(1, 'errors.records');
     ($this->sync)(['records' => ['a' => ['employee_no' => 'E-1']]])->assertUnprocessable()->assertJsonValidationErrors('records');
     ($this->sync)(['records' => ['not a record']])->assertUnprocessable()->assertJsonValidationErrors('records.0');
 

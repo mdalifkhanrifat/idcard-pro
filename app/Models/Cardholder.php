@@ -8,9 +8,9 @@ use App\Enums\CardStatus;
 use App\Enums\EmploymentType;
 use App\Enums\Gender;
 use App\Enums\MaritalStatus;
+use App\Models\Concerns\AuditsChanges;
 use App\Models\Concerns\BelongsToTenant;
 use App\Observers\BiometricStatusObserver;
-use App\Support\Audit\AuditValues;
 use Database\Factories\CardholderFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
@@ -24,8 +24,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
-use Spatie\Activitylog\Models\Activity;
-use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 /**
@@ -102,7 +100,7 @@ use Spatie\Activitylog\Support\LogOptions;
 class Cardholder extends Model
 {
     /** @use HasFactory<CardholderFactory> */
-    use BelongsToTenant, HasFactory, HasUlids, LogsActivity;
+    use AuditsChanges, BelongsToTenant, HasFactory, HasUlids;
 
     /**
      * Master data references: column => master data type (config/master_data.php).
@@ -391,10 +389,5 @@ class Cardholder extends Model
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->useLogName('cardholders');
-    }
-
-    public function beforeActivityLogged(Activity $activity, string $eventName): void
-    {
-        AuditValues::tidy($activity);
     }
 }

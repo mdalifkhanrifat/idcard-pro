@@ -3,13 +3,13 @@
 namespace App\Models;
 
 use App\Enums\CustomFieldType;
+use App\Models\Concerns\AuditsChanges;
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\CustomFieldFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 /**
@@ -33,7 +33,7 @@ use Spatie\Activitylog\Support\LogOptions;
 class CustomField extends Model
 {
     /** @use HasFactory<CustomFieldFactory> */
-    use BelongsToTenant, HasFactory, HasUlids, LogsActivity;
+    use AuditsChanges, BelongsToTenant, HasFactory, HasUlids;
 
     public const ENTITIES = ['cardholder'];
 
@@ -76,7 +76,8 @@ class CustomField extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['entity', 'key', 'label', 'type', 'is_required', 'is_active'])
+            ->logFillable()
+            ->logExcept(['sort_order'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->useLogName('custom_fields');

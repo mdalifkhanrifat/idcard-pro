@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\AppointmentSource;
 use App\Enums\AppointmentStatus;
+use App\Models\Concerns\AuditsChanges;
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\AppointmentFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -12,7 +13,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
-use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 /**
@@ -50,7 +50,7 @@ use Spatie\Activitylog\Support\LogOptions;
 class Appointment extends Model
 {
     /** @use HasFactory<AppointmentFactory> */
-    use BelongsToTenant, HasFactory, HasUlids, LogsActivity;
+    use AuditsChanges, BelongsToTenant, HasFactory, HasUlids;
 
     /**
      * @return array<int, string>
@@ -124,7 +124,8 @@ class Appointment extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['number', 'location_id', 'service', 'cardholder_id', 'family_member_id', 'date', 'starts_at', 'ends_at', 'status', 'note', 'cancel_reason'])
+            ->logFillable()
+            ->logExcept(['booked_by_id', 'status_changed_at', 'status_changed_by_id', 'status_changed_via'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->useLogName('appointments');

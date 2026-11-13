@@ -76,7 +76,8 @@ class TenantService
 
                 /** @var User $user */
                 $user = $this->users->create([...$owner, 'email' => strtolower($owner['email']), 'tenant_id' => $tenant->id]);
-                $user->forceFill(['password_changed_at' => now(), 'email_verified_at' => now()])->save();
+                // Part of the creation, not a change of password: no second audit row
+                activity()->withoutLogging(fn () => $user->forceFill(['password_changed_at' => now(), 'email_verified_at' => now()])->save());
                 $user->assignRole(PermissionRegistry::OWNER_ROLE);
             });
 

@@ -21,6 +21,8 @@ return [
             'authority_type_id' => 'Authority type',
         ],
         'user' => [
+            'password_changed_at' => 'Password changed',
+            'two_factor_confirmed_at' => 'Two-step sign-in turned on',
             'allowed_ips' => 'Addresses it works from',
             'kind' => 'Account type',
             'description' => 'Description',
@@ -49,6 +51,7 @@ return [
             'permissions' => 'Permissions',
         ],
         'tenant' => [
+            'country_code' => 'Country',
             'slug' => 'Short name (in links)',
             'legal_name' => 'Legal name',
             'timezone' => 'Time zone',
@@ -56,12 +59,14 @@ return [
             'logo_path' => 'Logo',
         ],
         'appointments' => [
+            'source' => 'Booked through',
             'number' => 'Booking no',
             'starts_at' => 'Starts at',
             'ends_at' => 'Ends at',
             'cancel_reason' => 'Why called off',
         ],
         'biometrics' => [
+            'device' => 'Device',
             'modality' => 'Kind',
             'position' => 'Position',
             'unavailable_reason' => 'Why not taken',
@@ -70,6 +75,8 @@ return [
             'low_quality' => 'Low quality',
         ],
         'cards' => [
+            'notes' => 'Card notes',
+            'signatory_id' => 'Signatory',
             'number' => 'Card no',
             'rf_card_no' => 'RF card no',
             'card_template_id' => 'Template',
@@ -79,6 +86,7 @@ return [
             'status_note' => 'Status note',
         ],
         'card_templates' => [
+            'is_double_sided' => 'Two-sided',
             'orientation' => 'Orientation',
             'width' => 'Width',
             'height' => 'Height',
@@ -90,6 +98,9 @@ return [
             'collection' => 'Kind of file',
         ],
         'custom_fields' => [
+            'label_local' => 'Label (local language)',
+            'group' => 'Group',
+            'options' => 'Choices',
             'entity' => 'Belongs to',
             'key' => 'Key',
             'label' => 'Label',
@@ -105,15 +116,20 @@ return [
             'card_no' => 'Card no',
         ],
         'master_data' => [
+            'parent_id' => 'Inside',
             'type' => 'List',
         ],
         'qualifications' => [
+            'subject' => 'Group / subject',
+            'degree' => 'Degree',
+            'certificate_no' => 'Certificate no',
             'kind' => 'Kind',
             'institution' => 'Institution',
             'year' => 'Year',
             'result' => 'Result',
         ],
         'signatories' => [
+            'designation_local' => 'Designation (local language)',
             'signature_path' => 'Signature image',
             'effective_from' => 'In effect from',
             'effective_to' => 'In effect until',

@@ -17,8 +17,10 @@ use App\Services\Webhooks\WebhookEvents;
 use App\Support\Audit\JsonChanges;
 use App\Support\Tenancy\TenantContext;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Str;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 
@@ -215,6 +217,28 @@ it('names every permission in both languages, as the roles page does', function 
         }
     }
 })->with(['en', 'bn']);
+
+it('names the record every logged reference points to, never by its id', function () {
+    $unnamed = [];
+    foreach (File::files(app_path('Models')) as $file) {
+        $class = 'App\\Models\\'.$file->getFilenameWithoutExtension();
+        if (! in_array(LogsActivity::class, class_uses_recursive($class), true)) {
+            continue;
+        }
+        $model = new $class;
+        foreach (loggedAttributes($model) as $field) {
+            $relation = config('audit.relations')["{$model->getActivitylogOptions()->logName}.{$field}"] ?? Str::camel(Str::beforeLast($field, '_id'));
+            if (! str_ends_with($field, '_id') || ! method_exists($model, $relation) || ! $model->{$relation}() instanceof BelongsTo) {
+                continue;
+            }
+            if (! array_key_exists($model->{$relation}()->getRelated()::class, (array) config('audit.references'))) {
+                $unnamed[] = class_basename($class).".{$field}";
+            }
+        }
+    }
+
+    expect($unnamed)->toBe([]);
+});
 
 it('shows the record a reference points to, days as days and moments in the organization\'s time, in the reader\'s digits', function () {
     [$tenant] = tenantWithOwner();

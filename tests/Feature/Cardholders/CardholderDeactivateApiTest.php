@@ -130,6 +130,7 @@ it('needs cardholders.sync, a list of numbers, no more than allowed, and a statu
     config(['cardholder_sync.max_records' => 2]);
     ($this->leave)(['employee_nos' => ['E-1', 'E-2', 'E-3']])->assertUnprocessable()->assertJsonValidationErrors('employee_nos');
     ($this->leave)(['employee_nos' => []])->assertUnprocessable()->assertJsonValidationErrors('employee_nos');
+    ($this->leave)(['employee_nos' => 'E-1'])->assertUnprocessable()->assertJsonCount(1, 'errors.employee_nos');
     ($this->leave)(['employee_nos' => ['a' => 'E-1']])->assertUnprocessable()->assertJsonValidationErrors('employee_nos');
     ($this->leave)(['employee_nos' => [['E-1'], '', str_repeat('9', 41)]])->assertUnprocessable()->assertJsonValidationErrors(['employee_nos.0', 'employee_nos.1', 'employee_nos.2']);
     ($this->leave)(['employee_nos' => ['E-1'], 'status' => 'active'])->assertUnprocessable()->assertJsonValidationErrors('status');

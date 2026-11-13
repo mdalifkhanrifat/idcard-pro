@@ -52,7 +52,8 @@ class UserService
 
         return DB::transaction(function () use ($data): User {
             $user = $this->users->create([...$this->attributes($data), 'password' => $data['password']]);
-            $user->forceFill(['password_changed_at' => now()])->save();
+            // Part of the creation, not a change of password: no second audit row
+            activity()->withoutLogging(fn () => $user->forceFill(['password_changed_at' => now()])->save());
             $user->syncRoles($data['roles'] ?? []);
             $this->noteRoles($user, []);
 

@@ -21,6 +21,8 @@ return [
             'authority_type_id' => 'কর্তৃপক্ষের ধরন',
         ],
         'user' => [
+            'password_changed_at' => 'পাসওয়ার্ড বদলের সময়',
+            'two_factor_confirmed_at' => 'দুই ধাপের লগইন চালুর সময়',
             'allowed_ips' => 'যে ঠিকানা থেকে চলে',
             'kind' => 'অ্যাকাউন্টের ধরন',
             'description' => 'বিবরণ',
@@ -49,6 +51,7 @@ return [
             'permissions' => 'পারমিশন',
         ],
         'tenant' => [
+            'country_code' => 'দেশ',
             'slug' => 'সংক্ষিপ্ত নাম (লিংকে)',
             'legal_name' => 'আইনি নাম',
             'timezone' => 'সময়-অঞ্চল',
@@ -56,12 +59,14 @@ return [
             'logo_path' => 'লোগো',
         ],
         'appointments' => [
+            'source' => 'বুকিংয়ের পথ',
             'number' => 'বুকিং নম্বর',
             'starts_at' => 'শুরুর সময়',
             'ends_at' => 'শেষের সময়',
             'cancel_reason' => 'বাতিলের কারণ',
         ],
         'biometrics' => [
+            'device' => 'যন্ত্র',
             'modality' => 'ধরন',
             'position' => 'অবস্থান',
             'unavailable_reason' => 'না নেওয়ার কারণ',
@@ -70,6 +75,8 @@ return [
             'low_quality' => 'কম মান',
         ],
         'cards' => [
+            'notes' => 'কার্ডের নোট',
+            'signatory_id' => 'সইকারী',
             'number' => 'কার্ড নম্বর',
             'rf_card_no' => 'RF কার্ড নম্বর',
             'card_template_id' => 'টেমপ্লেট',
@@ -79,6 +86,7 @@ return [
             'status_note' => 'অবস্থার নোট',
         ],
         'card_templates' => [
+            'is_double_sided' => 'দুই পিঠ',
             'orientation' => 'দিক',
             'width' => 'প্রস্থ',
             'height' => 'উচ্চতা',
@@ -90,6 +98,9 @@ return [
             'collection' => 'ফাইলের ধরন',
         ],
         'custom_fields' => [
+            'label_local' => 'লেবেল (বাংলায়)',
+            'group' => 'গ্রুপ',
+            'options' => 'বিকল্প',
             'entity' => 'কিসের ঘর',
             'key' => 'চাবি (key)',
             'label' => 'লেবেল',
@@ -105,15 +116,20 @@ return [
             'card_no' => 'কার্ড নম্বর',
         ],
         'master_data' => [
+            'parent_id' => 'যার অধীনে',
             'type' => 'তালিকা',
         ],
         'qualifications' => [
+            'subject' => 'বিভাগ / বিষয়',
+            'degree' => 'ডিগ্রি',
+            'certificate_no' => 'সনদ নম্বর',
             'kind' => 'ধরন',
             'institution' => 'প্রতিষ্ঠান',
             'year' => 'বছর',
             'result' => 'ফলাফল',
         ],
         'signatories' => [
+            'designation_local' => 'পদবি (বাংলায়)',
             'signature_path' => 'স্বাক্ষরের ছবি',
             'effective_from' => 'যেদিন থেকে কার্যকর',
             'effective_to' => 'যেদিন পর্যন্ত কার্যকর',

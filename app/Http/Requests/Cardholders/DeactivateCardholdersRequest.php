@@ -34,7 +34,7 @@ class DeactivateCardholdersRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'employee_nos' => ['required', 'array', 'list', 'min:1', 'max:'.config('cardholder_sync.max_records')],
+            'employee_nos' => ['bail', 'required', 'array', 'list', 'min:1', 'max:'.config('cardholder_sync.max_records')],
             'employee_nos.*' => ['required', 'string', 'max:40'],
             // Active is not a way out: a person comes back through POST /sync/cardholders with "status": "active"
             'status' => ['sometimes', Rule::enum(CardholderStatus::class)->except([CardholderStatus::Active])],

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\QualificationKind;
+use App\Models\Concerns\AuditsChanges;
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\QualificationFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -11,7 +12,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
-use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 /**
@@ -38,7 +38,7 @@ use Spatie\Activitylog\Support\LogOptions;
 class Qualification extends Model
 {
     /** @use HasFactory<QualificationFactory> */
-    use BelongsToTenant, HasFactory, HasUlids, LogsActivity;
+    use AuditsChanges, BelongsToTenant, HasFactory, HasUlids;
 
     /**
      * @return array<int, string>
@@ -76,7 +76,8 @@ class Qualification extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['cardholder_id', 'kind', 'title', 'institution', 'year', 'result'])
+            ->logFillable()
+            ->logExcept(['sort_order'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->useLogName('qualifications');

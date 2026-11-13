@@ -21,7 +21,7 @@ class SyncCardholdersRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'records' => ['required', 'array', 'list', 'min:1', 'max:'.config('cardholder_sync.max_records')],
+            'records' => ['bail', 'required', 'array', 'list', 'min:1', 'max:'.config('cardholder_sync.max_records')],
             'records.*' => ['required', 'array'],
             'dry_run' => ['sometimes', 'boolean'],
             'create_missing_lookups' => ['sometimes', 'boolean'],

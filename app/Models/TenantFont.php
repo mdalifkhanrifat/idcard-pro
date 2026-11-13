@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\AuditsChanges;
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\TenantFontFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -9,7 +10,6 @@ use Illuminate\Database\Eloquent\Concerns\HasUlids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
-use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 /**
@@ -33,7 +33,7 @@ use Spatie\Activitylog\Support\LogOptions;
 class TenantFont extends Model
 {
     /** @use HasFactory<TenantFontFactory> */
-    use BelongsToTenant, HasFactory, HasUlids, LogsActivity;
+    use AuditsChanges, BelongsToTenant, HasFactory, HasUlids;
 
     public const STYLES = ['normal', 'italic'];
 
@@ -66,7 +66,8 @@ class TenantFont extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['family', 'weight', 'style', 'original_name'])
+            ->logFillable()
+            ->logExcept(['format', 'disk', 'path', 'size'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->useLogName('fonts');

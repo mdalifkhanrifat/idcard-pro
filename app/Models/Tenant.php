@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use App\Enums\TenantStatus;
+use App\Models\Concerns\AuditsChanges;
 use App\Services\Appointments\AppointmentSettings;
 use App\Services\Biometrics\BiometricSettings;
 use App\Services\Cards\CardNumberFormat;
 use App\Services\Integrations\IntegrationSettings;
 use App\Services\Notifications\NotificationSettings;
 use App\Services\Webhooks\WebhookSettings;
+use App\Support\Audit\AuditValues;
 use App\Support\Audit\JsonChanges;
 use Database\Factories\TenantFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -18,7 +20,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Spatie\Activitylog\Models\Activity;
-use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 /**
@@ -37,7 +38,7 @@ use Spatie\Activitylog\Support\LogOptions;
 class Tenant extends Model
 {
     /** @use HasFactory<TenantFactory> */
-    use HasFactory, HasUlids, LogsActivity, SoftDeletes;
+    use AuditsChanges, HasFactory, HasUlids, SoftDeletes;
 
     /**
      * @var array<string, mixed>
@@ -89,7 +90,7 @@ class Tenant extends Model
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['name', 'slug', 'legal_name', 'email', 'phone', 'timezone', 'locale', 'primary_color', 'status', 'logo_path', 'settings'])
+            ->logFillable()
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->useLogName('tenant');
@@ -125,6 +126,8 @@ class Tenant extends Model
     {
         $changes = $activity->attribute_changes?->toArray() ?? [];
         if (! array_key_exists('settings', $changes['attributes'] ?? [])) {
+            AuditValues::tidy($activity);
+
             return;
         }
 
@@ -137,6 +140,7 @@ class Tenant extends Model
             $changes['old'] = [...($changes['old'] ?? []), ...$settings['old']];
         }
         $activity->attribute_changes = collect($changes);
+        AuditValues::tidy($activity);
     }
 
     /**

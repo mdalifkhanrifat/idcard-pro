@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\AuditsChanges;
 use App\Models\Concerns\BelongsToTenant;
 use Database\Factories\BiometricCaptureFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
@@ -11,7 +12,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
-use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
 /**
@@ -58,7 +58,7 @@ use Spatie\Activitylog\Support\LogOptions;
 class BiometricCapture extends Model
 {
     /** @use HasFactory<BiometricCaptureFactory> */
-    use BelongsToTenant, HasFactory, HasUlids, LogsActivity;
+    use AuditsChanges, BelongsToTenant, HasFactory, HasUlids;
 
     public const STATUS_CAPTURED = 'captured';
 
@@ -146,7 +146,8 @@ class BiometricCapture extends Model
     {
         // What was captured and how well, never the image, template or file locations
         return LogOptions::defaults()
-            ->logOnly(['cardholder_id', 'family_member_id', 'modality', 'position', 'status', 'unavailable_reason', 'driver', 'quality', 'low_quality', 'replaced_at'])
+            ->logFillable()
+            ->logExcept(['disk', 'image_path', 'image_format', 'image_width', 'image_height', 'image_dpi', 'template_path', 'template_format', 'attempts', 'captured_by', 'captured_at', 'current_key'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->useLogName('biometrics');
