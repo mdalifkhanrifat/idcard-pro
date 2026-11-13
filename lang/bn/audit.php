@@ -96,6 +96,9 @@ return [
             'type' => 'ধরন',
             'is_required' => 'আবশ্যক',
         ],
+        'cardholders' => [
+            'custom_fields' => 'কাস্টম ফিল্ড',
+        ],
         'family_members' => [
             'external_id' => 'HR-এর id',
             'relation' => 'সম্পর্ক',

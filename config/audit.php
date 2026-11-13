@@ -7,6 +7,8 @@ use App\Enums\CardStatus;
 use App\Enums\CustomFieldType;
 use App\Enums\EmploymentType;
 use App\Enums\FamilyRelation;
+use App\Enums\Gender;
+use App\Enums\MaritalStatus;
 use App\Enums\QualificationKind;
 use App\Enums\TemplateAudience;
 use App\Enums\TemplateOrientation;
@@ -43,6 +45,17 @@ return [
 
     'hidden' => ['password', 'remember_token', 'token', 'secret', 'two_factor_secret', 'two_factor_recovery_codes'],
 
+    // A person's identifiers, contact details and the like, by log name: that one changed is logged (who, when,
+    // which field), its value never. App\Support\Audit\AuditValues drops the values before the row is
+    // written, so the audit table never holds them, and the audit page, its report and the API read "(hidden)".
+    'private' => [
+        'cardholders' => [
+            'date_of_birth', 'national_id', 'passport_no', 'email', 'personal_phone', 'emergency_phone', 'present_address',
+            'permanent_address', 'postal_code', 'height', 'weight', 'eye_color', 'complexion', 'identification_mark', 'custom_fields',
+        ],
+        'family_members' => ['date_of_birth', 'phone', 'national_id', 'passport_no', 'identification_mark'],
+    ],
+
     // A wildcard part of a settings path, named by what it stands for: "notifications.events.card_ready.enabled"
     // reads "Card ready — Send messages for this event". `:segment` is the part; unknown parts keep their key.
     'segments' => [
@@ -63,6 +76,8 @@ return [
         EmploymentType::class => 'cards.values.employment_type',
         UserKind::class => 'audit.values.user_kind',
         FamilyRelation::class => 'cards.values.relation',
+        Gender::class => 'cards.values.gender',
+        MaritalStatus::class => 'cards.values.marital_status',
         QualificationKind::class => 'reports.values.qualification_kind',
         TemplateAudience::class => 'reports.values.audience',
         TemplateOrientation::class => 'reports.values.orientation',

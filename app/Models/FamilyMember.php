@@ -8,6 +8,7 @@ use App\Enums\FamilyRelation;
 use App\Enums\Gender;
 use App\Models\Concerns\BelongsToTenant;
 use App\Observers\BiometricStatusObserver;
+use App\Support\Audit\AuditValues;
 use Database\Factories\FamilyMemberFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
@@ -20,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
+use Spatie\Activitylog\Models\Activity;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
@@ -152,14 +154,21 @@ class FamilyMember extends Model
     }
 
     /**
-     * Personal identifiers and contact details are left out of the audit trail.
+     * Every field a member is given is audited (the order on the list aside); identifiers and contact details
+     * (config audit.private) as changed only, never their values.
      */
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly(['cardholder_id', 'external_id', 'relation', 'name', 'card_no'])
+            ->logFillable()
+            ->logExcept(['sort_order'])
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->useLogName('family_members');
+    }
+
+    public function beforeActivityLogged(Activity $activity, string $eventName): void
+    {
+        AuditValues::tidy($activity);
     }
 }

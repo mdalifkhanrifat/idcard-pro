@@ -16,10 +16,23 @@ use App\Services\Audit\AuditChangeDescriber;
 use App\Services\Webhooks\WebhookEvents;
 use App\Support\Audit\JsonChanges;
 use App\Support\Tenancy\TenantContext;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\File;
 use Spatie\Activitylog\Models\Activity;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
+
+/**
+ * The fields a model's own logging records: those named, or all it may be given (logFillable), less those left out.
+ *
+ * @return list<string>
+ */
+function loggedAttributes(Model $model): array
+{
+    $options = $model->getActivitylogOptions();
+
+    return array_values(array_diff([...$options->logAttributes, ...($options->logFillable ? $model->getFillable() : [])], $options->logExceptAttributes));
+}
 
 /**
  * Every field the audit log records, by log name: what the models log, and what services log by hand.
@@ -34,8 +47,8 @@ function auditedFields(): array
         if (! in_array(LogsActivity::class, class_uses_recursive($class), true)) {
             continue;
         }
-        $options = (new $class)->getActivitylogOptions();
-        $fields[$options->logName] = [...($fields[$options->logName] ?? []), ...array_diff($options->logAttributes, ['settings'])];
+        $model = new $class;
+        $fields[$model->getActivitylogOptions()->logName] = [...($fields[$model->getActivitylogOptions()->logName] ?? []), ...array_values(array_diff(loggedAttributes($model), ['settings']))];
     }
 
     return $fields;
@@ -132,7 +145,7 @@ it('names every case of every enum a logged field holds, in both languages', fun
             continue;
         }
         $model = new $class;
-        foreach ($model->getActivitylogOptions()->logAttributes as $field) {
+        foreach (loggedAttributes($model) as $field) {
             $cast = $model->getCasts()[$field] ?? null;
             if (! is_string($cast) || ! enum_exists($cast)) {
                 continue;

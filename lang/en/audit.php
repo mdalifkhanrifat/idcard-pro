@@ -96,6 +96,9 @@ return [
             'type' => 'Type',
             'is_required' => 'Required',
         ],
+        'cardholders' => [
+            'custom_fields' => 'Custom fields',
+        ],
         'family_members' => [
             'external_id' => 'HR id',
             'relation' => 'Relation',

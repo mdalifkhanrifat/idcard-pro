@@ -10,6 +10,7 @@ use App\Enums\Gender;
 use App\Enums\MaritalStatus;
 use App\Models\Concerns\BelongsToTenant;
 use App\Observers\BiometricStatusObserver;
+use App\Support\Audit\AuditValues;
 use Database\Factories\CardholderFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
@@ -23,6 +24,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use Spatie\Activitylog\Models\Activity;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
@@ -379,17 +381,20 @@ class Cardholder extends Model
     }
 
     /**
-     * Personal identifiers and contact details are deliberately left out of the audit trail.
+     * Every field a person's record is given is audited; identifiers and contact details (config audit.private)
+     * as changed only, never their values.
      */
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-            ->logOnly([
-                'full_name', 'employee_no', 'secondary_no', 'employment_type', 'status',
-                'department_id', 'unit_id', 'rank_id', 'designation_id', 'joining_date', 'retirement_date',
-            ])
+            ->logFillable()
             ->logOnlyDirty()
             ->dontLogEmptyChanges()
             ->useLogName('cardholders');
+    }
+
+    public function beforeActivityLogged(Activity $activity, string $eventName): void
+    {
+        AuditValues::tidy($activity);
     }
 }

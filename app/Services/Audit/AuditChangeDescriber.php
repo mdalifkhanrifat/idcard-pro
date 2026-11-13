@@ -3,6 +3,7 @@
 namespace App\Services\Audit;
 
 use App\Services\Reports\ReportValueText;
+use App\Support\Audit\AuditValues;
 use App\Support\Tenancy\TenantContext;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Model;
@@ -118,12 +119,12 @@ final class AuditChangeDescriber
 
     /**
      * A value as text, whatever it belongs to: "—" for nothing, yes/no, a list joined, a number in the reader's
-     * digits, a hidden field never.
+     * digits, a hidden field never (nor a log's private one, config audit.private).
      */
-    public function text(string $key, mixed $value): string
+    public function text(string $key, mixed $value, ?string $logName = null): string
     {
         return match (true) {
-            $this->hidden($key) => (string) __('audit.hidden'),
+            $this->hidden($key, $logName) => (string) __('audit.hidden'),
             $value === null, $value === '', $value === [] => '—',
             is_bool($value) => (string) __('reports.values.'.($value ? 'yes' : 'no')),
             is_array($value) && array_is_list($value) && array_filter($value, is_array(...)) === [] => Str::limit(implode(', ', array_map(fn (mixed $item): string => $this->text($key, $item), $value)), 200),
@@ -140,8 +141,8 @@ final class AuditChangeDescriber
     private function value(Activity $activity, string $key, mixed $value): string
     {
         $kind = $this->kind($activity, $key);
-        if ($kind === null || $value === null || $value === '' || is_bool($value) || $this->hidden($key)) {
-            return $this->text($key, $value);
+        if ($kind === null || $value === null || $value === '' || is_bool($value) || $this->hidden($key, $activity->log_name)) {
+            return $this->text($key, $value, $activity->log_name);
         }
         if (is_array($value)) {
             return array_is_list($value) && array_filter($value, is_array(...)) === []
@@ -349,9 +350,9 @@ final class AuditChangeDescriber
         return null;
     }
 
-    private function hidden(string $key): bool
+    private function hidden(string $key, ?string $logName = null): bool
     {
-        return in_array(Str::afterLast($key, '.'), (array) config('audit.hidden'), true);
+        return in_array(Str::afterLast($key, '.'), (array) config('audit.hidden'), true) || AuditValues::isPrivate($logName, $key);
     }
 
     /**
